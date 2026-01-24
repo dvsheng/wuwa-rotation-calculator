@@ -35,6 +35,8 @@ export const PrimaryEchoSelector = ({ index }: PrimaryEchoSelectorProps) => {
             if (echo) setPrimaryEcho(index, echo.id, echo.name);
           }}
           placeholder="Select primary echo"
+          groupBy="cost"
+          groupOrder="desc"
         />
       </div>
     </Stack>

@@ -44,6 +44,8 @@ export const WeaponSelector = ({ index }: WeaponSelectorProps) => {
             }
           }}
           placeholder="Select weapon"
+          groupBy="rarity"
+          groupOrder="desc"
         />
       </div>
       <div className="w-16 shrink-0">

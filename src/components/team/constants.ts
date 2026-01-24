@@ -1,8 +1,18 @@
+import { Attribute } from '@/types/attribute';
 import type {
   EchoMainStatOptionType,
   EchoSubstatOptionType,
 } from '@/types/client/echo';
 import { EchoMainStatOption, EchoSubstatOption } from '@/types/client/echo';
+
+export const ATTRIBUTE_COLORS: Record<Attribute, string> = {
+  [Attribute.FUSION]: '#C32439',
+  [Attribute.GLACIO]: '#56B9D7',
+  [Attribute.AERO]: '#36BA92',
+  [Attribute.ELECTRO]: '#A242B1',
+  [Attribute.SPECTRO]: '#BAA525',
+  [Attribute.HAVOC]: '#8F1D4F',
+} as const;
 
 export const SUBSTAT_OPTIONS: Array<EchoSubstatOptionType> =
   Object.values(EchoSubstatOption);

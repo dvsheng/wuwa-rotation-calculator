@@ -10,7 +10,7 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "format": "prettier",
-    "check": "prettier --write . && eslint --fix && tsc"
+    "check": "prettier --write . && eslint --fix && tsc && npm run test"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

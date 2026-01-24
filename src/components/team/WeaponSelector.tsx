@@ -1,5 +1,3 @@
-import { Sword } from 'lucide-react';
-
 import { SearchableSelect } from '@/components/common/SearchableSelect';
 import { Row } from '@/components/ui/layout';
 import {
@@ -13,6 +11,8 @@ import { useCharacterList } from '@/hooks/useCharacterList';
 import { useWeaponList } from '@/hooks/useWeaponList';
 import { useTeamStore } from '@/store/useTeamStore';
 import type { WeaponType } from '@/types';
+
+import { AssetIcon } from '../common/AssetIcon';
 
 interface WeaponSelectorProps {
   index: number;
@@ -32,7 +32,7 @@ export const WeaponSelector = ({ index }: WeaponSelectorProps) => {
 
   return (
     <Row className="gap-2 px-1">
-      <Sword className="text-muted-foreground h-4 w-4 shrink-0" />
+      <AssetIcon name="weapon" className="brightness-0 dark:invert" />
       <div className="flex-1">
         <SearchableSelect
           options={weaponList}

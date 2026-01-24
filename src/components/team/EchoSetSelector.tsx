@@ -1,4 +1,4 @@
-import { Plus, Shield, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 
 import { SearchableSelect } from '@/components/common/SearchableSelect';
 import { Button } from '@/components/ui/button';
@@ -10,9 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { LabelText } from '@/components/ui/typography';
 import { useEchoSetList } from '@/hooks/useEchoSetList';
 import { useTeamStore } from '@/store/useTeamStore';
+
+import { AssetIcon } from '../common/AssetIcon';
 
 interface EchoSetSelectorProps {
   index: number;
@@ -48,21 +49,15 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProps) => {
 
   return (
     <Stack spacing="sm">
-      <Row className="gap-2 px-1">
-        <Shield className="text-muted-foreground h-4 w-4 shrink-0" />
-        <LabelText className="text-xs font-bold uppercase opacity-70">
-          Echo Sets
-        </LabelText>
-      </Row>
-
-      <Stack spacing="sm" className="pl-6">
+      <Stack spacing="sm">
         {character.echoSets.map((set, setIndex) => {
           const selectedSetConfig = echoSetList.find((s) => s.id === set.id);
           const availableTiers = selectedSetConfig?.tiers || [2, 5];
 
           return (
-            <Row key={setIndex} className="items-end gap-2">
-              <div className="flex-1">
+            <Row key={setIndex} className="items-end gap-2 px-1">
+              <AssetIcon name="guord" className="brightness-0" />
+              <div className="min-w-0 flex-1">
                 <SearchableSelect
                   options={echoSetList}
                   value={set.name}

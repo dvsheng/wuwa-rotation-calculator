@@ -1,3 +1,4 @@
+import { AssetIcon } from '@/components/common/AssetIcon';
 import { CharacterSelectionDialog } from '@/components/team/CharacterSelectionDialog';
 import { Row } from '@/components/ui/layout';
 import {
@@ -25,7 +26,8 @@ export const CharacterSelector = ({ index }: CharacterSelectorProps) => {
     .filter((n): n is string => !!n);
 
   return (
-    <Row className="flex-1 gap-2 overflow-hidden">
+    <Row className="flex-1 gap-2 overflow-hidden px-1">
+      <AssetIcon name="role" className="brightness-0 dark:invert" />
       <div className="min-w-0 flex-1">
         <CharacterSelectionDialog
           selectedCharacterName={character.name}

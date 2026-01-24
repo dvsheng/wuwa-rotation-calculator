@@ -1,6 +1,4 @@
-import { User } from 'lucide-react';
-
-import { SearchableSelect } from '@/components/common/SearchableSelect';
+import { CharacterSelectionDialog } from '@/components/team/CharacterSelectionDialog';
 import { Row } from '@/components/ui/layout';
 import {
   Select,
@@ -9,7 +7,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useCharacterList } from '@/hooks/useCharacterList';
 import { useTeamStore } from '@/store/useTeamStore';
 
 interface CharacterSelectorProps {
@@ -22,29 +19,18 @@ export const CharacterSelector = ({ index }: CharacterSelectorProps) => {
   const setCharacter = useTeamStore((state) => state.setCharacter);
   const setSequence = useTeamStore((state) => state.setSequence);
 
-  const { data: characterList } = useCharacterList();
-
   const otherSelectedCharacterNames = team
     .filter((_c, i) => i !== index)
     .map((c) => c.name)
     .filter((n): n is string => !!n);
 
-  const availableCharacters = characterList.filter(
-    (c) => !otherSelectedCharacterNames.includes(c.name),
-  );
-
   return (
-    <Row className="flex-1 gap-2">
-      <User className="text-primary h-5 w-5 shrink-0" />
-      <div className="flex-1">
-        <SearchableSelect
-          options={availableCharacters}
-          value={character.name}
-          onChange={(newName) => {
-            const char = characterList.find((c) => c.name === newName);
-            if (char) setCharacter(index, char.id.toString(), newName);
-          }}
-          placeholder="Select character"
+    <Row className="flex-1 gap-2 overflow-hidden">
+      <div className="min-w-0 flex-1">
+        <CharacterSelectionDialog
+          selectedCharacterName={character.name}
+          onSelect={(id, name) => setCharacter(index, id, name)}
+          excludeNames={otherSelectedCharacterNames}
         />
       </div>
       <div className="w-16 shrink-0">

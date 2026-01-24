@@ -185,26 +185,37 @@ code {
   border-radius: var(--radius);
 }
 
-.react-grid-item > .react-resizable-handle {
-  position: absolute;
-  width: 20px;
-  height: 20px;
+/* 1. Target the item container */
+.react-grid-item {
+  /* This ensures the handle (which is a child) doesn't poke out */
+  overflow: hidden;
 }
 
-.react-grid-item > .react-resizable-handle::after {
-  content: '';
+/* 2. Style the handle to be a seamless bar */
+.react-grid-item > .react-resizable-handle-e {
   position: absolute;
-  right: 3px;
-  bottom: 3px;
-  width: 5px;
-  height: 5px;
-  border-right: 2px solid var(--primary-foreground);
-  border-bottom: 2px solid var(--primary-foreground);
-  opacity: 0.5;
-}
-
-.react-grid-item > .react-resizable-handle-se {
-  bottom: 0;
+  top: 0;
   right: 0;
-  cursor: se-resize;
+  bottom: 0;
+  width: 5px;
+  height: 100% !important;
+  cursor: col-resize;
+
+  /* Matches the dark grey cap in your screenshot */
+  background-color: rgba(0, 0, 0, 0.15);
+
+  /* Crucial: Match your pill's rounding on the right side only */
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+/* 3. Remove the default L-shaped icon */
+.react-grid-item > .react-resizable-handle-e::after {
+  content: none;
+}
+
+/* 4. Hover effect to make it feel responsive */
+.react-grid-item > .react-resizable-handle-e:hover {
+  background-color: rgba(0, 0, 0, 0.25);
 }

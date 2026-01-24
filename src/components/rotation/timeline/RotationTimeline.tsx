@@ -14,15 +14,21 @@ import type { RotationItem } from '../types';
 
 interface RotationTimelineProps {
   items: Array<RotationItem>;
-  layoutProps: Omit<GridLayoutProps, 'children'>;
+  width: number;
+  gridConfig: GridLayoutProps['gridConfig'];
 }
 
 export const RotationTimeline = ({
   items,
-  layoutProps: baseLayoutProps,
+  width,
+  gridConfig,
 }: RotationTimelineProps) => {
   const layoutProps: Omit<GridLayoutProps, 'children'> = {
-    ...baseLayoutProps,
+    width,
+    gridConfig: {
+      ...gridConfig,
+      rowHeight: 70,
+    },
     dragConfig: { enabled: false },
     resizeConfig: { enabled: false },
     layout: items.map((item, index) => ({
@@ -30,7 +36,7 @@ export const RotationTimeline = ({
       x: index,
       y: 0,
       w: 1,
-      h: 3,
+      h: 1,
     })),
   };
   return (

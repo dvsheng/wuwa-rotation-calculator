@@ -1,11 +1,12 @@
-import fs from 'node:fs';
-import path from 'node:path';
-
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 
+import { createFsStore } from '../hakushin-api/fs-store';
+
 import { getEchoIdByName } from './list-echoes';
 import type { Echo } from './types';
+
+const echoStore = createFsStore<Echo>();
 
 export const getEchoDetails = createServerFn({
   method: 'GET',
@@ -13,17 +14,12 @@ export const getEchoDetails = createServerFn({
   .inputValidator(z.string())
   .handler(async ({ data: name }) => {
     const id = await getEchoIdByName(name);
-    const filePath = await path.resolve(
-      process.cwd(),
-      `src/services/game-data/data/echo/parsed/${id}.json`,
-    );
+    const key = `echo/parsed/${id}.json`;
 
-    try {
-      const fileContent = fs.readFileSync(filePath, 'utf-8');
-      const echoData: Echo = JSON.parse(fileContent);
-      return echoData;
-    } catch (error) {
-      console.error(`Error reading echo data for ID ${id}:`, error);
+    const echoData = await echoStore.get(key);
+    if (!echoData) {
       throw new Error(`Failed to fetch echo details for ID ${id}`);
     }
+
+    return echoData;
   });

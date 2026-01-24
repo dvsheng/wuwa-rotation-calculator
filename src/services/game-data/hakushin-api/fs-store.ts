@@ -14,7 +14,9 @@ export const createMemoryStore = <T>(): DataStore<T> => {
   };
 };
 
-export const createFsStore = <T>(localDataPath: string): DataStore<T> => {
+export const createFsStore = <T>(
+  localDataPath: string = '.local/data',
+): DataStore<T> => {
   if (typeof window !== 'undefined') {
     return createMemoryStore<T>();
   }

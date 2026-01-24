@@ -1,11 +1,12 @@
-import fs from 'node:fs';
-import path from 'node:path';
-
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 
+import { createFsStore } from '../hakushin-api/fs-store';
+
 import { getCharacterIdByName } from './list-characters';
 import type { Character } from './types';
+
+const characterStore = createFsStore<Character>();
 
 export const getCharacterDetails = createServerFn({
   method: 'GET',
@@ -13,17 +14,12 @@ export const getCharacterDetails = createServerFn({
   .inputValidator(z.string())
   .handler(async ({ data: name }) => {
     const id = await getCharacterIdByName(name);
-    const filePath = await path.resolve(
-      process.cwd(),
-      `src/services/game-data/data/character/parsed/${id}.json`,
-    );
+    const key = `character/parsed/${id}.json`;
 
-    try {
-      const fileContent = fs.readFileSync(filePath, 'utf-8');
-      const characterData: Character = JSON.parse(fileContent);
-      return characterData;
-    } catch (error) {
-      console.error(`Error reading character data for ID ${id}:`, error);
+    const characterData = await characterStore.get(key);
+    if (!characterData) {
       throw new Error(`Failed to fetch character details for ID ${id}`);
     }
+
+    return characterData;
   });

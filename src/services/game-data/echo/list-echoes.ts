@@ -1,6 +1,7 @@
-import echoGroups from '@/services/game-data/data/echo-set.json';
+import { createServerFn } from '@tanstack/react-start';
 
 import { fetchEchoes } from '../hakushin-api/client';
+import { createFsStore } from '../hakushin-api/fs-store';
 
 export interface ListEchoesResponseItem {
   id: string;
@@ -11,9 +12,24 @@ export interface ListEchoesResponseItem {
 
 export type ListEchoesResponse = Array<ListEchoesResponseItem>;
 
-export const listEchoes = async (): Promise<ListEchoesResponse> => {
+interface EchoSetData {
+  en: string;
+  tiers: Array<number>;
+}
+
+type EchoSetsJson = Record<string, EchoSetData>;
+
+const echoSetsStore = createFsStore<EchoSetsJson>();
+
+export const listEchoes = createServerFn({
+  method: 'GET',
+}).handler(async (): Promise<ListEchoesResponse> => {
   const echoes = await fetchEchoes();
-  const groups = echoGroups as Record<string, { en: string; tiers: Array<number> }>;
+  const echoSets = await echoSetsStore.get('echo-set.json');
+
+  if (!echoSets) {
+    throw new Error('Failed to load echo sets data');
+  }
 
   return Object.entries(echoes)
     .filter(([_id, echo]) => !echo.en.startsWith('Nightmare:'))
@@ -27,10 +43,10 @@ export const listEchoes = async (): Promise<ListEchoesResponse> => {
         id: id,
         name: echo.en,
         cost,
-        sets: echo.group.map((gId) => groups[String(gId)].en).filter(Boolean),
+        sets: echo.group.map((gId) => echoSets[String(gId)].en).filter(Boolean),
       };
     });
-};
+});
 
 export const getEchoIdByName = async (name: string): Promise<string | undefined> => {
   const echoes = await fetchEchoes();

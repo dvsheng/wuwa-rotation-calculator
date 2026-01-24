@@ -4,7 +4,7 @@ import type { HakushinCharacterDetail } from './types';
 
 const HAKUSHIN_API_BASE = 'https://api.hakush.in/ww/data';
 const DEFAULT_LOCAL_DATA_PATH =
-  typeof window === 'undefined' ? `${process.cwd()}/src/services/game-data/data` : '';
+  typeof window === 'undefined' ? `${process.cwd()}/.local/data//` : '';
 
 export const fsStore = createFsStore<any>(DEFAULT_LOCAL_DATA_PATH);
 

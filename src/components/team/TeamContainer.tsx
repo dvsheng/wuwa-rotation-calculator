@@ -1,11 +1,10 @@
 import { CharacterCard } from '@/components/team/CharacterCard';
 import { CardGrid, Section } from '@/components/ui/layout';
 import { Heading } from '@/components/ui/typography';
-import { useTeamStore } from '@/store/useTeamStore';
+import { TeamSchema } from '@/schemas/team';
 
 export const TeamContainer = () => {
-  const team = useTeamStore((state) => state.team);
-
+  const teamSize = TeamSchema.def.items.length;
   return (
     <Section>
       <div className="flex items-center justify-between">
@@ -13,8 +12,8 @@ export const TeamContainer = () => {
       </div>
 
       <CardGrid>
-        {team.map((char, index) => (
-          <CharacterCard key={`${char.name}-${index}`} index={index} />
+        {Array.from({ length: teamSize }).map((_, index) => (
+          <CharacterCard key={index} index={index} />
         ))}
       </CardGrid>
     </Section>

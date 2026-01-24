@@ -1,11 +1,13 @@
-import { WeaponType } from '@/types';
+import { Attribute, WeaponType } from '@/types';
 
 import { fetchCharacters } from '../hakushin-api/client';
 
-interface ListCharactersResponseItem {
+export interface ListCharactersResponseItem {
   id: number;
   name: string;
   weaponType: WeaponType;
+  rarity: number;
+  attribute: Attribute;
 }
 
 export type ListCharactersResponse = Array<ListCharactersResponseItem>;
@@ -18,6 +20,15 @@ const WEAPON_TYPE_MAP: Record<number, WeaponType> = {
   5: WeaponType.RECTIFIER,
 };
 
+const ATTRIBUTE_MAP: Record<number, Attribute> = {
+  1: Attribute.GLACIO,
+  2: Attribute.FUSION,
+  3: Attribute.ELECTRO,
+  4: Attribute.AERO,
+  5: Attribute.SPECTRO,
+  6: Attribute.HAVOC,
+};
+
 export const listCharacters = async (
   weaponType?: WeaponType,
 ): Promise<ListCharactersResponse> => {
@@ -26,6 +37,8 @@ export const listCharacters = async (
     id: Number(id),
     name: char.en,
     weaponType: WEAPON_TYPE_MAP[char.weapon],
+    rarity: char.rank,
+    attribute: ATTRIBUTE_MAP[char.element],
   }));
 
   if (weaponType) {

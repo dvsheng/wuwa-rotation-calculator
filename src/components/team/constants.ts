@@ -14,6 +14,15 @@ export const ATTRIBUTE_COLORS: Record<Attribute, string> = {
   [Attribute.HAVOC]: '#8F1D4F',
 } as const;
 
+export const ATTRIBUTE_ICONS: Record<Attribute, string> = {
+  [Attribute.HAVOC]: '/attribute/icon/havoc.webp',
+  [Attribute.SPECTRO]: '/attribute/icon/spectro.webp',
+  [Attribute.AERO]: '/attribute/icon/aero.webp',
+  [Attribute.ELECTRO]: '/attribute/icon/electro.webp',
+  [Attribute.FUSION]: '/attribute/icon/fusion.webp',
+  [Attribute.GLACIO]: '/attribute/icon/glacio.webp',
+} as const;
+
 export const SUBSTAT_OPTIONS: Array<EchoSubstatOptionType> =
   Object.values(EchoSubstatOption);
 

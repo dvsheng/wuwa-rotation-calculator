@@ -6,6 +6,7 @@ export interface ListWeaponsResponseItem {
   id: string;
   name: string;
   weaponType: WeaponType;
+  rarity: number;
 }
 
 export type ListWeaponsResponse = Array<ListWeaponsResponseItem>;
@@ -26,6 +27,7 @@ export const listWeapons = async (
     id,
     name: weapon.en,
     weaponType: WEAPON_TYPE_MAP[weapon.type],
+    rarity: weapon.rank,
   }));
   if (weaponType) {
     return list.filter((weapon) => weapon.weaponType === weaponType);

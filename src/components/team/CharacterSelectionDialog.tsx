@@ -1,6 +1,7 @@
-import { Filter, Search, User, X } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Filter, Search, X } from 'lucide-react';
+import { useState } from 'react';
 
+import { GameImage } from '@/components/common/GameImage';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCharacterList } from '@/hooks/useCharacterList';
 import { cn } from '@/lib/utils';
+import { resolveImagePath } from '@/services/image-service';
 import { Attribute } from '@/types';
 
 import { ATTRIBUTE_COLORS } from './constants';
@@ -39,16 +41,27 @@ export const CharacterSelectionDialog = ({
 
   const { data: characterList = [] } = useCharacterList();
 
-  const filteredCharacters = useMemo(() => {
-    return characterList.filter((char) => {
+  const filteredCharacters = characterList
+    .filter((char) => {
       const matchesSearch = char.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesAttribute =
         !selectedAttribute || char.attribute === selectedAttribute;
       const matchesRarity = !selectedRarity || char.rarity === selectedRarity;
       const isNotExcluded = !excludeNames.includes(char.name);
       return matchesSearch && matchesAttribute && matchesRarity && isNotExcluded;
+    })
+    .sort((a, b) => {
+      // Sort by attribute first (alphabetical)
+      if (a.attribute !== b.attribute) {
+        return a.attribute.localeCompare(b.attribute);
+      }
+      // Then by rarity descending (5* before 4*)
+      if (a.rarity !== b.rarity) {
+        return b.rarity - a.rarity;
+      }
+      // Finally by name
+      return a.name.localeCompare(b.name);
     });
-  }, [characterList, searchTerm, selectedAttribute, selectedRarity, excludeNames]);
 
   const handleSelect = (id: string, name: string) => {
     onSelect(id, name);
@@ -64,11 +77,7 @@ export const CharacterSelectionDialog = ({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          className="w-full justify-start gap-2 truncate font-normal"
-        >
-          <User className="text-primary h-4 w-4 shrink-0" />
+        <Button variant="outline" className="w-full justify-start truncate font-normal">
           <span className="truncate">
             {selectedCharacterName || 'Select character'}
           </span>
@@ -101,26 +110,32 @@ export const CharacterSelectionDialog = ({
                 <Badge
                   key={attr}
                   variant={selectedAttribute === attr ? undefined : 'outline'}
-                  className="cursor-pointer capitalize transition-all"
+                  className="cursor-pointer gap-1.5 transition-all"
                   style={{
-                    backgroundColor: ATTRIBUTE_COLORS[attr],
-
+                    backgroundColor:
+                      selectedAttribute === attr ? ATTRIBUTE_COLORS[attr] : undefined,
                     borderColor: ATTRIBUTE_COLORS[attr],
-
-                    color: 'white',
-
+                    color:
+                      selectedAttribute === attr ? 'white' : ATTRIBUTE_COLORS[attr],
                     opacity:
                       selectedAttribute === null || selectedAttribute === attr
                         ? 1
                         : 0.3,
-
-                    transform: selectedAttribute === attr ? 'scale(1.1)' : 'scale(1)',
+                    transform: selectedAttribute === attr ? 'scale(1.05)' : 'scale(1)',
                   }}
                   onClick={() =>
                     setSelectedAttribute(selectedAttribute === attr ? null : attr)
                   }
                 >
-                  {attr}
+                  <img
+                    src={resolveImagePath('attribute', 'icon', attr)}
+                    alt={attr}
+                    className={cn(
+                      'h-3.5 w-3.5',
+                      selectedAttribute !== attr && 'brightness-100 contrast-125',
+                    )}
+                  />
+                  <span className="capitalize">{attr}</span>
                 </Badge>
               ))}
             </div>
@@ -168,8 +183,14 @@ export const CharacterSelectionDialog = ({
                       borderLeft: `4px solid ${ATTRIBUTE_COLORS[char.attribute]}`,
                     }}
                   >
-                    <div className="bg-muted group-hover:bg-background flex h-12 w-12 items-center justify-center rounded-full transition-colors">
-                      <User className="text-muted-foreground h-6 w-6" />
+                    <div className="group-hover:bg-background bg-muted relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-full transition-colors">
+                      <GameImage
+                        entity="character"
+                        type="icon"
+                        id={char.id}
+                        alt={char.name}
+                        className="h-full w-full object-cover"
+                      />
                     </div>
                     <div className="space-y-1">
                       <div className="max-w-[120px] truncate text-sm font-bold">

@@ -13,8 +13,8 @@ export interface RotationState {
   addAttack: (attack: Omit<Attack, 'id'>, atIndex?: number) => void;
   removeAttack: (id: string) => void;
   reorderAttacks: (oldIndex: number, newIndex: number) => void;
+  updateAttackParameters: (id: string, values: Array<number | undefined>) => void;
   setAttacks: (attacks: Array<Attack>) => void;
-  updateAttackParameter: (id: string, value: number) => void;
   clearAttacks: () => void;
 
   // Actions for buffs
@@ -27,7 +27,7 @@ export interface RotationState {
     timelineId: string,
     layout: Partial<Pick<BuffWithPosition, 'x' | 'y' | 'w' | 'h'>>,
   ) => void;
-  updateBuffParameter: (timelineId: string, value: number) => void;
+  updateBuffParameters: (timelineId: string, values: Array<number | undefined>) => void;
   clearBuffs: () => void;
 
   clearAll: () => void;
@@ -59,17 +59,21 @@ export const useRotationStore = create<RotationState>()(
         state.attacks.splice(newIndex, 0, removed);
       }),
 
+    updateAttackParameters: (id, values) =>
+      set((state) => {
+        const attack = state.attacks.find((a) => a.id === id);
+        if (attack?.parameters) {
+          values.forEach((value, index) => {
+            if (attack.parameters![index]) {
+              attack.parameters![index].value = value;
+            }
+          });
+        }
+      }),
+
     setAttacks: (attacks) =>
       set((state) => {
         state.attacks = attacks;
-      }),
-
-    updateAttackParameter: (id, value) =>
-      set((state) => {
-        const attack = state.attacks.find((a) => a.id === id);
-        if (attack) {
-          attack.parameterValue = value;
-        }
       }),
 
     clearAttacks: () =>
@@ -99,11 +103,15 @@ export const useRotationStore = create<RotationState>()(
         }
       }),
 
-    updateBuffParameter: (timelineId, value) =>
+    updateBuffParameters: (timelineId, values) =>
       set((state) => {
         const buff = state.buffs.find((b) => b.timelineId === timelineId);
-        if (buff) {
-          buff.parameterValue = value;
+        if (buff?.buff.parameters) {
+          values.forEach((value, index) => {
+            if (buff.buff.parameters![index]) {
+              buff.buff.parameters![index].value = value;
+            }
+          });
         }
       }),
 

@@ -6,6 +6,7 @@ import { getEchoDetails } from '@/services/game-data/echo/get-echo-details';
 import { getWeaponDetails } from '@/services/game-data/weapon/get-weapon-details';
 import { NegativeStatus } from '@/types';
 import type { Integer } from '@/types';
+import { isUserParameterizedNumber } from '@/types/parameterized-number';
 import { Tag } from '@/types/server';
 import type {
   CharacterDamageInstance,
@@ -18,11 +19,42 @@ import type {
   Team as ServerTeam,
 } from '@/types/server';
 import { CharacterStat as CharacterStatEnum } from '@/types/server/character';
+import { calculateParameterizedNumberValue } from '@/utils/math-utils';
 
 import type { RefineLevel } from '../game-data/weapon/types';
 
 import { calculateRotationDamage } from './calculate-rotation-damage';
 import type { RotationResult } from './types';
+
+/**
+ * Resolves a modifier's user parameters if they are provided.
+ */
+const applyUserParameters = (
+  modifier: Modifier<any>,
+  value?: number,
+): Modifier<any> => {
+  if (value === undefined) return modifier;
+
+  const resolvedStats: any = {};
+
+  Object.entries(modifier.modifiedStats).forEach(([stat, values]) => {
+    if (!Array.isArray(values)) return;
+
+    resolvedStats[stat] = values.map((sv) => {
+      if (isUserParameterizedNumber(sv.value)) {
+        const configs = sv.value.parameterConfigs;
+        const key = Object.keys(configs)[0];
+        const resolvedValue = calculateParameterizedNumberValue(sv.value, {
+          [key as any]: value,
+        });
+        return { ...sv, value: resolvedValue };
+      }
+      return sv;
+    });
+  });
+
+  return { ...modifier, modifiedStats: resolvedStats };
+};
 
 /**
  * Maps client-side echo stat types to server-side CharacterStat enums.
@@ -104,7 +136,7 @@ export const calculateRotation = async (
       );
       if (weaponMod) return weaponMod;
     }
-    // TODO: Fix This
+
     const echoMod = echo?.modifiers.find((m) => m.description === buffName);
     if (echoMod) return echoMod;
 
@@ -112,48 +144,46 @@ export const calculateRotation = async (
   };
 
   // 2. Map Client Team to Server Team
-  const serverTeamResults = await Promise.all(
-    clientTeam.map((clientChar, charIndex) => {
-      const charData = characterDetails[charIndex];
-      if (!charData) {
-        return {
-          name: 'Unknown',
-          level: 90,
-          stats: {} as CharacterStats,
-        } as ServerCharacter;
+  const serverTeamResults = clientTeam.map((clientChar, charIndex) => {
+    const charData = characterDetails[charIndex];
+    if (!charData) {
+      return {
+        name: 'Unknown',
+        level: 90,
+        stats: {} as CharacterStats,
+      } as ServerCharacter;
+    }
+
+    const stats = { ...charData.stats } as unknown as Partial<CharacterStats>;
+
+    clientChar.echoStats.forEach((echo) => {
+      const mainStatKey = ECHO_STAT_MAP[echo.mainStatType] as CharacterStat;
+      if (!stats[mainStatKey]) {
+        stats[mainStatKey] = [];
       }
-
-      const stats = { ...charData.stats } as unknown as Partial<CharacterStats>;
-
-      clientChar.echoStats.forEach((echo) => {
-        const mainStatKey = ECHO_STAT_MAP[echo.mainStatType] as CharacterStat;
-        if (!stats[mainStatKey]) {
-          stats[mainStatKey] = [];
-        }
-        stats[mainStatKey].push({
-          value: 0,
-          tags: [STAT_TYPE_TO_TAG[echo.mainStatType] ?? Tag.ALL],
-        });
-
-        echo.substats.forEach((sub) => {
-          const subKey = ECHO_STAT_MAP[sub.stat] as CharacterStat;
-          if (!stats[subKey]) {
-            stats[subKey] = [];
-          }
-          stats[subKey].push({
-            value: sub.value / 100,
-            tags: [Tag.ALL],
-          });
-        });
+      stats[mainStatKey].push({
+        value: 0,
+        tags: [STAT_TYPE_TO_TAG[echo.mainStatType] ?? Tag.ALL],
       });
 
-      return {
-        name: clientChar.name,
-        level: 90,
-        stats: stats as CharacterStats,
-      } as ServerCharacter;
-    }),
-  );
+      echo.substats.forEach((sub) => {
+        const subKey = ECHO_STAT_MAP[sub.stat] as CharacterStat;
+        if (!stats[subKey]) {
+          stats[subKey] = [];
+        }
+        stats[subKey].push({
+          value: sub.value / 100,
+          tags: [Tag.ALL],
+        });
+      });
+    });
+
+    return {
+      name: clientChar.name,
+      level: 90,
+      stats: stats as CharacterStats,
+    } as ServerCharacter;
+  });
 
   const serverTeam: ServerTeam = [
     serverTeamResults[0],
@@ -192,6 +222,19 @@ export const calculateRotation = async (
       );
     }
 
+    // Resolve parameterized motion values if user provided a value
+    const userAttackValue = attack.parameters?.[0]?.value;
+    let motionValues = serverInstance.motionValues || [];
+
+    if (userAttackValue !== undefined && serverInstance.parameterizedMotionValues) {
+      motionValues = serverInstance.parameterizedMotionValues.map((pmv) => {
+        const key = Object.keys(pmv.parameterConfigs)[0];
+        return calculateParameterizedNumberValue(pmv, {
+          [key as any]: userAttackValue,
+        });
+      });
+    }
+
     const activeModifiers = buffs
       .filter((b) => index >= b.x && index < b.x + b.w)
       .map((b) => {
@@ -200,10 +243,7 @@ export const calculateRotation = async (
 
         if (!definition) return null;
 
-        return {
-          target: definition.target,
-          modifiedStats: definition.modifiedStats,
-        } as Modifier;
+        return applyUserParameters(definition, b.buff.parameters?.[0]?.value);
       })
       .filter((m): m is Modifier => m !== null);
 
@@ -212,7 +252,7 @@ export const calculateRotation = async (
         originCharacterName: attack.characterName,
         attribute: charData.attribute,
         scalingStat: serverInstance.scalingStat,
-        motionValues: serverInstance.motionValues || [],
+        motionValues,
         tags: serverInstance.tags,
       } as CharacterDamageInstance,
       modifiers: activeModifiers,

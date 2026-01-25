@@ -109,7 +109,10 @@ export const RotationBuilder = () => {
                 <Text variant="muted">Loading attacks...</Text>
               </div>
             ) : (
-              <AttackPalette attacks={availableAttacks.attacks} />
+              <AttackPalette
+                attacks={availableAttacks.attacks}
+                onClickAttack={handleAddAttack}
+              />
             )}
           </aside>
         </div>

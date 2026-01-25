@@ -19,7 +19,7 @@ export const BuffTimelineCanvas = ({ width, gridConfig }: BuffTimelineCanvasProp
   const removeBuff = useRotationStore((state) => state.removeBuff);
   const addBuff = useRotationStore((state) => state.addBuff);
   const updateBuffLayout = useRotationStore((state) => state.updateBuffLayout);
-  const updateBuffParameter = useRotationStore((state) => state.updateBuffParameter);
+  const updateBuffParameters = useRotationStore((state) => state.updateBuffParameters);
 
   const { createHandleDrop } = useDragAndDrop({
     schema: BuffSchema,
@@ -81,7 +81,7 @@ export const BuffTimelineCanvas = ({ width, gridConfig }: BuffTimelineCanvasProp
               <BuffTimelineCanvasItem
                 buff={buff}
                 onRemove={removeBuff}
-                onSave={updateBuffParameter}
+                onSaveParameters={updateBuffParameters}
               />
             </div>
           ))}

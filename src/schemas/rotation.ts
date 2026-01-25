@@ -3,6 +3,7 @@ import { z } from 'zod';
 const ParameterSchema = z.object({
   minimum: z.number(),
   maximum: z.number(),
+  value: z.number().optional(),
 });
 
 export type Parameter = z.infer<typeof ParameterSchema>;
@@ -16,7 +17,6 @@ export const AttackSchema = z.object({
   parentName: z.string().optional(),
   parameters: z.array(ParameterSchema).optional(),
   isParameterized: z.boolean().optional(),
-  parameterValue: z.number().optional(),
 });
 
 export type Attack = z.infer<typeof AttackSchema>;
@@ -42,7 +42,6 @@ export const BuffWithPositionSchema = z.object({
   y: z.number(),
   w: z.number(),
   h: z.number(),
-  parameterValue: z.number().optional(),
 });
 
 export type BuffWithPosition = z.infer<typeof BuffWithPositionSchema>;

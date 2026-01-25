@@ -4,9 +4,15 @@ import { z } from 'zod';
 import { toClientAttack, toClientBuff } from '../client-converters';
 import { createFsStore } from '../hakushin-api/fs-store';
 
-import type { Character, GetClientCharacterDetailsOutput } from './types';
+import { GetClientCharacterDetailsInputSchema, Sequence } from './types';
+import type {
+  Character,
+  CharacterBaseItem,
+  GetClientCharacterDetailsInput,
+  GetClientCharacterDetailsOutput,
+} from './types';
 
-const characterStore = createFsStore<Character>();
+export const characterStore = createFsStore<Character>();
 
 export const getCharacterDetails = createServerFn({
   method: 'GET',
@@ -23,23 +29,59 @@ export const getCharacterDetails = createServerFn({
     return characterData;
   });
 
+const sequenceToNumber = (sequence?: Sequence): number => {
+  if (!sequence) return 0;
+  switch (sequence) {
+    case Sequence.S1:
+      return 1;
+    case Sequence.S2:
+      return 2;
+    case Sequence.S3:
+      return 3;
+    case Sequence.S4:
+      return 4;
+    case Sequence.S5:
+      return 5;
+    case Sequence.S6:
+      return 6;
+    default:
+      return 0;
+  }
+};
+
+const isItemActive = (item: CharacterBaseItem, currentSequence: number): boolean => {
+  const unlockedAt = sequenceToNumber(item.unlockedAt);
+  const disabledAt = item.disabledAt ? sequenceToNumber(item.disabledAt) : Infinity;
+
+  return currentSequence >= unlockedAt && currentSequence < disabledAt;
+};
+
+export const getClientCharacterDetailsHandler = async (
+  input: GetClientCharacterDetailsInput,
+): Promise<GetClientCharacterDetailsOutput> => {
+  const { id, sequence } = input;
+  const key = `character/parsed/${id}.json`;
+  const character = await characterStore.get(key);
+  if (!character) {
+    throw new Error(`Failed to fetch character details for ID ${id}`);
+  }
+
+  return {
+    attacks: character.attacks
+      .filter((attack) => isItemActive(attack, sequence))
+      .map((attack) => toClientAttack(attack, attack.parentName, attack.name)),
+    modifiers: character.modifiers
+      .filter((modifier) => isItemActive(modifier, sequence))
+      .map((modifier) =>
+        toClientBuff(modifier, modifier.parentName, 'character', modifier.name),
+      ),
+  };
+};
+
 export const getClientCharacterDetails = createServerFn({
   method: 'GET',
 })
-  .inputValidator(z.string())
-  .handler(async ({ data: id }): Promise<GetClientCharacterDetailsOutput> => {
-    const key = `character/parsed/${id}.json`;
-    const character = await characterStore.get(key);
-    if (!character) {
-      throw new Error(`Failed to fetch character details for ID ${id}`);
-    }
-
-    return {
-      attacks: character.attacks.map((attack) =>
-        toClientAttack(attack, attack.parentName, attack.name),
-      ),
-      modifiers: character.modifiers.map((modifier) =>
-        toClientBuff(modifier, modifier.parentName, 'character', modifier.name),
-      ),
-    };
+  .inputValidator(GetClientCharacterDetailsInputSchema)
+  .handler(async ({ data }): Promise<GetClientCharacterDetailsOutput> => {
+    return getClientCharacterDetailsHandler(data);
   });

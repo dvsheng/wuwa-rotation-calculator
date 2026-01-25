@@ -44,8 +44,11 @@ export const useTeamModifiers = (team: Team) => {
   const result = useQueries({
     queries: team.flatMap((character) => [
       {
-        queryKey: ['modifiers', 'character', character.id],
-        queryFn: () => getClientCharacterDetails({ data: character.id }),
+        queryKey: ['modifiers', 'character', character.id, character.sequence],
+        queryFn: () =>
+          getClientCharacterDetails({
+            data: { id: character.id, sequence: character.sequence },
+          }),
         enabled: !!character.id,
       },
       {

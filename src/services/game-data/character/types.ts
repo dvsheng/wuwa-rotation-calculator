@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 import type {
   Attack as ClientAttack,
   Buff as ClientModifier,
@@ -61,7 +63,7 @@ export interface CharacterBaseItem extends Named {
 
 export type CharacterAttack = Attack & CharacterBaseItem;
 
-export type ChracterModifiers = Modifiers<CharacterBaseItem>;
+export type CharacterModifiers = Modifiers<CharacterBaseItem>;
 
 export type CharacterStats = PermanentStats<CharacterBaseItem>;
 
@@ -78,13 +80,22 @@ export interface Character extends BaseEntity {
   /**
    * Temporary or conditional buffs (e.g., Outro skills, field effects).
    */
-  modifiers: ChracterModifiers;
+  modifiers: CharacterModifiers;
   /**
    * Comprehensive stat record including base stats (ATK, DEF, HP at Lvl 90),
    * permanent stat nodes, and unconditional sequence bonuses.
    */
   stats: CharacterStats;
 }
+
+export const GetClientCharacterDetailsInputSchema = z.object({
+  id: z.string(),
+  sequence: z.number().min(0).max(6).default(0),
+});
+
+export type GetClientCharacterDetailsInput = z.infer<
+  typeof GetClientCharacterDetailsInputSchema
+>;
 
 export interface GetClientCharacterDetailsOutput {
   attacks: Array<Omit<ClientAttack, 'id' | 'characterName'>>;

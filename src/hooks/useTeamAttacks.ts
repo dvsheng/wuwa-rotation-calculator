@@ -29,8 +29,11 @@ export const useTeamAttacks = (team: Team) => {
   const result = useQueries({
     queries: team.flatMap((character) => [
       {
-        queryKey: ['attacks', 'character', character.id],
-        queryFn: () => getClientCharacterDetails({ data: character.id }),
+        queryKey: ['attacks', 'character', character.id, character.sequence],
+        queryFn: () =>
+          getClientCharacterDetails({
+            data: { id: character.id, sequence: character.sequence },
+          }),
         enabled: !!character.id,
       },
       {

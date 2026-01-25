@@ -25,6 +25,7 @@ export const BuffSchema = z.object({
   description: z.string().optional(),
   characterName: z.string().optional(),
   parentName: z.string().optional(),
+  source: z.enum(['character', 'weapon', 'echo', 'echo-set']).optional(),
   parameters: z.array(ParameterSchema).optional(),
   isParameterized: z.boolean().optional(),
 });

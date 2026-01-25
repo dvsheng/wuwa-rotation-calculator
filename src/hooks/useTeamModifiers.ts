@@ -119,23 +119,24 @@ export const useTeamModifiers = (team: Team) => {
 
         const { characterName, queryType } = queryMetadata[index];
 
-        const processModifiers = (mods: Array<any>, parentName: string) => {
+        const processModifiers = (mods: Array<any>, parentName: string, source: 'character' | 'weapon' | 'echo' | 'echo-set') => {
           return mods.map((mod, i) => ({
             id: `buff-${characterName}-${parentName}-${mod.name}-${i}`,
             entityType: 'buff' as const,
             name: mod.name,
-            parentName: parentName,
+            parentName: mod.parentName || parentName,
             description: mod.description,
             characterName,
+            source,
             isParameterized: isBuffParameterized(mod),
           }));
         };
 
         if (queryType === 'character') {
-          return processModifiers(data as Array<any>, characterName);
+          return processModifiers(data as Array<any>, characterName, 'character');
         } else {
           const { name, modifiers } = data as { name: string; modifiers: Array<any> };
-          return processModifiers(modifiers, name);
+          return processModifiers(modifiers, name, queryType as any);
         }
       });
 

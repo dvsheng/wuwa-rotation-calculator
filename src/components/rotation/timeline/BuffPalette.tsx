@@ -1,5 +1,4 @@
 import { PaletteItem } from '@/components/common/PaletteItem';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Text } from '@/components/ui/typography';
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
 import { BuffSchema } from '@/schemas/rotation';
@@ -7,22 +6,11 @@ import type { Buff } from '@/schemas/rotation';
 
 export interface BuffPaletteProps {
   buffs: Array<Buff>;
-  onAdd: (buff: Buff) => void;
-  isLoading?: boolean;
+  onClickBuff?: (buff: Buff) => void;
 }
 
-export const BuffPalette = ({ buffs, onAdd, isLoading }: BuffPaletteProps) => {
+export const BuffPalette = ({ buffs, onClickBuff }: BuffPaletteProps) => {
   const { handleDragStart } = useDragAndDrop({ schema: BuffSchema });
-
-  if (isLoading) {
-    return (
-      <div className="flex h-24 items-center justify-center p-4">
-        <Text variant="muted" className="text-xs italic">
-          Loading buffs...
-        </Text>
-      </div>
-    );
-  }
 
   const buffsByCharacter = Object.groupBy(buffs, (b) => b.characterName ?? 'General');
 
@@ -35,36 +23,36 @@ export const BuffPalette = ({ buffs, onAdd, isLoading }: BuffPaletteProps) => {
   }
 
   return (
-    <ScrollArea className="w-full">
-      <div className="flex gap-4 p-2">
-        {Object.entries(buffsByCharacter).map(([charName, charBuffs]) => {
-          if (!charBuffs) return null;
-          const buffsByParent = Object.groupBy(
-            charBuffs,
-            (b) => b.parentName ?? 'Other',
-          );
+    <div className="w-full space-y-1.5">
+      {Object.entries(buffsByCharacter).map(([charName, charBuffs]) => {
+        if (!charBuffs) return null;
+        const buffsByParent = Object.groupBy(charBuffs, (b) => b.parentName ?? 'Other');
 
-          return (
-            <div
-              key={charName}
-              className="bg-muted/30 border-primary/5 flex min-w-[220px] shrink-0 flex-col gap-2 rounded-lg p-3"
-            >
-              <Text className="text-primary/70 text-[10px] font-bold tracking-wider uppercase">
-                {charName}
-              </Text>
+        return (
+          <div
+            key={charName}
+            className="bg-muted/30 border-primary/10 flex w-full flex-col gap-1 rounded-lg border p-2"
+          >
+            <div className="flex items-start gap-3">
+              {/* Character Label */}
+              <div className="flex shrink-0 items-center pt-1">
+                <Text className="text-primary/80 w-24 text-[10px] font-bold tracking-wider uppercase">
+                  {charName}
+                </Text>
+              </div>
 
-              <div className="space-y-4">
+              {/* Buff Groups */}
+              <div className="flex flex-1 flex-wrap gap-x-6 gap-y-2">
                 {Object.entries(buffsByParent).map(([parentName, parentBuffs]) => {
                   if (!parentBuffs) return null;
                   return (
-                    <div key={parentName} className="space-y-1.5">
+                    <div key={parentName} className="flex items-center gap-2">
                       <Text
                         variant="small"
-                        className="text-muted-foreground text-[9px] font-semibold uppercase"
+                        className="text-muted-foreground/60 shrink-0 text-[8px] font-semibold uppercase"
                       >
-                        {parentName}
+                        {parentName}:
                       </Text>
-
                       <div className="flex flex-wrap gap-1">
                         {parentBuffs.map((buff) => (
                           <div key={buff.id} className="min-w-0">
@@ -72,7 +60,9 @@ export const BuffPalette = ({ buffs, onAdd, isLoading }: BuffPaletteProps) => {
                               text={buff.name}
                               hoverText={buff.description}
                               onDragStart={(e) => handleDragStart(buff, e)}
-                              onAdd={() => onAdd(buff)}
+                              onClick={
+                                onClickBuff ? () => onClickBuff(buff) : undefined
+                              }
                             />
                           </div>
                         ))}
@@ -82,10 +72,9 @@ export const BuffPalette = ({ buffs, onAdd, isLoading }: BuffPaletteProps) => {
                 })}
               </div>
             </div>
-          );
-        })}
-      </div>
-      <ScrollBar orientation="horizontal" />
-    </ScrollArea>
+          </div>
+        );
+      })}
+    </div>
   );
 };

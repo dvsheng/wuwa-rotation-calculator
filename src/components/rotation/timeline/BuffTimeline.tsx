@@ -13,7 +13,7 @@ export const BuffTimeline = () => {
   const attacks = useRotationStore((state) => state.attacks);
   const addBuff = useRotationStore((state) => state.addBuff);
   const team = useTeamStore((state) => state.team);
-  const { buffs, isLoading } = useTeamModifiers(team);
+  const { buffs } = useTeamModifiers(team);
   const { width, containerRef, mounted } = useContainerWidth();
 
   const handleAddBuff = (buff: Buff) => {
@@ -33,7 +33,7 @@ export const BuffTimeline = () => {
         <>
           <RotationTimeline items={attacks} width={width} gridConfig={gridConfig} />
           <BuffTimelineCanvas width={width} gridConfig={gridConfig} />
-          <BuffPalette buffs={buffs} onAdd={handleAddBuff} isLoading={isLoading} />
+          <BuffPalette buffs={buffs} onClickBuff={handleAddBuff} />
         </>
       )}
     </div>

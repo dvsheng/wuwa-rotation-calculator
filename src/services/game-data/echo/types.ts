@@ -1,3 +1,8 @@
+import type {
+  Attack as ClientAttack,
+  Buff as ClientModifier,
+} from '@/schemas/rotation';
+
 import type { Attack, BaseEntity, Modifiers, PermanentStats } from '../common-types';
 
 /**
@@ -18,4 +23,9 @@ export interface Echo extends BaseEntity {
    * Permanent stat boosts an Echo adds while it is equipped in a Character's primary slot
    */
   stats: PermanentStats;
+}
+
+export interface GetClientEchoDetailsOutput {
+  attack?: Omit<ClientAttack, 'id' | 'characterName'>;
+  modifiers: Array<Omit<ClientModifier, 'id' | 'characterName'>>;
 }

@@ -37,3 +37,31 @@ export interface RotationRuntimeResolvableNumber extends LinearParameterizedNumb
 }
 
 export type UserParameterizedNumber = LinearParameterizedNumber<number>;
+
+/**
+ * Checks if a value is a UserParameterizedNumber.
+ */
+export const isUserParameterizedNumber = (
+  val: unknown,
+): val is UserParameterizedNumber => {
+  return (
+    typeof val === 'object' &&
+    val !== null &&
+    'parameterConfigs' in val &&
+    !('resolveWith' in val)
+  );
+};
+
+/**
+ * Checks if a value is a RotationRuntimeResolvableNumber.
+ */
+export const isRotationRuntimeResolvableNumber = (
+  val: unknown,
+): val is RotationRuntimeResolvableNumber => {
+  return (
+    typeof val === 'object' &&
+    val !== null &&
+    'parameterConfigs' in val &&
+    'resolveWith' in val
+  );
+};

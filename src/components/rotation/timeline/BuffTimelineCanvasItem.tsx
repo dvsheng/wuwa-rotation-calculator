@@ -20,10 +20,10 @@ export const BuffTimelineCanvasItem = React.forwardRef<
   BuffTimelineCanvasItemProps
 >(({ buff, onRemove, onSave, className, style, onClick, children, ...props }, ref) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const showWarning = buff.buff.isParameterized && buff.parameterValue === undefined;
+  const showWarning = buff.buff.parameters && buff.parameterValue === undefined;
 
   const handleBuffClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (buff.buff.isParameterized) {
+    if (buff.buff.parameters) {
       setIsDialogOpen(true);
     }
     onClick?.(e);

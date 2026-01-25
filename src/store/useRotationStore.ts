@@ -14,6 +14,7 @@ export interface RotationState {
   removeAttack: (id: string) => void;
   reorderAttacks: (oldIndex: number, newIndex: number) => void;
   setAttacks: (attacks: Array<Attack>) => void;
+  updateAttackParameter: (id: string, value: number) => void;
   clearAttacks: () => void;
 
   // Actions for buffs
@@ -61,6 +62,14 @@ export const useRotationStore = create<RotationState>()(
     setAttacks: (attacks) =>
       set((state) => {
         state.attacks = attacks;
+      }),
+
+    updateAttackParameter: (id, value) =>
+      set((state) => {
+        const attack = state.attacks.find((a) => a.id === id);
+        if (attack) {
+          attack.parameterValue = value;
+        }
       }),
 
     clearAttacks: () =>

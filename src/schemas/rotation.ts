@@ -5,14 +5,18 @@ const ParameterSchema = z.object({
   maximum: z.number(),
 });
 
+export type Parameter = z.infer<typeof ParameterSchema>;
+
 export const AttackSchema = z.object({
   id: z.string(),
-  entityType: z.literal('attack').default('attack'),
   name: z.string(),
   description: z.string().optional(),
+  characterId: z.string().optional(),
   characterName: z.string().optional(),
   parentName: z.string().optional(),
   parameters: z.array(ParameterSchema).optional(),
+  isParameterized: z.boolean().optional(),
+  parameterValue: z.number().optional(),
 });
 
 export type Attack = z.infer<typeof AttackSchema>;
@@ -20,14 +24,12 @@ export type Attack = z.infer<typeof AttackSchema>;
 /** Buff item for the palette (without timeline position) */
 export const BuffSchema = z.object({
   id: z.string(),
-  entityType: z.literal('buff').default('buff'),
   name: z.string(),
   description: z.string().optional(),
   characterName: z.string().optional(),
   parentName: z.string().optional(),
   source: z.enum(['character', 'weapon', 'echo', 'echo-set']).optional(),
   parameters: z.array(ParameterSchema).optional(),
-  isParameterized: z.boolean().optional(),
 });
 
 export type Buff = z.infer<typeof BuffSchema>;

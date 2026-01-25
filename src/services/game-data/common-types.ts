@@ -17,7 +17,7 @@ export type ParameterizedNumber =
   | UserParameterizedNumber
   | RotationRuntimeResolvableNumber;
 
-export interface Attack extends Describable, Tagged, Named {
+export interface Attack extends Describable, Tagged {
   scalingStat: AbilityAttribute;
   /** An attack will have at least one motion value or parmeterized motion value */
   motionValues?: Array<number>;
@@ -25,11 +25,11 @@ export interface Attack extends Describable, Tagged, Named {
 }
 
 export type Modifiers<T = unknown> = Array<
-  Modifier<ParameterizedNumber & Tagged> & Describable & Named & T
+  Modifier<ParameterizedNumber & Tagged> & Describable & T
 >;
 
 export type PermanentStats<T = unknown> = Partial<
-  Record<CharacterStat, Array<ParameterizedNumber & Describable & Tagged & Named & T>>
+  Record<CharacterStat, Array<ParameterizedNumber & Describable & Tagged & T>>
 >;
 
 export interface BaseEntity {

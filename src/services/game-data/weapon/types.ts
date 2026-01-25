@@ -1,3 +1,9 @@
+import { z } from 'zod';
+
+import type {
+  Attack as ClientAttack,
+  Buff as ClientModifier,
+} from '@/schemas/rotation';
 import type { CharacterStat } from '@/types/server';
 
 import type { Attack, BaseEntity, Modifiers, PermanentStats } from '../common-types';
@@ -27,4 +33,22 @@ interface RefineProperties {
 export interface Weapon extends BaseEntity {
   attributes: Record<RefineLevel, RefineProperties>;
   baseStats: Record<CharacterStat, number>;
+}
+
+export const GetWeaponDetailsInputSchema = z.object({
+  id: z.string(),
+  refineLevel: z.enum(RefineLevel),
+});
+
+export type GetWeaponDetailsInput = z.infer<typeof GetWeaponDetailsInputSchema>;
+
+export interface GetClientWeaponDetailsOutput {
+  attack?: Omit<ClientAttack, 'id' | 'characterName'>;
+  modifiers: Array<Omit<ClientModifier, 'id' | 'characterName'>>;
+}
+
+export interface GetServerWeaponDetailsOutput {
+  attack?: Attack;
+  modifiers: Modifiers;
+  stats: PermanentStats;
 }

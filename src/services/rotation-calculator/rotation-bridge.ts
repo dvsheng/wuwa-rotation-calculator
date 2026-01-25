@@ -73,7 +73,7 @@ export const calculateRotation = async (
 ): Promise<RotationResult> => {
   // 1. Fetch all necessary game data in parallel
   const characterDetails = await Promise.all(
-    clientTeam.map((c) => (c.name ? getCharacterDetails({ data: c.name }) : null)),
+    clientTeam.map((c) => (c.id ? getCharacterDetails({ data: c.id }) : null)),
   );
 
   const weaponDetails = await Promise.all(
@@ -104,8 +104,8 @@ export const calculateRotation = async (
       );
       if (weaponMod) return weaponMod;
     }
-
-    const echoMod = echo?.modifiers.find((m) => m.name === buffName);
+    // TODO: Fix This
+    const echoMod = echo?.modifiers.find((m) => m.description === buffName);
     if (echoMod) return echoMod;
 
     return null;

@@ -11,41 +11,41 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { BuffWithPosition } from '@/schemas/rotation';
+import type { Attack } from '@/schemas/rotation';
 
-interface BuffConfigurationDialogProps {
-  buff: BuffWithPosition | null;
+interface AttackConfigurationDialogProps {
+  attack: Attack | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (timelineId: string, parameterValue: number) => void;
+  onSave: (id: string, parameterValue: number) => void;
 }
 
-export const BuffConfigurationDialog = ({
-  buff,
+export const AttackConfigurationDialog = ({
+  attack,
   open,
   onOpenChange,
   onSave,
-}: BuffConfigurationDialogProps) => {
-  const [value, setValue] = useState<number | string>(buff?.parameterValue ?? '');
+}: AttackConfigurationDialogProps) => {
+  const [value, setValue] = useState<number | string>(attack?.parameterValue ?? '');
 
-  // Use parameters directly from the buff object
-  const parameterDefinition = buff?.buff.parameters?.[0] || null;
+  // Use parameters directly from the attack object
+  const parameterDefinition = attack?.parameters?.[0] || null;
 
   const handleSave = () => {
-    if (buff && value !== '') {
-      onSave(buff.timelineId, Number(value));
+    if (attack && value !== '') {
+      onSave(attack.id, Number(value));
       onOpenChange(false);
     }
   };
 
-  if (!buff) return null;
+  if (!attack) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Configure {buff.buff.name}</DialogTitle>
-          <DialogDescription>{buff.buff.description}</DialogDescription>
+          <DialogTitle>Configure {attack.name}</DialogTitle>
+          <DialogDescription>{attack.description}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">

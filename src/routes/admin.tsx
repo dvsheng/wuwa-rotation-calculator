@@ -49,7 +49,7 @@ type EntityType = 'character' | 'weapon' | 'echo' | 'echoSet';
 
 function AdminConsole() {
   const [activeEntityType, setEntityType] = useState<EntityType>('character');
-  const [selectedEntityName, setSelectedEntityName] = useState<string | null>(null);
+  const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [localEntity, setLocalEntity] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -77,22 +77,22 @@ function AdminConsole() {
 
   // Detail query
   const { isLoading: isLoadingDetails } = useQuery({
-    queryKey: ['details', activeEntityType, selectedEntityName],
+    queryKey: ['details', activeEntityType, selectedEntityId],
     queryFn: async () => {
       let details;
       if (activeEntityType === 'character') {
-        details = await getCharacterDetails({ data: selectedEntityName! });
+        details = await getCharacterDetails({ data: selectedEntityId! });
       } else if (activeEntityType === 'weapon') {
-        details = await getWeaponDetails({ data: selectedEntityName! });
+        details = await getWeaponDetails({ data: selectedEntityId! });
       } else if (activeEntityType === 'echo') {
-        details = await getEchoDetails({ data: selectedEntityName! });
+        details = await getEchoDetails({ data: selectedEntityId! });
       } else {
-        details = await getEchoSetDetails({ data: selectedEntityName! });
+        details = await getEchoSetDetails({ data: selectedEntityId! });
       }
       setLocalEntity(details);
       return details;
     },
-    enabled: !!selectedEntityName,
+    enabled: !!selectedEntityId,
   });
 
   const handleSave = async () => {
@@ -130,6 +130,11 @@ function AdminConsole() {
   const isLoadingList =
     isLoadingCharacters || isLoadingWeapons || isLoadingEchoes || isLoadingEchoSets;
 
+  const selectedEntity = useMemo(
+    () => entities.find((e: any) => e.id === selectedEntityId),
+    [entities, selectedEntityId],
+  );
+
   return (
     <div className="bg-background flex h-screen overflow-hidden">
       {/* Sidebar */}
@@ -149,7 +154,7 @@ function AdminConsole() {
               size="icon"
               onClick={() => {
                 setEntityType('character');
-                setSelectedEntityName(null);
+                setSelectedEntityId(null);
                 setLocalEntity(null);
               }}
               title="Characters"
@@ -161,7 +166,7 @@ function AdminConsole() {
               size="icon"
               onClick={() => {
                 setEntityType('weapon');
-                setSelectedEntityName(null);
+                setSelectedEntityId(null);
                 setLocalEntity(null);
               }}
               title="Weapons"
@@ -173,7 +178,7 @@ function AdminConsole() {
               size="icon"
               onClick={() => {
                 setEntityType('echo');
-                setSelectedEntityName(null);
+                setSelectedEntityId(null);
                 setLocalEntity(null);
               }}
               title="Echoes"
@@ -185,7 +190,7 @@ function AdminConsole() {
               size="icon"
               onClick={() => {
                 setEntityType('echoSet');
-                setSelectedEntityName(null);
+                setSelectedEntityId(null);
                 setLocalEntity(null);
               }}
               title="Echo Sets"
@@ -215,9 +220,9 @@ function AdminConsole() {
               filteredEntities.map((entity: any) => (
                 <button
                   key={entity.id}
-                  onClick={() => setSelectedEntityName(entity.name)}
+                  onClick={() => setSelectedEntityId(entity.id)}
                   className={`group flex w-full items-center justify-between rounded-md px-3 py-2 text-left transition-colors ${
-                    selectedEntityName === entity.name
+                    selectedEntityId === entity.id
                       ? 'bg-primary text-primary-foreground'
                       : 'hover:bg-muted'
                   }`}
@@ -225,7 +230,7 @@ function AdminConsole() {
                   <span className="truncate">{entity.name}</span>
                   <ChevronRight
                     className={`h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100 ${
-                      selectedEntityName === entity.name ? 'opacity-100' : ''
+                      selectedEntityId === entity.id ? 'opacity-100' : ''
                     }`}
                   />
                 </button>
@@ -237,16 +242,14 @@ function AdminConsole() {
 
       {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        {selectedEntityName ? (
+        {selectedEntityId ? (
           <>
             <header className="bg-card flex items-center justify-between border-b p-4">
               <div>
                 <h1 className="text-2xl font-bold">
-                  {localEntity?.name || selectedEntityName}
+                  {localEntity?.name || selectedEntity?.name || selectedEntityId}
                 </h1>
-                <p className="text-muted-foreground text-sm">
-                  ID: {entities.find((e: any) => e.name === selectedEntityName)?.id}
-                </p>
+                <p className="text-muted-foreground text-sm">ID: {selectedEntityId}</p>
               </div>
               <Button
                 onClick={handleSave}
@@ -817,10 +820,10 @@ function EchoSetEditor({
       <Tabs defaultValue="TWO_PIECE" className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2">
           <TabsTrigger value="TWO_PIECE">2-Piece Effect</TabsTrigger>
-          <TabsTrigger value="FOUR_PIECE">5-Piece Effect</TabsTrigger>
+          <TabsTrigger value="FIVE_PIECE">5-Piece Effect</TabsTrigger>
         </TabsList>
 
-        {['TWO_PIECE', 'FOUR_PIECE'].map((tier) => (
+        {['TWO_PIECE', 'FIVE_PIECE'].map((tier) => (
           <TabsContent key={tier} value={tier} className="mt-6 space-y-4">
             <Card>
               <CardHeader>

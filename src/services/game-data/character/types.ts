@@ -1,6 +1,16 @@
+import type {
+  Attack as ClientAttack,
+  Buff as ClientModifier,
+} from '@/schemas/rotation';
 import type { Attribute } from '@/types';
 
-import type { Attack, BaseEntity, Modifiers, PermanentStats } from '../common-types';
+import type {
+  Attack,
+  BaseEntity,
+  Modifiers,
+  Named,
+  PermanentStats,
+} from '../common-types';
 
 /**
  * Represents the progression stage at which a skill or bonus is unlocked.
@@ -35,7 +45,7 @@ export type OriginType = (typeof OriginType)[keyof typeof OriginType];
 /**
  * Common fields for all game data entries to track origin and unlock conditions.
  */
-export interface CharacterBaseItem {
+export interface CharacterBaseItem extends Named {
   /** The name of the parent skill or node (e.g., "Ground State Calibration"). */
   parentName: string;
   originType: OriginType;
@@ -74,4 +84,9 @@ export interface Character extends BaseEntity {
    * permanent stat nodes, and unconditional sequence bonuses.
    */
   stats: CharacterStats;
+}
+
+export interface GetClientCharacterDetailsOutput {
+  attacks: Array<Omit<ClientAttack, 'id' | 'characterName'>>;
+  modifiers: Array<Omit<ClientModifier, 'id' | 'characterName'>>;
 }

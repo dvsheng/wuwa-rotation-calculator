@@ -3,7 +3,7 @@ import { immer } from 'zustand/middleware/immer';
 
 import { ECHO_SUBSTAT_VALUES } from '@/schemas/echo';
 import { initialEnemyData } from '@/schemas/enemy';
-import type { EnemyFormData } from '@/schemas/enemy';
+import type { Enemy } from '@/schemas/enemy';
 import type {
   Character,
   EchoCost,
@@ -15,7 +15,7 @@ import { EchoMainStatOption, EchoSubstatOption } from '@/types/client';
 
 export interface TeamState {
   team: Team;
-  enemy: EnemyFormData;
+  enemy: Enemy;
   updateCharacter: (index: number, updater: (draft: Character) => void) => void;
   setCharacter: (index: number, id: string, name: string) => void;
   setSequence: (index: number, sequence: number) => void;
@@ -24,7 +24,7 @@ export interface TeamState {
   setEchoSet: (index: number, setIndex: number, id: string, name: string) => void;
   setEchoSetRequirement: (index: number, setIndex: number, requirement: string) => void;
   setPrimaryEcho: (index: number, id: string, name: string) => void;
-  updateEnemy: (updater: (draft: EnemyFormData) => void) => void;
+  updateEnemy: (updater: (draft: Enemy) => void) => void;
 }
 
 const createDefaultEchoStats = (cost: EchoCost): EchoStats => {
@@ -83,7 +83,7 @@ const initialTeam: Team = [
   createDefaultCharacter('1505', 'Shorekeeper'),
 ];
 
-const initialEnemy: EnemyFormData = initialEnemyData;
+const initialEnemy: Enemy = initialEnemyData;
 
 export const useTeamStore = create<TeamState>()(
   immer((set) => ({

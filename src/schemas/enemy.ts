@@ -14,9 +14,9 @@ export const EnemySchema = z.object({
   }),
 });
 
-export type EnemyFormData = z.infer<typeof EnemySchema>;
+export type Enemy = z.infer<typeof EnemySchema>;
 
-export const initialEnemyData: EnemyFormData = {
+export const initialEnemyData: Enemy = {
   level: 90,
   resistances: {
     [Attribute.GLACIO]: 10,

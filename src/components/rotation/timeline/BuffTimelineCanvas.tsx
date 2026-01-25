@@ -1,7 +1,6 @@
 import type { GridLayoutProps, Layout, LayoutItem } from 'react-grid-layout';
 import GridLayout from 'react-grid-layout';
 
-import { TooltipProvider } from '@/components/ui/tooltip';
 import { Text } from '@/components/ui/typography';
 import { cn } from '@/lib/utils';
 import { useRotationStore } from '@/store/useRotationStore';
@@ -64,34 +63,32 @@ export const BuffTimelineCanvas = ({ width, gridConfig }: BuffTimelineCanvasProp
     onLayoutChange,
   };
   return (
-    <TooltipProvider delayDuration={100}>
-      <div
-        className={cn(
-          'border-border/50 bg-muted/10 relative min-h-[100px] w-full rounded-lg border transition-colors',
-        )}
-      >
-        {activeBuffs.length === 0 && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <Text className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
-              Drag buffs here to track their duration
-            </Text>
-          </div>
-        )}
-
-        <div className="p-0">
-          <GridLayout {...layoutProps}>
-            {activeBuffs.map((buff) => (
-              <div key={buff.timelineId} className="group relative">
-                <BuffTimelineCanvasItem
-                  buff={buff}
-                  onRemove={removeBuff}
-                  onSave={updateBuffParameter}
-                />
-              </div>
-            ))}
-          </GridLayout>
+    <div
+      className={cn(
+        'border-border/50 bg-muted/10 relative min-h-[100px] w-full rounded-lg border transition-colors',
+      )}
+    >
+      {activeBuffs.length === 0 && (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <Text className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
+            Drag buffs here to track their duration
+          </Text>
         </div>
+      )}
+
+      <div className="p-0">
+        <GridLayout {...layoutProps}>
+          {activeBuffs.map((buff) => (
+            <div key={buff.timelineId} className="group relative">
+              <BuffTimelineCanvasItem
+                buff={buff}
+                onRemove={removeBuff}
+                onSave={updateBuffParameter}
+              />
+            </div>
+          ))}
+        </GridLayout>
       </div>
-    </TooltipProvider>
+    </div>
   );
 };

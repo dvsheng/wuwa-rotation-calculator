@@ -1,13 +1,17 @@
 import { z } from 'zod';
 
+const ParameterSchema = z.object({
+  minimum: z.number(),
+  maximum: z.number(),
+});
+
 export const AttackSchema = z.object({
-  id: z.string(), // Instance ID (random UUID)
-  characterId: z.string(),
-  characterName: z.string(),
-  skillName: z.string(),
-  damageInstanceName: z.string(),
-  originType: z.string(),
-  description: z.string(),
+  id: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  characterName: z.string().optional(),
+  parentName: z.string().optional(),
+  parameters: z.array(ParameterSchema).optional(),
 });
 
 export type Attack = z.infer<typeof AttackSchema>;

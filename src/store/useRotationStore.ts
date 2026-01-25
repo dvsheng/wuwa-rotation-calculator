@@ -13,6 +13,7 @@ export interface RotationState {
   addAttack: (attack: Omit<Attack, 'id'>, atIndex?: number) => void;
   removeAttack: (id: string) => void;
   reorderAttacks: (oldIndex: number, newIndex: number) => void;
+  setAttacks: (attacks: Array<Attack>) => void;
   clearAttacks: () => void;
 
   // Actions for buffs
@@ -52,6 +53,11 @@ export const useRotationStore = create<RotationState>()(
       set((state) => {
         const [removed] = state.attacks.splice(oldIndex, 1);
         state.attacks.splice(newIndex, 0, removed);
+      }),
+
+    setAttacks: (attacks) =>
+      set((state) => {
+        state.attacks = attacks;
       }),
 
     clearAttacks: () =>

@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Row, Stack } from '@/components/ui/layout';
-import { Heading } from '@/components/ui/typography';
+import { Heading, Text } from '@/components/ui/typography';
 import { useTeamAttacks } from '@/hooks/useTeamAttacks';
 import type { Attack } from '@/schemas/rotation';
 import { useRotationStore } from '@/store/useRotationStore';
@@ -52,7 +52,23 @@ export const RotationBuilder = () => {
           onReorder={setAttacks}
           onDrop={handleAddAttack}
         />
-        <AttackPalette attacks={availableAttacks.attacks} />
+        <aside className="bg-card flex min-h-0 w-full flex-col rounded-xl border md:w-80">
+          <div className="bg-muted/30 border-b p-4">
+            <Text
+              variant="small"
+              className="text-muted-foreground font-bold tracking-wider uppercase"
+            >
+              Available Attacks
+            </Text>
+          </div>
+          {availableAttacks.isLoading ? (
+            <div className="flex flex-1 items-center justify-center p-4">
+              <Text variant="muted">Loading attacks...</Text>
+            </div>
+          ) : (
+            <AttackPalette attacks={availableAttacks.attacks} />
+          )}
+        </aside>
       </div>
     </Stack>
   );

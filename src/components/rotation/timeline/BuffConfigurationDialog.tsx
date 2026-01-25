@@ -12,11 +12,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useCharacterDetails } from '@/hooks/useCharacterDetails';
-
-import type { TimelineBuff } from '../types';
+import type { BuffWithPosition } from '@/schemas/rotation';
 
 interface BuffConfigurationDialogProps {
-  buff: TimelineBuff | null;
+  buff: BuffWithPosition | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (timelineId: string, parameterValue: number) => void;
@@ -31,10 +30,10 @@ export const BuffConfigurationDialog = ({
   const [value, setValue] = useState<number | string>(buff?.parameterValue ?? '');
 
   // Fetch detailed info to get min/max/scaling logic
-  const { data: characterData } = useCharacterDetails(buff?.characterName || '');
+  const { data: characterData } = useCharacterDetails(buff?.buff.characterName || '');
 
   const buffDefinition = characterData?.modifiers.find(
-    (m) => m.name === buff?.skillName,
+    (m) => m.name === buff?.buff.name,
   );
 
   // Extract parameter definition if available
@@ -66,8 +65,8 @@ export const BuffConfigurationDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Configure {buff.skillName}</DialogTitle>
-          <DialogDescription>{buff.description}</DialogDescription>
+          <DialogTitle>Configure {buff.buff.name}</DialogTitle>
+          <DialogDescription>{buff.buff.description}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">

@@ -55,22 +55,22 @@ export const useTeamAttacks = (team: Team) => {
     ]),
     combine: (results) => {
       const attacks = results.flatMap((queryResult, index) => {
-        if (!queryResult.data) return [];
         const data = queryResult.data;
+        if (!data) return [];
 
         const { characterName, queryType, entityName } = queryMetadata[index];
 
         switch (queryType) {
           case 'character':
             return (data as Array<CharacterAttack>).map((attack) => ({
-              id: `${characterName}-${attack.name}`, // Create a composite ID
+              id: `${characterName}-${attack.name}`,
               name: attack.name,
               parentName: attack.parentName,
               description: attack.description,
               characterName,
             }));
           case 'weapon':
-            return data.map((attack) => ({
+            return (data as Array<any>).map((attack) => ({
               id: `${characterName}-weapon-${entityName}`,
               name: 'Weapon Skill',
               parentName: entityName,
@@ -78,7 +78,7 @@ export const useTeamAttacks = (team: Team) => {
               characterName,
             }));
           case 'echo':
-            return data.map((attack) => ({
+            return (data as Array<any>).map((attack) => ({
               id: `${characterName}-echo-${entityName}`,
               name: 'Echo Skill',
               parentName: entityName,
@@ -101,16 +101,8 @@ export const useTeamAttacks = (team: Team) => {
 
   useEffect(() => {
     if (!result.isError) return;
-    const failedNames = result.rawResults
-      .filter((res) => res.isError)
-      .map((res) => res.error.name);
-
-    const uniqueFailures = Array.from(new Set(failedNames));
-
-    toast.error('Library load partial failure', {
-      description: `Failed to fetch data for: ${uniqueFailures.join(', ')}`,
-    });
-  }, [result.rawResults, result.isError]);
+    toast.error('Failed to load some attacks');
+  }, [result.isError]);
 
   return result;
 };

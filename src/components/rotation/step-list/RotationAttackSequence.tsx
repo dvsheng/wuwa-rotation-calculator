@@ -4,7 +4,7 @@ import GridLayout, { useContainerWidth } from 'react-grid-layout';
 import { Text } from '@/components/ui/typography';
 import type { Attack } from '@/schemas/rotation';
 
-import { PALETTE_DRAG_TYPE } from '../palette/types';
+import { PALETTE_DRAG_TYPE } from '../constants';
 
 import { EmptyRotationState } from './EmptyRotationState';
 import { RotationAttack } from './RotationAttack';

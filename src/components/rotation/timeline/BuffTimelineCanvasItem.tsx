@@ -5,13 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Text } from '@/components/ui/typography';
 import { cn } from '@/lib/utils';
-
-import type { TimelineBuff } from '../types';
+import type { BuffWithPosition } from '@/schemas/rotation';
 
 import { BuffConfigurationDialog } from './BuffConfigurationDialog';
 
 interface BuffTimelineCanvasItemProps extends React.HTMLAttributes<HTMLDivElement> {
-  buff: TimelineBuff;
+  buff: BuffWithPosition;
   onRemove: (timelineId: string) => void;
   onSave: (timelineId: string, parameterValue: number) => void;
 }
@@ -21,10 +20,10 @@ export const BuffTimelineCanvasItem = React.forwardRef<
   BuffTimelineCanvasItemProps
 >(({ buff, onRemove, onSave, className, style, onClick, children, ...props }, ref) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const showWarning = buff.isParameterized && buff.parameterValue === undefined;
+  const showWarning = buff.buff.isParameterized && buff.parameterValue === undefined;
 
   const handleBuffClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (buff.isParameterized) {
+    if (buff.buff.isParameterized) {
       setIsDialogOpen(true);
     }
     onClick?.(e);
@@ -42,7 +41,7 @@ export const BuffTimelineCanvasItem = React.forwardRef<
         <TooltipTrigger asChild>
           <div
             className={cn(
-              'relative flex h-full w-full items-center gap-1 overflow-hidden rounded border', // Added h-full
+              'relative flex h-full w-full items-center gap-1 overflow-hidden rounded border',
               'bg-primary/20 border-primary/30 group-hover:bg-primary/30 transition-colors',
             )}
           >
@@ -60,7 +59,7 @@ export const BuffTimelineCanvasItem = React.forwardRef<
             </Button>
             <div className="drag-handle flex h-full min-w-0 flex-1 cursor-grab items-center gap-1 active:cursor-grabbing">
               <Text className="text-primary truncate text-[9px] font-bold whitespace-nowrap">
-                {buff.skillName}
+                {buff.buff.name}
               </Text>
               {showWarning && (
                 <AlertTriangle className="h-3 w-3 shrink-0 text-amber-500" />
@@ -70,9 +69,9 @@ export const BuffTimelineCanvasItem = React.forwardRef<
         </TooltipTrigger>
         <TooltipContent side="bottom" className="max-w-[300px]">
           <Text variant="tiny" className="font-bold">
-            {buff.characterName} - {buff.skillName}
+            {buff.buff.characterName} - {buff.buff.name}
           </Text>
-          <Text variant="tiny">{buff.description}</Text>
+          <Text variant="tiny">{buff.buff.description}</Text>
           {showWarning && (
             <Text variant="tiny" className="mt-1 font-bold text-amber-500">
               Configuration required
@@ -94,3 +93,5 @@ export const BuffTimelineCanvasItem = React.forwardRef<
     </div>
   );
 });
+
+BuffTimelineCanvasItem.displayName = 'BuffTimelineCanvasItem';

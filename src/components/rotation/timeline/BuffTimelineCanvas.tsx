@@ -5,6 +5,8 @@ import { Text } from '@/components/ui/typography';
 import { cn } from '@/lib/utils';
 import { useRotationStore } from '@/store/useRotationStore';
 
+import { PALETTE_DRAG_TYPE } from '../constants';
+
 import { BuffTimelineCanvasItem } from './BuffTimelineCanvasItem';
 
 interface BuffTimelineCanvasProps {
@@ -24,19 +26,23 @@ export const BuffTimelineCanvas = ({ width, gridConfig }: BuffTimelineCanvasProp
       updateBuffLayout(item.i, { x: item.x, y: item.y, w: item.w, h: item.h });
     });
   };
+
   const onDrop = (_: Layout, item: LayoutItem | undefined, event: Event) => {
     const dragEvent = event as unknown as DragEvent;
     if (!item) return;
     if (!dragEvent.dataTransfer) return;
     try {
-      const data = JSON.parse(dragEvent.dataTransfer.getData('application/json'));
-      addBuff({
-        ...data,
+      const dataStr =
+        dragEvent.dataTransfer.getData(PALETTE_DRAG_TYPE) ||
+        dragEvent.dataTransfer.getData('application/json');
+      if (!dataStr) return;
+
+      const buff = JSON.parse(dataStr);
+      addBuff(buff, {
         x: item.x,
         y: item.y,
         w: item.w,
         h: item.h,
-        timelineId: crypto.randomUUID(),
       });
     } catch (err) {
       console.error('Drop failed', err);
@@ -62,6 +68,7 @@ export const BuffTimelineCanvas = ({ width, gridConfig }: BuffTimelineCanvasProp
     onDrop,
     onLayoutChange,
   };
+
   return (
     <div
       className={cn(

@@ -1,13 +1,13 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
-import type { Attack, Buff } from '@/schemas/rotation';
+import type { Attack, Buff, BuffWithPosition } from '@/schemas/rotation';
 
 import { useTeamStore } from './useTeamStore';
 
 export interface RotationState {
   attacks: Array<Attack>;
-  buffs: Array<Buff>;
+  buffs: Array<BuffWithPosition>;
 
   // Actions for attacks
   addAttack: (attack: Omit<Attack, 'id'>, atIndex?: number) => void;
@@ -17,11 +17,14 @@ export interface RotationState {
   clearAttacks: () => void;
 
   // Actions for buffs
-  addBuff: (buff: Omit<Buff, 'timelineId'>) => void;
+  addBuff: (
+    buff: Buff,
+    position: Pick<BuffWithPosition, 'x' | 'y' | 'w' | 'h'>,
+  ) => void;
   removeBuff: (timelineId: string) => void;
   updateBuffLayout: (
     timelineId: string,
-    layout: Partial<Pick<Buff, 'x' | 'y' | 'w' | 'h'>>,
+    layout: Partial<Pick<BuffWithPosition, 'x' | 'y' | 'w' | 'h'>>,
   ) => void;
   updateBuffParameter: (timelineId: string, value: number) => void;
   clearBuffs: () => void;
@@ -65,9 +68,13 @@ export const useRotationStore = create<RotationState>()(
         state.attacks = [];
       }),
 
-    addBuff: (buff) =>
+    addBuff: (buff, position) =>
       set((state) => {
-        state.buffs.push({ ...buff, timelineId: crypto.randomUUID() });
+        state.buffs.push({
+          timelineId: crypto.randomUUID(),
+          buff,
+          ...position,
+        });
       }),
 
     removeBuff: (timelineId) =>

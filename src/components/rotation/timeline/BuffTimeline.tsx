@@ -1,6 +1,9 @@
 import { useContainerWidth } from 'react-grid-layout';
 
+import { useTeamModifiers } from '@/hooks/useTeamModifiers';
+import type { Buff } from '@/schemas/rotation';
 import { useRotationStore } from '@/store/useRotationStore';
+import { useTeamStore } from '@/store/useTeamStore';
 
 import { BuffPalette } from './BuffPalette';
 import { BuffTimelineCanvas } from './BuffTimelineCanvas';
@@ -8,7 +11,14 @@ import { RotationTimeline } from './RotationTimeline';
 
 export const BuffTimeline = () => {
   const attacks = useRotationStore((state) => state.attacks);
+  const addBuff = useRotationStore((state) => state.addBuff);
+  const team = useTeamStore((state) => state.team);
+  const { buffs, isLoading } = useTeamModifiers(team);
   const { width, containerRef, mounted } = useContainerWidth();
+
+  const handleAddBuff = (buff: Buff) => {
+    addBuff(buff, { x: 0, y: 0, w: 2, h: 1 });
+  };
 
   const gridConfig = {
     cols: Math.max(attacks.length, 5),
@@ -23,7 +33,7 @@ export const BuffTimeline = () => {
         <>
           <RotationTimeline items={attacks} width={width} gridConfig={gridConfig} />
           <BuffTimelineCanvas width={width} gridConfig={gridConfig} />
-          <BuffPalette />
+          <BuffPalette buffs={buffs} onAdd={handleAddBuff} isLoading={isLoading} />
         </>
       )}
     </div>

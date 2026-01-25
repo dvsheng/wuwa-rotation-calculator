@@ -2,18 +2,12 @@ import type { GridLayoutProps } from 'react-grid-layout';
 import ReactGridLayout from 'react-grid-layout';
 
 import { Card } from '@/components/ui/card';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Text } from '@/components/ui/typography';
-
-import type { RotationItem } from '../types';
+import type { Attack } from '@/schemas/rotation';
 
 interface RotationTimelineProps {
-  items: Array<RotationItem>;
+  items: Array<Attack>;
   width: number;
   gridConfig: GridLayoutProps['gridConfig'];
 }
@@ -58,10 +52,10 @@ export const RotationTimeline = ({
                   </div>
                   <div className="-mt-0.5 min-w-0 overflow-hidden">
                     <Text className="text-foreground truncate text-[10px] leading-[1.1] font-medium">
-                      {item.skillName}
+                      {item.parentName}
                     </Text>
                     <Text className="text-muted-foreground truncate text-[9px] leading-[1.1]">
-                      {item.damageInstanceName}
+                      {item.name}
                     </Text>
                   </div>
                 </Card>
@@ -71,7 +65,7 @@ export const RotationTimeline = ({
                   {item.characterName}
                 </Text>
                 <Text variant="tiny">
-                  {item.skillName}: {item.damageInstanceName}
+                  {item.parentName}: {item.name}
                 </Text>
               </TooltipContent>
             </Tooltip>

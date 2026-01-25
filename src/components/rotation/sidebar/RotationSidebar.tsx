@@ -33,7 +33,7 @@ export const RotationSidebar = ({
             char.name ? (
               <SidebarCharacter
                 key={`${char.name}-${index}`}
-                name={char.name}
+                character={char}
                 onSkillClick={onSkillClick}
                 isDragging={isDragging}
               />

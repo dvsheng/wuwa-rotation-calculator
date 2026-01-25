@@ -1,16 +1,32 @@
+import { useEffect } from 'react';
+import { toast } from 'sonner';
+
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/typography';
 import { useCharacterDetails } from '@/hooks/useCharacterDetails';
+import { useEchoDetails } from '@/hooks/useEchoDetails';
+import { useEchoSetDetails } from '@/hooks/useEchoSetDetails';
+import { useWeaponDetails } from '@/hooks/useWeaponDetails';
 import { OriginType } from '@/services/game-data/character/types';
+import type { RefineLevel } from '@/services/game-data/weapon/types';
+import type { Character } from '@/types/client';
 
 import type { RotationItem } from '../types';
 
 import { SidebarSkillGroup } from './SidebarSkillGroup';
 
 interface SidebarCharacterProps {
-  name: string;
+  character: Character;
   onSkillClick: (item: Omit<RotationItem, 'id'>) => void;
   isDragging: boolean;
+}
+
+// Simplified attack item for sidebar display
+interface SidebarAttackItem {
+  parentName: string;
+  name: string;
+  originType: string;
+  description: string;
 }
 
 const GROUP_ORDER: Record<string, number> = {
@@ -27,26 +43,106 @@ const GROUP_ORDER: Record<string, number> = {
   [OriginType.S4]: 11,
   [OriginType.S5]: 12,
   [OriginType.S6]: 13,
+  Weapon: 14,
+  'Echo Set': 15,
+  Echo: 16,
 };
 
 export const SidebarCharacter = ({
-  name,
+  character,
   onSkillClick,
   isDragging,
 }: SidebarCharacterProps) => {
-  const { data, isLoading, error } = useCharacterDetails(name);
-  if (isLoading)
+  const {
+    data: charData,
+    isLoading: charLoading,
+    error: charError,
+  } = useCharacterDetails(character.name);
+  const { data: weaponData, error: weaponError } = useWeaponDetails(
+    character.weapon.name || null,
+  );
+  const echoSetName = character.echoSets[0].name;
+  const { error: echoSetError } = useEchoSetDetails(echoSetName || null);
+  const { data: echoData, error: echoError } = useEchoDetails(
+    character.primarySlotEcho.name || null,
+  );
+
+  // Show error toasts for failed queries
+  useEffect(() => {
+    if (charError) {
+      toast.error(`Failed to load character: ${character.name}`);
+    }
+  }, [charError, character.name]);
+
+  useEffect(() => {
+    if (weaponError && character.weapon.name) {
+      toast.error(`Failed to load weapon: ${character.weapon.name}`);
+    }
+  }, [weaponError, character.weapon.name]);
+
+  useEffect(() => {
+    if (echoSetError && echoSetName) {
+      toast.error(`Failed to load echo set: ${echoSetName}`);
+    }
+  }, [echoSetError, echoSetName]);
+
+  useEffect(() => {
+    if (echoError && character.primarySlotEcho.name) {
+      toast.error(`Failed to load echo: ${character.primarySlotEcho.name}`);
+    }
+  }, [echoError, character.primarySlotEcho.name]);
+
+  if (charLoading)
     return (
       <Text variant="muted" className="p-2">
-        Loading {name}...
+        Loading {character.name}...
       </Text>
     );
-  if (error || !data) return null;
-  const { attacks } = data;
+  if (charError || !charData) return null;
 
-  const groups = Map.groupBy(attacks, (attack) => {
-    return attack.parentName;
-  });
+  // Build attack groups from character attacks
+  const characterAttacks = charData.attacks;
+  const groups = new Map<string, Array<SidebarAttackItem>>();
+
+  // Add character attacks
+  for (const attack of characterAttacks) {
+    const existing = groups.get(attack.parentName) || [];
+    existing.push({
+      parentName: attack.parentName,
+      name: attack.name,
+      originType: attack.originType,
+      description: attack.description,
+    });
+    groups.set(attack.parentName, existing);
+  }
+
+  // Add weapon attack if available
+  if (weaponData) {
+    const refineLevel = String(character.weapon.refine) as RefineLevel;
+    const weaponAttack = weaponData.attributes[refineLevel].attack;
+    if (weaponAttack) {
+      groups.set(weaponData.name, [
+        {
+          parentName: weaponData.name,
+          name: weaponAttack.description || 'Weapon Attack',
+          originType: 'Weapon',
+          description: weaponAttack.description,
+        },
+      ]);
+    }
+  }
+
+  // Add echo attack if available
+  if (echoData?.attack) {
+    groups.set(echoData.name, [
+      {
+        parentName: echoData.name,
+        name: echoData.attack.description || 'Echo Attack',
+        originType: 'Echo',
+        description: echoData.attack.description,
+      },
+    ]);
+  }
 
   const sortedGroups = Array.from(groups.entries()).sort(([, aSkills], [, bSkills]) => {
     const aOrder = GROUP_ORDER[aSkills[0]?.originType] ?? 99;
@@ -58,7 +154,7 @@ export const SidebarCharacter = ({
     <div className="min-w-0 space-y-4 p-2">
       <div className="flex items-center justify-between px-1">
         <Text variant="small" className="font-bold">
-          {data.name}
+          {charData.name}
         </Text>
       </div>
 
@@ -67,9 +163,9 @@ export const SidebarCharacter = ({
           if (skills.length === 0) return null;
           const first = skills[0];
           const items = skills.map((skill) => ({
-            id: `${data.name}-${skill.parentName}-${skill.name}`,
-            characterId: data.id,
-            characterName: data.name,
+            id: `${charData.name}-${skill.parentName}-${skill.name}`,
+            characterId: charData.id,
+            characterName: charData.name,
             skillName: skill.parentName,
             damageInstanceName: skill.name,
             originType: skill.originType,
@@ -88,7 +184,7 @@ export const SidebarCharacter = ({
           );
         })}
 
-        {attacks.length === 0 && (
+        {groups.size === 0 && (
           <Text variant="muted" className="px-1 text-[10px] italic">
             No damage skills
           </Text>

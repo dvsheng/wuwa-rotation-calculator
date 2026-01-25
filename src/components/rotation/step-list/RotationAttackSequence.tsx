@@ -1,10 +1,10 @@
-import type { GridLayoutProps, Layout, LayoutItem } from 'react-grid-layout';
+import type { GridLayoutProps, Layout } from 'react-grid-layout';
 import GridLayout, { useContainerWidth } from 'react-grid-layout';
 
 import { Text } from '@/components/ui/typography';
+import { useDragAndDrop } from '@/hooks/useDragAndDrop';
+import { AttackSchema } from '@/schemas/rotation';
 import type { Attack } from '@/schemas/rotation';
-
-import { PALETTE_DRAG_TYPE } from '../constants';
 
 import { EmptyRotationState } from './EmptyRotationState';
 import { RotationAttack } from './RotationAttack';
@@ -23,6 +23,9 @@ export const RotationAttackSequence = ({
   onDrop,
 }: RotationAttackSequenceProps) => {
   const { width, containerRef, mounted } = useContainerWidth();
+  const { createHandleDrop } = useDragAndDrop({
+    schema: AttackSchema,
+  });
 
   const handleLayoutChange = (layout: Layout) => {
     // Prevent drops from triggering onReorder
@@ -41,25 +44,9 @@ export const RotationAttackSequence = ({
     }
   };
 
-  const handleDrop = (
-    _layout: Layout,
-    layoutItem: LayoutItem | undefined,
-    event: Event,
-  ) => {
-    const dragEvent = event as unknown as DragEvent;
-    if (!layoutItem || !dragEvent.dataTransfer) return;
-    try {
-      const data =
-        dragEvent.dataTransfer.getData(PALETTE_DRAG_TYPE) ||
-        dragEvent.dataTransfer.getData('application/json');
-      if (!data) return;
-
-      const attack = JSON.parse(data) as Attack;
-      onDrop(attack, layoutItem.y);
-    } catch (err) {
-      console.error('Drop failed', err);
-    }
-  };
+  const handleDrop = createHandleDrop((attack, item) => {
+    onDrop(attack, item.y);
+  });
 
   const gridConfig = {
     cols: 1,

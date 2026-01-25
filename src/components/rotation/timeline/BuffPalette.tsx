@@ -1,9 +1,9 @@
 import { PaletteItem } from '@/components/common/PaletteItem';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Text } from '@/components/ui/typography';
+import { useDragAndDrop } from '@/hooks/useDragAndDrop';
+import { BuffSchema } from '@/schemas/rotation';
 import type { Buff } from '@/schemas/rotation';
-
-import { PALETTE_DRAG_TYPE } from '../constants';
 
 export interface BuffPaletteProps {
   buffs: Array<Buff>;
@@ -12,13 +12,7 @@ export interface BuffPaletteProps {
 }
 
 export const BuffPalette = ({ buffs, onAdd, isLoading }: BuffPaletteProps) => {
-  const handleDragStart = (buff: Buff, event: React.DragEvent) => {
-    event.dataTransfer.effectAllowed = 'copy';
-    event.dataTransfer.dropEffect = 'copy';
-    event.dataTransfer.setData('text/plain', '');
-    event.dataTransfer.setData(PALETTE_DRAG_TYPE, JSON.stringify(buff));
-    event.dataTransfer.setData('application/json', JSON.stringify(buff));
-  };
+  const { handleDragStart } = useDragAndDrop({ schema: BuffSchema });
 
   if (isLoading) {
     return (

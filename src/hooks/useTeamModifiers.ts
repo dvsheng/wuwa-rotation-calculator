@@ -122,6 +122,7 @@ export const useTeamModifiers = (team: Team) => {
         const processModifiers = (mods: Array<any>, parentName: string) => {
           return mods.map((mod, i) => ({
             id: `buff-${characterName}-${parentName}-${mod.name}-${i}`,
+            entityType: 'buff' as const,
             name: mod.name,
             parentName: parentName,
             description: mod.description,

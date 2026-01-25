@@ -64,6 +64,7 @@ export const useTeamAttacks = (team: Team) => {
           case 'character':
             return (data as Array<CharacterAttack>).map((attack) => ({
               id: `${characterName}-${attack.name}`,
+              entityType: 'attack' as const,
               name: attack.name,
               parentName: attack.parentName,
               description: attack.description,
@@ -72,6 +73,7 @@ export const useTeamAttacks = (team: Team) => {
           case 'weapon':
             return (data as Array<any>).map((attack) => ({
               id: `${characterName}-weapon-${entityName}`,
+              entityType: 'attack' as const,
               name: 'Weapon Skill',
               parentName: entityName,
               description: attack.description,
@@ -80,6 +82,7 @@ export const useTeamAttacks = (team: Team) => {
           case 'echo':
             return (data as Array<any>).map((attack) => ({
               id: `${characterName}-echo-${entityName}`,
+              entityType: 'attack' as const,
               name: 'Echo Skill',
               parentName: entityName,
               description: attack.description,

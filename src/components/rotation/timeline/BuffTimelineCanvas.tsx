@@ -1,11 +1,11 @@
-import type { GridLayoutProps, Layout, LayoutItem } from 'react-grid-layout';
+import type { GridLayoutProps, Layout } from 'react-grid-layout';
 import GridLayout from 'react-grid-layout';
 
 import { Text } from '@/components/ui/typography';
+import { useDragAndDrop } from '@/hooks/useDragAndDrop';
 import { cn } from '@/lib/utils';
+import { BuffSchema } from '@/schemas/rotation';
 import { useRotationStore } from '@/store/useRotationStore';
-
-import { PALETTE_DRAG_TYPE } from '../constants';
 
 import { BuffTimelineCanvasItem } from './BuffTimelineCanvasItem';
 
@@ -21,33 +21,24 @@ export const BuffTimelineCanvas = ({ width, gridConfig }: BuffTimelineCanvasProp
   const updateBuffLayout = useRotationStore((state) => state.updateBuffLayout);
   const updateBuffParameter = useRotationStore((state) => state.updateBuffParameter);
 
+  const { createHandleDrop } = useDragAndDrop({
+    schema: BuffSchema,
+  });
+
   const onLayoutChange = (layout: Layout) => {
     layout.forEach((item) => {
       updateBuffLayout(item.i, { x: item.x, y: item.y, w: item.w, h: item.h });
     });
   };
 
-  const onDrop = (_: Layout, item: LayoutItem | undefined, event: Event) => {
-    const dragEvent = event as unknown as DragEvent;
-    if (!item) return;
-    if (!dragEvent.dataTransfer) return;
-    try {
-      const dataStr =
-        dragEvent.dataTransfer.getData(PALETTE_DRAG_TYPE) ||
-        dragEvent.dataTransfer.getData('application/json');
-      if (!dataStr) return;
-
-      const buff = JSON.parse(dataStr);
-      addBuff(buff, {
-        x: item.x,
-        y: item.y,
-        w: item.w,
-        h: item.h,
-      });
-    } catch (err) {
-      console.error('Drop failed', err);
-    }
-  };
+  const handleDrop = createHandleDrop((buff, item) => {
+    addBuff(buff, {
+      x: item.x,
+      y: item.y,
+      w: item.w,
+      h: item.h,
+    });
+  });
 
   const layoutProps: Omit<GridLayoutProps, 'children'> = {
     width,
@@ -65,7 +56,7 @@ export const BuffTimelineCanvas = ({ width, gridConfig }: BuffTimelineCanvasProp
       w: buff.w,
       h: buff.h,
     })),
-    onDrop,
+    onDrop: handleDrop,
     onLayoutChange,
   };
 

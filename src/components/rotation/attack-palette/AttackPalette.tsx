@@ -1,9 +1,9 @@
 import { PaletteItem } from '@/components/common/PaletteItem';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Text } from '@/components/ui/typography';
+import { useDragAndDrop } from '@/hooks/useDragAndDrop';
+import { AttackSchema } from '@/schemas/rotation';
 import type { Attack } from '@/schemas/rotation';
-
-import { PALETTE_DRAG_TYPE } from '../constants';
 
 export interface AttackPaletteProps {
   attacks: Array<Attack>;
@@ -16,13 +16,7 @@ export const AttackPalette = ({
   onAddAttack,
   onClickAttack,
 }: AttackPaletteProps) => {
-  const handleDragStart = (attack: Attack, event: React.DragEvent) => {
-    event.dataTransfer.effectAllowed = 'copy';
-    event.dataTransfer.dropEffect = 'copy';
-    event.dataTransfer.setData('text/plain', '');
-    event.dataTransfer.setData(PALETTE_DRAG_TYPE, JSON.stringify(attack));
-    event.dataTransfer.setData('application/json', JSON.stringify(attack));
-  };
+  const { handleDragStart } = useDragAndDrop({ schema: AttackSchema });
 
   const attacksByCharacter = Object.groupBy(
     attacks,

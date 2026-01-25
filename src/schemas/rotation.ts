@@ -7,6 +7,7 @@ const ParameterSchema = z.object({
 
 export const AttackSchema = z.object({
   id: z.string(),
+  entityType: z.literal('attack').default('attack'),
   name: z.string(),
   description: z.string().optional(),
   characterName: z.string().optional(),
@@ -19,6 +20,7 @@ export type Attack = z.infer<typeof AttackSchema>;
 /** Buff item for the palette (without timeline position) */
 export const BuffSchema = z.object({
   id: z.string(),
+  entityType: z.literal('buff').default('buff'),
   name: z.string(),
   description: z.string().optional(),
   characterName: z.string().optional(),

@@ -14,10 +14,10 @@ export const calculateStatTotal = (
 };
 
 export const getCalculateStatValueFn =
-  (tags: Array<string>) => (statValues: Array<TaggedStatValue>) => {
+  (tags: Array<string>) => (statValues: Array<TaggedStatValue> | undefined) => {
+    if (!statValues) return 0;
     // 1. Convert target tags to a Set once for O(1) lookups
     const tagSet = new Set(tags);
-
     return statValues.reduce((sum, statValue) => {
       // 2. Check if statValue has Tag.ALL OR any overlapping tag
       const isApplicable =
@@ -35,6 +35,7 @@ export const getCalculateStatValueFn =
 export const getCalculateAbilityAttributeValueFn =
   (tags: Array<string>) => (stats: CharacterStats, attribute: AbilityAttribute) => {
     const resolveStatValue = getCalculateStatValueFn(tags);
+    console.log('stats', attribute, stats);
     switch (attribute) {
       case AbilityAttribute.ATK:
         return calculateStatTotal(
@@ -70,7 +71,6 @@ export const getCalculateCharacterStatsForTag =
         resolveStatValue(statValues),
       ]),
     ) as Record<keyof CharacterStats, number>;
-
     const abilityAttributes = Object.fromEntries(
       Object.values(AbilityAttribute).map((attr) => [
         attr,

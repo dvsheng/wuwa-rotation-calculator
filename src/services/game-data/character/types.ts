@@ -1,12 +1,6 @@
 import type { Attribute } from '@/types';
 
-import type {
-  Attack,
-  BaseEntity,
-  BaseValueObject,
-  Modifiers,
-  PermanentStats,
-} from '../common-types';
+import type { Attack, BaseEntity, Modifiers, PermanentStats } from '../common-types';
 
 /**
  * Represents the progression stage at which a skill or bonus is unlocked.
@@ -41,7 +35,7 @@ export type OriginType = (typeof OriginType)[keyof typeof OriginType];
 /**
  * Common fields for all game data entries to track origin and unlock conditions.
  */
-export interface CharacterBaseItem extends BaseValueObject {
+export interface CharacterBaseItem {
   /** The name of the parent skill or node (e.g., "Ground State Calibration"). */
   parentName: string;
   originType: OriginType;

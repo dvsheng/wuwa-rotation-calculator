@@ -1,3 +1,5 @@
+import type { CharacterDamageInstance, Enemy, Team } from '@/types/server';
+
 import { applyModifiers } from './apply-modifiers';
 import { calculateAttackDamage } from './calculate-attack-damage';
 import { resolveStatValuesInRotation } from './resolve-stat-value';
@@ -17,12 +19,28 @@ export const calculateRotationDamage = (rotation: Rotation): RotationResult => {
         team,
         enemy,
       });
-      const { totalDamage, damageInstances } = reducer;
+      const { totalDamage, damageInstances, damageDetails } = reducer;
       return {
         totalDamage: totalDamage + instanceDamage,
         damageInstances: [...damageInstances, instanceDamage],
+        damageDetails: [
+          ...damageDetails,
+          {
+            team,
+            enemy,
+            instance,
+          },
+        ],
       };
     },
-    { totalDamage: 0, damageInstances: new Array<number>() } as RotationResult,
+    {
+      totalDamage: 0,
+      damageInstances: new Array<number>(),
+      damageDetails: new Array<{
+        team: Team;
+        enemy: Enemy;
+        instance: CharacterDamageInstance;
+      }>(),
+    } as RotationResult,
   );
 };

@@ -13,4 +13,9 @@ export interface Rotation {
 export interface RotationResult {
   totalDamage: number;
   damageInstances: Array<number>;
+  damageDetails: Array<{
+    team: Team;
+    enemy: Enemy;
+    instance: CharacterDamageInstance;
+  }>;
 }

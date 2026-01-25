@@ -6,6 +6,7 @@ import { getEchoDetails } from '@/services/game-data/echo/get-echo-details';
 import { getWeaponDetails } from '@/services/game-data/weapon/get-weapon-details';
 import { NegativeStatus } from '@/types';
 import type { Integer } from '@/types';
+import { Tag } from '@/types/server';
 import type {
   CharacterDamageInstance,
   CharacterStat,
@@ -53,10 +54,6 @@ const ECHO_STAT_MAP: Record<string, string | undefined> = {
  * Maps client main stat types to their corresponding Tags.
  */
 const STAT_TYPE_TO_TAG: Record<string, string | undefined> = {
-  damage_bonus_basic_attack: 'basicAttack',
-  damage_bonus_heavy_attack: 'heavyAttack',
-  damage_bonus_resonance_skill: 'resonanceSkill',
-  damage_bonus_resonance_liberation: 'resonanceLiberation',
   damage_bonus_glacio: 'glacio',
   damage_bonus_fusion: 'fusion',
   damage_bonus_electro: 'electro',
@@ -116,7 +113,7 @@ export const calculateRotation = async (
 
   // 2. Map Client Team to Server Team
   const serverTeamResults = await Promise.all(
-    clientTeam.map(async (clientChar, charIndex) => {
+    clientTeam.map((clientChar, charIndex) => {
       const charData = characterDetails[charIndex];
       if (!charData) {
         return {
@@ -135,7 +132,7 @@ export const calculateRotation = async (
         }
         stats[mainStatKey].push({
           value: 0,
-          tags: [STAT_TYPE_TO_TAG[echo.mainStatType] as string],
+          tags: [STAT_TYPE_TO_TAG[echo.mainStatType] ?? Tag.ALL],
         });
 
         echo.substats.forEach((sub) => {
@@ -145,7 +142,7 @@ export const calculateRotation = async (
           }
           stats[subKey].push({
             value: sub.value / 100,
-            tags: [STAT_TYPE_TO_TAG[sub.stat] as string],
+            tags: [Tag.ALL],
           });
         });
       });
@@ -222,10 +219,11 @@ export const calculateRotation = async (
     };
   });
 
-  return calculateRotationDamage({
+  const calculateRotationDamageProps = {
     team: serverTeam,
     enemy: serverEnemy,
     duration: attacks.length,
     damageInstances,
-  });
+  };
+  return calculateRotationDamage(calculateRotationDamageProps);
 };

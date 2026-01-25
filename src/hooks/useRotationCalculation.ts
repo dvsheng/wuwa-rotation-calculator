@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 
 import { calculateRotation } from '@/services/rotation-calculator/rotation-bridge';
 import { useRotationStore } from '@/store/useRotationStore';
@@ -10,9 +10,8 @@ export const useRotationCalculation = () => {
   const attacks = useRotationStore((state) => state.attacks);
   const buffs = useRotationStore((state) => state.buffs);
 
-  return useQuery({
-    queryKey: ['rotation-calculation', team, enemy, attacks, buffs],
-    queryFn: () => calculateRotation(team, enemy, attacks, buffs),
-    enabled: attacks.length > 0,
+  return useMutation({
+    mutationKey: ['rotation-calculation'],
+    mutationFn: () => calculateRotation(team, enemy, attacks, buffs),
   });
 };

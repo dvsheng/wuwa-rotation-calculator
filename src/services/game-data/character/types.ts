@@ -1,6 +1,12 @@
 import type { Attribute } from '@/types';
 
-import type { Attack, BaseEntity, Modifiers, PermanentStats } from '../common-types';
+import type {
+  Attack,
+  BaseEntity,
+  BaseValueObject,
+  Modifiers,
+  PermanentStats,
+} from '../common-types';
 
 /**
  * Represents the progression stage at which a skill or bonus is unlocked.
@@ -35,11 +41,9 @@ export type OriginType = (typeof OriginType)[keyof typeof OriginType];
 /**
  * Common fields for all game data entries to track origin and unlock conditions.
  */
-export type CharacterBaseItem = {
+export interface CharacterBaseItem extends BaseValueObject {
   /** The name of the parent skill or node (e.g., "Ground State Calibration"). */
   parentName: string;
-  /** The display name of the entry. */
-  name: string;
   originType: OriginType;
   /** The sequence to unlock this entry.*/
   unlockedAt?: Sequence;
@@ -49,7 +53,7 @@ export type CharacterBaseItem = {
    * parameterizable way, i.e. Aemeath s3.
    */
   disabledAt?: Sequence;
-};
+}
 
 export type CharacterAttack = Attack & CharacterBaseItem;
 

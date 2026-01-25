@@ -32,3 +32,7 @@ export interface BaseEntity {
   id: string;
   name: string;
 }
+
+export interface BaseValueObject {
+  name: string;
+}

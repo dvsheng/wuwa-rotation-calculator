@@ -61,13 +61,50 @@ const createDefaultEchoStats = (cost: EchoCost): EchoStats => {
   };
 };
 
-const createDefaultCharacter = (id: string, name: string): Character => ({
+const CHARACTER_DEFAULTS: Record<
+  string,
+  | {
+      weapon: [string, string];
+      echoSet: [string, string];
+      primaryEcho: [string, string];
+    }
+  | undefined
+> = {
+  '1304': {
+    // Jinhsi
+    weapon: ['21010026', 'Ages of Harvest'],
+    echoSet: ['5', 'Celestial Light'],
+    primaryEcho: ['6000059', 'Jué'],
+  },
+  '1209': {
+    // Mornye
+    weapon: ['21010045', 'Radiance Cleaver'],
+    echoSet: ['2', 'Molten Rift'],
+    primaryEcho: ['390080007', 'Inferno Rider'],
+  },
+  '1505': {
+    // Shorekeeper
+    weapon: ['21050036', 'Stellar Symphony'],
+    echoSet: ['7', 'Rejuvenating Glow'],
+    primaryEcho: ['390080005', 'Bell-Borne Geochelone'],
+  },
+};
+
+const createDefaultCharacter = (
+  id: string,
+  name: string,
+  defaults = CHARACTER_DEFAULTS[id] ?? {
+    weapon: ['', ''],
+    echoSet: ['', ''],
+    primaryEcho: ['', ''],
+  },
+): Character => ({
   id,
   name,
   sequence: 0,
-  weapon: { id: '', name: '', refine: 1 },
-  echoSets: [{ id: '', name: '', requirement: '2' }],
-  primarySlotEcho: { id: '', name: '' },
+  weapon: { id: defaults.weapon[0], name: defaults.weapon[1], refine: 1 },
+  echoSets: [{ id: defaults.echoSet[0], name: defaults.echoSet[1], requirement: '5' }],
+  primarySlotEcho: { id: defaults.primaryEcho[0], name: defaults.primaryEcho[1] },
   echoStats: [
     createDefaultEchoStats(4),
     createDefaultEchoStats(3),
@@ -91,9 +128,7 @@ export const useTeamStore = create<TeamState>()(
     enemy: initialEnemy,
     updateCharacter: (index, updater) =>
       set((state) => {
-        if (state.team[index]) {
-          updater(state.team[index]);
-        }
+        updater(state.team[index]);
       }),
     setCharacter: (index, id, name) =>
       set((state) => {
@@ -101,43 +136,31 @@ export const useTeamStore = create<TeamState>()(
       }),
     setSequence: (index, sequence) =>
       set((state) => {
-        if (state.team[index]) {
-          state.team[index].sequence = sequence;
-        }
+        state.team[index].sequence = sequence;
       }),
     setWeapon: (index, id, name) =>
       set((state) => {
-        if (state.team[index]) {
-          state.team[index].weapon = { ...state.team[index].weapon, id, name };
-        }
+        state.team[index].weapon = { ...state.team[index].weapon, id, name };
       }),
     setRefine: (index, refine) =>
       set((state) => {
-        if (state.team[index]) {
-          state.team[index].weapon.refine = refine;
-        }
+        state.team[index].weapon.refine = refine;
       }),
     setEchoSet: (index, setIndex, id, name) =>
       set((state) => {
-        if (state.team[index]) {
-          state.team[index].echoSets[setIndex] = {
-            ...state.team[index].echoSets[setIndex],
-            id,
-            name,
-          };
-        }
+        state.team[index].echoSets[setIndex] = {
+          ...state.team[index].echoSets[setIndex],
+          id,
+          name,
+        };
       }),
     setEchoSetRequirement: (index, setIndex, requirement) =>
       set((state) => {
-        if (state.team[index].echoSets[setIndex]) {
-          state.team[index].echoSets[setIndex].requirement = requirement as any;
-        }
+        state.team[index].echoSets[setIndex].requirement = requirement as any;
       }),
     setPrimaryEcho: (index, id, name) =>
       set((state) => {
-        if (state.team[index]) {
-          state.team[index].primarySlotEcho = { id, name };
-        }
+        state.team[index].primarySlotEcho = { id, name };
       }),
     updateEnemy: (updater) =>
       set((state) => {

@@ -36,7 +36,7 @@ export const ParameterConfigurationDialog = ({
   // ensure fresh values when opened, we'll use the 'open' state logic inside the render
   // or a key on the component.
   const [values, setValues] = useState<Array<number | undefined>>(() =>
-    parameters.map((p) => p.value ?? undefined),
+    parameters.map((p) => p.value),
   );
 
   const handleValueChange = (index: number, value: string) => {

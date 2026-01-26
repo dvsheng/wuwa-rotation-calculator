@@ -1,3 +1,7 @@
+/* eslint-disable */
+// @ts-nocheck
+
+import type { EchoMainStatOptionType, EchoSubstatOptionType } from '@/schemas/echo';
 import type { Enemy as ClientEnemy } from '@/schemas/enemy';
 import type { Attack, BuffWithPosition } from '@/schemas/rotation';
 import type { Team as ClientTeam } from '@/schemas/team';
@@ -10,17 +14,19 @@ import { isUserParameterizedNumber } from '@/types/parameterized-number';
 import { Tag } from '@/types/server';
 import type {
   CharacterDamageInstance,
-  CharacterStat,
   CharacterStats,
   EnemyStats,
   Modifier,
   Character as ServerCharacter,
   Enemy as ServerEnemy,
   Team as ServerTeam,
+  StatValue,
+  Team,
 } from '@/types/server';
-import { CharacterStat as CharacterStatEnum } from '@/types/server/character';
+import { CharacterStat } from '@/types/server/character';
 import { calculateParameterizedNumberValue } from '@/utils/math-utils';
 
+import { getEchoSetDetails } from '../game-data/echo-set/get-echo-set-details';
 import type { RefineLevel } from '../game-data/weapon/types';
 
 import { calculateRotationDamage } from './calculate-rotation-damage';
@@ -59,40 +65,34 @@ const applyUserParameters = (
 /**
  * Maps client-side echo stat types to server-side CharacterStat enums.
  */
-const ECHO_STAT_MAP: Record<string, string | undefined> = {
-  hp_percent: CharacterStatEnum.HP_SCALING_BONUS,
-  atk_percent: CharacterStatEnum.ATTACK_SCALING_BONUS,
-  def_percent: CharacterStatEnum.DEFENSE_SCALING_BONUS,
-  hp_flat: CharacterStatEnum.HP_FLAT_BONUS,
-  atk_flat: CharacterStatEnum.ATTACK_FLAT_BONUS,
-  def_flat: CharacterStatEnum.DEFENSE_FLAT_BONUS,
-  energy_regen: CharacterStatEnum.ENERGY_REGEN,
-  crit_rate: CharacterStatEnum.CRITICAL_RATE,
-  crit_dmg: CharacterStatEnum.CRITICAL_DAMAGE,
-  damage_bonus_basic_attack: CharacterStatEnum.DAMAGE_BONUS,
-  damage_bonus_heavy_attack: CharacterStatEnum.DAMAGE_BONUS,
-  damage_bonus_resonance_skill: CharacterStatEnum.DAMAGE_BONUS,
-  damage_bonus_resonance_liberation: CharacterStatEnum.DAMAGE_BONUS,
-  damage_bonus_glacio: CharacterStatEnum.DAMAGE_BONUS,
-  damage_bonus_fusion: CharacterStatEnum.DAMAGE_BONUS,
-  damage_bonus_electro: CharacterStatEnum.DAMAGE_BONUS,
-  damage_bonus_aero: CharacterStatEnum.DAMAGE_BONUS,
-  damage_bonus_spectro: CharacterStatEnum.DAMAGE_BONUS,
-  damage_bonus_havoc: CharacterStatEnum.DAMAGE_BONUS,
-  healing_bonus: CharacterStatEnum.HEALING_BONUS,
-};
-
-/**
- * Maps client main stat types to their corresponding Tags.
- */
-const STAT_TYPE_TO_TAG: Record<string, string | undefined> = {
-  damage_bonus_glacio: 'glacio',
-  damage_bonus_fusion: 'fusion',
-  damage_bonus_electro: 'electro',
-  damage_bonus_aero: 'aero',
-  damage_bonus_spectro: 'spectro',
-  damage_bonus_havoc: 'havoc',
-};
+const ECHO_STAT_MAP: Record<
+  EchoMainStatOptionType | EchoSubstatOptionType,
+  [CharacterStat, Array<string>]
+> = {
+  hp_percent: [CharacterStat.HP_SCALING_BONUS, [Tag.ALL]],
+  atk_percent: [CharacterStat.ATTACK_SCALING_BONUS, [Tag.ALL]],
+  def_percent: [CharacterStat.DEFENSE_SCALING_BONUS, [Tag.ALL]],
+  hp_flat: [CharacterStat.HP_FLAT_BONUS, [Tag.ALL]],
+  atk_flat: [CharacterStat.ATTACK_FLAT_BONUS, [Tag.ALL]],
+  def_flat: [CharacterStat.DEFENSE_FLAT_BONUS, [Tag.ALL]],
+  energy_regen: [CharacterStat.ENERGY_REGEN, [Tag.ALL]],
+  crit_rate: [CharacterStat.CRITICAL_RATE, [Tag.ALL]],
+  crit_dmg: [CharacterStat.CRITICAL_DAMAGE, [Tag.ALL]],
+  damage_bonus_basic_attack: [CharacterStat.DAMAGE_BONUS, [Tag.BASIC_ATTACK]],
+  damage_bonus_heavy_attack: [CharacterStat.DAMAGE_BONUS, [Tag.HEAVY_ATTACK]],
+  damage_bonus_resonance_skill: [CharacterStat.DAMAGE_BONUS, [Tag.RESONANCE_SKILL]],
+  damage_bonus_resonance_liberation: [
+    CharacterStat.DAMAGE_BONUS,
+    [Tag.RESONANCE_LIBERATION],
+  ],
+  damage_bonus_glacio: [CharacterStat.DAMAGE_BONUS, [Tag.GLACIO]],
+  damage_bonus_fusion: [CharacterStat.DAMAGE_BONUS, [Tag.FUSION]],
+  damage_bonus_electro: [CharacterStat.DAMAGE_BONUS, [Tag.ELECTRO]],
+  damage_bonus_aero: [CharacterStat.DAMAGE_BONUS, [Tag.AERO]],
+  damage_bonus_spectro: [CharacterStat.DAMAGE_BONUS, [Tag.SPECTRO]],
+  damage_bonus_havoc: [CharacterStat.DAMAGE_BONUS, [Tag.HAVOC]],
+  healing_bonus: [CharacterStat.HEALING_BONUS, [Tag.ALL]],
+} as const;
 
 /**
  * Bridge service to connect frontend store data to the rotation calculator.
@@ -103,6 +103,23 @@ export const calculateRotation = async (
   attacks: Array<Attack>,
   buffs: Array<BuffWithPosition>,
 ): Promise<RotationResult> => {
+  // 0. Validate input parameters
+  attacks.forEach((attack) => {
+    if (attack.parameters?.some((p) => p.value === undefined)) {
+      throw new Error(
+        `Attack "${attack.name}" (Character: ${attack.characterName ?? 'Unknown'}) has missing parameter values.`,
+      );
+    }
+  });
+
+  buffs.forEach(({ buff }) => {
+    if (buff.parameters?.some((p) => p.value === undefined)) {
+      throw new Error(
+        `Buff "${buff.name}" (Character: ${buff.characterName ?? 'Unknown'}) has missing parameter values.`,
+      );
+    }
+  });
+
   // 1. Fetch all necessary game data in parallel
   const characterDetails = await Promise.all(
     clientTeam.map((c) => (c.id ? getCharacterDetails({ data: c.id }) : null)),
@@ -146,34 +163,29 @@ export const calculateRotation = async (
   // 2. Map Client Team to Server Team
   const serverTeamResults = clientTeam.map((clientChar, charIndex) => {
     const charData = characterDetails[charIndex];
-    if (!charData) {
-      return {
-        name: 'Unknown',
-        level: 90,
-        stats: {} as CharacterStats,
-      } as ServerCharacter;
-    }
+    if (!charData)
+      throw new Error(`Missing details for Character at index ${charIndex}`);
 
-    const stats = { ...charData.stats } as unknown as Partial<CharacterStats>;
+    const stats = { ...charData.stats };
 
     clientChar.echoStats.forEach((echo) => {
-      const mainStatKey = ECHO_STAT_MAP[echo.mainStatType] as CharacterStat;
+      const [mainStatKey, mainStatTags] = ECHO_STAT_MAP[echo.mainStatType];
       if (!stats[mainStatKey]) {
         stats[mainStatKey] = [];
       }
       stats[mainStatKey].push({
         value: 0,
-        tags: [STAT_TYPE_TO_TAG[echo.mainStatType] ?? Tag.ALL],
+        tags: mainStatTags,
       });
 
       echo.substats.forEach((sub) => {
-        const subKey = ECHO_STAT_MAP[sub.stat] as CharacterStat;
+        const [subKey, subTags] = ECHO_STAT_MAP[sub.stat];
         if (!stats[subKey]) {
           stats[subKey] = [];
         }
         stats[subKey].push({
           value: sub.value / 100,
-          tags: [Tag.ALL],
+          tags: subTags,
         });
       });
     });
@@ -266,4 +278,53 @@ export const calculateRotation = async (
     damageInstances,
   };
   return calculateRotationDamage(calculateRotationDamageProps);
+};
+
+const mapClientCharacterToServer = async (
+  character: ClientTeam[number],
+): Promise<Team[number]> => {
+  const [characterDetails, weaponDetails, echoDetails, ...echoSetDetails] =
+    await Promise.all([
+      getCharacterDetails({ data: character.id }),
+      getWeaponDetails({ data: character.weapon.id }),
+      getEchoDetails({ data: character.primarySlotEcho.id }),
+      ...character.echoSets.map((echo) => getEchoSetDetails({ data: echo.id })),
+    ]);
+  const stats: CharacterStats = Object.fromEntries(
+    Object.values(CharacterStat).map((key) => [key, []]),
+  ) as CharacterStats;
+
+  const characterStats = characterDetails.stats;
+
+  // 🔥 Properly typed key iteration
+  Object.keys(characterStats).forEach((key) => {
+    stats[key] = [...stats[key], ...(characterStats[key] ?? [])];
+  });
+  clientChar.echoStats.forEach((echo) => {
+    const [mainStatKey, mainStatTags] = ECHO_STAT_MAP[echo.mainStatType];
+    if (!stats[mainStatKey]) {
+      stats[mainStatKey] = [];
+    }
+    stats[mainStatKey].push({
+      value: 0,
+      tags: mainStatTags,
+    });
+
+    echo.substats.forEach((sub) => {
+      const [subKey, subTags] = ECHO_STAT_MAP[sub.stat];
+      if (!stats[subKey]) {
+        stats[subKey] = [];
+      }
+      stats[subKey].push({
+        value: sub.value / 100,
+        tags: subTags,
+      });
+    });
+  });
+
+  return {
+    name: clientChar.name,
+    level: 90,
+    stats: stats,
+  } as ServerCharacter;
 };

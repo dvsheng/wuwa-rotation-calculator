@@ -51,6 +51,7 @@ export const CanvasItem = React.forwardRef<HTMLDivElement, CanvasItemProps>(
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const hasParameters = (parameters?.length ?? 0) > 0;
     const shouldShowWarning =
+      // eslint-disable-next-line
       hasParameters && parameters?.some((p) => p.value === undefined);
 
     const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {

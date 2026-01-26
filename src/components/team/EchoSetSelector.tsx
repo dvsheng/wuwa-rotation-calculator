@@ -25,7 +25,6 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProps) => {
   const setEchoSet = useTeamStore((state) => state.setEchoSet);
   const setEchoSetRequirement = useTeamStore((state) => state.setEchoSetRequirement);
   const updateCharacter = useTeamStore((state) => state.updateCharacter);
-
   const handleAddSet = () => {
     if (character.echoSets.length < 2) {
       updateCharacter(index, (draft) => {
@@ -47,6 +46,10 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProps) => {
     }
   };
 
+  const handleUpdateSet = (setIndex: number, id: string, name: string) => {
+    setEchoSet(index, setIndex, id, name);
+  };
+
   return (
     <Stack spacing="sm">
       <Stack spacing="sm">
@@ -59,14 +62,9 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProps) => {
               <AssetIcon name="guord" className="brightness-0" />
               <div className="min-w-0 flex-1">
                 <SearchableSelect
-                  options={echoSetList}
-                  value={set.name}
-                  onChange={(val) => {
-                    const foundSet = echoSetList.find((s) => s.name === val);
-                    if (foundSet) {
-                      setEchoSet(index, setIndex, foundSet.id, foundSet.name);
-                    }
-                  }}
+                  items={echoSetList}
+                  selectedItem={character.echoSets[setIndex]}
+                  onItemClick={(item) => handleUpdateSet(setIndex, item.id, item.name)}
                   placeholder="Select echo set"
                   className="w-full"
                 />

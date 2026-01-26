@@ -18,12 +18,6 @@ export const Tag = {
   TUNE_RUPTURE: 'tuneRupture',
   /** Tag for Tune Strain specific multiplier increases. */
   TUNE_STRAIN: 'tuneStrain',
-  /** Tag for Intro skill specific modifiers. */
-  INTRO: 'intro',
-  /** Tag for Outro skill specific modifiers. */
-  OUTRO: 'outro',
-  /** Tag for mid-air/aerial attacks. */
-  AERIAL: 'aerial',
 } as const;
 
 export type Tag = (typeof Tag)[keyof typeof Tag];

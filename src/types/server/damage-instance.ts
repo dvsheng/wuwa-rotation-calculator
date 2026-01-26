@@ -30,6 +30,14 @@ export const DamageType = {
   RESONANCE_LIBERATION: 'resonanceLiberation',
   /** Damage from active Echoes. */
   ECHO: 'echo',
+  /** Attacks triggered by other characters. */
+  COORDINATED_ATTACK: 'coordinatedAttack',
+  /** Tag for Intro skill specific modifiers. */
+  INTRO: 'intro',
+  /** Tag for Outro skill specific modifiers. */
+  OUTRO: 'outro',
+  /** Tag for mid-air/aerial attacks. */
+  AERIAL: 'aerial',
 } as const;
 
 export type DamageType = (typeof DamageType)[keyof typeof DamageType];

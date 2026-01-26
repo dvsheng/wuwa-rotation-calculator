@@ -18,8 +18,7 @@ export const getWeaponDetails = createServerFn({
   method: 'GET',
 })
   .inputValidator(z.string())
-  .handler(async ({ data: name }) => {
-    const id = await getWeaponIdByName(name);
+  .handler(async ({ data: id }) => {
     const key = `weapon/parsed/${id}.json`;
 
     const weaponData = await weaponStore.get(key);

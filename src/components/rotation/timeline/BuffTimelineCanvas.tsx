@@ -69,7 +69,7 @@ export const BuffTimelineCanvas = ({ width, gridConfig }: BuffTimelineCanvasProp
       {activeBuffs.length === 0 && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <Text className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
-            Drag buffs here to track their duration
+            Align buffs with attacks to include them in damage calculations
           </Text>
         </div>
       )}

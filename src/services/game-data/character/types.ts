@@ -6,13 +6,7 @@ import type {
 } from '@/schemas/rotation';
 import type { Attribute } from '@/types';
 
-import type {
-  Attack,
-  BaseEntity,
-  Modifiers,
-  Named,
-  PermanentStats,
-} from '../common-types';
+import type { BaseEntity, Capabilities } from '../common-types';
 
 /**
  * Represents the progression stage at which a skill or bonus is unlocked.
@@ -47,7 +41,8 @@ export type OriginType = (typeof OriginType)[keyof typeof OriginType];
 /**
  * Common fields for all game data entries to track origin and unlock conditions.
  */
-export interface CharacterBaseItem extends Named {
+export interface CharacterCapabilityProperties {
+  name: string;
   /** The name of the parent skill or node (e.g., "Ground State Calibration"). */
   parentName: string;
   originType: OriginType;
@@ -61,31 +56,13 @@ export interface CharacterBaseItem extends Named {
   disabledAt?: Sequence;
 }
 
-export type CharacterAttack = Attack & CharacterBaseItem;
-
-export type CharacterModifiers = Modifiers<CharacterBaseItem>;
-
-export type CharacterStats = PermanentStats<CharacterBaseItem>;
-
 /**
  * The core Character data structure used for damage calculations and rotation building.
  */
 export interface Character extends BaseEntity {
   /** Attribute of the character */
   attribute: Attribute;
-  /**
-   * All damage-dealing instances in the character's kit.
-   */
-  attacks: Array<CharacterAttack>;
-  /**
-   * Temporary or conditional buffs (e.g., Outro skills, field effects).
-   */
-  modifiers: CharacterModifiers;
-  /**
-   * Comprehensive stat record including base stats (ATK, DEF, HP at Lvl 90),
-   * permanent stat nodes, and unconditional sequence bonuses.
-   */
-  stats: CharacterStats;
+  capabilities: Capabilities<CharacterCapabilityProperties>;
 }
 
 export const GetClientCharacterDetailsInputSchema = z.object({

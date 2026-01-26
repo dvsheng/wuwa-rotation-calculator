@@ -29,6 +29,28 @@ This plan outlines the process for transforming raw Hakushin API JSON data into 
 
 ---
 
+## Schema Structure Overview
+
+All entities use a **Capabilities** structure that contains:
+
+```typescript
+interface Capabilities {
+  attacks: Array<Attack>;
+  modifiers: Array<Modifier>;
+  permanentStats: Array<PermanentStat>;
+}
+```
+
+### Key Schema Changes (from old format)
+
+1. **`capabilities` wrapper**: All attacks, modifiers, and stats are now nested under a `capabilities` object
+2. **`permanentStats` is an array**: Changed from `Record<StatKey, Array<...>>` to `Array<{stat, name, description, value, tags, ...}>`
+3. **`modifiedStats` is an array**: Changed from `Record<StatKey, Array<{value, tags}>>` to `Array<{stat, value, tags}>`
+4. **No `parameterizedMotionValues`**: Removed from attacks - use `motionValues` with `UserParameterizedNumber` objects when needed
+5. **Weapons**: `baseStats` incorporated into each refine level's `permanentStats`
+
+---
+
 ## Phase 1: Character Data Parsing
 
 ### 1.1 Input Structure (Raw Hakushin JSON)
@@ -110,17 +132,17 @@ For each SkillTree node with `Skill.Damage` (skip nodes without damage data per 
 
    **Specific attack names as tags**: Some attacks should use their own name as a tag for targeted buffs (see "Edge Cases > Specific Attack Tagging")
 
-4. **Output Format**:
+4. **Output Format** (inside `capabilities.attacks`):
    ```typescript
    {
-     originType: "Normal Attack",
-     parentName: "Ground State Calibration",
      name: "Basic Attack Stage 1",
      description: "Perform up to 4 consecutive attacks...",
      scalingStat: "atk",
      motionValues: [0.2227, 0.1671, 0.1671],
-     parameterizedMotionValues: [],
-     tags: ["basicAttack"]
+     tags: ["basicAttack"],
+     // Character-specific fields:
+     originType: "Normal Attack",
+     parentName: "Ground State Calibration"
    }
    ```
 
@@ -155,6 +177,21 @@ For effects with duration or conditions (from `Skill.Desc`):
    - If a sequence replaces/upgrades a base modifier, add `disabledAt` to the base version
    - See "Edge Cases > Sequence Replacement Pattern" for detailed example (Aemeath S3)
 
+5. **Output Format** (inside `capabilities.modifiers`):
+   ```typescript
+   {
+     name: "Condensation Resonance Skill Buff",
+     description: "Damage dealt by Sanhua's Resonance Skill increased by 20%...",
+     target: "self",
+     modifiedStats: [
+       { stat: "damageBonus", value: 0.2, tags: ["resonanceSkill"] }
+     ],
+     // Character-specific fields:
+     originType: "Inherent Skill",
+     parentName: "Condensation"
+   }
+   ```
+
 ### 1.6 Stat Extraction Logic
 
 1. **Base Stats** (Level 90):
@@ -164,6 +201,69 @@ For effects with duration or conditions (from `Skill.Desc`):
 2. **Permanent Bonuses** (`NodeType: 4` and unconditional Inherent Skills):
    - Extract stat increases without duration/conditions
    - Convert percentages to decimals (e.g., "2.28%" → `0.0228`)
+
+3. **Output Format** (inside `capabilities.permanentStats`):
+   ```typescript
+   {
+     stat: "hpFlat",
+     name: "Base HP",
+     description: "Base HP at Level 90",
+     value: 10062.5,
+     tags: ["all"],
+     // Character-specific fields:
+     originType: "Base Stats",
+     parentName: "Sanhua"
+   }
+   ```
+
+### 1.7 Character Output Structure
+
+```typescript
+{
+  id: "1102",
+  name: "Sanhua",
+  attribute: "glacio",
+  capabilities: {
+    attacks: [
+      {
+        name: "Basic Attack Stage 1",
+        description: "Perform up to 5 consecutive attacks...",
+        scalingStat: "atk",
+        motionValues: [0.4871],
+        tags: ["basicAttack"],
+        originType: "Normal Attack",
+        parentName: "Frigid Light"
+      },
+      // ... more attacks
+    ],
+    modifiers: [
+      {
+        name: "Condensation Resonance Skill Buff",
+        description: "Damage dealt by Sanhua's Resonance Skill increased by 20%...",
+        target: "self",
+        modifiedStats: [
+          { stat: "damageBonus", value: 0.2, tags: ["resonanceSkill"] }
+        ],
+        originType: "Inherent Skill",
+        parentName: "Condensation"
+      },
+      // ... more modifiers
+    ],
+    permanentStats: [
+      {
+        stat: "hpFlat",
+        name: "Base HP",
+        description: "Base HP at Level 90",
+        value: 10062.5,
+        tags: ["all"],
+        originType: "Base Stats",
+        parentName: "Sanhua"
+      },
+      // ... more permanent stats
+    ]
+  }
+}
+```
 
 ---
 
@@ -195,9 +295,11 @@ Key fields:
 
 Weapons have 5 refinement levels. Parse `Effect["1"]` through `Effect["5"]`.
 
-1. **Permanent Stats**: If no condition/trigger → `stats`
+1. **Permanent Stats**: If no condition/trigger → `permanentStats`
 2. **Conditional Buffs**: If trigger/duration → `modifiers`
-3. **Weapon Attacks**: Some weapons add attacks → `attack`
+3. **Weapon Attacks**: Some weapons add attacks → `attacks`
+
+**Important**: Base stats are included in each refine level's `permanentStats`.
 
 ### 2.4 Output Structure
 
@@ -205,14 +307,32 @@ Weapons have 5 refinement levels. Parse `Effect["1"]` through `Effect["5"]`.
 {
   id: "21050015",
   name: "Cosmic Ripples",
-  baseStats: {
-    attackFlat: 587,
-    attackScalingBonus: 0.321
-  },
-  attributes: {
-    "1": { attack: undefined, modifiers: [...], stats: {...} },
-    "2": { attack: undefined, modifiers: [...], stats: {...} },
-    // ... through "5"
+  capabilities: {
+    "1": {
+      attacks: [],
+      modifiers: [
+        {
+          description: "When dealing Basic Attack DMG, increases Basic Attack DMG Bonus by 3.2%...",
+          target: "self",
+          modifiedStats: [
+            {
+              stat: "damageBonus",
+              value: { parameterConfigs: { "Stacks": { scale: 0.032 } }, minimum: 0, maximum: 5 },
+              tags: ["basicAttack"]
+            }
+          ]
+        }
+      ],
+      permanentStats: [
+        { stat: "attackFlat", name: "Base attackFlat", description: "Base weapon stat", value: 500, tags: ["all"] },
+        { stat: "attackScalingBonus", name: "Base attackScalingBonus", description: "Base weapon stat", value: 0.54, tags: ["all"] },
+        { stat: "energyRegen", name: "energyRegen", description: "Increases Energy Regen by 12.8%.", value: 0.128, tags: ["all"] }
+      ]
+    },
+    "2": { /* ... */ },
+    "3": { /* ... */ },
+    "4": { /* ... */ },
+    "5": { /* ... */ }
   }
 }
 ```
@@ -256,7 +376,7 @@ Key fields:
    - Source: `Skill.Damage[key].RelatedProperty`
    - Lowercase: "ATK" → "atk"
 
-4. **Tags**: Always include `["echoSkill"]` + element tag
+4. **Tags**: Always include `["echo"]` or `["echoSkill"]`
 
 ### 3.3 Modifier Extraction
 
@@ -271,6 +391,28 @@ Extract from `Group` object keys (e.g., `"12"`, `"13"`):
 echoSetIds: ['12', '13'];
 ```
 
+### 3.5 Output Structure
+
+```typescript
+{
+  id: "390070078",
+  name: "Baby Viridblaze Saurian",
+  echoSetIds: ["2", "3", "9"],
+  capabilities: {
+    attacks: [
+      {
+        description: "Transform into Baby Viridblaze Saurian to rest in place...",
+        scalingStat: "atk",
+        motionValues: [],
+        tags: ["echo", "all"]
+      }
+    ],
+    modifiers: [],
+    permanentStats: []
+  }
+}
+```
+
 ---
 
 ## Phase 4: Echo Set Data Parsing
@@ -283,13 +425,13 @@ Echo Sets are derived from Echo `Group` data, not separate raw files.
 
 Hakushin uses `"2"` and `"5"` for set bonuses. Map to:
 
-- `"2"` → `TWO_PIECE` (2-piece bonus)
-- `"5"` → `FOUR_PIECE` (5-piece bonus, shown as "4" in game but stored as "5" in API)
+- `"2"` → 2-piece bonus
+- `"5"` → 5-piece bonus (shown as "4" in game but stored as "5" in API)
 
 ### 4.3 Effect Classification
 
 1. **Permanent Stats** (e.g., "Havoc DMG + 10%"):
-   - No trigger/duration → `setEffects["2"].stats`
+   - No trigger/duration → `setEffects["2"].permanentStats`
 
 2. **Conditional Modifiers** (e.g., "When Outro Skill is triggered..."):
    - Has trigger/duration → `setEffects["5"].modifiers`
@@ -302,20 +444,24 @@ Hakushin uses `"2"` and `"5"` for set bonuses. Map to:
   name: "Midnight Veil",
   setEffects: {
     "2": {
+      attacks: [],
       modifiers: [],
-      stats: {
-        damageBonus: [{ value: 0.1, tags: ["havoc"] }]
-      }
+      permanentStats: [
+        { stat: "damageBonus", name: "damageBonus", description: "Havoc DMG + 10%", value: 0.1, tags: ["havoc"] }
+      ]
     },
     "5": {
-      modifiers: [{
-        target: "activeCharacter",
-        description: "When Outro Skill is triggered...",
-        modifiedStats: {
-          damageBonus: [{ value: 0.15, tags: ["havoc"] }]
+      attacks: [],
+      modifiers: [
+        {
+          description: "When Outro Skill is triggered, deal additional 480% Havoc DMG...",
+          target: "activeCharacter",
+          modifiedStats: [
+            { stat: "damageBonus", value: 0.15, tags: ["havoc"] }
+          ]
         }
-      }],
-      stats: {}
+      ],
+      permanentStats: []
     }
   }
 }
@@ -360,13 +506,15 @@ This will validate all parsed files against Zod schemas defined in `scripts/vali
 - [ ] Tags match attack type (basicAttack, resonanceSkill, etc.)
 - [ ] Sequence bonuses have `unlockedAt`
 - [ ] Base stats from `Stats["6"]["90"]`
-- [ ] `parentName` and `originType` present on all items
+- [ ] `parentName` and `originType` present on all items in capabilities
+- [ ] All data wrapped in `capabilities` object
 
 #### Weapon Data
 
 - [ ] Level 90 stats extracted correctly
 - [ ] Secondary stat mapped to correct key
 - [ ] All 5 refine levels (`"1"` through `"5"`) parsed
+- [ ] Base stats included in each refine level's `permanentStats`
 - [ ] Weapon type mapped correctly
 
 #### Echo Data
@@ -374,21 +522,23 @@ This will validate all parsed files against Zod schemas defined in `scripts/vali
 - [ ] Motion values from `RateLv[4]` (max level)
 - [ ] Element tag included
 - [ ] All echo set IDs extracted as strings
+- [ ] Data wrapped in `capabilities` object
 
 #### Echo Set Data
 
 - [ ] 2pc and 5pc (stored as `"2"` and `"5"`) bonuses parsed
 - [ ] Permanent vs conditional effects separated
 - [ ] All values converted to decimals
+- [ ] Each set effect is a `Capabilities` object
 
 ---
 
 ## Gold Standard References
 
-- **Character**: `.local/data/character/parsed/1209.json` (Mornye), `.local/data/character/parsed/1102.json`, `.local/data/character/parsed/1103.json`
-- **Weapon**: Compare output against expected `Weapon` interface
-- **Echo**: Compare output against expected `Echo` interface
-- **Echo Set**: Compare output against expected `EchoSet` interface
+- **Character**: `.local/data/character/parsed/1102.json` (Sanhua), `.local/data/character/parsed/1103.json`
+- **Weapon**: `.local/data/weapon/parsed/21050015.json` (Cosmic Ripples)
+- **Echo**: `.local/data/echo/parsed/390070078.json` (Baby Viridblaze Saurian)
+- **Echo Set**: `.local/data/echo-set/parsed/12.json` (Midnight Veil)
 
 ---
 
@@ -411,19 +561,27 @@ The validation script enforces these constraints:
 #### Attack Schema
 
 - `scalingStat`: Must be `"hp"`, `"atk"`, or `"def"` (lowercase)
-- `motionValues`: Optional `Array<number>`
-- `parameterizedMotionValues`: Optional `Array<UserParameterizedNumber>`
+- `motionValues`: `Array<number | UserParameterizedNumber>`
 - `description`: Required string
 - `tags`: Required `Array<string>`
 
 #### Modifier Schema
 
-- `target`: One of `"team"`, `"enemy"`, `"activeCharacter"`, `"self"`, or array `[1, 2, 3]` for slot targeting
-- `modifiedStats`: Record of stat key → `Array<{ value, tags }>`
+- `target`: Optional - one of `"team"`, `"enemy"`, `"activeCharacter"`, `"self"`, or array `[1, 2, 3]` for slot targeting
+- `modifiedStats`: `Array<{ stat: string, value: number | ParameterizedNumber, tags: Array<string> }>`
 - `description`: Required string
+
+#### PermanentStat Schema
+
+- `stat`: Required string (stat key like "hpFlat", "damageBonus", etc.)
+- `name`: Required string
+- `description`: Required string
+- `value`: `number | ParameterizedNumber`
+- `tags`: Required `Array<string>`
 
 #### Character-Specific Fields
 
+- `name`: Required string
 - `parentName`: Required (skill tree node name)
 - `originType`: Required (e.g., "Normal Attack", "Resonance Skill")
 - `unlockedAt`: Optional sequence `"s1"`-`"s6"`
@@ -431,21 +589,18 @@ The validation script enforces these constraints:
 
 #### Weapon Schema
 
-- `baseStats`: Record of stat key → number
-- `attributes`: Record with keys `"1"` through `"5"` (refine levels)
-- Each refine level has: `attack?`, `modifiers`, `stats`
+- `capabilities`: Record with keys `"1"` through `"5"` (refine levels)
+- Each refine level is a `Capabilities` object with `attacks`, `modifiers`, `permanentStats`
 
 #### Echo Schema
 
 - `echoSetIds`: `Array<string>` (references to echo set IDs)
-- `attack`: Optional attack object
-- `modifiers`: `Array<Modifier>`
-- `stats`: Permanent stats record
+- `capabilities`: `Capabilities` object with `attacks`, `modifiers`, `permanentStats`
 
 #### Echo Set Schema
 
 - `setEffects`: Object with optional keys `"2"`, `"3"`, `"5"`
-- Each set effect has: `modifiers`, `stats`
+- Each set effect is a `Capabilities` object with `attacks`, `modifiers`, `permanentStats`
 
 ### Validation Workflow
 
@@ -477,23 +632,23 @@ This uses `UserParameterizedNumber` because the user controls stack count (0-3):
 
 ```typescript
 {
+  name: "Between the Stars (Tune Rupture)",
+  description: "...",
   originType: "Inherent Skill",
   parentName: "Between the Stars",
-  name: "Between the Stars (Tune Rupture)",
   disabledAt: "s3",  // <-- Key: disabled when S3 unlocks
   target: "self",
-  modifiedStats: {
-    criticalDamage: [{
+  modifiedStats: [
+    {
+      stat: "criticalDamage",
       value: {
-        parameterConfigs: {
-          0: { scale: 0.2 }  // 20% per stack
-        },
+        parameterConfigs: { "0": { scale: 0.2 } },  // 20% per stack
         minimum: 0,
         maximum: 3
       },
       tags: ["all"]
-    }]
-  }
+    }
+  ]
 }
 ```
 
@@ -510,17 +665,15 @@ This becomes a simple modifier with `unlockedAt`:
 
 ```typescript
 {
+  name: "Between the Stars (Tune Rupture) - S3",
+  description: "...",
   originType: "s3",
   parentName: "Absolute Sovereignty",
-  name: "Between the Stars (Tune Rupture) - S3",
   unlockedAt: "s3",  // <-- Key: only active at S3+
   target: "self",
-  modifiedStats: {
-    criticalDamage: [{
-      value: 0.6,  // Flat 60%, no stacks
-      tags: ["all"]
-    }]
-  }
+  modifiedStats: [
+    { stat: "criticalDamage", value: 0.6, tags: ["all"] }  // Flat 60%, no stacks
+  ]
 }
 ```
 
@@ -555,17 +708,15 @@ Some sequences ADD a new effect to an existing ability without replacing/disabli
 
 ```typescript
 {
+  name: "Outer Stellarealm ATK Buff",
+  description: "...",
   originType: "s2",
   parentName: "Echerta",  // S2 node name
-  name: "Outer Stellarealm ATK Buff",
   unlockedAt: "s2",
   target: "team",
-  modifiedStats: {
-    attackPercentage: [{
-      value: 0.4,  // 40% ATK
-      tags: ["all"]
-    }]
-  }
+  modifiedStats: [
+    { stat: "attackPercentage", value: 0.4, tags: ["all"] }  // 40% ATK
+  ]
 }
 ```
 
@@ -594,14 +745,9 @@ Ice Burst is a specific attack in Sanhua's Forte Circuit that deals Resonance Sk
 ```typescript
 // DON'T do this - would buff ALL resonance skills
 {
-  modifiedStats: {
-    criticalDamage: [
-      {
-        value: 1.0,
-        tags: ['resonanceSkill'], // Wrong!
-      },
-    ];
-  }
+  modifiedStats: [
+    { stat: "criticalDamage", value: 1.0, tags: ["resonanceSkill"] }  // Wrong!
+  ]
 }
 ```
 
@@ -617,17 +763,15 @@ Ice Burst is a specific attack in Sanhua's Forte Circuit that deals Resonance Sk
 
 // The S5 modifier targets only Ice Burst by name
 {
+  name: "Ice Burst Crit DMG Bonus",
+  description: "...",
   originType: "s5",
   parentName: "Unraveling Fate",
-  name: "Ice Burst Crit DMG Bonus",
   unlockedAt: "s5",
   target: "self",
-  modifiedStats: {
-    criticalDamage: [{
-      value: 1.0,
-      tags: ["Ice Burst"]  // Matches the attack name (added by engine at runtime)
-    }]
-  }
+  modifiedStats: [
+    { stat: "criticalDamage", value: 1.0, tags: ["Ice Burst"] }  // Matches the attack name
+  ]
 }
 ```
 
@@ -706,36 +850,40 @@ You need to assign meaningful names AND use those exact names as tags.
 
 ```typescript
 {
+  name: "Cartethyia Form DMG Multiplier Bonus",
+  description: "...",
   originType: "s2",
   parentName: "Blade Broken by Tempest",
-  name: "Cartethyia Form DMG Multiplier Bonus",
   unlockedAt: "s2",
   target: "self",
-  modifiedStats: {
-    damageMultiplierBonus: [{
+  modifiedStats: [
+    {
+      stat: "damageMultiplierBonus",
       value: 0.5,
       tags: [
         "Basic Attack Stage 1", "Basic Attack Stage 2", "Basic Attack Stage 3", "Basic Attack Stage 4",
         "Heavy Attack", "Dodge Counter", "Intro Skill"
       ]
-    }]
-  }
+    }
+  ]
 },
 {
+  name: "Cartethyia Mid-air Attack DMG Multiplier Bonus",
+  description: "...",
   originType: "s2",
   parentName: "Blade Broken by Tempest",
-  name: "Cartethyia Mid-air Attack DMG Multiplier Bonus",
   unlockedAt: "s2",
   target: "self",
-  modifiedStats: {
-    damageMultiplierBonus: [{
+  modifiedStats: [
+    {
+      stat: "damageMultiplierBonus",
       value: 2.0,  // 200%
       tags: [
         "Mid-air Attack", "Mid-air Attack 1 Sword Shadow Recalled",
         "Mid-air Attack 2 Sword Shadows Recalled", "Mid-air Attack 3 Sword Shadows Recalled"
       ]
-    }]
-  }
+    }
+  ]
 }
 ```
 
@@ -760,7 +908,7 @@ You need to assign meaningful names AND use those exact names as tags.
 2. **Ambiguous descriptions**: Flag modifiers that can't be auto-parsed
 3. **Missing data**: Log warning if expected fields are missing
 4. **Schema Validation**: Run `scripts/validate-game-data.test.ts` after parsing to catch:
-   - Missing required fields (`description`, `tags`, `target`, etc.)
+   - Missing required fields (`description`, `tags`, `stat`, etc.)
    - Invalid enum values (`scalingStat` must be `hp`/`atk`/`def`)
    - Incorrect types (numbers vs strings, arrays vs objects)
    - Malformed parameterized numbers
@@ -774,3 +922,6 @@ You need to assign meaningful names AND use those exact names as tags.
 - Percentages in descriptions need regex extraction and conversion to decimals
 - Some character abilities use `UserParameterizedNumber` for user-controllable parameters (e.g., stack counts)
 - Some abilities use `RotationRuntimeResolvableNumber` for stats that scale with character stats at runtime
+- **All entities use the `capabilities` wrapper** containing `attacks`, `modifiers`, and `permanentStats` arrays
+- **`modifiedStats` is now an array** of `{ stat, value, tags }` objects, not a record
+- **`permanentStats` is now an array** of `{ stat, name, description, value, tags, ... }` objects, not a record

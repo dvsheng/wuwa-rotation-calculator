@@ -8,19 +8,10 @@ import { z } from 'zod';
 
 const TagSchema = z.string();
 
-const TaggedSchema = z.object({
-  tags: z.array(TagSchema),
-});
-
-const DescribableSchema = z.object({
-  description: z.string(),
-});
-
 const LinearScalingParameterConfigSchema = z.object({
   scale: z.number(),
   minimum: z.number().optional(),
   maximum: z.number().optional(),
-  offset: z.number().optional(),
 });
 
 const LinearParameterizedNumberSchema = z.object({
@@ -45,11 +36,18 @@ const ParameterizedNumberSchema = z.union([
   RotationRuntimeResolvableNumberSchema,
 ]);
 
-const TaggedStatValueSchema = TaggedSchema.extend({
+// New flattened stat structure
+const StatSchema = z.object({
+  stat: z.string(),
   value: ParameterizedNumberSchema,
+  tags: z.array(TagSchema),
 });
 
-// Mutually exclusive attack category tags - an attack must have exactly one
+const DescribableSchema = z.object({
+  description: z.string(),
+});
+
+// Mutually exclusive attack category tags - an attack must have at most one
 const MUTUALLY_EXCLUSIVE_TAGS = [
   'basicAttack',
   'heavyAttack',
@@ -65,31 +63,35 @@ const AttackTagsSchema = z.array(TagSchema).refine(
     return exclusiveTagsPresent.length <= 1;
   },
   {
-    message: `Attack must have exactly one of: ${MUTUALLY_EXCLUSIVE_TAGS.join(', ')}`,
+    message: `Attack must have at most one of: ${MUTUALLY_EXCLUSIVE_TAGS.join(', ')}`,
   },
 );
 
 const AttackSchema = DescribableSchema.extend({
   tags: AttackTagsSchema,
   scalingStat: z.enum(['hp', 'atk', 'def']),
-  motionValues: z.array(z.number()).optional(),
-  parameterizedMotionValues: z.array(UserParameterizedNumberSchema).optional(),
+  motionValues: z.array(z.number().or(UserParameterizedNumberSchema)),
 });
 
 const ModifierSchema = z
   .object({
-    target: z.union([
-      z.enum(['team', 'enemy', 'activeCharacter', 'self']),
-      z.array(z.union([z.literal(1), z.literal(2), z.literal(3)])),
-    ]),
-    modifiedStats: z.record(z.string(), z.array(TaggedStatValueSchema)),
+    target: z
+      .union([
+        z.enum(['team', 'enemy', 'activeCharacter', 'self']),
+        z.array(z.union([z.literal(1), z.literal(2), z.literal(3)])),
+      ])
+      .optional(),
+    modifiedStats: z.array(StatSchema),
   })
   .and(DescribableSchema);
 
-const PermanentStatsSchema = z.record(
-  z.string(),
-  z.array(TaggedStatValueSchema.and(DescribableSchema)),
-);
+const PermanentStatSchema = StatSchema.and(DescribableSchema);
+
+const CapabilitiesSchema = z.object({
+  attacks: z.array(AttackSchema),
+  modifiers: z.array(ModifierSchema),
+  permanentStats: z.array(PermanentStatSchema),
+});
 
 const BaseEntitySchema = z.object({
   id: z.string(),
@@ -100,37 +102,19 @@ const BaseEntitySchema = z.object({
 
 const EchoSchema = BaseEntitySchema.extend({
   echoSetIds: z.array(z.string()),
-  attack: AttackSchema.optional(),
-  modifiers: z.array(ModifierSchema),
-  stats: PermanentStatsSchema,
+  capabilities: CapabilitiesSchema,
 });
 
 // --- Echo Set Schemas ---
 
-const SetEffectSchema = z.object({
-  modifiers: z.array(ModifierSchema),
-  stats: PermanentStatsSchema,
-});
-
 const EchoSetSchema = BaseEntitySchema.extend({
-  setEffects: z.object({
-    '2': SetEffectSchema.optional(),
-    '3': SetEffectSchema.optional(),
-    '5': SetEffectSchema.optional(),
-  }),
+  setEffects: z.record(z.enum(['2', '3', '5']), CapabilitiesSchema.optional()),
 });
 
 // --- Weapon Schemas ---
 
-const RefinePropertiesSchema = z.object({
-  attack: AttackSchema.optional(),
-  modifiers: z.array(ModifierSchema),
-  stats: PermanentStatsSchema,
-});
-
 const WeaponSchema = BaseEntitySchema.extend({
-  attributes: z.record(z.enum(['1', '2', '3', '4', '5']), RefinePropertiesSchema),
-  baseStats: z.record(z.string(), z.number()),
+  capabilities: z.record(z.enum(['1', '2', '3', '4', '5']), CapabilitiesSchema),
 });
 
 // --- Character Schemas ---
@@ -149,16 +133,17 @@ const CharacterAttackSchema = AttackSchema.and(CharacterBaseItemSchema);
 
 const CharacterModifierSchema = ModifierSchema.and(CharacterBaseItemSchema);
 
-const CharacterStatsSchema = z.record(
-  z.string(),
-  z.array(TaggedStatValueSchema.and(DescribableSchema).and(CharacterBaseItemSchema)),
-);
+const CharacterPermanentStatSchema = PermanentStatSchema.and(CharacterBaseItemSchema);
+
+const CharacterCapabilitiesSchema = z.object({
+  attacks: z.array(CharacterAttackSchema),
+  modifiers: z.array(CharacterModifierSchema),
+  permanentStats: z.array(CharacterPermanentStatSchema),
+});
 
 const CharacterSchema = BaseEntitySchema.extend({
   attribute: z.string(),
-  attacks: z.array(CharacterAttackSchema),
-  modifiers: z.array(CharacterModifierSchema),
-  stats: CharacterStatsSchema,
+  capabilities: CharacterCapabilitiesSchema,
 });
 
 // --- Validation Tests ---

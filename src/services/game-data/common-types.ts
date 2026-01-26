@@ -2,37 +2,49 @@ import type {
   RotationRuntimeResolvableNumber,
   UserParameterizedNumber,
 } from '@/types/parameterized-number';
-import type { AbilityAttribute, CharacterStat, Modifier, Tagged } from '@/types/server';
+import type {
+  AbilityAttribute,
+  CharacterStat,
+  EnemyStat,
+  Tagged,
+} from '@/types/server';
 
-export interface Describable {
+export interface BaseCapability {
+  id: string;
   description: string;
 }
 
-export interface Named {
-  name: string;
+export interface Stat extends Tagged {
+  stat: CharacterStat | EnemyStat;
+  value: number | RotationRuntimeResolvableNumber | UserParameterizedNumber;
+  tags: Array<string>;
 }
 
-export type ParameterizedNumber =
-  | number
-  | UserParameterizedNumber
-  | RotationRuntimeResolvableNumber;
+interface PermanentStatBase extends Stat, BaseCapability {}
 
-export interface Attack extends Describable, Tagged {
+export type PermanentStat<T = {}> = PermanentStatBase & T;
+
+interface ModifierBase extends BaseCapability {
+  modifiedStats: Array<Stat>;
+}
+
+export type Modifier<T = {}> = ModifierBase & T;
+
+interface AttackBase extends BaseCapability {
   scalingStat: AbilityAttribute;
-  /** An attack will have at least one motion value or parmeterized motion value */
-  motionValues?: Array<number>;
-  parameterizedMotionValues?: Array<UserParameterizedNumber>;
+  motionValues: Array<number | UserParameterizedNumber>;
 }
 
-export type Modifiers<T = unknown> = Array<
-  Modifier<ParameterizedNumber & Tagged> & Describable & T
->;
+export type Attack<T = {}> = AttackBase & T;
 
-export type PermanentStats<T = unknown> = Partial<
-  Record<CharacterStat, Array<ParameterizedNumber & Describable & Tagged & T>>
->;
+export interface Capabilities<T = {}> {
+  attacks: Array<Attack<T>>;
+  modifiers: Array<Modifier<T>>;
+  permanentStats: Array<PermanentStat<T>>;
+}
 
 export interface BaseEntity {
   id: string;
+  uuid: string;
   name: string;
 }

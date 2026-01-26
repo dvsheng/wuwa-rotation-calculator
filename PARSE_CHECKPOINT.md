@@ -130,6 +130,7 @@
 
 - [x] **1102**: Sanhua (Mapped Glacio/Basic DMG modifiers and S1-S6 sequence buffs)
 - [x] **1103**: Baizhi (Mapped HP-scaling skills and ATK/DMG Amplification buffs)
+- [x] **1105**: Zhezhi (Mapped Glacio/BA-coordinated attacks and sequence replacement buffs)
 
 ### Skipped (Per User Instruction)
 

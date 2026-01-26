@@ -13,10 +13,9 @@ export interface LinearScalingParameterConfig {
   minimum?: number;
   /** The value of the source stat at which scaling ends. */
   maximum?: number;
-  offset?: number;
 }
 
-export interface LinearParameterizedNumber<T extends string | number> {
+export interface LinearParameterizedNumber<T extends string> {
   minimum?: number;
   maximum?: number;
   parameterConfigs: Partial<Record<T, LinearScalingParameterConfig>>;
@@ -36,7 +35,7 @@ export interface RotationRuntimeResolvableNumber extends LinearParameterizedNumb
   resolveWith: string;
 }
 
-export type UserParameterizedNumber = LinearParameterizedNumber<number>;
+export type UserParameterizedNumber = LinearParameterizedNumber<'0' | '1' | '2'>;
 
 /**
  * Checks if a value is a UserParameterizedNumber.

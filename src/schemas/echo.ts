@@ -121,7 +121,7 @@ export const EchoStatsSchema = z
   .object({
     cost: EchoCostSchema,
     mainStatType: EchoMainStatOptionSchema,
-    substats: z.array(EchoSubstatSchema),
+    substats: z.array(EchoSubstatSchema).length(5),
   })
   .superRefine((data, ctx) => {
     const validMainStats = VALID_MAIN_STATS[data.cost];

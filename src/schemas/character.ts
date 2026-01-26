@@ -7,15 +7,12 @@ import { WeaponSchema } from './weapon';
 export const CharacterSchema = z.object({
   id: z.string(),
   name: z.string(),
-  sequence: z.number().min(0).max(6).default(0),
+  sequence: z.number().min(0).max(6),
   weapon: WeaponSchema,
-  echoSets: z.union([
-    z.tuple([EchoSetSchema]),
-    z.tuple([EchoSetSchema, EchoSetSchema]),
-  ]),
+  echoSets: z.array(EchoSetSchema).min(1).max(2),
   primarySlotEcho: z.object({
-    id: z.string().default(''),
-    name: z.string().default(''),
+    id: z.string(),
+    name: z.string(),
   }),
   echoStats: z.array(EchoStatsSchema),
 });

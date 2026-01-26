@@ -3,7 +3,7 @@ import { z } from 'zod';
 const ParameterSchema = z.object({
   minimum: z.number(),
   maximum: z.number(),
-  value: z.number().optional(),
+  value: z.number(),
 });
 
 export type Parameter = z.infer<typeof ParameterSchema>;

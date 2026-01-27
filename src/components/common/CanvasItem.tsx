@@ -12,7 +12,6 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Text } from '@/components/ui/typography';
 import { cn } from '@/lib/utils';
-import type { Parameter } from '@/schemas/rotation';
 
 import { ParameterConfigurationDialog } from './ParameterConfigurationDialog';
 
@@ -20,7 +19,7 @@ export interface CanvasItemProps extends React.HTMLAttributes<HTMLDivElement> {
   text: string;
   subtext?: string;
   hoverText?: string;
-  parameters?: Array<Parameter>;
+  parameters?: Array<{ minimum: number; maximum: number; value: number | undefined }>;
   onRemove: () => void;
   onSaveParameters: (values: Array<number | undefined>) => void;
   index?: number;
@@ -51,7 +50,6 @@ export const CanvasItem = React.forwardRef<HTMLDivElement, CanvasItemProps>(
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const hasParameters = (parameters?.length ?? 0) > 0;
     const shouldShowWarning =
-      // eslint-disable-next-line
       hasParameters && parameters?.some((p) => p.value === undefined);
 
     const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {

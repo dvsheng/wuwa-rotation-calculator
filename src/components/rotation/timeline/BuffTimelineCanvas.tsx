@@ -4,18 +4,24 @@ import GridLayout from 'react-grid-layout';
 import { Text } from '@/components/ui/typography';
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
 import { cn } from '@/lib/utils';
+import type { BuffWithPosition } from '@/schemas/rotation';
 import { BuffSchema } from '@/schemas/rotation';
 import { useRotationStore } from '@/store/useRotationStore';
+import type { DetailedBuff } from '@/types/client/capability';
 
 import { BuffTimelineCanvasItem } from './BuffTimelineCanvasItem';
 
 interface BuffTimelineCanvasProps {
   width: number;
   gridConfig: GridLayoutProps['gridConfig'];
+  buffs: Array<DetailedBuff & BuffWithPosition>;
 }
 
-export const BuffTimelineCanvas = ({ width, gridConfig }: BuffTimelineCanvasProps) => {
-  const activeBuffs = useRotationStore((state) => state.buffs);
+export const BuffTimelineCanvas = ({
+  width,
+  gridConfig,
+  buffs,
+}: BuffTimelineCanvasProps) => {
   const removeBuff = useRotationStore((state) => state.removeBuff);
   const addBuff = useRotationStore((state) => state.addBuff);
   const updateBuffLayout = useRotationStore((state) => state.updateBuffLayout);
@@ -49,8 +55,8 @@ export const BuffTimelineCanvas = ({ width, gridConfig }: BuffTimelineCanvasProp
     dropConfig: { enabled: true },
     resizeConfig: { enabled: true, handles: ['e'] },
     style: { minHeight: '100px' },
-    layout: activeBuffs.map((buff) => ({
-      i: buff.timelineId,
+    layout: buffs.map((buff) => ({
+      i: buff.instanceId,
       x: buff.x,
       y: buff.y,
       w: buff.w,
@@ -66,7 +72,7 @@ export const BuffTimelineCanvas = ({ width, gridConfig }: BuffTimelineCanvasProp
         'border-border/50 bg-muted/10 relative min-h-[100px] w-full rounded-lg border transition-colors',
       )}
     >
-      {activeBuffs.length === 0 && (
+      {buffs.length === 0 && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <Text className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
             Align buffs with attacks to include them in damage calculations
@@ -76,8 +82,8 @@ export const BuffTimelineCanvas = ({ width, gridConfig }: BuffTimelineCanvasProp
 
       <div className="p-0">
         <GridLayout {...layoutProps}>
-          {activeBuffs.map((buff) => (
-            <div key={buff.timelineId} className="group relative">
+          {buffs.map((buff) => (
+            <div key={buff.instanceId} className="group relative">
               <BuffTimelineCanvasItem
                 buff={buff}
                 onRemove={removeBuff}

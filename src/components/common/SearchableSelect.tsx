@@ -16,7 +16,7 @@ interface Item {
 interface SearchableSelectProps {
   items: Array<Item>;
   onItemClick: (item: Item) => void;
-  selectedItem?: Item;
+  value?: string;
   placeholder?: string;
   className?: string;
 }
@@ -24,7 +24,7 @@ interface SearchableSelectProps {
 export const SearchableSelect = ({
   items,
   onItemClick,
-  selectedItem,
+  value,
   placeholder = 'Select...',
   className,
 }: SearchableSelectProps) => {
@@ -32,7 +32,7 @@ export const SearchableSelect = ({
     <Combobox items={items} itemToStringLabel={(item: Item) => item.name}>
       <ComboboxInput
         placeholder={placeholder}
-        value={selectedItem?.name}
+        value={value}
         className={cn('h-8 w-full', className)}
       />
       <ComboboxContent>

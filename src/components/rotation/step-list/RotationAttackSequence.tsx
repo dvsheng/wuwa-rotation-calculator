@@ -3,17 +3,18 @@ import GridLayout, { useContainerWidth } from 'react-grid-layout';
 
 import { Text } from '@/components/ui/typography';
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
-import { AttackSchema } from '@/schemas/rotation';
-import type { Attack } from '@/schemas/rotation';
+import type { Attack, Capability } from '@/schemas/rotation';
+import { CapabilitySchema } from '@/schemas/rotation';
+import type { DetailedAttack } from '@/types/client/capability';
 
 import { EmptyRotationState } from './EmptyRotationState';
 import { RotationAttack } from './RotationAttack';
 
 export interface RotationAttackSequenceProps {
-  attacks: Array<Attack>;
-  onRemove: (id: string) => void;
-  onReorder: (attacks: Array<Attack>) => void;
-  onDrop: (attack: Attack, index: number) => void;
+  attacks: Array<DetailedAttack & Attack>;
+  onRemove: (instanceId: string) => void;
+  onReorder: (instanceIds: Array<Attack>) => void;
+  onDrop: (attack: Capability, index: number) => void;
 }
 
 export const RotationAttackSequence = ({
@@ -24,23 +25,22 @@ export const RotationAttackSequence = ({
 }: RotationAttackSequenceProps) => {
   const { width, containerRef, mounted } = useContainerWidth();
   const { createHandleDrop } = useDragAndDrop({
-    schema: AttackSchema,
+    schema: CapabilitySchema,
   });
 
   const handleLayoutChange = (layout: Layout) => {
-    // Prevent drops from triggering onReorder
     if (layout.length !== attacks.length) return;
-
-    const newAttackIdOrder = [...layout]
+    const newAttackInstanceIdOrder = [...layout]
       .sort((a, b) => a.y - b.y)
       .map((layoutItem) => layoutItem.i);
     const hasAttackOrderChanged = attacks.some(
-      (attack, index) => attack.id !== newAttackIdOrder[index],
+      (attack, index) => attack.instanceId !== newAttackInstanceIdOrder[index],
     );
-
     if (hasAttackOrderChanged) {
-      const reordered = newAttackIdOrder.map((id) => attacks.find((a) => a.id === id)!);
-      onReorder(reordered);
+      const newAttackOrder = newAttackInstanceIdOrder
+        .map((id) => attacks.find((attack) => attack.id === id))
+        .filter((attack) => attack !== undefined);
+      onReorder(newAttackOrder);
     }
   };
 
@@ -48,28 +48,21 @@ export const RotationAttackSequence = ({
     onDrop(attack, item.y);
   });
 
-  const gridConfig = {
-    cols: 1,
-    rowHeight: 64,
-    margin: [0, 8] as [number, number],
-    containerPadding: [0, 0] as [number, number],
-  };
-
-  const layout = attacks.map((attack, index) => ({
-    i: attack.id,
-    x: 0,
-    y: index,
-    w: 1,
-    h: 1,
-  }));
-
-  // Subtract padding (p-4 = 16px * 2 = 32px) from container width
-  const gridWidth = Math.max(0, width - 32);
-
   const layoutProps: Omit<GridLayoutProps, 'children'> = {
-    width: gridWidth,
-    gridConfig,
-    layout,
+    width: Math.max(0, width - 32),
+    gridConfig: {
+      cols: 1,
+      rowHeight: 64,
+      margin: [0, 8] as [number, number],
+      containerPadding: [0, 0] as [number, number],
+    },
+    layout: attacks.map((attack, index) => ({
+      i: attack.instanceId,
+      x: 0,
+      y: index,
+      w: 1,
+      h: 1,
+    })),
     style: { minHeight: '400px' },
     dropConfig: { enabled: true },
     dragConfig: { enabled: true },
@@ -105,7 +98,7 @@ export const RotationAttackSequence = ({
         {mounted && (
           <GridLayout {...layoutProps}>
             {attacks.map((attack, index) => (
-              <div key={attack.id} className="h-full w-full">
+              <div key={attack.instanceId} className="h-full w-full">
                 <RotationAttack attack={attack} index={index} onRemove={onRemove} />
               </div>
             ))}

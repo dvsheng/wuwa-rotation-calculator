@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+export const ECHO_PIECE_COUNT = 5;
+
 export const EchoSubstatOption = {
   HP_PERCENT: 'hp_percent',
   ATK_PERCENT: 'atk_percent',
@@ -60,6 +62,7 @@ export const EchoMainStatOption = {
 } as const;
 
 export const EchoMainStatOptionSchema = z.enum(EchoMainStatOption);
+
 export type EchoMainStatOptionType = z.infer<typeof EchoMainStatOptionSchema>;
 
 export const EchoCost = {
@@ -69,6 +72,7 @@ export const EchoCost = {
 } as const;
 
 export const EchoCostSchema = z.enum(EchoCost);
+
 export type EchoCost = z.infer<typeof EchoCostSchema>;
 
 export const VALID_MAIN_STATS: Record<EchoCost, Array<EchoMainStatOptionType>> = {
@@ -117,7 +121,7 @@ export const EchoSubstatSchema = z
 
 export type EchoSubstat = z.infer<typeof EchoSubstatSchema>;
 
-export const EchoStatsSchema = z
+export const EchoPieceSchema = z
   .object({
     cost: EchoCostSchema,
     mainStatType: EchoMainStatOptionSchema,
@@ -133,5 +137,9 @@ export const EchoStatsSchema = z
       });
     }
   });
+
+export type EchoPiece = z.infer<typeof EchoPieceSchema>;
+
+export const EchoStatsSchema = z.array(EchoPieceSchema).length(ECHO_PIECE_COUNT);
 
 export type EchoStats = z.infer<typeof EchoStatsSchema>;

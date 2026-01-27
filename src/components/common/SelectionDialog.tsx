@@ -1,18 +1,17 @@
-import { Filter, Search, X } from 'lucide-react';
+import { Filter, X } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
 import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 
 export interface FilterOption {
@@ -29,13 +28,15 @@ export interface FilterConfig<T> {
   renderBadge?: (option: FilterOption, isSelected: boolean) => ReactNode;
 }
 
-export interface SelectionDialogProps<T extends { id: string | number; name: string }> {
-  // Core functionality
+export interface SelectionDialogProps<T extends { id: string; name: string }> {
+  // Data
   items: Array<T>;
-  selectedItemName?: string;
-  onSelect: (id: string | number, name: string) => void;
 
-  // Dialog configuration
+  // Selection - work with string IDs
+  value?: string;
+  onValueChange: (value: string) => void;
+
+  // Display
   title: string;
   placeholder: string;
   searchPlaceholder?: string;
@@ -43,29 +44,29 @@ export interface SelectionDialogProps<T extends { id: string | number; name: str
 
   // Filtering
   filters?: Array<FilterConfig<T>>;
-  excludeNames?: Array<string>;
+  excludeIds?: Array<string>;
 
-  // Item rendering
+  // Rendering
   renderItem: (item: T, isSelected: boolean) => ReactNode;
   getItemStyle?: (item: T) => CSSProperties;
 
   // Sorting
   sortFn?: (a: T, b: T) => number;
 
-  // Grid layout
+  // Layout
   gridCols?: { default: number; md?: number };
 }
 
-export const SelectionDialog = <T extends { id: string | number; name: string }>({
+export const SelectionDialog = <T extends { id: string; name: string }>({
   items,
-  selectedItemName,
-  onSelect,
+  value,
+  onValueChange,
   title,
   placeholder,
   searchPlaceholder = 'Search...',
   triggerClassName,
   filters = [],
-  excludeNames = [],
+  excludeIds = [],
   renderItem,
   getItemStyle,
   sortFn,
@@ -77,6 +78,8 @@ export const SelectionDialog = <T extends { id: string | number; name: string }>
     new Map(),
   );
 
+  const selectedItem = items.find((item) => item.id === value);
+
   // Multi-criteria filtering
   const filteredItems = items.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -86,15 +89,15 @@ export const SelectionDialog = <T extends { id: string | number; name: string }>
         return filter.getValue(item) === filterValue;
       },
     );
-    const isNotExcluded = !excludeNames.includes(item.name);
+    const isNotExcluded = !excludeIds.includes(item.id);
     return matchesSearch && matchesFilters && isNotExcluded;
   });
 
   // Apply custom sorting
   const sortedItems = sortFn ? [...filteredItems].sort(sortFn) : filteredItems;
 
-  const handleSelect = (id: string | number, name: string) => {
-    onSelect(id, name);
+  const handleSelect = (item: T) => {
+    onValueChange(item.id);
     setIsOpen(false);
   };
 
@@ -103,21 +106,21 @@ export const SelectionDialog = <T extends { id: string | number; name: string }>
     setActiveFilters(new Map());
   };
 
-  const toggleFilter = (filterIndex: number, value: string | number) => {
+  const toggleFilter = (filterIndex: number, filterValue: string | number) => {
     const newFilters = new Map(activeFilters);
-    if (newFilters.get(filterIndex) === value) {
+    if (newFilters.get(filterIndex) === filterValue) {
       newFilters.delete(filterIndex);
     } else {
-      newFilters.set(filterIndex, value);
+      newFilters.set(filterIndex, filterValue);
     }
     setActiveFilters(newFilters);
   };
 
-  const hasActiveFilters = activeFilters.size > 0 || !!searchTerm;
+  const hasActiveFilters = activeFilters.size > 0;
 
   // Build grid class name
   const gridClassName = cn(
-    'grid gap-2 p-4',
+    'grid gap-2 p-2',
     gridCols.default === 2 && 'grid-cols-2',
     gridCols.default === 3 && 'grid-cols-3',
     gridCols.default === 4 && 'grid-cols-4',
@@ -127,111 +130,102 @@ export const SelectionDialog = <T extends { id: string | number; name: string }>
   );
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          className={cn('w-full justify-start truncate font-normal', triggerClassName)}
-        >
-          <span className="truncate">{selectedItemName || placeholder}</span>
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="flex h-[80vh] max-w-2xl flex-col p-0">
-        <DialogHeader className="p-6 pb-0">
-          <DialogTitle>{title}</DialogTitle>
-        </DialogHeader>
+    <>
+      <Button
+        variant="outline"
+        onClick={() => setIsOpen(true)}
+        className={cn('w-full justify-start truncate font-normal', triggerClassName)}
+      >
+        <span className="truncate">{selectedItem?.name || placeholder}</span>
+      </Button>
 
-        <div className="flex flex-1 flex-col space-y-4 overflow-hidden p-6">
-          {/* Search Input */}
-          <div className="relative">
-            <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
-            <Input
-              placeholder={searchPlaceholder}
-              className="pl-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+      <CommandDialog
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        title={title}
+        description={`Select from ${items.length} options`}
+        className="max-w-2xl"
+      >
+        <CommandInput
+          placeholder={searchPlaceholder}
+          value={searchTerm}
+          onValueChange={setSearchTerm}
+        />
 
-          {/* Filter Bar */}
-          {filters.length > 0 && (
-            <div className="flex flex-wrap items-center gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <Filter className="text-muted-foreground h-4 w-4" />
-                <span className="font-medium">Filters:</span>
-              </div>
+        {/* Filter Bar */}
+        {filters.length > 0 && (
+          <div className="flex flex-wrap items-center gap-4 border-b px-3 py-2 text-sm">
+            <div className="flex items-center gap-2">
+              <Filter className="text-muted-foreground h-4 w-4" />
+              <span className="font-medium">Filters:</span>
+            </div>
 
-              {filters.map((filter, filterIndex) => (
-                <div key={filterIndex} className="flex gap-1">
-                  {filter.options.map((option) => {
-                    const isSelected = activeFilters.get(filterIndex) === option.value;
+            {filters.map((filter, filterIndex) => (
+              <div key={filterIndex} className="flex gap-1">
+                {filter.options.map((option) => {
+                  const isSelected = activeFilters.get(filterIndex) === option.value;
 
-                    if (filter.renderBadge) {
-                      return (
-                        <div
-                          key={option.value}
-                          onClick={() => toggleFilter(filterIndex, option.value)}
-                          className="cursor-pointer"
-                        >
-                          {filter.renderBadge(option, isSelected)}
-                        </div>
-                      );
-                    }
-
+                  if (filter.renderBadge) {
                     return (
-                      <Badge
+                      <div
                         key={option.value}
-                        variant={isSelected ? 'default' : 'outline'}
-                        className="cursor-pointer"
                         onClick={() => toggleFilter(filterIndex, option.value)}
+                        className="cursor-pointer"
                       >
-                        {option.label}
-                      </Badge>
+                        {filter.renderBadge(option, isSelected)}
+                      </div>
                     );
-                  })}
-                </div>
-              ))}
+                  }
 
-              {hasActiveFilters && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 gap-1 px-2 text-xs"
-                  onClick={resetFilters}
-                >
-                  <X className="h-3 w-3" /> Clear
-                </Button>
-              )}
-            </div>
-          )}
+                  return (
+                    <Badge
+                      key={option.value}
+                      variant={isSelected ? 'default' : 'outline'}
+                      className="cursor-pointer"
+                      onClick={() => toggleFilter(filterIndex, option.value)}
+                    >
+                      {option.label}
+                    </Badge>
+                  );
+                })}
+              </div>
+            ))}
 
-          {/* Items Grid */}
-          <ScrollArea className="h-full flex-1 rounded-md border">
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1 px-2 text-xs"
+                onClick={resetFilters}
+              >
+                <X className="h-3 w-3" /> Clear
+              </Button>
+            )}
+          </div>
+        )}
+
+        <CommandList className="max-h-[60vh]">
+          <CommandEmpty>No items found matching your filters.</CommandEmpty>
+          <CommandGroup>
             <div className={gridClassName}>
-              {sortedItems.length > 0 ? (
-                sortedItems.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => handleSelect(item.id, item.name)}
-                    className={cn(
-                      'group hover:bg-accent hover:border-primary/50 flex flex-col items-center gap-2 rounded-lg border p-3 text-center transition-all',
-                      selectedItemName === item.name &&
-                        'border-primary ring-primary bg-accent ring-1',
-                    )}
-                    style={getItemStyle?.(item)}
-                  >
-                    {renderItem(item, selectedItemName === item.name)}
-                  </button>
-                ))
-              ) : (
-                <div className="text-muted-foreground col-span-full py-12 text-center">
-                  No items found matching your filters.
-                </div>
-              )}
+              {sortedItems.map((item) => (
+                <CommandItem
+                  key={item.id}
+                  value={item.name}
+                  onSelect={() => handleSelect(item)}
+                  className={cn(
+                    'group hover:bg-accent hover:border-primary/50 flex flex-col items-center gap-2 rounded-lg border p-3 text-center transition-all',
+                    value === item.id && 'border-primary ring-primary bg-accent ring-1',
+                  )}
+                  style={getItemStyle?.(item)}
+                >
+                  {renderItem(item, value === item.id)}
+                </CommandItem>
+              ))}
             </div>
-          </ScrollArea>
-        </div>
-      </DialogContent>
-    </Dialog>
+          </CommandGroup>
+        </CommandList>
+      </CommandDialog>
+    </>
   );
 };

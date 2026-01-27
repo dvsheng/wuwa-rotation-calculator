@@ -8,23 +8,30 @@ import {
 } from '@/components/ui/select';
 import { LabelText } from '@/components/ui/typography';
 import { VALID_MAIN_STATS } from '@/schemas/echo';
-import type { EchoCost as EchoCostType, EchoStats } from '@/types/client/echo';
+import { useTeamStore } from '@/store/useTeamStore';
+import type { EchoCost as EchoCostType } from '@/types/client/echo';
 import { EchoCost } from '@/types/client/echo';
 
 import { STAT_LABELS } from './constants';
 import { EchoSubstatEditor } from './EchoSubstatEditor';
 
 interface EchoPieceEditorProps {
-  echo: EchoStats;
-  onUpdate: (updater: (draft: EchoStats) => void) => void;
+  characterIndex: number;
+  echoIndex: number;
 }
 
-export const EchoPieceEditor = ({ echo, onUpdate }: EchoPieceEditorProps) => {
+export const EchoPieceEditor = ({
+  characterIndex,
+  echoIndex,
+}: EchoPieceEditorProps) => {
+  const echo = useTeamStore((state) => state.team[characterIndex].echoStats[echoIndex]);
+  const updateEchoPiece = useTeamStore((state) => state.updateEchoPiece);
+
   const mainStatOptions = VALID_MAIN_STATS[echo.cost];
 
   const handleCostChange = (val: string) => {
     const newCost = parseInt(val) as EchoCostType;
-    onUpdate((draft) => {
+    updateEchoPiece(characterIndex, echoIndex, (draft) => {
       draft.cost = newCost;
       const newValidOptions = VALID_MAIN_STATS[newCost];
       if (!newValidOptions.includes(draft.mainStatType)) {
@@ -59,7 +66,7 @@ export const EchoPieceEditor = ({ echo, onUpdate }: EchoPieceEditorProps) => {
               <Select
                 value={echo.mainStatType}
                 onValueChange={(val) =>
-                  onUpdate((draft) => {
+                  updateEchoPiece(characterIndex, echoIndex, (draft) => {
                     // @ts-ignore - dynamic enum cast
                     draft.mainStatType = val;
                   })
@@ -85,13 +92,13 @@ export const EchoPieceEditor = ({ echo, onUpdate }: EchoPieceEditorProps) => {
             </Row>
 
             <Stack spacing="xs">
-              {echo.substats.map((substat, index) => (
+              {echo.substats.map((substat, substatIndex) => (
                 <EchoSubstatEditor
-                  key={index}
+                  key={substatIndex}
                   substat={substat}
                   onUpdate={(updater) =>
-                    onUpdate((draft) => {
-                      updater(draft.substats[index]);
+                    updateEchoPiece(characterIndex, echoIndex, (draft) => {
+                      updater(draft.substats[substatIndex]);
                     })
                   }
                 />

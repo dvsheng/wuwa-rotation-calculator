@@ -2,17 +2,24 @@ import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 
 import { toClientAttack, toClientBuff } from '../client-converters';
+import type { EnrichedAttack, EnrichedBuff } from '../common-types';
 import { createFsStore } from '../hakushin-api/fs-store';
 
 import { GetClientCharacterDetailsInputSchema, Sequence } from './types';
 import type {
   Character,
-  CharacterBaseItem,
+  CharacterCapabilityProperties,
   GetClientCharacterDetailsInput,
-  GetClientCharacterDetailsOutput,
 } from './types';
 
 export const characterStore = createFsStore<Character>();
+
+export interface GetClientCharacterDetailsOutput {
+  id: string;
+  name: string;
+  attacks: Array<EnrichedAttack>;
+  modifiers: Array<EnrichedBuff>;
+}
 
 export const getCharacterDetails = createServerFn({
   method: 'GET',
@@ -49,7 +56,10 @@ const sequenceToNumber = (sequence?: Sequence): number => {
   }
 };
 
-const isItemActive = (item: CharacterBaseItem, currentSequence: number): boolean => {
+const isItemActive = (
+  item: CharacterCapabilityProperties,
+  currentSequence: number,
+): boolean => {
   const unlockedAt = sequenceToNumber(item.unlockedAt);
   const disabledAt = item.disabledAt ? sequenceToNumber(item.disabledAt) : Infinity;
 
@@ -67,10 +77,12 @@ export const getClientCharacterDetailsHandler = async (
   }
 
   return {
-    attacks: character.attacks
+    id: character.id,
+    name: character.name,
+    attacks: character.capabilities.attacks
       .filter((attack) => isItemActive(attack, sequence))
       .map((attack) => toClientAttack(attack, attack.parentName, attack.name)),
-    modifiers: character.modifiers
+    modifiers: character.capabilities.modifiers
       .filter((modifier) => isItemActive(modifier, sequence))
       .map((modifier) =>
         toClientBuff(modifier, modifier.parentName, 'character', modifier.name),

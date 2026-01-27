@@ -534,12 +534,12 @@ function CharacterEditor({
                               const newVal = parseFloat(e.target.value);
                               if (isNaN(newVal)) return;
                               const newStats = { ...character.stats };
-                              const statArray = [...(newStats[statName as any] as any)];
+                              const statArray = [...newStats[statName as any]];
                               statArray[i] = {
                                 ...statArray[i],
                                 value: newVal,
                               };
-                              (newStats as any)[statName] = statArray;
+                              newStats[statName] = statArray;
                               onChange({ ...character, stats: newStats });
                             }}
                           />
@@ -568,7 +568,7 @@ function WeaponEditor({
 
   const updateWeaponStat = (statName: string, value: number) => {
     const newBaseStats = { ...weapon.baseStats, [statName]: value };
-    onChange({ ...weapon, baseStats: newBaseStats as any });
+    onChange({ ...weapon, baseStats: newBaseStats });
   };
 
   const updateRefineProperty = (field: string, value: any) => {

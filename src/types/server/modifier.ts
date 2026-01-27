@@ -73,7 +73,7 @@ export const isUserParameterizedModifier = (modifier: Modifier<any>): boolean =>
  * Extracts all UserParameterizedNumbers found within a modifier's stats.
  */
 export const extractUserParameters = (
-  modifier: Modifier<any>,
+  modifier: Modifier,
 ): Array<UserParameterizedNumber> => {
   const modifiedStats = modifier.modifiedStats;
   const params: Array<UserParameterizedNumber> = [];

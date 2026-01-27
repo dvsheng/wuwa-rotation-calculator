@@ -1,7 +1,5 @@
 import { z } from 'zod';
 
-import type { Buff as ClientModifier } from '@/schemas/rotation';
-
 import type { BaseEntity, Capabilities } from '../common-types';
 
 export const SetEffectRequirement = ['2', '3', '5'] as const;
@@ -20,7 +18,3 @@ export const GetClientEchoSetDetailsInputSchema = z.object({
 export type GetClientEchoSetDetailsInput = z.infer<
   typeof GetClientEchoSetDetailsInputSchema
 >;
-
-export interface GetClientEchoSetDetailsOutput {
-  modifiers: Array<Omit<ClientModifier, 'id' | 'characterName'>>;
-}

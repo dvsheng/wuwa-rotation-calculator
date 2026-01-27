@@ -1,10 +1,5 @@
 import { z } from 'zod';
 
-import type {
-  Attack as ClientAttack,
-  Buff as ClientModifier,
-} from '@/schemas/rotation';
-
 import type { BaseEntity, Capabilities } from '../common-types';
 
 export const RefineLevel = ['1', '2', '3', '4', '5'] as const;
@@ -24,8 +19,3 @@ export const GetWeaponDetailsInputSchema = z.object({
 });
 
 export type GetWeaponDetailsInput = z.infer<typeof GetWeaponDetailsInputSchema>;
-
-export interface GetClientWeaponDetailsOutput {
-  attack?: Omit<ClientAttack, 'id' | 'characterName'>;
-  modifiers: Array<Omit<ClientModifier, 'id' | 'characterName'>>;
-}

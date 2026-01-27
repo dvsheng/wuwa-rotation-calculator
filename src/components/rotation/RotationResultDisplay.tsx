@@ -6,10 +6,11 @@ import { Heading, Text } from '@/components/ui/typography';
 import type { Attack } from '@/schemas/rotation';
 import { getCalculateCharacterStatsForTag } from '@/services/rotation-calculator/calculate-stat-total';
 import type { RotationResult } from '@/services/rotation-calculator/types';
+import type { DetailedAttack } from '@/types/client/capability';
 
 interface RotationResultDisplayProps {
   result: RotationResult;
-  attacks: Array<Attack>;
+  attacks: Array<DetailedAttack & Attack>;
 }
 
 /**
@@ -59,15 +60,17 @@ export const RotationResultDisplay = ({
               {result.damageInstances.map((dmg, idx) => {
                 const attack = attacks[idx];
                 const detail = result.damageDetails[idx];
+                const charName = attack.characterName;
+
                 return (
-                  <Tooltip key={`${attack.id}-${idx}`}>
+                  <Tooltip key={`${attack.instanceId}-${idx}`}>
                     <TooltipTrigger asChild>
                       <div className="hover:bg-muted/30 grid cursor-help grid-cols-12 items-center p-3 text-sm transition-colors">
                         <div className="text-muted-foreground col-span-1 text-center font-mono text-xs">
                           {idx + 1}
                         </div>
                         <div className="text-primary/80 col-span-3 font-semibold">
-                          {attack.characterName}
+                          {charName}
                         </div>
                         <div className="col-span-5 truncate pr-2">
                           <Text variant="small" className="font-medium">
@@ -107,9 +110,7 @@ export const RotationResultDisplay = ({
                           </Text>
                           <div className="grid grid-cols-2 gap-x-2 text-[10px]">
                             {(() => {
-                              const char = detail.team.find(
-                                (c) => c.name === attack.characterName,
-                              );
+                              const char = detail.team.find((c) => c.name === charName);
                               if (!char) return null;
 
                               const calculateStats = getCalculateCharacterStatsForTag(

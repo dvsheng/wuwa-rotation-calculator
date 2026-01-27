@@ -75,6 +75,7 @@ export type GetClientCharacterDetailsInput = z.infer<
 >;
 
 export interface GetClientCharacterDetailsOutput {
+  name: string;
   attacks: Array<Omit<ClientAttack, 'id' | 'characterName'>>;
   modifiers: Array<Omit<ClientModifier, 'id' | 'characterName'>>;
 }

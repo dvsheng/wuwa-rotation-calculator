@@ -1,12 +1,13 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 
-import { toClientBuff } from '../client-converters';
+import { toClientAttack, toClientBuff } from '../client-converters';
+import type { GetClientEntityDetailsOutput } from '../common-types';
 import { createFsStore } from '../hakushin-api/fs-store';
 
 import { getEchoSetIdByName } from './list-echo-sets';
 import { GetClientEchoSetDetailsInputSchema } from './types';
-import type { EchoSet, GetClientEchoSetDetailsOutput } from './types';
+import type { EchoSet } from './types';
 
 const echoSetStore = createFsStore<EchoSet>();
 
@@ -30,7 +31,7 @@ export const getClientEchoSetDetails = createServerFn({
   method: 'GET',
 })
   .inputValidator(GetClientEchoSetDetailsInputSchema)
-  .handler(async ({ data }): Promise<GetClientEchoSetDetailsOutput> => {
+  .handler(async ({ data }): Promise<GetClientEntityDetailsOutput> => {
     const { id, requirement } = data;
     const key = `echo-set/parsed/${id}.json`;
     const echoSet = await echoSetStore.get(key);
@@ -41,6 +42,9 @@ export const getClientEchoSetDetails = createServerFn({
     const setEffect = echoSet.setEffects[requirement];
 
     return {
+      attacks: (setEffect?.attacks || []).map((attack) =>
+        toClientAttack(attack, echoSet.name, `${echoSet.name} Attack`),
+      ),
       modifiers: (setEffect?.modifiers || []).map((modifier) =>
         toClientBuff(modifier, echoSet.name, 'echo-set', `${echoSet.name} Buff`),
       ),

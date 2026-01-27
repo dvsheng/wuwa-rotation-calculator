@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 
 import type { Team } from '@/schemas/team';
 import { getClientCharacterDetails } from '@/services/game-data/character/get-character-details';
+import type { GetClientCharacterDetailsOutput } from '@/services/game-data/character/types';
 import { getClientEchoDetails } from '@/services/game-data/echo/get-echo-details';
 import { getClientEchoSetDetails } from '@/services/game-data/echo-set/get-echo-set-details';
 import { getClientWeaponDetails } from '@/services/game-data/weapon/get-weapon-details';
@@ -13,17 +14,14 @@ export const useTeamModifiers = (team: Team) => {
     const items = [
       {
         characterId: character.id,
-        characterName: character.name,
         queryType: 'character',
       },
       {
         characterId: character.id,
-        characterName: character.name,
         queryType: 'weapon',
       },
       {
         characterId: character.id,
-        characterName: character.name,
         queryType: 'echo',
       },
     ];
@@ -32,9 +30,8 @@ export const useTeamModifiers = (team: Team) => {
       if (set.id) {
         items.push({
           characterId: character.id,
-          characterName: character.name,
           queryType: 'echo-set',
-        } as any);
+        });
       }
     });
 
@@ -77,15 +74,25 @@ export const useTeamModifiers = (team: Team) => {
       })),
     ]),
     combine: (results) => {
+      const characterNameMap = new Map<string, string>();
+      results.forEach((characterResult, index) => {
+        const meta = queryMetadata[index];
+        if (meta.queryType !== 'character') return;
+        if (!characterResult.data) return;
+        characterNameMap.set(
+          meta.characterId,
+          (characterResult.data as unknown as GetClientCharacterDetailsOutput).name,
+        );
+      });
       const buffs = results.flatMap((queryResult, index) => {
         const data = queryResult.data;
         if (!data) return [];
 
-        const { characterId, characterName } = queryMetadata[index];
+        const { characterId } = queryMetadata[index];
+        const characterName = characterNameMap.get(characterId) ?? 'Unknown';
 
-        return (data as any).modifiers.map((modifier: any, i: number) => ({
+        return data.modifiers.map((modifier) => ({
           ...modifier,
-          id: `buff-${characterName}-${modifier.name}-${i}`,
           characterId,
           characterName,
         }));

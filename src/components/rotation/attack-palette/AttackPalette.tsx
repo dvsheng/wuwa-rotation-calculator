@@ -2,13 +2,13 @@ import { PaletteItem } from '@/components/common/PaletteItem';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Text } from '@/components/ui/typography';
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
-import { AttackSchema } from '@/schemas/rotation';
-import type { Attack } from '@/schemas/rotation';
+import { CapabilitySchema } from '@/schemas/rotation';
+import type { DetailedAttack } from '@/types/client/capability';
 
 export interface AttackPaletteProps {
-  attacks: Array<Attack>;
-  onAddAttack?: (attack: Attack) => void;
-  onClickAttack?: (attack: Attack) => void;
+  attacks: Array<DetailedAttack>;
+  onAddAttack?: (attack: DetailedAttack) => void;
+  onClickAttack?: (attack: DetailedAttack) => void;
 }
 
 export const AttackPalette = ({
@@ -16,22 +16,16 @@ export const AttackPalette = ({
   onAddAttack,
   onClickAttack,
 }: AttackPaletteProps) => {
-  const { handleDragStart } = useDragAndDrop({ schema: AttackSchema });
+  const { handleDragStart } = useDragAndDrop({ schema: CapabilitySchema });
 
-  const attacksByCharacter = Object.groupBy(
-    attacks,
-    (a) => a.characterName ?? 'General',
-  );
+  const attacksByCharacter = Object.groupBy(attacks, (a) => a.characterName);
 
   return (
     <ScrollArea className="min-w-0 flex-1">
       <div className="flex flex-col gap-6 p-4">
         {Object.entries(attacksByCharacter).map(([charName, charAttacks]) => {
           if (!charAttacks) return null;
-          const attacksByParentSkill = Object.groupBy(
-            charAttacks,
-            (a) => a.parentName ?? 'Other Skills',
-          );
+          const attacksByParentSkill = Object.groupBy(charAttacks, (a) => a.parentName);
           return (
             <div key={charName} className="space-y-4">
               {/* Character Header */}

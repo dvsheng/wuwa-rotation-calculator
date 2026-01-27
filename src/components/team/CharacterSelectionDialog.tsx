@@ -4,40 +4,29 @@ import { SelectionDialog } from '@/components/common/SelectionDialog';
 import { Badge } from '@/components/ui/badge';
 import { useCharacterList } from '@/hooks/useCharacterList';
 import { cn } from '@/lib/utils';
+import type { ListCharactersResponseItem } from '@/services/game-data/character/list-characters';
 import { resolveImagePath } from '@/services/image-service';
 import { Attribute } from '@/types';
 
 import { ATTRIBUTE_COLORS } from './constants';
 
 interface CharacterSelectionDialogProps {
-  onSelect: (id: string, name: string) => void;
-  selectedCharacterName?: string;
-  excludeNames?: Array<string>;
+  value?: string;
+  onValueChange: (id: string) => void;
+  excludeIds?: Array<string>;
 }
 
 const ATTRIBUTES = Object.values(Attribute);
 const RARITIES = [5, 4];
 
-type CharacterListItem = {
-  id: number;
-  name: string;
-  attribute: Attribute;
-  rarity: number;
-};
-
 export const CharacterSelectionDialog = ({
-  onSelect,
-  selectedCharacterName,
-  excludeNames = [],
+  value,
+  onValueChange,
+  excludeIds = [],
 }: CharacterSelectionDialogProps) => {
   const { data: characterList = [] } = useCharacterList();
 
-  const handleSelect = (id: string | number, name: string) => {
-    onSelect(id.toString(), name);
-  };
-
-  // Attribute filter with custom badge rendering
-  const attributeFilter: FilterConfig<CharacterListItem> = {
+  const attributeFilter: FilterConfig<ListCharactersResponseItem> = {
     label: 'Attribute',
     options: ATTRIBUTES.map((attr) => ({
       value: attr,
@@ -67,8 +56,7 @@ export const CharacterSelectionDialog = ({
     ),
   };
 
-  // Rarity filter with default badge rendering
-  const rarityFilter: FilterConfig<CharacterListItem> = {
+  const rarityFilter: FilterConfig<ListCharactersResponseItem> = {
     label: 'Rarity',
     options: RARITIES.map((r) => ({ value: r, label: `${r}★` })),
     getValue: (char) => char.rarity,
@@ -77,9 +65,9 @@ export const CharacterSelectionDialog = ({
   return (
     <SelectionDialog
       items={characterList}
-      selectedItemName={selectedCharacterName}
-      onSelect={handleSelect}
-      excludeNames={excludeNames}
+      value={value}
+      onValueChange={onValueChange}
+      excludeIds={excludeIds}
       title="Select Character"
       placeholder="Select character"
       searchPlaceholder="Search characters..."
@@ -119,15 +107,12 @@ export const CharacterSelectionDialog = ({
         borderLeft: `4px solid ${ATTRIBUTE_COLORS[char.attribute]}`,
       })}
       sortFn={(a, b) => {
-        // Sort by attribute first (alphabetical)
         if (a.attribute !== b.attribute) {
           return a.attribute.localeCompare(b.attribute);
         }
-        // Then by rarity descending (5* before 4*)
         if (a.rarity !== b.rarity) {
           return b.rarity - a.rarity;
         }
-        // Finally by name
         return a.name.localeCompare(b.name);
       }}
       gridCols={{ default: 2, md: 3 }}

@@ -1,3 +1,5 @@
+import { useShallow } from 'zustand/react/shallow';
+
 import { AssetIcon } from '@/components/common/AssetIcon';
 import { CharacterSelectionDialog } from '@/components/team/CharacterSelectionDialog';
 import { Row } from '@/components/ui/layout';
@@ -16,23 +18,20 @@ interface CharacterSelectorProps {
 
 export const CharacterSelector = ({ index }: CharacterSelectorProps) => {
   const character = useTeamStore((state) => state.team[index]);
-  const team = useTeamStore((state) => state.team);
+  const otherSelectedCharacterIds = useTeamStore(
+    useShallow((s) => s.team.flatMap((c, i) => (i !== index && c.id ? [c.id] : []))),
+  );
   const setCharacter = useTeamStore((state) => state.setCharacter);
   const setSequence = useTeamStore((state) => state.setSequence);
-
-  const otherSelectedCharacterNames = team
-    .filter((_c, i) => i !== index)
-    .map((c) => c.name)
-    .filter((n): n is string => !!n);
 
   return (
     <Row className="flex-1 gap-2 overflow-hidden px-1">
       <AssetIcon name="role" className="brightness-0 dark:invert" />
       <div className="min-w-0 flex-1">
         <CharacterSelectionDialog
-          selectedCharacterName={character.name}
-          onSelect={(id, name) => setCharacter(index, id, name)}
-          excludeNames={otherSelectedCharacterNames}
+          value={character.id}
+          onValueChange={(id) => setCharacter(index, id)}
+          excludeIds={otherSelectedCharacterIds}
         />
       </div>
       <div className="w-16 shrink-0">

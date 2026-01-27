@@ -5,11 +5,11 @@ import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/typography';
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
 import { BuffSchema } from '@/schemas/rotation';
-import type { Buff } from '@/schemas/rotation';
+import type { DetailedBuff } from '@/types/client/capability';
 
 export interface BuffPaletteProps {
-  buffs: Array<Buff>;
-  onClickBuff?: (buff: Buff) => void;
+  buffs: Array<DetailedBuff>;
+  onClickBuff?: (buff: DetailedBuff) => void;
 }
 
 export const BuffPalette = ({ buffs, onClickBuff }: BuffPaletteProps) => {
@@ -23,7 +23,7 @@ export const BuffPalette = ({ buffs, onClickBuff }: BuffPaletteProps) => {
     );
   }
 
-  const buffsByCharacter = Object.groupBy(buffs, (b) => b.characterName ?? 'General');
+  const buffsByCharacter = Object.groupBy(buffs, (b) => b.characterName);
 
   const SOURCE_ORDER = ['character', 'weapon', 'echo-set', 'echo'] as const;
   const SOURCE_LABELS: Record<string, string> = {
@@ -39,10 +39,7 @@ export const BuffPalette = ({ buffs, onClickBuff }: BuffPaletteProps) => {
         {Object.entries(buffsByCharacter).map(([charName, charBuffs]) => {
           if (!charBuffs) return null;
 
-          const buffsBySource = Object.groupBy(
-            charBuffs,
-            (b) => b.source ?? 'character',
-          );
+          const buffsBySource = Object.groupBy(charBuffs, (b) => b.source);
 
           return (
             <div

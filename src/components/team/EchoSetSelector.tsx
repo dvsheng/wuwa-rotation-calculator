@@ -20,24 +20,22 @@ interface EchoSetSelectorProps {
 }
 
 export const EchoSetSelector = ({ index }: EchoSetSelectorProps) => {
-  const character = useTeamStore((state) => state.team[index]);
+  const selectedEchoSets = useTeamStore((state) => state.team[index].echoSets);
   const { data: echoSetList = [] } = useEchoSetList();
   const setEchoSet = useTeamStore((state) => state.setEchoSet);
   const setEchoSetRequirement = useTeamStore((state) => state.setEchoSetRequirement);
   const updateCharacter = useTeamStore((state) => state.updateCharacter);
+
   const handleAddSet = () => {
-    if (character.echoSets.length < 2) {
+    if (selectedEchoSets.length < 2) {
       updateCharacter(index, (draft) => {
-        draft.echoSets = [
-          draft.echoSets[0],
-          { id: '', name: '', requirement: '2' },
-        ] as any;
+        draft.echoSets = [draft.echoSets[0], { id: '', requirement: '2' }] as any;
       });
     }
   };
 
   const handleRemoveSet = (setIndex: number) => {
-    if (character.echoSets.length > 1) {
+    if (selectedEchoSets.length > 1) {
       updateCharacter(index, (draft) => {
         const newSets = [...draft.echoSets];
         newSets.splice(setIndex, 1);
@@ -46,14 +44,14 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProps) => {
     }
   };
 
-  const handleUpdateSet = (setIndex: number, id: string, name: string) => {
-    setEchoSet(index, setIndex, id, name);
+  const handleUpdateSet = (setIndex: number, id: string) => {
+    setEchoSet(index, setIndex, id);
   };
 
   return (
     <Stack spacing="sm">
       <Stack spacing="sm">
-        {character.echoSets.map((set, setIndex) => {
+        {selectedEchoSets.map((set, setIndex) => {
           const selectedSetConfig = echoSetList.find((s) => s.id === set.id);
           const availableTiers = selectedSetConfig?.tiers || [2, 5];
 
@@ -63,8 +61,8 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProps) => {
               <div className="min-w-0 flex-1">
                 <SearchableSelect
                   items={echoSetList}
-                  selectedItem={character.echoSets[setIndex]}
-                  onItemClick={(item) => handleUpdateSet(setIndex, item.id, item.name)}
+                  value={selectedSetConfig?.name}
+                  onItemClick={(item) => handleUpdateSet(setIndex, item.id)}
                   placeholder="Select echo set"
                   className="w-full"
                 />
@@ -90,7 +88,7 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProps) => {
                 </div>
               )}
 
-              {character.echoSets.length > 1 && (
+              {selectedEchoSets.length > 1 && (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -104,7 +102,7 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProps) => {
           );
         })}
 
-        {character.echoSets.length < 2 && (
+        {selectedEchoSets.length < 2 && (
           <Button
             variant="ghost"
             size="sm"

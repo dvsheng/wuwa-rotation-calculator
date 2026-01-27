@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 
 import type { Team } from '@/schemas/team';
 import { getClientCharacterDetails } from '@/services/game-data/character/get-character-details';
+import type { GetClientCharacterDetailsOutput } from '@/services/game-data/character/types';
 import { getClientEchoDetails } from '@/services/game-data/echo/get-echo-details';
 import { getClientWeaponDetails } from '@/services/game-data/weapon/get-weapon-details';
 
@@ -11,17 +12,14 @@ export const useTeamAttacks = (team: Team) => {
   const queryMetadata = team.flatMap((character) => [
     {
       characterId: character.id,
-      characterName: character.name,
       queryType: 'character',
     },
     {
       characterId: character.id,
-      characterName: character.name,
       queryType: 'weapon',
     },
     {
       characterId: character.id,
-      characterName: character.name,
       queryType: 'echo',
     },
   ]);
@@ -54,31 +52,26 @@ export const useTeamAttacks = (team: Team) => {
       },
     ]),
     combine: (results) => {
+      const characterNameMap = new Map<string, string>();
+      results.forEach((characterResult, index) => {
+        const meta = queryMetadata[index];
+        if (meta.queryType !== 'character') return;
+        if (!characterResult.data) return;
+        characterNameMap.set(
+          meta.characterId,
+          (characterResult.data as unknown as GetClientCharacterDetailsOutput).name,
+        );
+      });
       const attacks = results.flatMap((queryResult, index) => {
         const data = queryResult.data;
         if (!data) return [];
-
-        const { characterId, characterName, queryType } = queryMetadata[index];
-
-        if (queryType === 'character') {
-          return (data as any).attacks.map((attack: any) => ({
-            ...attack,
-            id: `${characterName}-${attack.name}`,
-            characterId,
-            characterName,
-          }));
-        } else {
-          const attack = (data as any).attack;
-          if (!attack) return [];
-          return [
-            {
-              ...attack,
-              id: `${characterName}-${queryType}-attack`,
-              characterId,
-              characterName,
-            },
-          ];
-        }
+        const { characterId } = queryMetadata[index];
+        const characterName = characterNameMap.get(characterId) ?? 'Unknown';
+        return data.attacks.map((attack) => ({
+          ...attack,
+          characterId,
+          characterName,
+        }));
       });
 
       return {

@@ -746,8 +746,8 @@ Ice Burst is a specific attack in Sanhua's Forte Circuit that deals Resonance Sk
 // DON'T do this - would buff ALL resonance skills
 {
   modifiedStats: [
-    { stat: "criticalDamage", value: 1.0, tags: ["resonanceSkill"] }  // Wrong!
-  ]
+    { stat: 'criticalDamage', value: 1.0, tags: ['resonanceSkill'] }, // Wrong!
+  ];
 }
 ```
 

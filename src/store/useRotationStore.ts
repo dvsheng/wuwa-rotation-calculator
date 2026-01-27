@@ -10,10 +10,10 @@ export interface RotationState {
   buffs: Array<BuffWithPosition>;
 
   // Actions for attacks
-  addAttack: (attack: Omit<Attack, 'id'>, atIndex?: number) => void;
-  removeAttack: (id: string) => void;
+  addAttack: (attack: Omit<Attack, 'instanceId'>, atIndex?: number) => void;
+  removeAttack: (instanceId: string) => void;
   reorderAttacks: (oldIndex: number, newIndex: number) => void;
-  updateAttackParameters: (id: string, values: Array<number | undefined>) => void;
+  updateAttackParameters: (instanceId: string, values: Array<number>) => void;
   setAttacks: (attacks: Array<Attack>) => void;
   clearAttacks: () => void;
 
@@ -22,12 +22,12 @@ export interface RotationState {
     buff: Buff,
     position: Pick<BuffWithPosition, 'x' | 'y' | 'w' | 'h'>,
   ) => void;
-  removeBuff: (timelineId: string) => void;
+  removeBuff: (instanceId: string) => void;
   updateBuffLayout: (
-    timelineId: string,
+    instanceId: string,
     layout: Partial<Pick<BuffWithPosition, 'x' | 'y' | 'w' | 'h'>>,
   ) => void;
-  updateBuffParameters: (timelineId: string, values: Array<number | undefined>) => void;
+  updateBuffParameters: (instanceId: string, values: Array<number>) => void;
   clearBuffs: () => void;
 
   clearAll: () => void;
@@ -40,7 +40,7 @@ export const useRotationStore = create<RotationState>()(
 
     addAttack: (attack, atIndex) =>
       set((state) => {
-        const newAttack = { ...attack, id: crypto.randomUUID() };
+        const newAttack = { ...attack, instanceId: crypto.randomUUID() };
         if (atIndex !== undefined && atIndex !== -1) {
           state.attacks.splice(atIndex, 0, newAttack);
         } else {
@@ -48,9 +48,9 @@ export const useRotationStore = create<RotationState>()(
         }
       }),
 
-    removeAttack: (id) =>
+    removeAttack: (instanceId) =>
       set((state) => {
-        state.attacks = state.attacks.filter((a) => a.id !== id);
+        state.attacks = state.attacks.filter((a) => a.instanceId !== instanceId);
       }),
 
     reorderAttacks: (oldIndex, newIndex) =>
@@ -59,15 +59,11 @@ export const useRotationStore = create<RotationState>()(
         state.attacks.splice(newIndex, 0, removed);
       }),
 
-    updateAttackParameters: (id, values) =>
+    updateAttackParameters: (instanceId, values) =>
       set((state) => {
-        const attack = state.attacks.find((a) => a.id === id);
-        if (attack?.parameters) {
-          values.forEach((value, index) => {
-            if (attack.parameters![index]) {
-              attack.parameters![index].value = value;
-            }
-          });
+        const attack = state.attacks.find((a) => a.instanceId === instanceId);
+        if (attack) {
+          attack.parameterValues = values;
         }
       }),
 
@@ -84,34 +80,30 @@ export const useRotationStore = create<RotationState>()(
     addBuff: (buff, position) =>
       set((state) => {
         state.buffs.push({
-          timelineId: crypto.randomUUID(),
-          buff,
+          instanceId: crypto.randomUUID(),
+          ...buff,
           ...position,
         });
       }),
 
-    removeBuff: (timelineId) =>
+    removeBuff: (instanceId) =>
       set((state) => {
-        state.buffs = state.buffs.filter((b) => b.timelineId !== timelineId);
+        state.buffs = state.buffs.filter((b) => b.instanceId !== instanceId);
       }),
 
-    updateBuffLayout: (timelineId, layout) =>
+    updateBuffLayout: (instanceId, layout) =>
       set((state) => {
-        const buff = state.buffs.find((b) => b.timelineId === timelineId);
+        const buff = state.buffs.find((b) => b.instanceId === instanceId);
         if (buff) {
           Object.assign(buff, layout);
         }
       }),
 
-    updateBuffParameters: (timelineId, values) =>
+    updateBuffParameters: (instanceId, values) =>
       set((state) => {
-        const buff = state.buffs.find((b) => b.timelineId === timelineId);
-        if (buff?.buff.parameters) {
-          values.forEach((value, index) => {
-            if (buff.buff.parameters![index]) {
-              buff.buff.parameters![index].value = value;
-            }
-          });
+        const buff = state.buffs.find((b) => b.instanceId === instanceId);
+        if (buff) {
+          buff.parameterValues = values;
         }
       }),
 

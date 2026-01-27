@@ -12,6 +12,7 @@ import {
 import { useCharacterList } from '@/hooks/useCharacterList';
 import { useWeaponList } from '@/hooks/useWeaponList';
 import { cn } from '@/lib/utils';
+import type { ListWeaponsResponseItem } from '@/services/game-data/weapon/list-weapons';
 import { useTeamStore } from '@/store/useTeamStore';
 import type { WeaponType } from '@/types';
 
@@ -21,30 +22,21 @@ interface WeaponSelectorProps {
   index: number;
 }
 
-type WeaponListItem = {
-  id: string;
-  name: string;
-  weaponType: WeaponType;
-  rarity: number;
-};
-
 export const WeaponSelector = ({ index }: WeaponSelectorProps) => {
-  const character = useTeamStore((state) => state.team[index]);
+  const characterId = useTeamStore((state) => state.team[index].id);
+  const weapon = useTeamStore((state) => state.team[index].weapon);
   const setWeapon = useTeamStore((state) => state.setWeapon);
   const setRefine = useTeamStore((state) => state.setRefine);
-
-  const { data: characterList } = useCharacterList();
-
-  const selectedCharacterData = characterList.find((c) => c.name === character.name);
+  const { data: characterList = [] } = useCharacterList();
+  const selectedCharacterData = characterList.find((c) => c.id === characterId);
   const { data: weaponList = [] } = useWeaponList(
     selectedCharacterData?.weaponType as WeaponType,
   );
 
-  // Rarity filter
-  const rarityFilter: FilterConfig<WeaponListItem> = {
+  const rarityFilter: FilterConfig<ListWeaponsResponseItem> = {
     label: 'Rarity',
     options: [5, 4, 3].map((r) => ({ value: r, label: `${r}★` })),
-    getValue: (weapon) => weapon.rarity,
+    getValue: (_weapon) => _weapon.rarity,
   };
 
   return (
@@ -53,40 +45,38 @@ export const WeaponSelector = ({ index }: WeaponSelectorProps) => {
       <div className="flex-1">
         <SelectionDialog
           items={weaponList}
-          selectedItemName={character.weapon.name}
-          onSelect={(id, name) => {
-            setWeapon(index, id as string, name);
-          }}
+          value={weapon.id}
+          onValueChange={(id) => setWeapon(index, id)}
           title="Select Weapon"
           placeholder="Select weapon"
           searchPlaceholder="Search weapons..."
           filters={[rarityFilter]}
-          renderItem={(weapon) => (
+          renderItem={(_weapon) => (
             <>
               <div className="relative flex h-14 w-14 items-center justify-center">
                 <GameImage
                   entity="weapon"
                   type="icon"
-                  id={weapon.id}
-                  alt={weapon.name}
+                  id={_weapon.id}
+                  alt={_weapon.name}
                   className="h-full w-full object-contain"
                 />
               </div>
               <div className="space-y-1">
                 <div className="max-w-[120px] truncate text-sm font-bold">
-                  {weapon.name}
+                  {_weapon.name}
                 </div>
                 <span
                   className={cn(
                     'rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase',
-                    weapon.rarity === 5
+                    _weapon.rarity === 5
                       ? 'bg-yellow-500/10 text-yellow-600'
-                      : weapon.rarity === 4
+                      : _weapon.rarity === 4
                         ? 'bg-purple-500/10 text-purple-600'
                         : 'bg-blue-500/10 text-blue-600',
                   )}
                 >
-                  {weapon.rarity}★
+                  {_weapon.rarity}★
                 </span>
               </div>
             </>
@@ -105,7 +95,7 @@ export const WeaponSelector = ({ index }: WeaponSelectorProps) => {
       </div>
       <div className="w-16 shrink-0">
         <Select
-          value={String(character.weapon.refine)}
+          value={String(weapon.refine)}
           onValueChange={(val) => setRefine(index, parseInt(val))}
         >
           <SelectTrigger className="h-9 px-2">

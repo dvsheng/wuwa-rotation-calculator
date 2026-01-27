@@ -21,7 +21,6 @@ import type {
   Enemy as ServerEnemy,
   Team as ServerTeam,
   StatValue,
-  Team,
 } from '@/types/server';
 import { CharacterStat } from '@/types/server/character';
 import { calculateParameterizedNumberValue } from '@/utils/math-utils';
@@ -37,21 +36,21 @@ import type { RotationResult } from './types';
  */
 const applyUserParameters = (
   modifier: Modifier<any>,
-  value?: number,
+  values?: Array<number>,
 ): Modifier<any> => {
-  if (value === undefined) return modifier;
+  if (!values || values.length === 0) return modifier;
 
   const resolvedStats: any = {};
 
-  Object.entries(modifier.modifiedStats).forEach(([stat, values]) => {
-    if (!Array.isArray(values)) return;
+  Object.entries(modifier.modifiedStats).forEach(([stat, statValues]) => {
+    if (!Array.isArray(statValues)) return;
 
-    resolvedStats[stat] = values.map((sv) => {
+    resolvedStats[stat] = statValues.map((sv) => {
       if (isUserParameterizedNumber(sv.value)) {
         const configs = sv.value.parameterConfigs;
         const key = Object.keys(configs)[0];
         const resolvedValue = calculateParameterizedNumberValue(sv.value, {
-          [key as any]: value,
+          [key as any]: values[0],
         });
         return { ...sv, value: resolvedValue };
       }
@@ -103,23 +102,6 @@ export const calculateRotation = async (
   attacks: Array<Attack>,
   buffs: Array<BuffWithPosition>,
 ): Promise<RotationResult> => {
-  // 0. Validate input parameters
-  attacks.forEach((attack) => {
-    if (attack.parameters?.some((p) => p.value === undefined)) {
-      throw new Error(
-        `Attack "${attack.name}" (Character: ${attack.characterName ?? 'Unknown'}) has missing parameter values.`,
-      );
-    }
-  });
-
-  buffs.forEach(({ buff }) => {
-    if (buff.parameters?.some((p) => p.value === undefined)) {
-      throw new Error(
-        `Buff "${buff.name}" (Character: ${buff.characterName ?? 'Unknown'}) has missing parameter values.`,
-      );
-    }
-  });
-
   // 1. Fetch all necessary game data in parallel
   const characterDetails = await Promise.all(
     clientTeam.map((c) => (c.id ? getCharacterDetails({ data: c.id }) : null)),
@@ -127,34 +109,34 @@ export const calculateRotation = async (
 
   const weaponDetails = await Promise.all(
     clientTeam.map((c) =>
-      c.weapon.name ? getWeaponDetails({ data: c.weapon.name }) : null,
+      c.weapon.id ? getWeaponDetails({ data: c.weapon.id }) : null,
     ),
   );
 
   const primaryEchoDetails = await Promise.all(
     clientTeam.map((c) =>
-      c.primarySlotEcho.name ? getEchoDetails({ data: c.primarySlotEcho.name }) : null,
+      c.primarySlotEcho.id ? getEchoDetails({ data: c.primarySlotEcho.id }) : null,
     ),
   );
 
   // Helper to find a modifier definition across all data sources for a character
-  const findModifierDefinition = (charIndex: number, buffName: string) => {
+  const findModifierDefinition = (charIndex: number, modifierId: string) => {
     const char = characterDetails[charIndex];
     const weapon = weaponDetails[charIndex];
     const echo = primaryEchoDetails[charIndex];
 
-    const charMod = char?.modifiers.find((m) => m.name === buffName);
+    const charMod = char?.capabilities.modifiers.find((m) => m.id === modifierId);
     if (charMod) return charMod;
 
     if (weapon) {
       const refine = String(clientTeam[charIndex].weapon.refine) as RefineLevel;
       const weaponMod = weapon.attributes[refine].modifiers.find(
-        (m: any) => m.name === buffName,
+        (m: any) => m.id === modifierId,
       );
       if (weaponMod) return weaponMod;
     }
 
-    const echoMod = echo?.modifiers.find((m) => m.description === buffName);
+    const echoMod = echo?.capabilities.modifiers.find((m) => m.id === modifierId);
     if (echoMod) return echoMod;
 
     return null;
@@ -169,29 +151,36 @@ export const calculateRotation = async (
     const stats = { ...charData.stats };
 
     clientChar.echoStats.forEach((echo) => {
-      const [mainStatKey, mainStatTags] = ECHO_STAT_MAP[echo.mainStatType];
-      if (!stats[mainStatKey]) {
-        stats[mainStatKey] = [];
+      const mainStatOption = ECHO_STAT_MAP[echo.mainStatType];
+      if (mainStatOption) {
+        const [mainStatKey, mainStatTags] = mainStatOption;
+        if (!stats[mainStatKey]) {
+          stats[mainStatKey] = [];
+        }
+        stats[mainStatKey].push({
+          value: 0,
+          tags: mainStatTags,
+        });
       }
-      stats[mainStatKey].push({
-        value: 0,
-        tags: mainStatTags,
-      });
 
       echo.substats.forEach((sub) => {
-        const [subKey, subTags] = ECHO_STAT_MAP[sub.stat];
-        if (!stats[subKey]) {
-          stats[subKey] = [];
+        const subOption = ECHO_STAT_MAP[sub.stat];
+        if (subOption) {
+          const [subKey, subTags] = subOption;
+          if (!stats[subKey]) {
+            stats[subKey] = [];
+          }
+          stats[subKey].push({
+            value: sub.value / 100,
+            tags: subTags,
+          });
         }
-        stats[subKey].push({
-          value: sub.value / 100,
-          tags: subTags,
-        });
       });
     });
 
     return {
-      name: clientChar.name,
+      id: clientChar.id,
+      name: charData.name,
       level: 90,
       stats: stats as CharacterStats,
     } as ServerCharacter;
@@ -222,27 +211,46 @@ export const calculateRotation = async (
 
   // 4. Map Attacks and active Buffs to Damage Instances
   const damageInstances = attacks.map((attack, index) => {
-    const charData = characterDetails.find((d) => d?.name === attack.characterName);
+    const charIndex = clientTeam.findIndex((c) => c.id === attack.characterId);
+    const charData = characterDetails[charIndex];
+    const weaponData = weaponDetails[charIndex];
+    const echoData = primaryEchoDetails[charIndex];
+
     if (!charData) {
-      throw new Error(`Could not find character data for ${attack.characterName}`);
+      throw new Error(`Could not find character data for ${attack.characterId}`);
     }
-    const serverInstance = charData.attacks.find((a) => a.name === attack.name);
+
+    // Find attack definition in character, weapon, or echo
+    let serverInstance = charData.capabilities.attacks.find((a) => a.id === attack.id);
+    if (!serverInstance && weaponData) {
+      const refine = String(clientTeam[charIndex].weapon.refine) as RefineLevel;
+      if (weaponData.attributes[refine].attack?.id === attack.id) {
+        serverInstance = weaponData.attributes[refine].attack;
+      }
+    }
+    if (!serverInstance && echoData) {
+      if (echoData.capabilities.attacks?.[0]?.id === attack.id) {
+        serverInstance = echoData.capabilities.attacks[0];
+      }
+    }
 
     if (!serverInstance) {
       throw new Error(
-        `Could not find attack ${attack.name} for character ${attack.characterName}`,
+        `Could not find attack ${attack.id} for character ${attack.characterId}`,
       );
     }
 
-    // Resolve parameterized motion values if user provided a value
-    const userAttackValue = attack.parameters?.[0]?.value;
+    // Resolve parameterized motion values if user provided values
     let motionValues = serverInstance.motionValues || [];
-
-    if (userAttackValue !== undefined && serverInstance.parameterizedMotionValues) {
+    if (
+      attack.parameterValues &&
+      attack.parameterValues.length > 0 &&
+      serverInstance.parameterizedMotionValues
+    ) {
       motionValues = serverInstance.parameterizedMotionValues.map((pmv) => {
         const key = Object.keys(pmv.parameterConfigs)[0];
         return calculateParameterizedNumberValue(pmv, {
-          [key as any]: userAttackValue,
+          [key as any]: attack.parameterValues[0], // assume first value for now
         });
       });
     }
@@ -250,18 +258,18 @@ export const calculateRotation = async (
     const activeModifiers = buffs
       .filter((b) => index >= b.x && index < b.x + b.w)
       .map((b) => {
-        const charIdx = clientTeam.findIndex((c) => c.name === b.buff.characterName);
-        const definition = findModifierDefinition(charIdx, b.buff.name);
+        const bCharIdx = clientTeam.findIndex((c) => c.id === b.characterId);
+        const definition = findModifierDefinition(bCharIdx, b.id);
 
         if (!definition) return null;
 
-        return applyUserParameters(definition, b.buff.parameters?.[0]?.value);
+        return applyUserParameters(definition, b.parameterValues);
       })
       .filter((m): m is Modifier => m !== null);
 
     return {
       instance: {
-        originCharacterName: attack.characterName,
+        originCharacterName: charData.name,
         attribute: charData.attribute,
         scalingStat: serverInstance.scalingStat,
         motionValues,
@@ -278,53 +286,4 @@ export const calculateRotation = async (
     damageInstances,
   };
   return calculateRotationDamage(calculateRotationDamageProps);
-};
-
-const mapClientCharacterToServer = async (
-  character: ClientTeam[number],
-): Promise<Team[number]> => {
-  const [characterDetails, weaponDetails, echoDetails, ...echoSetDetails] =
-    await Promise.all([
-      getCharacterDetails({ data: character.id }),
-      getWeaponDetails({ data: character.weapon.id }),
-      getEchoDetails({ data: character.primarySlotEcho.id }),
-      ...character.echoSets.map((echo) => getEchoSetDetails({ data: echo.id })),
-    ]);
-  const stats: CharacterStats = Object.fromEntries(
-    Object.values(CharacterStat).map((key) => [key, []]),
-  ) as CharacterStats;
-
-  const characterStats = characterDetails.stats;
-
-  // 🔥 Properly typed key iteration
-  Object.keys(characterStats).forEach((key) => {
-    stats[key] = [...stats[key], ...(characterStats[key] ?? [])];
-  });
-  clientChar.echoStats.forEach((echo) => {
-    const [mainStatKey, mainStatTags] = ECHO_STAT_MAP[echo.mainStatType];
-    if (!stats[mainStatKey]) {
-      stats[mainStatKey] = [];
-    }
-    stats[mainStatKey].push({
-      value: 0,
-      tags: mainStatTags,
-    });
-
-    echo.substats.forEach((sub) => {
-      const [subKey, subTags] = ECHO_STAT_MAP[sub.stat];
-      if (!stats[subKey]) {
-        stats[subKey] = [];
-      }
-      stats[subKey].push({
-        value: sub.value / 100,
-        tags: subTags,
-      });
-    });
-  });
-
-  return {
-    name: clientChar.name,
-    level: 90,
-    stats: stats,
-  } as ServerCharacter;
 };

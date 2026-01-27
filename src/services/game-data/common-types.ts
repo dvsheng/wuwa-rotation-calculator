@@ -48,3 +48,25 @@ export interface BaseEntity {
   uuid: string;
   name: string;
 }
+
+export interface EnrichedAttack {
+  id: string;
+  name: string;
+  parentName: string;
+  description?: string;
+  parameters?: Array<{ minimum: number; maximum: number }>;
+}
+
+export interface EnrichedBuff {
+  id: string;
+  name: string;
+  parentName: string;
+  description?: string;
+  source: 'character' | 'weapon' | 'echo' | 'echo-set';
+  parameters?: Array<{ minimum: number; maximum: number }>;
+}
+
+export interface GetClientEntityDetailsOutput {
+  attacks: Array<EnrichedAttack>;
+  modifiers: Array<EnrichedBuff>;
+}

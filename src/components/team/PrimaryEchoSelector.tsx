@@ -4,6 +4,7 @@ import { SelectionDialog } from '@/components/common/SelectionDialog';
 import { Row, Stack } from '@/components/ui/layout';
 import { useEchoList } from '@/hooks/useEchoList';
 import { cn } from '@/lib/utils';
+import type { ListEchoesResponseItem } from '@/services/game-data/echo/list-echoes';
 import { useTeamStore } from '@/store/useTeamStore';
 
 import { AssetIcon } from '../common/AssetIcon';
@@ -12,29 +13,23 @@ interface PrimaryEchoSelectorProps {
   index: number;
 }
 
-type EchoListItem = {
-  id: string;
-  name: string;
-  cost: number;
-  sets: Array<string>;
-};
-
 export const PrimaryEchoSelector = ({ index }: PrimaryEchoSelectorProps) => {
-  const character = useTeamStore((state) => state.team[index]);
-  const setPrimaryEcho = useTeamStore((state) => state.setPrimaryEcho);
+  const echo = useTeamStore((state) => state.team[index].primarySlotEcho);
+  const selectedEchoSets = useTeamStore((state) => state.team[index].echoSets);
+  const setEcho = useTeamStore((state) => state.setPrimaryEcho);
   const { data: echoList = [] } = useEchoList();
 
-  // Filter echoes by selected echo sets
-  const selectedSets = character.echoSets.map((s) => s.name).filter(Boolean);
-  const primaryEchoOptions = echoList.filter(
-    (e) => selectedSets.length === 0 || e.sets.some((s) => selectedSets.includes(s)),
+  // Filter echoes by selected echo set IDs
+  const selectedSetIds = selectedEchoSets.map((set) => set.id);
+  const primaryEchoOptions = echoList.filter((_echo) =>
+    _echo.sets.some((set) => selectedSetIds.includes(set)),
   );
 
   // Cost filter
-  const costFilter: FilterConfig<EchoListItem> = {
+  const costFilter: FilterConfig<ListEchoesResponseItem> = {
     label: 'Cost',
     options: [4, 3, 1].map((c) => ({ value: c, label: `Cost ${c}` })),
-    getValue: (echo) => echo.cost,
+    getValue: (_echo) => _echo.cost,
   };
 
   return (
@@ -44,40 +39,38 @@ export const PrimaryEchoSelector = ({ index }: PrimaryEchoSelectorProps) => {
         <div className="min-w-0 flex-1">
           <SelectionDialog
             items={primaryEchoOptions}
-            selectedItemName={character.primarySlotEcho.name}
-            onSelect={(id, name) => {
-              setPrimaryEcho(index, id as string, name);
-            }}
+            value={echo.id}
+            onValueChange={(id) => setEcho(index, id)}
             title="Select Primary Echo"
             placeholder="Select primary echo"
             searchPlaceholder="Search echoes..."
             filters={[costFilter]}
-            renderItem={(echo) => (
+            renderItem={(_echo) => (
               <>
                 <div className="relative flex h-14 w-14 items-center justify-center">
                   <GameImage
                     entity="echo"
                     type="icon"
-                    id={echo.id}
-                    alt={echo.name}
+                    id={_echo.id}
+                    alt={_echo.name}
                     className="h-full w-full object-contain"
                   />
                 </div>
                 <div className="space-y-1">
                   <div className="max-w-[120px] truncate text-sm font-bold">
-                    {echo.name}
+                    {_echo.name}
                   </div>
                   <span
                     className={cn(
                       'rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase',
-                      echo.cost === 4
+                      _echo.cost === 4
                         ? 'bg-yellow-500/10 text-yellow-600'
-                        : echo.cost === 3
+                        : _echo.cost === 3
                           ? 'bg-purple-500/10 text-purple-600'
                           : 'bg-blue-500/10 text-blue-600',
                     )}
                   >
-                    Cost {echo.cost}
+                    Cost {_echo.cost}
                   </span>
                 </div>
               </>

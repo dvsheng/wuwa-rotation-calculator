@@ -1,23 +1,37 @@
 import { useContainerWidth } from 'react-grid-layout';
 
-import { useTeamModifiers } from '@/hooks/useTeamModifiers';
-import type { Buff } from '@/schemas/rotation';
+import type { Attack, BuffWithPosition } from '@/schemas/rotation';
 import { useRotationStore } from '@/store/useRotationStore';
-import { useTeamStore } from '@/store/useTeamStore';
+import type { DetailedAttack, DetailedBuff } from '@/types/client/capability';
 
 import { BuffPalette } from './BuffPalette';
 import { BuffTimelineCanvas } from './BuffTimelineCanvas';
 import { RotationTimeline } from './RotationTimeline';
 
-export const BuffTimeline = () => {
-  const attacks = useRotationStore((state) => state.attacks);
+interface BuffTimelineProps {
+  buffs: Array<DetailedBuff & BuffWithPosition>;
+  attacks: Array<DetailedAttack & Attack>;
+  availableBuffs: Array<DetailedBuff>;
+  isLoading: boolean;
+}
+
+export const BuffTimeline = ({
+  buffs,
+  attacks,
+  availableBuffs,
+  isLoading,
+}: BuffTimelineProps) => {
   const addBuff = useRotationStore((state) => state.addBuff);
-  const team = useTeamStore((state) => state.team);
-  const { buffs } = useTeamModifiers(team);
   const { width, containerRef, mounted } = useContainerWidth();
 
-  const handleAddBuff = (buff: Buff) => {
-    addBuff(buff, { x: 0, y: 0, w: 2, h: 1 });
+  const handleAddBuff = (buff: DetailedBuff) => {
+    addBuff(
+      {
+        id: buff.id,
+        characterId: buff.characterId,
+      },
+      { x: 0, y: 0, w: 2, h: 1 },
+    );
   };
 
   const gridConfig = {
@@ -32,8 +46,16 @@ export const BuffTimeline = () => {
       {mounted && (
         <>
           <RotationTimeline items={attacks} width={width} gridConfig={gridConfig} />
-          <BuffTimelineCanvas width={width} gridConfig={gridConfig} />
-          <BuffPalette buffs={buffs} onClickBuff={handleAddBuff} />
+          <BuffTimelineCanvas buffs={buffs} width={width} gridConfig={gridConfig} />
+          {isLoading ? (
+            <div className="bg-muted/10 flex h-16 items-center justify-center rounded-xl border border-dashed">
+              <span className="text-muted-foreground text-xs">
+                Loading modifiers...
+              </span>
+            </div>
+          ) : (
+            <BuffPalette buffs={availableBuffs} onClickBuff={handleAddBuff} />
+          )}
         </>
       )}
     </div>

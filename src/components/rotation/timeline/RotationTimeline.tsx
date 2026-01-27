@@ -5,9 +5,10 @@ import { Card } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Text } from '@/components/ui/typography';
 import type { Attack } from '@/schemas/rotation';
+import type { DetailedAttack } from '@/types/client/capability';
 
 interface RotationTimelineProps {
-  items: Array<Attack>;
+  items: Array<DetailedAttack & Attack>;
   width: number;
   gridConfig: GridLayoutProps['gridConfig'];
 }
@@ -37,7 +38,7 @@ export const RotationTimeline = ({
     <div className="bg-muted/20 border-border/50 rounded-lg border">
       <ReactGridLayout {...layoutProps}>
         {items.map((item, index) => (
-          <div key={item.id}>
+          <div key={item.instanceId}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Card className="bg-card hover:bg-accent/50 border-primary/10 group flex h-full flex-col justify-start overflow-hidden px-2 py-1 shadow-sm transition-colors">

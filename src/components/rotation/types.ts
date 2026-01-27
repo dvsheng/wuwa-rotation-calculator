@@ -18,6 +18,5 @@ export interface TimelineBuff {
   y: number;
   w: number;
   h: number;
-  isParameterized: boolean;
   parameterValue?: number;
 }

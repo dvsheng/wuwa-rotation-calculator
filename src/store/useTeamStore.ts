@@ -1,18 +1,17 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
-import { ECHO_SUBSTAT_VALUES } from '@/schemas/echo';
+import type { Character } from '@/schemas/character';
+import type { EchoCost, EchoPiece, EchoSubstatOptionType } from '@/schemas/echo';
+import {
+  ECHO_SUBSTAT_VALUES,
+  EchoMainStatOption,
+  EchoSubstatOption,
+} from '@/schemas/echo';
 import { initialEnemyData } from '@/schemas/enemy';
 import type { Enemy } from '@/schemas/enemy';
+import type { Team } from '@/schemas/team';
 import type { RefineLevel } from '@/services/game-data/weapon/types';
-import type {
-  Character,
-  EchoCost,
-  EchoPiece,
-  EchoSubstatOptionType,
-  Team,
-} from '@/types/client';
-import { EchoMainStatOption, EchoSubstatOption } from '@/types/client';
 
 export interface TeamState {
   team: Team;

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { Attribute } from '@/types/attribute';
+import { Attribute } from '@/types';
 
 export const EnemySchema = z.object({
   level: z.number().int().min(1).max(120),

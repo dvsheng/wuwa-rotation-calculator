@@ -5,10 +5,9 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Text } from '@/components/ui/typography';
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
 import { cn } from '@/lib/utils';
-import type { BuffWithPosition } from '@/schemas/rotation';
-import { BuffSchema } from '@/schemas/rotation';
+import type { ModifierInstance } from '@/schemas/rotation';
+import { CapabilitySchema } from '@/schemas/rotation';
 import { useRotationStore } from '@/store/useRotationStore';
-import type { DetailedBuff } from '@/types/client/capability';
 
 import type { SharedGridConfig } from '../types';
 
@@ -16,7 +15,7 @@ import { BuffTimelineCanvasItem } from './BuffTimelineCanvasItem';
 
 interface BuffTimelineCanvasProps {
   gridConfig: SharedGridConfig;
-  buffs: Array<DetailedBuff & BuffWithPosition>;
+  buffs: Array<ModifierInstance>;
 }
 
 export const BuffTimelineCanvas = ({ gridConfig, buffs }: BuffTimelineCanvasProps) => {
@@ -26,7 +25,7 @@ export const BuffTimelineCanvas = ({ gridConfig, buffs }: BuffTimelineCanvasProp
   const updateBuffParameters = useRotationStore((state) => state.updateBuffParameters);
 
   const { createHandleDrop } = useDragAndDrop({
-    schema: BuffSchema,
+    schema: CapabilitySchema,
   });
 
   const onLayoutChange = (layout: Layout) => {

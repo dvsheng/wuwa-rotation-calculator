@@ -1,4 +1,4 @@
-import type { CharacterDamageInstance, Enemy, Team } from '@/types/server';
+import type { CharacterDamageInstance, Enemy, Team } from '@/types';
 
 import { applyModifiers } from './apply-modifiers';
 import { calculateAttackDamage } from './calculate-attack-damage';

@@ -1,7 +1,5 @@
-import type { Integer } from '@/types';
-
-import type { RotationRuntimeResolvableNumber } from '../parameterized-number';
-
+import type { Integer } from './common';
+import type { RotationRuntimeResolvableNumber } from './parameterized-number';
 import type { TaggedStatValue } from './tag';
 
 export const CharacterStat = {
@@ -27,7 +25,7 @@ export const CharacterStat = {
   TUNE_BREAK_BOOST: 'tuneBreakBoost',
   ENERGY_REGEN: 'energyRegen',
   HEALING_BONUS: 'healingBonus',
-};
+} as const;
 
 export type CharacterStat = (typeof CharacterStat)[keyof typeof CharacterStat];
 

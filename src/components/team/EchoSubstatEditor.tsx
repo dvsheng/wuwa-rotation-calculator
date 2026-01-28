@@ -6,8 +6,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ECHO_SUBSTAT_VALUES } from '@/services/game-data/substats';
-import type { EchoSubstat, EchoSubstatOptionType } from '@/types/client/echo';
+import type { EchoSubstat, EchoSubstatOptionType } from '@/schemas/echo';
+import { ECHO_SUBSTAT_VALUES } from '@/schemas/echo';
 
 import { STAT_LABELS, SUBSTAT_OPTIONS } from './constants';
 

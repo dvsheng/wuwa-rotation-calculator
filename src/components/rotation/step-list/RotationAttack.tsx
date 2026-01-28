@@ -1,11 +1,10 @@
-import type { Attack } from '@/schemas/rotation';
+import type { AttackInstance } from '@/schemas/rotation';
 import { useRotationStore } from '@/store/useRotationStore';
-import type { DetailedAttack } from '@/types/client/capability';
 
 import { CanvasItem } from '../../common/CanvasItem';
 
 interface RotationAttackProps {
-  attack: DetailedAttack & Attack;
+  attack: AttackInstance;
   index: number;
   onRemove: (instanceId: string) => void;
 }
@@ -16,17 +15,12 @@ export const RotationAttack = ({ attack, index, onRemove }: RotationAttackProps)
   );
   const displayName = `${attack.parentName}: ${attack.name}`;
 
-  const parameters = attack.parameters?.map((parameter, i) => ({
-    ...parameter,
-    value: attack.parameterValues?.[i] ?? parameter.minimum,
-  }));
-
   return (
     <CanvasItem
       text={displayName}
       subtext={attack.characterName}
       hoverText={attack.description}
-      parameters={parameters}
+      parameters={attack.parameters}
       index={index}
       onRemove={() => onRemove(attack.instanceId)}
       onSaveParameters={(vals) =>

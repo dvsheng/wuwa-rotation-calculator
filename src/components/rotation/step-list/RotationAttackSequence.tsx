@@ -3,8 +3,7 @@ import GridLayout from 'react-grid-layout';
 
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Text } from '@/components/ui/typography';
-import type { Attack } from '@/schemas/rotation';
-import type { DetailedAttack } from '@/types/client/capability';
+import type { AttackInstance } from '@/schemas/rotation';
 
 import type { SharedGridConfig } from '../types';
 
@@ -12,10 +11,10 @@ import { EmptyRotationState } from './EmptyRotationState';
 import { RotationAttack } from './RotationAttack';
 
 export interface RotationAttackSequenceProps {
-  attacks: Array<DetailedAttack & Attack>;
+  attacks: Array<AttackInstance>;
   gridConfig: SharedGridConfig;
   onRemove: (instanceId: string) => void;
-  onReorder: (instanceIds: Array<Attack>) => void;
+  onReorder: (instanceIds: Array<AttackInstance>) => void;
   onDropAttack: (layout: Layout, item: LayoutItem | undefined, event: Event) => void;
 }
 

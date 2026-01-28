@@ -1,6 +1,6 @@
-import type { CharacterStat } from './server/character';
-import type { AbilityAttribute } from './server/damage-instance';
-import type { EnemyStat } from './server/enemy';
+import type { CharacterStat } from './character';
+import type { AbilityAttribute } from './damage-instance';
+import type { EnemyStat } from './enemy';
 
 /**
  * Defines the parameters for a linear scaling calculation:

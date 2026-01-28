@@ -1,12 +1,11 @@
 import React from 'react';
 
-import type { BuffWithPosition } from '@/schemas/rotation';
-import type { DetailedBuff } from '@/types/client/capability';
+import type { ModifierInstance } from '@/schemas/rotation';
 
 import { CanvasItem } from '../../common/CanvasItem';
 
 interface BuffTimelineCanvasItemProps extends React.HTMLAttributes<HTMLDivElement> {
-  buff: BuffWithPosition & DetailedBuff;
+  buff: ModifierInstance;
   onRemove: (instanceId: string) => void;
   onSaveParameters: (instanceId: string, parameterValues: Array<number>) => void;
 }
@@ -15,9 +14,9 @@ export const BuffTimelineCanvasItem = React.forwardRef<
   HTMLDivElement,
   BuffTimelineCanvasItemProps
 >(({ buff, onRemove, onSaveParameters, ...props }, ref) => {
-  const parameters = buff.parameters?.map((p, i) => ({
+  const parameters = buff.parameters?.map((p) => ({
     ...p,
-    value: buff.parameterValues?.[i] ?? p.minimum,
+    value: p.value ?? p.minimum,
   }));
 
   return (

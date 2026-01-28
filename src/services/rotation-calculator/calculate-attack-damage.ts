@@ -1,4 +1,4 @@
-import type { CharacterDamageInstance, Enemy, Team } from '@/types/server';
+import type { CharacterDamageInstance, Enemy, Team } from '@/types';
 
 import { calculateDamage } from '../damage-calculator';
 

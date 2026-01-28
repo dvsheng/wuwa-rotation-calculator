@@ -1,5 +1,5 @@
-import { Tag } from '@/types/server';
-import type { Enemy, StatValue, Team } from '@/types/server';
+import { Tag } from '@/types';
+import type { Enemy, StatValue, Team } from '@/types';
 import { calculateParameterizedNumberValue } from '@/utils/math-utils';
 
 import {
@@ -37,7 +37,6 @@ export const resolveStatValuesInRotation = (rotation: Rotation): Rotation => {
             ...modifier,
             value: Object.fromEntries(
               Object.entries(modifier.modifiedStats).map(([key, values]) => {
-                if (!values) return [key, undefined];
                 const resolvedValues = values.map((value) => {
                   if (typeof value.value === 'number') {
                     return value;

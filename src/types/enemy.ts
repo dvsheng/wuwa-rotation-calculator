@@ -1,8 +1,6 @@
-import { NegativeStatus } from '@/types';
-import type { Integer } from '@/types';
-
-import type { RotationRuntimeResolvableNumber } from '../parameterized-number';
-
+import type { Integer } from './common';
+import { NegativeStatus } from './negative-status';
+import type { RotationRuntimeResolvableNumber } from './parameterized-number';
 import type { TaggedStatValue } from './tag';
 
 export const EnemyStat = {

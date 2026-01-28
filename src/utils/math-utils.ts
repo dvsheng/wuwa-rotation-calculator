@@ -1,7 +1,4 @@
-import type {
-  LinearParameterizedNumber,
-  LinearScalingParameterConfig,
-} from '@/types/parameterized-number';
+import type { LinearParameterizedNumber, LinearScalingParameterConfig } from '@/types';
 
 export const calculateParameterizedNumberValue = <T extends string>(
   parameterizedNumber: LinearParameterizedNumber<T>,

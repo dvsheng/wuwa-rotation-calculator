@@ -1,4 +1,4 @@
-import type { Attribute } from '@/types';
+import type { Attribute } from './attribute';
 
 /**
  * Defines the base stat used for damage scaling.

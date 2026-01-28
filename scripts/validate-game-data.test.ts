@@ -4,7 +4,8 @@ import path from 'node:path';
 import { describe, it } from 'vitest';
 import { z } from 'zod';
 
-import { CharacterStat, EnemyStat } from '@/types/server';
+import { Sequence } from '@/services/game-data/character/types';
+import { AbilityAttribute, CharacterStat, EnemyStat } from '@/types';
 
 // --- Shared Schemas ---
 
@@ -40,12 +41,16 @@ const ParameterizedNumberSchema = z.union([
 
 // New flattened stat structure
 const StatSchema = z.object({
-  stat: z.union([z.enum(CharacterStat), z.enum(EnemyStat)]),
+  stat: z.union([
+    z.enum(Object.values(CharacterStat)),
+    z.enum(Object.values(EnemyStat)),
+  ]),
   value: ParameterizedNumberSchema,
   tags: z.array(TagSchema),
 });
 
-const DescribableSchema = z.object({
+const CapabilitySchema = z.object({
+  id: z.string(),
   description: z.string(),
 });
 
@@ -69,25 +74,23 @@ const AttackTagsSchema = z.array(TagSchema).refine(
   },
 );
 
-const AttackSchema = DescribableSchema.extend({
+const AttackSchema = CapabilitySchema.extend({
   tags: AttackTagsSchema,
-  scalingStat: z.enum(['hp', 'atk', 'def']),
+  scalingStat: z.enum(Object.values(AbilityAttribute)),
   motionValues: z.array(z.number().or(UserParameterizedNumberSchema)),
 });
 
-const ModifierSchema = z
-  .object({
-    target: z
-      .union([
-        z.enum(['team', 'enemy', 'activeCharacter', 'self']),
-        z.array(z.union([z.literal(1), z.literal(2), z.literal(3)])),
-      ])
-      .optional(),
-    modifiedStats: z.array(StatSchema),
-  })
-  .and(DescribableSchema);
+const ModifierSchema = CapabilitySchema.extend({
+  target: z
+    .union([
+      z.enum(['team', 'enemy', 'activeCharacter', 'self']),
+      z.array(z.union([z.literal(1), z.literal(2), z.literal(3)])),
+    ])
+    .optional(),
+  modifiedStats: z.array(StatSchema),
+});
 
-const PermanentStatSchema = StatSchema.and(DescribableSchema);
+const PermanentStatSchema = CapabilitySchema.and(StatSchema);
 
 const CapabilitiesSchema = z.object({
   attacks: z.array(AttackSchema),
@@ -97,6 +100,7 @@ const CapabilitiesSchema = z.object({
 
 const BaseEntitySchema = z.object({
   id: z.string(),
+  uuid: z.string(),
   name: z.string(),
 });
 
@@ -110,7 +114,7 @@ const EchoSchema = BaseEntitySchema.extend({
 // --- Echo Set Schemas ---
 
 const EchoSetSchema = BaseEntitySchema.extend({
-  setEffects: z.record(z.enum(['2', '3', '5']), CapabilitiesSchema.optional()),
+  setEffects: z.partialRecord(z.enum(['2', '3', '5']), CapabilitiesSchema),
 });
 
 // --- Weapon Schemas ---
@@ -121,7 +125,7 @@ const WeaponSchema = BaseEntitySchema.extend({
 
 // --- Character Schemas ---
 
-const SequenceSchema = z.enum(['s1', 's2', 's3', 's4', 's5', 's6']);
+const SequenceSchema = z.enum(Object.values(Sequence));
 
 const CharacterBaseItemSchema = z.object({
   name: z.string(),

@@ -1,11 +1,10 @@
-import { isUserParameterizedNumber } from '../parameterized-number';
+import type { CharacterStats } from './character';
+import type { EnemyStats } from './enemy';
+import { isUserParameterizedNumber } from './parameterized-number';
 import type {
   RotationRuntimeResolvableNumber,
   UserParameterizedNumber,
-} from '../parameterized-number';
-
-import type { CharacterStats } from './character';
-import type { EnemyStats } from './enemy';
+} from './parameterized-number';
 
 /**
  * Defines the potential targets for a modifier.

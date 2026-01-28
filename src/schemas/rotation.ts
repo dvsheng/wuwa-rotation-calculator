@@ -1,46 +1,53 @@
 import { z } from 'zod';
 
-export interface Parameter {
-  minimum?: number;
-  maximum?: number;
-  value?: number;
-}
+export const ParameterSchema = z.object({
+  minimum: z.number(),
+  maximum: z.number(),
+  value: z.number().optional(),
+});
+
+export type Parameter = z.infer<typeof ParameterSchema>;
 
 /**
- * Base schema for user-input capability instances.
- * Stores only the data provided by the user, while descriptive metadata
- * is resolved via game-data services using the ID.
+ * Schema for validating capability data during drag/drop operations.
+ * Matches the Capability type from @/types/client/capability.
  */
 export const CapabilitySchema = z.object({
-  id: z.string(), // Game data ID (skillId or modifierId)
-  characterId: z.string(), // Which character provides/performs it
-  parameterValues: z.array(z.number()).optional(),
+  id: z.string(),
+  name: z.string(),
+  parentName: z.string(),
+  description: z.string().optional(),
+  characterName: z.string(),
+  characterId: z.string(),
+  parameters: z
+    .array(
+      z.object({
+        minimum: z.number(),
+        maximum: z.number(),
+        value: z.number().optional(),
+      }),
+    )
+    .optional(),
 });
 
 export type Capability = z.infer<typeof CapabilitySchema>;
 
 /**
- * Represents the user's input for a single attack in a rotation.
- * Extends CapabilitySchema by adding an instance UUID for ordering and timeline placement.
+ * Schema for stored attack instances in the rotation.
+ * Contains only the minimal data needed to identify and configure the attack.
+ * Full capability metadata (name, description, etc.) is resolved via game-data services.
  */
-export const AttackSchema = CapabilitySchema.extend({
+export const AttackInstanceSchema = CapabilitySchema.extend({
   instanceId: z.string(), // Unique UUID for this specific instance in the sequence
 });
 
-export type Attack = z.infer<typeof AttackSchema>;
+export type AttackInstance = z.infer<typeof AttackInstanceSchema>;
 
 /**
- * Represents the user's input for a single buff/modifier as it exists in a palette.
+ * Schema for stored modifier/buff instances in the rotation.
+ * Contains the minimal data to identify the buff plus its timeline position.
  */
-export const BuffSchema = CapabilitySchema;
-
-export type Buff = z.infer<typeof BuffSchema>;
-
-/**
- * Buff placed on the timeline (with position).
- * Similar to AttackSchema, it is a Capability enriched with user-decided form info (position and instanceId).
- */
-export const BuffWithPositionSchema = CapabilitySchema.extend({
+export const ModifierInstanceSchema = CapabilitySchema.extend({
   instanceId: z.string(), // Unique UUID for this specific placement
   x: z.number(),
   y: z.number(),
@@ -48,23 +55,11 @@ export const BuffWithPositionSchema = CapabilitySchema.extend({
   h: z.number(),
 });
 
-export type BuffWithPosition = z.infer<typeof BuffWithPositionSchema>;
+export type ModifierInstance = z.infer<typeof ModifierInstanceSchema>;
 
 export const RotationSchema = z.object({
-  attacks: z.array(AttackSchema),
-  buffs: z.array(BuffWithPositionSchema),
+  attacks: z.array(AttackInstanceSchema),
+  buffs: z.array(ModifierInstanceSchema),
 });
 
 export type Rotation = z.infer<typeof RotationSchema>;
-
-/**
- * Metadata for parameters, used when enriching the store data with game-data details.
- * This is NOT stored in the form-driven store but fetched via queries.
- */
-export const ParameterMetadataSchema = z.object({
-  name: z.string().optional(),
-  minimum: z.number(),
-  maximum: z.number(),
-});
-
-export type ParameterMetadata = z.infer<typeof ParameterMetadataSchema>;

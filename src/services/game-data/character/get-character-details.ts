@@ -31,6 +31,9 @@ export const getCharacterDetailsHandler = async (id: string): Promise<Character>
   if (!characterData) {
     throw new Error(`Failed to fetch character details for ID ${id}`);
   }
+  characterData.capabilities.attacks.forEach((attack) => {
+    attack.attribute = characterData.attribute;
+  });
 
   return characterData;
 };

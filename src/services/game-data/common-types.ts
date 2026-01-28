@@ -1,14 +1,14 @@
-import type {
-  RotationRuntimeResolvableNumber,
-  UserParameterizedNumber,
-} from '@/types/parameterized-number';
+import type { Capability } from '@/schemas/rotation';
 import type {
   AbilityAttribute,
+  Attribute,
   CharacterStat,
   EnemyStat,
+  RotationRuntimeResolvableNumber,
   Tagged,
   Target,
-} from '@/types/server';
+  UserParameterizedNumber,
+} from '@/types';
 
 export interface BaseCapability {
   id: string;
@@ -34,6 +34,7 @@ export type Modifier<T = {}> = ModifierBase & T;
 
 interface AttackBase extends BaseCapability {
   scalingStat: AbilityAttribute;
+  attribute: Attribute;
   motionValues: Array<number | UserParameterizedNumber>;
   tags: Array<string>;
 }
@@ -52,13 +53,7 @@ export interface BaseEntity {
   name: string;
 }
 
-export interface ClientCapability {
-  id: string;
-  name: string;
-  parentName: string;
-  description?: string;
-  parameters?: Array<{ minimum: number; maximum: number }>;
-}
+export type ClientCapability = Omit<Capability, 'characterId' | 'characterName'>;
 
 export interface GetClientEntityDetailsOutput {
   attacks: Array<ClientCapability>;

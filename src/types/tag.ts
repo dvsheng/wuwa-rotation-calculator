@@ -1,9 +1,7 @@
-import { Attribute } from '@/types';
-import { NegativeStatus } from '@/types/negative-status';
-
-import type { RotationRuntimeResolvableNumber } from '../parameterized-number';
-
+import { Attribute } from './attribute';
 import { DamageType } from './damage-instance';
+import { NegativeStatus } from './negative-status';
+import type { RotationRuntimeResolvableNumber } from './parameterized-number';
 
 /**
  * A collection of commonly used strings in tags used for filtering and categorization during calculations.

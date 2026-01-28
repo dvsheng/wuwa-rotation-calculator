@@ -1,5 +1,5 @@
-import type { CharacterStats, EnemyStats, TaggedStatValue } from '@/types/server';
-import { AbilityAttribute, Tag } from '@/types/server';
+import { AbilityAttribute, Tag } from '@/types';
+import type { CharacterStats, EnemyStats, TaggedStatValue } from '@/types';
 
 export const isAbilityAttribute = (key: string): key is AbilityAttribute => {
   return Object.values(AbilityAttribute).includes(key as AbilityAttribute);

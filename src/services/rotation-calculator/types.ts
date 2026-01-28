@@ -1,4 +1,4 @@
-import type { CharacterDamageInstance, Enemy, Modifier, Team } from '@/types/server';
+import type { CharacterDamageInstance, Enemy, Modifier, Team } from '@/types';
 
 export interface Rotation {
   team: Team;

@@ -1,4 +1,4 @@
-import { isUserParameterizedNumber } from '@/types/parameterized-number';
+import { isUserParameterizedNumber } from '@/types';
 
 import type { Attack, ClientCapability, Modifier } from './common-types';
 

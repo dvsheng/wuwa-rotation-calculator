@@ -8,9 +8,9 @@ import { Row, Section } from '@/components/ui/layout';
 import { useRotationCalculation } from '@/hooks/useRotationCalculation';
 import { useTeamAttacks } from '@/hooks/useTeamAttacks';
 import { useTeamModifiers } from '@/hooks/useTeamModifiers';
+import type { Capability } from '@/schemas/rotation';
 import { useRotationStore } from '@/store/useRotationStore';
 import { useTeamStore } from '@/store/useTeamStore';
-import type { DetailedAttack, DetailedBuff } from '@/types/client/capability';
 
 import { AttackSequenceBuilder } from './AttackSequenceBuilder';
 import { BuffTimelineBuilder } from './BuffTimelineBuilder';
@@ -35,12 +35,12 @@ export const RotationBuilder = () => {
   // Enrichment Logic: Combine store state (IDs/Values) with detailed metadata
   const enrichedAttacks = rotationAttacks.map((attack) => ({
     ...attack,
-    ...(availableAttacks.find((a) => a.id === attack.id) as DetailedAttack),
+    ...(availableAttacks.find((a) => a.id === attack.id) as Capability),
   }));
 
   const enrichedBuffs = rotationBuffs.map((buff) => ({
     ...buff,
-    ...(availableBuffs.find((b) => b.id === buff.id) as DetailedBuff),
+    ...(availableBuffs.find((b) => b.id === buff.id) as Capability),
   }));
 
   const [showResult, setShowResult] = useState(false);

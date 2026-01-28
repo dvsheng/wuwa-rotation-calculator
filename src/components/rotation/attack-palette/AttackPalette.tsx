@@ -1,15 +1,12 @@
-import { useMemo } from 'react';
-
 import { Palette } from '@/components/common/Palette';
-import type { PaletteGroup } from '@/components/common/Palette';
 import { PaletteItem } from '@/components/common/PaletteItem';
-import type { DetailedAttack } from '@/types/client/capability';
+import type { Capability } from '@/schemas/rotation';
 
 export interface AttackPaletteProps {
-  attacks: Array<DetailedAttack>;
-  onAddAttack?: (attack: DetailedAttack) => void;
-  onClickAttack?: (attack: DetailedAttack) => void;
-  onDragAttack?: (attack: DetailedAttack, event: React.DragEvent) => void;
+  attacks: Array<Capability>;
+  onAddAttack?: (attack: Capability) => void;
+  onClickAttack?: (attack: Capability) => void;
+  onDragAttack?: (attack: Capability, event: React.DragEvent) => void;
   className?: string;
 }
 
@@ -29,27 +26,23 @@ export const AttackPalette = ({
   onDragAttack,
   className,
 }: AttackPaletteProps) => {
-  const groups = useMemo((): Array<PaletteGroup<DetailedAttack>> => {
-    const byCharacter = Object.groupBy(attacks, (a) => a.characterName);
+  const byCharacter = Object.groupBy(attacks, (a) => a.characterName);
 
-    return Object.entries(byCharacter).map(([charName, charAttacks]) => {
-      const bySkill = Object.groupBy(charAttacks ?? [], (a) => a.parentName);
-
-      // Get ordered skills first, then any remaining skills not in the order
-      const orderedSkills = SKILL_ORDER.filter((skill) => bySkill[skill]?.length);
-      const remainingSkills = Object.keys(bySkill).filter(
-        (skill) => !SKILL_ORDER.includes(skill as (typeof SKILL_ORDER)[number]),
-      );
-
-      return {
-        name: charName,
-        subgroups: [...orderedSkills, ...remainingSkills].map((skillName) => ({
-          name: skillName,
-          items: bySkill[skillName] ?? [],
-        })),
-      };
-    });
-  }, [attacks]);
+  const groups = Object.entries(byCharacter).map(([charName, charAttacks]) => {
+    const bySkill = Object.groupBy(charAttacks ?? [], (a) => a.parentName);
+    // Get ordered skills first, then any remaining skills not in the order
+    const orderedSkills = SKILL_ORDER.filter((skill) => bySkill[skill]?.length);
+    const remainingSkills = Object.keys(bySkill).filter(
+      (skill) => !SKILL_ORDER.includes(skill as (typeof SKILL_ORDER)[number]),
+    );
+    return {
+      name: charName,
+      subgroups: [...orderedSkills, ...remainingSkills].map((skillName) => ({
+        name: skillName,
+        items: bySkill[skillName] ?? [],
+      })),
+    };
+  });
 
   return (
     <Palette

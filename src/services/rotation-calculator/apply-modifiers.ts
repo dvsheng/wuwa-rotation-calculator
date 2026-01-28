@@ -10,7 +10,7 @@ import type {
   Modifier,
   TaggedStatValue,
   Team,
-} from '@/types/server';
+} from '@/types';
 
 const applyModifierToCharacter = (target: Character, modifier: CharacterModifier) => {
   const stats = target.stats;

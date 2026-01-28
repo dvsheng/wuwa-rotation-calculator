@@ -9,7 +9,7 @@ import { Section } from '@/components/ui/layout';
 import { Heading } from '@/components/ui/typography';
 import { EnemySchema } from '@/schemas/enemy';
 import { useTeamStore } from '@/store/useTeamStore';
-import { Attribute } from '@/types/attribute';
+import { Attribute } from '@/types';
 
 export const EnemyContainer = () => {
   const enemy = useTeamStore((state) => state.enemy);

@@ -1,9 +1,6 @@
-import { Attribute } from '@/types/attribute';
-import type {
-  EchoMainStatOptionType,
-  EchoSubstatOptionType,
-} from '@/types/client/echo';
-import { EchoMainStatOption, EchoSubstatOption } from '@/types/client/echo';
+import type { EchoMainStatOptionType, EchoSubstatOptionType } from '@/schemas/echo';
+import { EchoMainStatOption, EchoSubstatOption } from '@/schemas/echo';
+import { Attribute } from '@/types';
 
 export const ATTRIBUTE_COLORS: Record<Attribute, string> = {
   [Attribute.FUSION]: '#C32439',

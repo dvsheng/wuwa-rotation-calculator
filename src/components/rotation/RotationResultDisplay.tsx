@@ -3,14 +3,13 @@ import { Stack } from '@/components/ui/layout';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Heading, Text } from '@/components/ui/typography';
-import type { Attack } from '@/schemas/rotation';
+import type { AttackInstance } from '@/schemas/rotation';
 import { getCalculateCharacterStatsForTag } from '@/services/rotation-calculator/calculate-stat-total';
 import type { RotationResult } from '@/services/rotation-calculator/types';
-import type { DetailedAttack } from '@/types/client/capability';
 
 interface RotationResultDisplayProps {
   result: RotationResult;
-  attacks: Array<DetailedAttack & Attack>;
+  attacks: Array<AttackInstance>;
 }
 
 /**

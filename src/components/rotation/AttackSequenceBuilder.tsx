@@ -8,18 +8,17 @@ import {
 } from '@/components/ui/collapsible';
 import { Text } from '@/components/ui/typography';
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
-import type { Attack, Capability } from '@/schemas/rotation';
+import type { AttackInstance, Capability } from '@/schemas/rotation';
 import { CapabilitySchema } from '@/schemas/rotation';
 import { useRotationStore } from '@/store/useRotationStore';
-import type { DetailedAttack } from '@/types/client/capability';
 
 import { AttackPalette } from './attack-palette/AttackPalette';
 import { RotationAttackSequence } from './step-list/RotationAttackSequence';
 import type { SharedGridConfig } from './types';
 
 interface AttackSequenceBuilderProps {
-  availableAttacks: Array<DetailedAttack>;
-  enrichedAttacks: Array<DetailedAttack & Attack>;
+  availableAttacks: Array<Capability>;
+  enrichedAttacks: Array<AttackInstance>;
   gridConfig: SharedGridConfig;
   isLoading: boolean;
 }

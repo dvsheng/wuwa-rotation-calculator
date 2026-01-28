@@ -1,9 +1,6 @@
 import { z } from 'zod';
 
-import type {
-  Attack as ClientAttack,
-  Buff as ClientModifier,
-} from '@/schemas/rotation';
+import type { Capability } from '@/schemas/rotation';
 import type { Attribute } from '@/types';
 
 import type { BaseEntity, Capabilities } from '../common-types';
@@ -76,6 +73,6 @@ export type GetClientCharacterDetailsInput = z.infer<
 
 export interface GetClientCharacterDetailsOutput {
   name: string;
-  attacks: Array<Omit<ClientAttack, 'id' | 'characterName'>>;
-  modifiers: Array<Omit<ClientModifier, 'id' | 'characterName'>>;
+  attacks: Array<Omit<Capability, 'id' | 'characterName'>>;
+  modifiers: Array<Omit<Capability, 'id' | 'characterName'>>;
 }

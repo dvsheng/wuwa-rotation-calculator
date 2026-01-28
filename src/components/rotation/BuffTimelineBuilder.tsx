@@ -8,18 +8,17 @@ import {
 } from '@/components/ui/collapsible';
 import { Text } from '@/components/ui/typography';
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
-import type { BuffWithPosition } from '@/schemas/rotation';
-import { BuffSchema } from '@/schemas/rotation';
+import type { Capability, ModifierInstance } from '@/schemas/rotation';
+import { CapabilitySchema } from '@/schemas/rotation';
 import { useRotationStore } from '@/store/useRotationStore';
-import type { DetailedBuff } from '@/types/client/capability';
 
 import { BuffPalette } from './timeline/BuffPalette';
 import { BuffTimelineCanvas } from './timeline/BuffTimelineCanvas';
 import type { SharedGridConfig } from './types';
 
 interface BuffTimelineBuilderProps {
-  availableBuffs: Array<DetailedBuff>;
-  enrichedBuffs: Array<DetailedBuff & BuffWithPosition>;
+  availableBuffs: Array<Capability>;
+  enrichedBuffs: Array<ModifierInstance>;
   gridConfig: SharedGridConfig;
   isLoading: boolean;
 }
@@ -36,17 +35,11 @@ export const BuffTimelineBuilder = ({
 
   // Drag and drop handlers for buffs
   const { handleDragStart } = useDragAndDrop({
-    schema: BuffSchema,
+    schema: CapabilitySchema,
   });
 
-  const handleAddBuff = (buff: DetailedBuff) => {
-    addBuff(
-      {
-        id: buff.id,
-        characterId: buff.characterId,
-      },
-      { x: 0, y: 0, w: 2, h: 1 },
-    );
+  const handleAddBuff = (buff: Capability) => {
+    addBuff(buff, { x: 0, y: 0, w: 2, h: 1 });
   };
 
   return (

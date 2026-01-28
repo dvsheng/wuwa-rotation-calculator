@@ -1,31 +1,31 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
-import type { Attack, Buff, BuffWithPosition } from '@/schemas/rotation';
+import type { AttackInstance, Capability, ModifierInstance } from '@/schemas/rotation';
 
 import { useTeamStore } from './useTeamStore';
 
 export interface RotationState {
-  attacks: Array<Attack>;
-  buffs: Array<BuffWithPosition>;
+  attacks: Array<AttackInstance>;
+  buffs: Array<ModifierInstance>;
 
   // Actions for attacks
-  addAttack: (attack: Omit<Attack, 'instanceId'>, atIndex?: number) => void;
+  addAttack: (attack: Capability, atIndex?: number) => void;
   removeAttack: (instanceId: string) => void;
   reorderAttacks: (oldIndex: number, newIndex: number) => void;
   updateAttackParameters: (instanceId: string, values: Array<number>) => void;
-  setAttacks: (attacks: Array<Attack>) => void;
+  setAttacks: (attacks: Array<AttackInstance>) => void;
   clearAttacks: () => void;
 
   // Actions for buffs
   addBuff: (
-    buff: Buff,
-    position: Pick<BuffWithPosition, 'x' | 'y' | 'w' | 'h'>,
+    buff: Capability,
+    position: Pick<ModifierInstance, 'x' | 'y' | 'w' | 'h'>,
   ) => void;
   removeBuff: (instanceId: string) => void;
   updateBuffLayout: (
     instanceId: string,
-    layout: Partial<Pick<BuffWithPosition, 'x' | 'y' | 'w' | 'h'>>,
+    layout: Partial<Pick<ModifierInstance, 'x' | 'y' | 'w' | 'h'>>,
   ) => void;
   updateBuffParameters: (instanceId: string, values: Array<number>) => void;
   clearBuffs: () => void;
@@ -62,9 +62,10 @@ export const useRotationStore = create<RotationState>()(
     updateAttackParameters: (instanceId, values) =>
       set((state) => {
         const attack = state.attacks.find((a) => a.instanceId === instanceId);
-        if (attack) {
-          attack.parameterValues = values;
-        }
+        values.forEach((value, index) => {
+          if (!attack?.parameters?.[index]?.value) return;
+          attack.parameters[index].value = value;
+        });
       }),
 
     setAttacks: (attacks) =>
@@ -102,9 +103,10 @@ export const useRotationStore = create<RotationState>()(
     updateBuffParameters: (instanceId, values) =>
       set((state) => {
         const buff = state.buffs.find((b) => b.instanceId === instanceId);
-        if (buff) {
-          buff.parameterValues = values;
-        }
+        values.forEach((value, index) => {
+          if (!buff?.parameters?.[index]?.value) return;
+          buff.parameters[index].value = value;
+        });
       }),
 
     clearBuffs: () =>

@@ -26,7 +26,7 @@ const config = defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
-    exclude: ['**/node_modules/**', '**/dist/**', 'scripts/validate-game-data.test.ts'],
+    exclude: ['**/node_modules/**', '**/dist/**'],
   },
 });
 

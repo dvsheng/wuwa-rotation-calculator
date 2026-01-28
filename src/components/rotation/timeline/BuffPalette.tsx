@@ -3,12 +3,12 @@ import { useMemo } from 'react';
 import { Palette } from '@/components/common/Palette';
 import type { PaletteGroup } from '@/components/common/Palette';
 import { PaletteItem } from '@/components/common/PaletteItem';
-import type { DetailedBuff } from '@/types/client/capability';
+import type { Capability } from '@/schemas/rotation';
 
 export interface BuffPaletteProps {
-  buffs: Array<DetailedBuff>;
-  onClickBuff?: (buff: DetailedBuff) => void;
-  onDragBuff?: (buff: DetailedBuff, event: React.DragEvent) => void;
+  buffs: Array<Capability>;
+  onClickBuff?: (buff: Capability) => void;
+  onDragBuff?: (buff: Capability, event: React.DragEvent) => void;
   className?: string;
 }
 
@@ -27,7 +27,7 @@ export const BuffPalette = ({
   onDragBuff,
   className,
 }: BuffPaletteProps) => {
-  const groups = useMemo((): Array<PaletteGroup<DetailedBuff>> => {
+  const groups = useMemo((): Array<PaletteGroup<Capability>> => {
     const byCharacter = Object.groupBy(buffs, (b) => b.characterName);
 
     return Object.entries(byCharacter).map(([charName, charBuffs]) => {

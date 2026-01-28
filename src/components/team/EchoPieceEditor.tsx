@@ -7,10 +7,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { LabelText } from '@/components/ui/typography';
-import { VALID_MAIN_STATS } from '@/schemas/echo';
+import { EchoCost, VALID_MAIN_STATS } from '@/schemas/echo';
 import { useTeamStore } from '@/store/useTeamStore';
-import type { EchoCost as EchoCostType } from '@/types/client/echo';
-import { EchoCost } from '@/types/client/echo';
 
 import { STAT_LABELS } from './constants';
 import { EchoSubstatEditor } from './EchoSubstatEditor';
@@ -30,7 +28,7 @@ export const EchoPieceEditor = ({
   const mainStatOptions = VALID_MAIN_STATS[echo.cost];
 
   const handleCostChange = (val: string) => {
-    const newCost = parseInt(val) as EchoCostType;
+    const newCost = parseInt(val) as EchoCost;
     updateEchoPiece(characterIndex, echoIndex, (draft) => {
       draft.cost = newCost;
       const newValidOptions = VALID_MAIN_STATS[newCost];

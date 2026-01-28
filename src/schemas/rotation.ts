@@ -1,5 +1,11 @@
 import { z } from 'zod';
 
+export interface Parameter {
+  minimum?: number;
+  maximum?: number;
+  value?: number;
+}
+
 /**
  * Base schema for user-input capability instances.
  * Stores only the data provided by the user, while descriptive metadata

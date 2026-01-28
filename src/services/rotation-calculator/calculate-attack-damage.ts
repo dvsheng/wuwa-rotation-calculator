@@ -17,7 +17,7 @@ export const calculateAttackDamage = (
   const getStatValue = getCalculateStatValueFn(instance.tags);
   const getScalingStatValue = getCalculateAbilityAttributeValueFn(instance.tags);
   const { team, enemy } = context;
-  const character = team.find((c) => c.name === instance.originCharacterName);
+  const character = team.find((c) => c.id === instance.originCharacterName);
   if (!character) {
     throw new Error(`Character ${instance.originCharacterName} not found`);
   }

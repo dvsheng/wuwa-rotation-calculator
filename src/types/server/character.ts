@@ -45,7 +45,7 @@ export type CharacterStats<T = RotationRuntimeResolvableNumber | number> = Recor
  */
 export interface Character {
   /** Display name. */
-  name: string;
+  id: string;
   /** Progression level. */
   level: Integer;
   /** Current calculated stats. */

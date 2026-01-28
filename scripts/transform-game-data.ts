@@ -224,12 +224,6 @@ function transformModifier(old: OldModifier): NewModifier {
     description: old.description,
     modifiedStats: transformModifiedStats(old.modifiedStats),
   };
-
-  // Only include target if it exists
-  if (old.target !== undefined) {
-    result.target = old.target;
-  }
-
   // Character-specific fields
   if (old.originType) result.originType = old.originType;
   if (old.parentName) result.parentName = old.parentName;
@@ -462,6 +456,7 @@ function createBackup(): void {
 // ============================================================================
 
 async function main(): Promise<void> {
+  await Promise.resolve({});
   console.log('='.repeat(60));
   console.log('Game Data Migration Script');
   console.log('='.repeat(60));

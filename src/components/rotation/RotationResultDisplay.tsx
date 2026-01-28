@@ -110,7 +110,7 @@ export const RotationResultDisplay = ({
                           </Text>
                           <div className="grid grid-cols-2 gap-x-2 text-[10px]">
                             {(() => {
-                              const char = detail.team.find((c) => c.name === charName);
+                              const char = detail.team.find((c) => c.id === charName);
                               if (!char) return null;
 
                               const calculateStats = getCalculateCharacterStatsForTag(

@@ -48,7 +48,7 @@ const applyModifierToTeamAndEnemy = (
     draftTeam.forEach((character) => applyModifierToCharacter(character, modifier));
   } else if (target === 'activeCharacter' || target === 'self') {
     const activeCharacter = draftTeam.find(
-      (character) => character.name === activeCharacterName,
+      (character) => character.id === activeCharacterName,
     );
     if (!activeCharacter) {
       throw new Error(`Character ${activeCharacterName} not found in team`);

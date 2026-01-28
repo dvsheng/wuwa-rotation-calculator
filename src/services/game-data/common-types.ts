@@ -7,6 +7,7 @@ import type {
   CharacterStat,
   EnemyStat,
   Tagged,
+  Target,
 } from '@/types/server';
 
 export interface BaseCapability {
@@ -25,6 +26,7 @@ interface PermanentStatBase extends Stat, BaseCapability {}
 export type PermanentStat<T = {}> = PermanentStatBase & T;
 
 interface ModifierBase extends BaseCapability {
+  target: Target;
   modifiedStats: Array<Stat>;
 }
 
@@ -33,6 +35,7 @@ export type Modifier<T = {}> = ModifierBase & T;
 interface AttackBase extends BaseCapability {
   scalingStat: AbilityAttribute;
   motionValues: Array<number | UserParameterizedNumber>;
+  tags: Array<string>;
 }
 
 export type Attack<T = {}> = AttackBase & T;

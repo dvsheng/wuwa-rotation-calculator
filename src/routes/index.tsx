@@ -1,12 +1,11 @@
 import { TooltipProvider } from '@radix-ui/react-tooltip';
-import { Link, createFileRoute } from '@tanstack/react-router';
-import { Calculator, Loader2, Settings, Shield, Sword, User } from 'lucide-react';
+import { createFileRoute } from '@tanstack/react-router';
+import { Calculator, Loader2, Shield, Sword, User } from 'lucide-react';
 import { Suspense } from 'react';
 
 import { EnemyContainer } from '@/components/enemy/EnemyContainer';
 import { RotationBuilder } from '@/components/rotation/RotationBuilder';
 import { TeamContainer } from '@/components/team/TeamContainer';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // --- Main App ---
@@ -23,14 +22,6 @@ function App() {
             <h1 className="from-primary bg-gradient-to-r to-blue-600 bg-clip-text text-xl font-bold text-transparent">
               Wuthering Waves Rotation Builder
             </h1>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <Link to="/admin">
-              <Button variant="outline" size="icon" title="Admin Console">
-                <Settings size={18} />
-              </Button>
-            </Link>
           </div>
         </header>
 

@@ -1,65 +1,31 @@
-/* eslint-disable */
-// @ts-nocheck
-
 import type { EchoMainStatOptionType, EchoSubstatOptionType } from '@/schemas/echo';
 import type { Enemy as ClientEnemy } from '@/schemas/enemy';
 import type { Attack, BuffWithPosition } from '@/schemas/rotation';
 import type { Team as ClientTeam } from '@/schemas/team';
 import { getCharacterDetails } from '@/services/game-data/character/get-character-details';
+import type { Attack as ServerAttack } from '@/services/game-data/common-types';
 import { getEchoDetails } from '@/services/game-data/echo/get-echo-details';
 import { getWeaponDetails } from '@/services/game-data/weapon/get-weapon-details';
-import { NegativeStatus } from '@/types';
+import { Attribute } from '@/types';
 import type { Integer } from '@/types';
 import { isUserParameterizedNumber } from '@/types/parameterized-number';
 import { Tag } from '@/types/server';
 import type {
-  CharacterDamageInstance,
   CharacterStats,
   EnemyStats,
   Modifier,
   Character as ServerCharacter,
   Enemy as ServerEnemy,
   Team as ServerTeam,
-  StatValue,
+  TaggedStatValue,
 } from '@/types/server';
 import { CharacterStat } from '@/types/server/character';
 import { calculateParameterizedNumberValue } from '@/utils/math-utils';
 
 import { getEchoSetDetails } from '../game-data/echo-set/get-echo-set-details';
-import type { RefineLevel } from '../game-data/weapon/types';
 
 import { calculateRotationDamage } from './calculate-rotation-damage';
 import type { RotationResult } from './types';
-
-/**
- * Resolves a modifier's user parameters if they are provided.
- */
-const applyUserParameters = (
-  modifier: Modifier<any>,
-  values?: Array<number>,
-): Modifier<any> => {
-  if (!values || values.length === 0) return modifier;
-
-  const resolvedStats: any = {};
-
-  Object.entries(modifier.modifiedStats).forEach(([stat, statValues]) => {
-    if (!Array.isArray(statValues)) return;
-
-    resolvedStats[stat] = statValues.map((sv) => {
-      if (isUserParameterizedNumber(sv.value)) {
-        const configs = sv.value.parameterConfigs;
-        const key = Object.keys(configs)[0];
-        const resolvedValue = calculateParameterizedNumberValue(sv.value, {
-          [key as any]: values[0],
-        });
-        return { ...sv, value: resolvedValue };
-      }
-      return sv;
-    });
-  });
-
-  return { ...modifier, modifiedStats: resolvedStats };
-};
 
 /**
  * Maps client-side echo stat types to server-side CharacterStat enums.
@@ -103,84 +69,67 @@ export const calculateRotation = async (
   buffs: Array<BuffWithPosition>,
 ): Promise<RotationResult> => {
   // 1. Fetch all necessary game data in parallel
-  const characterDetails = await Promise.all(
-    clientTeam.map((c) => (c.id ? getCharacterDetails({ data: c.id }) : null)),
-  );
+  console.log(JSON.stringify(clientTeam, null, 2));
+  const [characterDetails, weaponDetails, primaryEchoDetails, echoSetDetails] =
+    await Promise.all([
+      Promise.all(clientTeam.map((c) => getCharacterDetails({ data: c.id }))),
+      Promise.all(clientTeam.map((c) => getWeaponDetails({ data: c.weapon.id }))),
+      Promise.all(
+        clientTeam.map((c) => getEchoDetails({ data: c.primarySlotEcho.id })),
+      ),
+      Promise.all(
+        clientTeam.map((c) =>
+          Promise.all(c.echoSets.map((set) => getEchoSetDetails({ data: set.id }))),
+        ),
+      ),
+    ]);
 
-  const weaponDetails = await Promise.all(
-    clientTeam.map((c) =>
-      c.weapon.id ? getWeaponDetails({ data: c.weapon.id }) : null,
+  const modifierDetails = [
+    ...characterDetails.flatMap((char) => char.capabilities.modifiers),
+    ...weaponDetails.flatMap((weapon) => weapon.capabilities[1].modifiers),
+    ...echoSetDetails.flatMap((sets) =>
+      sets.flatMap((set) => set.setEffects[5]?.modifiers),
     ),
-  );
+    ...primaryEchoDetails.flatMap((echo) => echo.capabilities.modifiers),
+  ].filter((mod) => mod !== undefined);
 
-  const primaryEchoDetails = await Promise.all(
-    clientTeam.map((c) =>
-      c.primarySlotEcho.id ? getEchoDetails({ data: c.primarySlotEcho.id }) : null,
+  const attackDetails = [
+    ...characterDetails.flatMap((char) => char.capabilities.attacks),
+    ...weaponDetails.flatMap((weapon) => weapon.capabilities[1].attacks),
+    ...echoSetDetails.flatMap((sets) =>
+      sets.flatMap((set) => set.setEffects[5]?.attacks),
     ),
-  );
-
-  // Helper to find a modifier definition across all data sources for a character
-  const findModifierDefinition = (charIndex: number, modifierId: string) => {
-    const char = characterDetails[charIndex];
-    const weapon = weaponDetails[charIndex];
-    const echo = primaryEchoDetails[charIndex];
-
-    const charMod = char?.capabilities.modifiers.find((m) => m.id === modifierId);
-    if (charMod) return charMod;
-
-    if (weapon) {
-      const refine = String(clientTeam[charIndex].weapon.refine) as RefineLevel;
-      const weaponMod = weapon.attributes[refine].modifiers.find(
-        (m: any) => m.id === modifierId,
-      );
-      if (weaponMod) return weaponMod;
-    }
-
-    const echoMod = echo?.capabilities.modifiers.find((m) => m.id === modifierId);
-    if (echoMod) return echoMod;
-
-    return null;
-  };
+    ...primaryEchoDetails.flatMap((echo) => echo.capabilities.attacks),
+  ].filter((attack) => attack !== undefined);
 
   // 2. Map Client Team to Server Team
   const serverTeamResults = clientTeam.map((clientChar, charIndex) => {
     const charData = characterDetails[charIndex];
-    if (!charData)
-      throw new Error(`Missing details for Character at index ${charIndex}`);
-
-    const stats = { ...charData.stats };
+    const stats = Object.groupBy(
+      charData.capabilities.permanentStats,
+      (stat) => stat.stat,
+    ) as Partial<Record<CharacterStat, Array<TaggedStatValue>>>;
 
     clientChar.echoStats.forEach((echo) => {
-      const mainStatOption = ECHO_STAT_MAP[echo.mainStatType];
-      if (mainStatOption) {
-        const [mainStatKey, mainStatTags] = mainStatOption;
-        if (!stats[mainStatKey]) {
-          stats[mainStatKey] = [];
-        }
-        stats[mainStatKey].push({
-          value: 0,
-          tags: mainStatTags,
-        });
+      const [statName, tags] = ECHO_STAT_MAP[echo.mainStatType];
+      if (!stats[statName]) {
+        stats[statName] = [];
       }
+      stats[statName].push({ value: 0, tags });
 
-      echo.substats.forEach((sub) => {
-        const subOption = ECHO_STAT_MAP[sub.stat];
-        if (subOption) {
-          const [subKey, subTags] = subOption;
-          if (!stats[subKey]) {
-            stats[subKey] = [];
-          }
-          stats[subKey].push({
-            value: sub.value / 100,
-            tags: subTags,
-          });
+      echo.substats.forEach((substat) => {
+        const [substatName, substatTags] = ECHO_STAT_MAP[substat.stat];
+        if (!stats[substatName]) {
+          stats[substatName] = [];
         }
+        stats[substatName].push({
+          value: substat.value / 100,
+          tags: substatTags,
+        });
       });
     });
-
     return {
       id: clientChar.id,
-      name: charData.name,
       level: 90,
       stats: stats as CharacterStats,
     } as ServerCharacter;
@@ -195,7 +144,6 @@ export const calculateRotation = async (
   // 3. Map Client Enemy to Server Enemy
   const serverEnemy: ServerEnemy = {
     level: clientEnemy.level as Integer,
-    // @ts-expect-error - Complex dynamic mapping of stats
     stats: {
       baseResistance: Object.entries(clientEnemy.resistances).map(([attr, val]) => ({
         value: val / 100,
@@ -203,87 +151,59 @@ export const calculateRotation = async (
       })),
       defenseReduction: [],
       resistanceReduction: [],
-      ...Object.fromEntries(
-        Object.values(NegativeStatus).map((status) => [status, []]),
-      ),
+      glacioChafe: [],
+      spectroFrazzle: [],
+      fusionBurst: [],
+      havocBane: [],
+      aeroErosion: [],
+      electroFlare: [],
     } as EnemyStats,
   };
 
   // 4. Map Attacks and active Buffs to Damage Instances
-  const damageInstances = attacks.map((attack, index) => {
-    const charIndex = clientTeam.findIndex((c) => c.id === attack.characterId);
-    const charData = characterDetails[charIndex];
-    const weaponData = weaponDetails[charIndex];
-    const echoData = primaryEchoDetails[charIndex];
-
-    if (!charData) {
-      throw new Error(`Could not find character data for ${attack.characterId}`);
-    }
-
-    // Find attack definition in character, weapon, or echo
-    let serverInstance = charData.capabilities.attacks.find((a) => a.id === attack.id);
-    if (!serverInstance && weaponData) {
-      const refine = String(clientTeam[charIndex].weapon.refine) as RefineLevel;
-      if (weaponData.attributes[refine].attack?.id === attack.id) {
-        serverInstance = weaponData.attributes[refine].attack;
-      }
-    }
-    if (!serverInstance && echoData) {
-      if (echoData.capabilities.attacks?.[0]?.id === attack.id) {
-        serverInstance = echoData.capabilities.attacks[0];
-      }
-    }
-
-    if (!serverInstance) {
-      throw new Error(
-        `Could not find attack ${attack.id} for character ${attack.characterId}`,
-      );
-    }
-
-    // Resolve parameterized motion values if user provided values
-    let motionValues = serverInstance.motionValues || [];
-    if (
-      attack.parameterValues &&
-      attack.parameterValues.length > 0 &&
-      serverInstance.parameterizedMotionValues
-    ) {
-      motionValues = serverInstance.parameterizedMotionValues.map((pmv) => {
-        const key = Object.keys(pmv.parameterConfigs)[0];
-        return calculateParameterizedNumberValue(pmv, {
-          [key as any]: attack.parameterValues[0], // assume first value for now
-        });
-      });
-    }
-
-    const activeModifiers = buffs
-      .filter((b) => index >= b.x && index < b.x + b.w)
-      .map((b) => {
-        const bCharIdx = clientTeam.findIndex((c) => c.id === b.characterId);
-        const definition = findModifierDefinition(bCharIdx, b.id);
-
-        if (!definition) return null;
-
-        return applyUserParameters(definition, b.parameterValues);
-      })
-      .filter((m): m is Modifier => m !== null);
-
-    return {
+  const damageInstances = attacks
+    .map(
+      (attack) =>
+        ({
+          ...attack,
+          ...attackDetails.find((attackDetail) => attackDetail.id === attack.id),
+          parameterValues: attack.parameterValues,
+        }) as ServerAttack & { parameterValues: Array<number> } & Attack,
+    )
+    .map((attack) => ({
+      ...attack,
+      motionValues: attack.motionValues.map((mv) =>
+        isUserParameterizedNumber(mv)
+          ? calculateParameterizedNumberValue(
+              mv,
+              Object.fromEntries(
+                attack.parameterValues.map((value, index) => [String(index), value]),
+              ),
+            )
+          : 0,
+      ),
+    }))
+    .map((attack, index) => ({
+      ...attack,
+      modifiers: buffs
+        .filter((buff) => index >= buff.x && index < buff.x + buff.w)
+        .map(
+          (buff) =>
+            modifierDetails.find((modifier) => modifier.id === buff.id) as Modifier,
+        ),
+    }))
+    .map((instance) => ({
       instance: {
-        originCharacterName: charData.name,
-        attribute: charData.attribute,
-        scalingStat: serverInstance.scalingStat,
-        motionValues,
-        tags: serverInstance.tags,
-      } as CharacterDamageInstance,
-      modifiers: activeModifiers,
-    };
-  });
-
-  const calculateRotationDamageProps = {
+        ...instance,
+        originCharacterName: instance.characterId,
+        attribute: Attribute.AERO,
+      },
+      modifiers: instance.modifiers,
+    }));
+  return calculateRotationDamage({
     team: serverTeam,
     enemy: serverEnemy,
-    duration: attacks.length,
+    duration: 25,
     damageInstances,
-  };
-  return calculateRotationDamage(calculateRotationDamageProps);
+  });
 };

@@ -1,7 +1,5 @@
 import type { Attribute } from '@/types';
 
-import type { Tag } from './tag';
-
 /**
  * Defines the base stat used for damage scaling.
  */
@@ -57,7 +55,7 @@ export interface CharacterDamageInstance {
    */
   motionValues: Array<number>;
   /** Tags for filtering modifiers (e.g., BasicAttack, Fusion). */
-  tags: Array<Tag>;
+  tags: Array<string>;
 }
 
 /**

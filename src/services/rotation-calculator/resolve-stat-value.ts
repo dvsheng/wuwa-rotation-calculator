@@ -15,7 +15,7 @@ export const getStatValueResolver =
       return statValue;
     }
     const { resolveWith } = statValue;
-    const character = team.find((c) => c.name === resolveWith);
+    const character = team.find((c) => c.id === resolveWith);
     if (!character) return 0;
     const characterStats = getCalculateCharacterStatsForTag([Tag.ALL])(character.stats);
     const enemyStats = getCalculateEnemyStatsForTag([Tag.ALL])(enemy.stats);

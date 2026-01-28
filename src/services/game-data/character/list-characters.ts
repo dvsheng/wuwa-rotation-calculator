@@ -50,8 +50,8 @@ export const listCharacters = async (
 
 export const getCharacterIdByName = async (
   name: string,
-): Promise<number | undefined> => {
+): Promise<string | undefined> => {
   const characters = await fetchCharacters();
   const entry = Object.entries(characters).find(([_id, char]) => char.en === name);
-  return entry ? Number(entry[0]) : undefined;
+  return entry ? entry[0] : undefined;
 };

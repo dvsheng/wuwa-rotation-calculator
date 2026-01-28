@@ -52,15 +52,7 @@ export interface BaseEntity {
   name: string;
 }
 
-export interface EnrichedAttack {
-  id: string;
-  name: string;
-  parentName: string;
-  description?: string;
-  parameters?: Array<{ minimum: number; maximum: number }>;
-}
-
-export interface EnrichedBuff {
+export interface ClientCapability {
   id: string;
   name: string;
   parentName: string;
@@ -69,6 +61,6 @@ export interface EnrichedBuff {
 }
 
 export interface GetClientEntityDetailsOutput {
-  attacks: Array<EnrichedAttack>;
-  modifiers: Array<EnrichedBuff>;
+  attacks: Array<ClientCapability>;
+  modifiers: Array<ClientCapability>;
 }

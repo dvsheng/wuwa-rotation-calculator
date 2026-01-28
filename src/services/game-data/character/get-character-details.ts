@@ -2,7 +2,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 
 import { toClientAttack, toClientBuff } from '../client-converters';
-import type { EnrichedAttack, EnrichedBuff } from '../common-types';
+import type { ClientCapability } from '../common-types';
 import { createFsStore } from '../hakushin-api/fs-store';
 
 import { GetClientCharacterDetailsInputSchema, Sequence } from './types';
@@ -12,28 +12,35 @@ import type {
   GetClientCharacterDetailsInput,
 } from './types';
 
-export const characterStore = createFsStore<Character>();
+const characterStore = createFsStore<Character>();
 
 export interface GetClientCharacterDetailsOutput {
   id: string;
   name: string;
-  attacks: Array<EnrichedAttack>;
-  modifiers: Array<EnrichedBuff>;
+  attacks: Array<ClientCapability>;
+  modifiers: Array<ClientCapability>;
 }
+
+/**
+ * Shared handler for fetching character details.
+ */
+export const getCharacterDetailsHandler = async (id: string): Promise<Character> => {
+  const key = `character/parsed/${id}.json`;
+
+  const characterData = await characterStore.get(key);
+  if (!characterData) {
+    throw new Error(`Failed to fetch character details for ID ${id}`);
+  }
+
+  return characterData;
+};
 
 export const getCharacterDetails = createServerFn({
   method: 'GET',
 })
   .inputValidator(z.string())
-  .handler(async ({ data: id }) => {
-    const key = `character/parsed/${id}.json`;
-
-    const characterData = await characterStore.get(key);
-    if (!characterData) {
-      throw new Error(`Failed to fetch character details for ID ${id}`);
-    }
-
-    return characterData;
+  .handler(async ({ data: id }): Promise<Character> => {
+    return getCharacterDetailsHandler(id);
   });
 
 const sequenceToNumber = (sequence?: Sequence): number => {
@@ -70,11 +77,7 @@ export const getClientCharacterDetailsHandler = async (
   input: GetClientCharacterDetailsInput,
 ): Promise<GetClientCharacterDetailsOutput> => {
   const { id, sequence } = input;
-  const key = `character/parsed/${id}.json`;
-  const character = await characterStore.get(key);
-  if (!character) {
-    throw new Error(`Failed to fetch character details for ID ${id}`);
-  }
+  const character = await getCharacterDetailsHandler(id);
 
   return {
     id: character.id,

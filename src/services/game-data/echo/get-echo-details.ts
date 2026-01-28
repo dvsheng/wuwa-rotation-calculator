@@ -9,19 +9,26 @@ import type { Echo } from './types';
 
 const echoStore = createFsStore<Echo>();
 
+/**
+ * Shared handler for fetching echo details.
+ */
+export const getEchoDetailsHandler = async (id: string): Promise<Echo> => {
+  const key = `echo/parsed/${id}.json`;
+
+  const echoData = await echoStore.get(key);
+  if (!echoData) {
+    throw new Error(`Failed to fetch echo details for ID ${id}`);
+  }
+
+  return echoData;
+};
+
 export const getEchoDetails = createServerFn({
   method: 'GET',
 })
   .inputValidator(z.string())
-  .handler(async ({ data: id }) => {
-    const key = `echo/parsed/${id}.json`;
-
-    const echoData = await echoStore.get(key);
-    if (!echoData) {
-      throw new Error(`Failed to fetch echo details for ID ${id}`);
-    }
-
-    return echoData;
+  .handler(async ({ data: id }): Promise<Echo> => {
+    return getEchoDetailsHandler(id);
   });
 
 export const getClientEchoDetails = createServerFn({
@@ -29,12 +36,7 @@ export const getClientEchoDetails = createServerFn({
 })
   .inputValidator(z.string())
   .handler(async ({ data: id }): Promise<GetClientEntityDetailsOutput> => {
-    const key = `echo/parsed/${id}.json`;
-    const echo = await echoStore.get(key);
-    if (!echo) {
-      throw new Error(`Failed to fetch echo details for ID ${id}`);
-    }
-
+    const echo = await getEchoDetailsHandler(id);
     return {
       attacks: echo.capabilities.attacks.map((attack) =>
         toClientAttack(attack, echo.name, `${echo.name} Attack`),

@@ -5,9 +5,71 @@ import type { GetClientEntityDetailsOutput } from '../common-types';
 import { createFsStore } from '../hakushin-api/fs-store';
 
 import { GetEchoSetDetailsInputSchema, SetEffectRequirement } from './types';
-import type { EchoSet, GetEchoSetDetailsOutput } from './types';
+import type {
+  EchoSet,
+  GetEchoSetDetailsInput,
+  GetEchoSetDetailsOutput,
+  SetEffectRequirement as SetEffectRequirementType,
+} from './types';
 
 const echoSetStore = createFsStore<EchoSet>();
+
+/**
+ * Shared handler for fetching echo set data.
+ */
+const getEchoSetDataHandler = async (id: string): Promise<EchoSet> => {
+  const key = `echo-set/parsed/${id}.json`;
+
+  const echoSetData = await echoSetStore.get(key);
+  if (!echoSetData) {
+    throw new Error(`Failed to fetch echo set details for ID ${id}`);
+  }
+
+  return echoSetData;
+};
+
+/**
+ * Returns applicable requirements for a given requirement level.
+ */
+const getApplicableRequirements = (
+  requirement: SetEffectRequirementType,
+): Array<SetEffectRequirementType> => {
+  const requirementValue = parseInt(requirement, 10);
+  return SetEffectRequirement.filter((req) => parseInt(req, 10) <= requirementValue);
+};
+
+/**
+ * Shared handler for fetching echo set details with combined capabilities.
+ */
+export const getEchoSetDetailsHandler = async (
+  input: GetEchoSetDetailsInput,
+): Promise<GetEchoSetDetailsOutput> => {
+  const { id, requirement } = input;
+  const echoSetData = await getEchoSetDataHandler(id);
+  const applicableRequirements = getApplicableRequirements(requirement);
+
+  const attacks = applicableRequirements.flatMap((req) => {
+    const setEffect = echoSetData.setEffects[req];
+    return setEffect?.attacks ?? [];
+  });
+
+  const modifiers = applicableRequirements.flatMap((req) => {
+    const setEffect = echoSetData.setEffects[req];
+    return setEffect?.modifiers ?? [];
+  });
+
+  const permanentStats = applicableRequirements.flatMap((req) => {
+    const setEffect = echoSetData.setEffects[req];
+    return setEffect?.permanentStats ?? [];
+  });
+
+  return {
+    id: echoSetData.id,
+    uuid: echoSetData.uuid,
+    name: echoSetData.name,
+    capabilities: { attacks, modifiers, permanentStats },
+  };
+};
 
 /**
  * Returns echo set details with combined capabilities for all set effects
@@ -18,42 +80,7 @@ export const getEchoSetDetails = createServerFn({
 })
   .inputValidator(GetEchoSetDetailsInputSchema)
   .handler(async ({ data }): Promise<GetEchoSetDetailsOutput> => {
-    const { id, requirement } = data;
-    const key = `echo-set/parsed/${id}.json`;
-
-    const echoSetData = await echoSetStore.get(key);
-    if (!echoSetData) {
-      throw new Error(`Failed to fetch echo set details for ID ${id}`);
-    }
-
-    const requirementValue = parseInt(requirement, 10);
-
-    // Get all set effects where requirement <= input requirement
-    const applicableRequirements = SetEffectRequirement.filter(
-      (req) => parseInt(req, 10) <= requirementValue,
-    );
-
-    const attacks = applicableRequirements.flatMap((req) => {
-      const setEffect = echoSetData.setEffects[req];
-      return setEffect?.attacks ?? [];
-    });
-
-    const modifiers = applicableRequirements.flatMap((req) => {
-      const setEffect = echoSetData.setEffects[req];
-      return setEffect?.modifiers ?? [];
-    });
-
-    const permanentStats = applicableRequirements.flatMap((req) => {
-      const setEffect = echoSetData.setEffects[req];
-      return setEffect?.permanentStats ?? [];
-    });
-
-    return {
-      id: echoSetData.id,
-      uuid: echoSetData.uuid,
-      name: echoSetData.name,
-      capabilities: { attacks, modifiers, permanentStats },
-    };
+    return getEchoSetDetailsHandler(data);
   });
 
 /**
@@ -66,18 +93,8 @@ export const getClientEchoSetDetails = createServerFn({
   .inputValidator(GetEchoSetDetailsInputSchema)
   .handler(async ({ data }): Promise<GetClientEntityDetailsOutput> => {
     const { id, requirement } = data;
-    const key = `echo-set/parsed/${id}.json`;
-    const echoSet = await echoSetStore.get(key);
-    if (!echoSet) {
-      throw new Error(`Failed to fetch echo set details for ID ${id}`);
-    }
-
-    const requirementValue = parseInt(requirement, 10);
-
-    // Get all set effects where requirement <= input requirement
-    const applicableRequirements = SetEffectRequirement.filter(
-      (req) => parseInt(req, 10) <= requirementValue,
-    );
+    const echoSet = await getEchoSetDataHandler(id);
+    const applicableRequirements = getApplicableRequirements(requirement);
 
     const attacks = applicableRequirements.flatMap((req) => {
       const setEffect = echoSet.setEffects[req];

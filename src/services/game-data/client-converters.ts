@@ -1,6 +1,6 @@
 import { isUserParameterizedNumber } from '@/types/parameterized-number';
 
-import type { Attack, EnrichedAttack, EnrichedBuff, Modifier } from './common-types';
+import type { Attack, ClientCapability, Modifier } from './common-types';
 
 /**
  * Converts a game-data Attack into a client-facing enriched Attack structure.
@@ -9,7 +9,7 @@ export const toClientAttack = (
   attack: Attack,
   parentName: string,
   name: string,
-): EnrichedAttack => {
+): ClientCapability => {
   const parameters = attack.motionValues.filter(isUserParameterizedNumber).map((v) => ({
     minimum: v.minimum ?? 0,
     maximum: v.maximum ?? 100,
@@ -31,7 +31,7 @@ export const toClientBuff = (
   modifier: Modifier,
   parentName: string,
   name: string,
-): EnrichedBuff => {
+): ClientCapability => {
   const parameters = modifier.modifiedStats
     .map((s) => s.value)
     .filter(isUserParameterizedNumber)

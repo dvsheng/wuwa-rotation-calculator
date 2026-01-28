@@ -7,6 +7,7 @@ export const calculateParameterizedNumberValue = <T extends string>(
   parameterizedNumber: LinearParameterizedNumber<T>,
   parameters: Partial<Record<T, number>>,
 ): number => {
+  console.log('resolving');
   const { parameterConfigs, offset = 0, minimum, maximum } = parameterizedNumber;
 
   const total = (

@@ -26,7 +26,7 @@ export const CharacterCard = ({ index }: CharacterCardProps) => {
       </CardHeader>
       <CardContent className="p-4">
         <Stack className="mt-4">
-          {Array(ECHO_PIECE_COUNT).map((_, echoIndex) => (
+          {Array.from({ length: ECHO_PIECE_COUNT }, (_, echoIndex) => (
             <EchoPieceEditor
               key={echoIndex}
               characterIndex={index}

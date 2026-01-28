@@ -1,37 +1,35 @@
-import type { GridLayoutProps, Layout } from 'react-grid-layout';
-import GridLayout, { useContainerWidth } from 'react-grid-layout';
+import type { GridLayoutProps, Layout, LayoutItem } from 'react-grid-layout';
+import GridLayout from 'react-grid-layout';
 
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Text } from '@/components/ui/typography';
-import { useDragAndDrop } from '@/hooks/useDragAndDrop';
-import type { Attack, Capability } from '@/schemas/rotation';
-import { CapabilitySchema } from '@/schemas/rotation';
+import type { Attack } from '@/schemas/rotation';
 import type { DetailedAttack } from '@/types/client/capability';
+
+import type { SharedGridConfig } from '../types';
 
 import { EmptyRotationState } from './EmptyRotationState';
 import { RotationAttack } from './RotationAttack';
 
 export interface RotationAttackSequenceProps {
   attacks: Array<DetailedAttack & Attack>;
+  gridConfig: SharedGridConfig;
   onRemove: (instanceId: string) => void;
   onReorder: (instanceIds: Array<Attack>) => void;
-  onDrop: (attack: Capability, index: number) => void;
+  onDropAttack: (layout: Layout, item: LayoutItem | undefined, event: Event) => void;
 }
 
 export const RotationAttackSequence = ({
   attacks,
+  gridConfig,
   onRemove,
   onReorder,
-  onDrop,
+  onDropAttack,
 }: RotationAttackSequenceProps) => {
-  const { width, containerRef, mounted } = useContainerWidth();
-  const { createHandleDrop } = useDragAndDrop({
-    schema: CapabilitySchema,
-  });
-
   const handleLayoutChange = (layout: Layout) => {
     if (layout.length !== attacks.length) return;
     const newAttackInstanceIdOrder = [...layout]
-      .sort((a, b) => a.y - b.y)
+      .sort((a, b) => a.x - b.x)
       .map((layoutItem) => layoutItem.i);
     const hasAttackOrderChanged = attacks.some(
       (attack, index) => attack.instanceId !== newAttackInstanceIdOrder[index],
@@ -44,66 +42,58 @@ export const RotationAttackSequence = ({
     }
   };
 
-  const handleDrop = createHandleDrop((attack, item) => {
-    onDrop(attack, item.y);
-  });
-
   const layoutProps: Omit<GridLayoutProps, 'children'> = {
-    width: Math.max(0, width - 32),
+    width: gridConfig.width,
     gridConfig: {
-      cols: 1,
+      cols: gridConfig.cols,
       rowHeight: 64,
-      margin: [0, 8] as [number, number],
-      containerPadding: [0, 0] as [number, number],
+      margin: gridConfig.margin,
+      containerPadding: gridConfig.containerPadding,
     },
     layout: attacks.map((attack, index) => ({
       i: attack.instanceId,
-      x: 0,
-      y: index,
+      x: index,
+      y: 0,
       w: 1,
       h: 1,
     })),
-    style: { minHeight: '400px' },
+    style: { minHeight: '80px', minWidth: gridConfig.width },
     dropConfig: { enabled: true },
     dragConfig: { enabled: true },
     resizeConfig: { enabled: false },
-    onDrop: handleDrop,
+    onDrop: onDropAttack,
     onLayoutChange: handleLayoutChange,
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="bg-muted/5 border-muted-foreground/20 flex min-h-0 flex-1 flex-col rounded-xl border border-dashed"
-    >
-      <div className="bg-muted/30 flex items-center justify-between border-b px-4 py-2">
-        <Text
-          variant="small"
-          className="text-muted-foreground font-bold tracking-wider uppercase"
-        >
+    <div className="flex min-h-0 flex-1 flex-col border-t">
+      <div className="flex items-center justify-between px-4 py-2">
+        <Text className="text-sm font-semibold tracking-wider uppercase">
           Attack Sequence
         </Text>
-        <Text variant="tiny" className="text-muted-foreground/60">
+        <Text variant="tiny" className="text-muted-foreground font-medium">
           {attacks.length} {attacks.length === 1 ? 'Attack' : 'Attacks'}
         </Text>
       </div>
 
-      <div className="relative min-h-[400px] flex-1 overflow-hidden p-4">
-        {attacks.length === 0 && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <EmptyRotationState />
-          </div>
-        )}
+      <div className="px-4 pb-4">
+        <ScrollArea className="w-full">
+          <div
+            className="border-border/50 bg-muted/10 relative min-h-[80px] rounded-lg border transition-colors"
+            style={{ minWidth: gridConfig.width }}
+          >
+            {attacks.length === 0 && <EmptyRotationState />}
 
-        {mounted && (
-          <GridLayout {...layoutProps}>
-            {attacks.map((attack, index) => (
-              <div key={attack.instanceId} className="h-full w-full">
-                <RotationAttack attack={attack} index={index} onRemove={onRemove} />
-              </div>
-            ))}
-          </GridLayout>
-        )}
+            <GridLayout {...layoutProps}>
+              {attacks.map((attack, index) => (
+                <div key={attack.instanceId} className="h-full w-full">
+                  <RotationAttack attack={attack} index={index} onRemove={onRemove} />
+                </div>
+              ))}
+            </GridLayout>
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
       </div>
     </div>
   );

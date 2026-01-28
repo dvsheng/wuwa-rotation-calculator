@@ -35,7 +35,6 @@ export const getCalculateStatValueFn =
 export const getCalculateAbilityAttributeValueFn =
   (tags: Array<string>) => (stats: CharacterStats, attribute: AbilityAttribute) => {
     const resolveStatValue = getCalculateStatValueFn(tags);
-    console.log('stats', attribute, stats);
     switch (attribute) {
       case AbilityAttribute.ATK:
         return calculateStatTotal(

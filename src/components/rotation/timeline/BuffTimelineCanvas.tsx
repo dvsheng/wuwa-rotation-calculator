@@ -1,6 +1,7 @@
 import type { GridLayoutProps, Layout } from 'react-grid-layout';
 import GridLayout from 'react-grid-layout';
 
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Text } from '@/components/ui/typography';
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
 import { cn } from '@/lib/utils';
@@ -9,19 +10,16 @@ import { BuffSchema } from '@/schemas/rotation';
 import { useRotationStore } from '@/store/useRotationStore';
 import type { DetailedBuff } from '@/types/client/capability';
 
+import type { SharedGridConfig } from '../types';
+
 import { BuffTimelineCanvasItem } from './BuffTimelineCanvasItem';
 
 interface BuffTimelineCanvasProps {
-  width: number;
-  gridConfig: GridLayoutProps['gridConfig'];
+  gridConfig: SharedGridConfig;
   buffs: Array<DetailedBuff & BuffWithPosition>;
 }
 
-export const BuffTimelineCanvas = ({
-  width,
-  gridConfig,
-  buffs,
-}: BuffTimelineCanvasProps) => {
+export const BuffTimelineCanvas = ({ gridConfig, buffs }: BuffTimelineCanvasProps) => {
   const removeBuff = useRotationStore((state) => state.removeBuff);
   const addBuff = useRotationStore((state) => state.addBuff);
   const updateBuffLayout = useRotationStore((state) => state.updateBuffLayout);
@@ -47,14 +45,16 @@ export const BuffTimelineCanvas = ({
   });
 
   const layoutProps: Omit<GridLayoutProps, 'children'> = {
-    width,
+    width: gridConfig.width,
     gridConfig: {
-      ...gridConfig,
+      cols: gridConfig.cols,
       rowHeight: 20,
+      margin: gridConfig.margin,
+      containerPadding: gridConfig.containerPadding,
     },
     dropConfig: { enabled: true },
     resizeConfig: { enabled: true, handles: ['e'] },
-    style: { minHeight: '100px' },
+    style: { minHeight: '100px', minWidth: gridConfig.width },
     layout: buffs.map((buff) => ({
       i: buff.instanceId,
       x: buff.x,
@@ -67,32 +67,36 @@ export const BuffTimelineCanvas = ({
   };
 
   return (
-    <div
-      className={cn(
-        'border-border/50 bg-muted/10 relative min-h-[100px] w-full rounded-lg border transition-colors',
-      )}
-    >
-      {buffs.length === 0 && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <Text className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
-            Align buffs with attacks to include them in damage calculations
-          </Text>
-        </div>
-      )}
+    <ScrollArea className="w-full">
+      <div
+        className={cn(
+          'border-border/50 bg-muted/10 relative min-h-[100px] rounded-lg border transition-colors',
+        )}
+        style={{ minWidth: gridConfig.width }}
+      >
+        {buffs.length === 0 && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <Text className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
+              Align buffs with attacks to include them in damage calculations
+            </Text>
+          </div>
+        )}
 
-      <div className="p-0">
-        <GridLayout {...layoutProps}>
-          {buffs.map((buff) => (
-            <div key={buff.instanceId} className="group relative">
-              <BuffTimelineCanvasItem
-                buff={buff}
-                onRemove={removeBuff}
-                onSaveParameters={updateBuffParameters}
-              />
-            </div>
-          ))}
-        </GridLayout>
+        <div className="p-0">
+          <GridLayout {...layoutProps}>
+            {buffs.map((buff) => (
+              <div key={buff.instanceId} className="group relative">
+                <BuffTimelineCanvasItem
+                  buff={buff}
+                  onRemove={removeBuff}
+                  onSaveParameters={updateBuffParameters}
+                />
+              </div>
+            ))}
+          </GridLayout>
+        </div>
       </div>
-    </div>
+      <ScrollBar orientation="horizontal" />
+    </ScrollArea>
   );
 };

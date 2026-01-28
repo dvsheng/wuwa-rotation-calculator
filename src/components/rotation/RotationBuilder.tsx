@@ -1,21 +1,21 @@
 import { Play } from 'lucide-react';
 import { useState } from 'react';
+import { useContainerWidth } from 'react-grid-layout';
 
 import { Button } from '@/components/ui/button';
-import { Row, Stack } from '@/components/ui/layout';
-import { Heading, Text } from '@/components/ui/typography';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
+import { Row, Section } from '@/components/ui/layout';
 import { useRotationCalculation } from '@/hooks/useRotationCalculation';
 import { useTeamAttacks } from '@/hooks/useTeamAttacks';
 import { useTeamModifiers } from '@/hooks/useTeamModifiers';
-import type { Capability } from '@/schemas/rotation';
 import { useRotationStore } from '@/store/useRotationStore';
 import { useTeamStore } from '@/store/useTeamStore';
 import type { DetailedAttack, DetailedBuff } from '@/types/client/capability';
 
-import { AttackPalette } from './attack-palette/AttackPalette';
+import { AttackSequenceBuilder } from './AttackSequenceBuilder';
+import { BuffTimelineBuilder } from './BuffTimelineBuilder';
 import { RotationResultDisplay } from './RotationResultDisplay';
-import { RotationAttackSequence } from './step-list/RotationAttackSequence';
-import { BuffTimeline } from './timeline/BuffTimeline';
+import { createSharedGridConfig } from './types';
 
 /**
  * Parent Component: Manages state and layout for the Rotation Builder
@@ -25,10 +25,6 @@ export const RotationBuilder = () => {
   const team = useTeamStore((state) => state.team);
   const rotationAttacks = useRotationStore((state) => state.attacks);
   const rotationBuffs = useRotationStore((state) => state.buffs);
-
-  const addAttack = useRotationStore((state) => state.addAttack);
-  const removeAttack = useRotationStore((state) => state.removeAttack);
-  const setAttacks = useRotationStore((state) => state.setAttacks);
   const clearAll = useRotationStore((state) => state.clearAll);
 
   // Fetch detailed data from service hooks
@@ -50,10 +46,6 @@ export const RotationBuilder = () => {
   const [showResult, setShowResult] = useState(false);
   const rotationMutation = useRotationCalculation();
 
-  const handleAddAttack = (attack: Capability, index?: number) => {
-    addAttack(attack, index);
-  };
-
   const handleCalculate = async () => {
     try {
       await rotationMutation.mutateAsync();
@@ -65,86 +57,79 @@ export const RotationBuilder = () => {
 
   const isLoading = isAttacksLoading || isBuffsLoading;
 
+  // Measure container width for shared grid config
+  const { width: containerWidth, containerRef } = useContainerWidth();
+
+  // Shared grid config for horizontal alignment between attack sequence and buff canvas
+  const sharedGridConfig = createSharedGridConfig(
+    enrichedAttacks.length,
+    containerWidth - 32, // Account for padding
+  );
+
   return (
-    <Stack spacing="lg" className="min-h-0 flex-1">
-      <Row className="items-center justify-between">
-        <Heading level={2}>Rotation Builder</Heading>
-        <Row>
-          {(rotationAttacks.length > 0 || rotationBuffs.length > 0) && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                clearAll();
-                setShowResult(false);
-              }}
-              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-            >
-              Clear All
-            </Button>
-          )}
-          {rotationAttacks.length > 0 && (
-            <Button
-              size="sm"
-              onClick={handleCalculate}
-              disabled={rotationMutation.isPending || isLoading}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20 font-bold shadow-lg"
-            >
-              <Play className="mr-2 h-4 w-4 fill-current" />
-              {rotationMutation.isPending
-                ? 'Calculating...'
-                : 'Calculate Rotation Damage'}
-            </Button>
-          )}
-        </Row>
-      </Row>
+    <Section ref={containerRef} className="min-h-0 flex-1">
+      {/* Result Display */}
+      {showResult && rotationMutation.data && (
+        <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+          <RotationResultDisplay
+            result={rotationMutation.data}
+            attacks={enrichedAttacks}
+          />
+        </div>
+      )}
 
-      <div className="flex flex-col gap-6 overflow-hidden">
-        {showResult && rotationMutation.data && (
-          <div className="animate-in fade-in slide-in-from-top-4 duration-500">
-            <RotationResultDisplay
-              result={rotationMutation.data}
-              attacks={enrichedAttacks}
-            />
-          </div>
-        )}
+      {/* Main Card */}
+      <Card className="gap-0 overflow-hidden py-0">
+        <CardHeader className="px-4 py-3">
+          <Row className="items-center justify-between">
+            <CardTitle className="text-base tracking-wider uppercase">
+              Rotation Builder
+            </CardTitle>
+            <Row className="gap-2">
+              {(rotationAttacks.length > 0 || rotationBuffs.length > 0) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    clearAll();
+                    setShowResult(false);
+                  }}
+                  className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                >
+                  Clear All
+                </Button>
+              )}
+              {rotationAttacks.length > 0 && (
+                <Button
+                  size="sm"
+                  onClick={handleCalculate}
+                  disabled={rotationMutation.isPending || isLoading}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20 font-bold shadow-lg"
+                >
+                  <Play className="mr-2 h-4 w-4 fill-current" />
+                  {rotationMutation.isPending
+                    ? 'Calculating...'
+                    : 'Calculate Rotation Damage'}
+                </Button>
+              )}
+            </Row>
+          </Row>
+        </CardHeader>
 
-        <BuffTimeline
-          buffs={enrichedBuffs}
-          attacks={enrichedAttacks}
-          availableBuffs={availableBuffs}
-          isLoading={isLoading}
+        <AttackSequenceBuilder
+          availableAttacks={availableAttacks}
+          enrichedAttacks={enrichedAttacks}
+          gridConfig={sharedGridConfig}
+          isLoading={isAttacksLoading}
         />
 
-        <div className="flex flex-1 flex-col gap-6 overflow-hidden md:flex-row">
-          <RotationAttackSequence
-            attacks={enrichedAttacks}
-            onRemove={removeAttack}
-            onReorder={setAttacks}
-            onDrop={handleAddAttack}
-          />
-          <aside className="bg-card flex min-h-0 w-full flex-col rounded-xl border md:w-80">
-            <div className="bg-muted/30 border-b p-4">
-              <Text
-                variant="small"
-                className="text-muted-foreground font-bold tracking-wider uppercase"
-              >
-                Available Attacks
-              </Text>
-            </div>
-            {isAttacksLoading ? (
-              <div className="flex flex-1 items-center justify-center p-4">
-                <Text variant="muted">Loading attacks...</Text>
-              </div>
-            ) : (
-              <AttackPalette
-                attacks={availableAttacks}
-                onClickAttack={handleAddAttack}
-              />
-            )}
-          </aside>
-        </div>
-      </div>
-    </Stack>
+        <BuffTimelineBuilder
+          availableBuffs={availableBuffs}
+          enrichedBuffs={enrichedBuffs}
+          gridConfig={sharedGridConfig}
+          isLoading={isBuffsLoading}
+        />
+      </Card>
+    </Section>
   );
 };

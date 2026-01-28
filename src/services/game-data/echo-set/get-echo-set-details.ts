@@ -5,7 +5,6 @@ import { toClientAttack, toClientBuff } from '../client-converters';
 import type { GetClientEntityDetailsOutput } from '../common-types';
 import { createFsStore } from '../hakushin-api/fs-store';
 
-import { getEchoSetIdByName } from './list-echo-sets';
 import { GetClientEchoSetDetailsInputSchema } from './types';
 import type { EchoSet } from './types';
 
@@ -15,8 +14,7 @@ export const getEchoSetDetails = createServerFn({
   method: 'GET',
 })
   .inputValidator(z.string())
-  .handler(async ({ data: name }) => {
-    const id = await getEchoSetIdByName(name);
+  .handler(async ({ data: id }) => {
     const key = `echo-set/parsed/${id}.json`;
 
     const echoSetData = await echoSetStore.get(key);

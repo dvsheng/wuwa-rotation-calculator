@@ -1,108 +1,97 @@
 import { Fragment } from 'react';
 
 import { PaletteItem } from '@/components/common/PaletteItem';
-import { Separator } from '@/components/ui/separator';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Text } from '@/components/ui/typography';
-import { useDragAndDrop } from '@/hooks/useDragAndDrop';
-import { BuffSchema } from '@/schemas/rotation';
+import { cn } from '@/lib/utils';
 import type { DetailedBuff } from '@/types/client/capability';
 
 export interface BuffPaletteProps {
   buffs: Array<DetailedBuff>;
   onClickBuff?: (buff: DetailedBuff) => void;
+  onDragBuff?: (buff: DetailedBuff, event: React.DragEvent) => void;
+  className?: string;
 }
 
-export const BuffPalette = ({ buffs, onClickBuff }: BuffPaletteProps) => {
-  const { handleDragStart } = useDragAndDrop({ schema: BuffSchema });
+const SOURCE_ORDER = ['character', 'weapon', 'echo-set', 'echo'] as const;
 
+export const BuffPalette = ({
+  buffs,
+  onClickBuff,
+  onDragBuff,
+  className,
+}: BuffPaletteProps) => {
   if (buffs.length === 0) {
     return (
-      <div className="text-muted-foreground flex items-center justify-center p-4 text-sm font-medium italic">
+      <div className="text-muted-foreground flex items-center justify-center py-4 text-sm font-medium italic">
         No buffs available
       </div>
     );
   }
 
   const buffsByCharacter = Object.groupBy(buffs, (b) => b.characterName);
-
-  const SOURCE_ORDER = ['character', 'weapon', 'echo-set', 'echo'] as const;
-  const SOURCE_LABELS: Record<string, string> = {
-    character: 'Character',
-    weapon: 'Weapon',
-    'echo-set': 'Echo Set',
-    echo: 'Echo',
-  };
+  const characters = Object.entries(buffsByCharacter);
 
   return (
-    <div className="bg-muted/30 border-primary/10 w-full overflow-hidden rounded-xl border shadow-sm">
-      <div className="divide-border/50 flex flex-col divide-y">
-        {Object.entries(buffsByCharacter).map(([charName, charBuffs]) => {
+    <ScrollArea className={cn('w-full', className)}>
+      <div className="flex gap-0">
+        {characters.map(([charName, charBuffs], charIdx) => {
           if (!charBuffs) return null;
 
+          // Group buffs by source
           const buffsBySource = Object.groupBy(charBuffs, (b) => b.source);
 
           return (
-            <div
-              key={charName}
-              className="hover:bg-muted/20 flex items-stretch transition-colors"
-            >
-              {/* Character Header */}
-              <div className="bg-muted/20 flex w-28 shrink-0 flex-col justify-center border-r px-3 py-2">
-                <Text className="text-primary/80 text-[10px] leading-tight font-bold tracking-wider uppercase">
-                  {charName}
-                </Text>
-              </div>
-
-              {/* Buff Groups by Source */}
-              <div className="flex flex-1 items-center overflow-x-auto px-3 py-2">
-                <div className="flex h-full items-center gap-4">
-                  {SOURCE_ORDER.map((source, sourceIdx) => {
+            <Fragment key={charName}>
+              <div
+                className={cn(
+                  'flex min-w-[200px] flex-1 flex-col',
+                  charIdx > 0 && 'border-border border-l',
+                )}
+              >
+                <div className="border-b px-3 py-2">
+                  <Text className="text-primary text-xs font-bold tracking-wider uppercase">
+                    {charName}
+                  </Text>
+                </div>
+                <div className="flex flex-col gap-2 p-3">
+                  {SOURCE_ORDER.map((source) => {
                     const sourceBuffs = buffsBySource[source];
                     if (!sourceBuffs || sourceBuffs.length === 0) return null;
 
                     return (
-                      <Fragment key={source}>
-                        {sourceIdx > 0 &&
-                          SOURCE_ORDER.slice(0, sourceIdx).some(
-                            (prev) =>
-                              buffsBySource[prev] && buffsBySource[prev].length > 0,
-                          ) && (
-                            <Separator
-                              orientation="vertical"
-                              className="h-6 opacity-50"
+                      <div key={source} className="flex flex-col gap-1">
+                        <Text
+                          variant="small"
+                          className="text-muted-foreground text-[10px] font-semibold uppercase"
+                        >
+                          {source.replace('-', ' ')}
+                        </Text>
+                        <div className="flex flex-wrap gap-1">
+                          {sourceBuffs.map((buff) => (
+                            <PaletteItem
+                              key={buff.id}
+                              text={buff.name}
+                              hoverText={buff.description}
+                              onDragStart={
+                                onDragBuff ? (e) => onDragBuff(buff, e) : undefined
+                              }
+                              onClick={
+                                onClickBuff ? () => onClickBuff(buff) : undefined
+                              }
                             />
-                          )}
-                        <div className="flex items-center gap-2.5">
-                          <Text
-                            variant="small"
-                            className="text-muted-foreground/50 text-[8px] font-bold tracking-tighter uppercase"
-                          >
-                            {SOURCE_LABELS[source]}
-                          </Text>
-                          <div className="flex flex-wrap gap-1">
-                            {sourceBuffs.map((buff) => (
-                              <div key={buff.id} className="min-w-0">
-                                <PaletteItem
-                                  text={buff.name}
-                                  hoverText={buff.description}
-                                  onDragStart={(e) => handleDragStart(buff, e)}
-                                  onClick={
-                                    onClickBuff ? () => onClickBuff(buff) : undefined
-                                  }
-                                />
-                              </div>
-                            ))}
-                          </div>
+                          ))}
                         </div>
-                      </Fragment>
+                      </div>
                     );
                   })}
                 </div>
               </div>
-            </div>
+            </Fragment>
           );
         })}
       </div>
-    </div>
+      <ScrollBar orientation="horizontal" />
+    </ScrollArea>
   );
 };

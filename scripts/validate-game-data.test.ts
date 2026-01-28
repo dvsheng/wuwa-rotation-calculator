@@ -4,6 +4,8 @@ import path from 'node:path';
 import { describe, it } from 'vitest';
 import { z } from 'zod';
 
+import { CharacterStat } from '@/types/server';
+
 // --- Shared Schemas ---
 
 const TagSchema = z.string();
@@ -38,7 +40,7 @@ const ParameterizedNumberSchema = z.union([
 
 // New flattened stat structure
 const StatSchema = z.object({
-  stat: z.string(),
+  stat: z.enum(CharacterStat),
   value: ParameterizedNumberSchema,
   tags: z.array(TagSchema),
 });

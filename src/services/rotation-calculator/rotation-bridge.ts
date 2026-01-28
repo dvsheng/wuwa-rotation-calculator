@@ -14,7 +14,6 @@ import type {
   CharacterStats,
   EnemyStats,
   Modifier,
-  Character as ServerCharacter,
   Enemy as ServerEnemy,
   Team as ServerTeam,
   TaggedStatValue,
@@ -59,6 +58,31 @@ const ECHO_STAT_MAP: Record<
   healing_bonus: [CharacterStat.HEALING_BONUS, [Tag.ALL]],
 } as const;
 
+const CHARACTER_BASE_STATS: CharacterStats = {
+  [CharacterStat.ATTACK_FLAT]: [],
+  [CharacterStat.ATTACK_SCALING_BONUS]: [],
+  [CharacterStat.ATTACK_FLAT_BONUS]: [],
+  [CharacterStat.DEFENSE_FLAT]: [],
+  [CharacterStat.DEFENSE_SCALING_BONUS]: [],
+  [CharacterStat.DEFENSE_FLAT_BONUS]: [],
+  [CharacterStat.HP_FLAT]: [],
+  [CharacterStat.HP_SCALING_BONUS]: [],
+  [CharacterStat.HP_FLAT_BONUS]: [],
+  [CharacterStat.CRITICAL_RATE]: [{ tags: [Tag.ALL], value: 0.05 }],
+  [CharacterStat.CRITICAL_DAMAGE]: [{ tags: [Tag.ALL], value: 0.5 }],
+  [CharacterStat.DEFENSE_IGNORE]: [],
+  [CharacterStat.RESISTANCE_PENETRATION]: [],
+  [CharacterStat.DAMAGE_BONUS]: [],
+  [CharacterStat.DAMAGE_AMPLIFICATION]: [],
+  [CharacterStat.DAMAGE_MULTIPLIER_BONUS]: [],
+  [CharacterStat.FINAL_DAMAGE_BONUS]: [],
+  [CharacterStat.FLAT_DAMAGE]: [],
+  [CharacterStat.OFF_TUNE_BUILDUP_RATE]: [],
+  [CharacterStat.TUNE_BREAK_BOOST]: [],
+  [CharacterStat.ENERGY_REGEN]: [{ tags: [Tag.ALL], value: 1 }],
+  [CharacterStat.HEALING_BONUS]: [],
+};
+
 /**
  * Bridge service to connect frontend store data to the rotation calculator.
  */
@@ -69,7 +93,6 @@ export const calculateRotation = async (
   buffs: Array<BuffWithPosition>,
 ): Promise<RotationResult> => {
   // 1. Fetch all necessary game data in parallel
-  console.log(JSON.stringify(clientTeam, null, 2));
   const [characterDetails, weaponDetails, primaryEchoDetails, echoSetDetails] =
     await Promise.all([
       Promise.all(clientTeam.map((c) => getCharacterDetails({ data: c.id }))),
@@ -103,43 +126,64 @@ export const calculateRotation = async (
   ].filter((attack) => attack !== undefined);
 
   // 2. Map Client Team to Server Team
-  const serverTeamResults = clientTeam.map((clientChar, charIndex) => {
-    const charData = characterDetails[charIndex];
-    const stats = Object.groupBy(
-      charData.capabilities.permanentStats,
-      (stat) => stat.stat,
-    ) as Partial<Record<CharacterStat, Array<TaggedStatValue>>>;
+  const serverTeam = clientTeam.map((clientChar, charIndex) => {
+    // 1. Gather Permanent Stats (Flat Array)
+    const permanentStats = [
+      ...characterDetails[charIndex].capabilities.permanentStats.map(
+        ({ name, originType, parentName, ...stat }) => stat,
+      ),
+      ...weaponDetails[charIndex].capabilities[1].permanentStats,
+      ...primaryEchoDetails[charIndex].capabilities.permanentStats,
+      ...echoSetDetails[charIndex].flatMap((set) => set.setEffects[5]?.permanentStats),
+    ]
+      .filter((stat) => stat !== undefined)
+      .map(
+        ({ id, description, ...stat }) =>
+          stat as TaggedStatValue & { stat: CharacterStat },
+      );
 
-    clientChar.echoStats.forEach((echo) => {
-      const [statName, tags] = ECHO_STAT_MAP[echo.mainStatType];
-      if (!stats[statName]) {
-        stats[statName] = [];
-      }
-      stats[statName].push({ value: 0, tags });
-
-      echo.substats.forEach((substat) => {
-        const [substatName, substatTags] = ECHO_STAT_MAP[substat.stat];
-        if (!stats[substatName]) {
-          stats[substatName] = [];
-        }
-        stats[substatName].push({
+    // 2. Gather Echo Stats (Flat Array)
+    const echoStats = clientChar.echoStats.flatMap((echo) => {
+      const [mainStatName, mainTags] = ECHO_STAT_MAP[echo.mainStatType];
+      const mainStatEntry = {
+        stat: mainStatName,
+        value: 0,
+        tags: mainTags,
+      };
+      const subStatEntries = echo.substats.map((substat) => {
+        const [subName, subTags] = ECHO_STAT_MAP[substat.stat];
+        return {
+          stat: subName,
           value: substat.value / 100,
-          tags: substatTags,
-        });
+          tags: subTags,
+        };
       });
+      return [mainStatEntry, ...subStatEntries];
     });
+
+    // 3. Group all new incoming stats by their stat name
+    // Note: We combine both sources before grouping to reduce passes
+    const characterInstancePermanentStats = Object.groupBy(
+      [...permanentStats, ...echoStats],
+      (item) => item.stat,
+    );
+
+    // 4. Merge into Base Stats (Immutable Creation)
+    // We iterate over the keys of the Base Stats to ensure the shape is preserved
+    const finalStats = Object.fromEntries(
+      Object.entries(CHARACTER_BASE_STATS).map(([statName, baseValues]) => {
+        const statValues = characterInstancePermanentStats[statName] ?? [];
+        const sanitizedStatValues = statValues.map(({ stat, ...rest }) => rest);
+
+        return [statName, [...baseValues, ...sanitizedStatValues]];
+      }),
+    );
     return {
       id: clientChar.id,
       level: 90,
-      stats: stats as CharacterStats,
-    } as ServerCharacter;
-  });
-
-  const serverTeam: ServerTeam = [
-    serverTeamResults[0],
-    serverTeamResults[1],
-    serverTeamResults[2],
-  ];
+      stats: finalStats,
+    };
+  }) as ServerTeam;
 
   // 3. Map Client Enemy to Server Enemy
   const serverEnemy: ServerEnemy = {
@@ -167,7 +211,6 @@ export const calculateRotation = async (
         ({
           ...attack,
           ...attackDetails.find((attackDetail) => attackDetail.id === attack.id),
-          parameterValues: attack.parameterValues,
         }) as ServerAttack & { parameterValues: Array<number> } & Attack,
     )
     .map((attack) => ({
@@ -180,26 +223,48 @@ export const calculateRotation = async (
                 attack.parameterValues.map((value, index) => [String(index), value]),
               ),
             )
-          : 0,
+          : mv,
       ),
     }))
     .map((attack, index) => ({
       ...attack,
       modifiers: buffs
         .filter((buff) => index >= buff.x && index < buff.x + buff.w)
+        .map((buff) => modifierDetails.find((modifier) => modifier.id === buff.id))
+        .filter((modifier) => modifier !== undefined)
         .map(
-          (buff) =>
-            modifierDetails.find((modifier) => modifier.id === buff.id) as Modifier,
+          ({ description, id, ...modifier }) =>
+            ({
+              ...modifier,
+              modifiedStats: Object.groupBy(
+                modifier.modifiedStats,
+                (stat) => stat.stat,
+              ),
+            }) as Modifier,
         ),
     }))
     .map((instance) => ({
       instance: {
-        ...instance,
+        scalingStat: instance.scalingStat,
+        tags: instance.tags,
+        motionValues: instance.motionValues,
         originCharacterName: instance.characterId,
         attribute: Attribute.AERO,
       },
       modifiers: instance.modifiers,
     }));
+  console.log(
+    JSON.stringify(
+      {
+        team: serverTeam,
+        enemy: serverEnemy,
+        duration: 25,
+        damageInstances,
+      },
+      null,
+      2,
+    ),
+  );
   return calculateRotationDamage({
     team: serverTeam,
     enemy: serverEnemy,

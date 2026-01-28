@@ -19,3 +19,10 @@ export const GetWeaponDetailsInputSchema = z.object({
 });
 
 export type GetWeaponDetailsInput = z.infer<typeof GetWeaponDetailsInputSchema>;
+
+/**
+ * Output for getWeaponDetails - returns the weapon with capabilities for a specific refine level
+ */
+export interface GetWeaponDetailsOutput extends BaseEntity {
+  capabilities: Capabilities;
+}

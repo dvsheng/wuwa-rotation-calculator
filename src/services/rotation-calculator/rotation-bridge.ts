@@ -96,34 +96,44 @@ export const calculateRotation = async (
   const [characterDetails, weaponDetails, primaryEchoDetails, echoSetDetails] =
     await Promise.all([
       Promise.all(clientTeam.map((c) => getCharacterDetails({ data: c.id }))),
-      Promise.all(clientTeam.map((c) => getWeaponDetails({ data: c.weapon.id }))),
+      Promise.all(
+        clientTeam.map((c) =>
+          getWeaponDetails({
+            data: { id: c.weapon.id, refineLevel: c.weapon.refine },
+          }),
+        ),
+      ),
       Promise.all(
         clientTeam.map((c) => getEchoDetails({ data: c.primarySlotEcho.id })),
       ),
       Promise.all(
         clientTeam.map((c) =>
-          Promise.all(c.echoSets.map((set) => getEchoSetDetails({ data: set.id }))),
+          Promise.all(
+            c.echoSets.map((set) =>
+              getEchoSetDetails({ data: { id: set.id, requirement: set.requirement } }),
+            ),
+          ),
         ),
       ),
     ]);
 
   const modifierDetails = [
     ...characterDetails.flatMap((char) => char.capabilities.modifiers),
-    ...weaponDetails.flatMap((weapon) => weapon.capabilities[1].modifiers),
+    ...weaponDetails.flatMap((weapon) => weapon.capabilities.modifiers),
     ...echoSetDetails.flatMap((sets) =>
-      sets.flatMap((set) => set.setEffects[5]?.modifiers),
+      sets.flatMap((set) => set.capabilities.modifiers),
     ),
     ...primaryEchoDetails.flatMap((echo) => echo.capabilities.modifiers),
-  ].filter((mod) => mod !== undefined);
+  ];
 
   const attackDetails = [
     ...characterDetails.flatMap((char) => char.capabilities.attacks),
-    ...weaponDetails.flatMap((weapon) => weapon.capabilities[1].attacks),
+    ...weaponDetails.flatMap((weapon) => weapon.capabilities.attacks),
     ...echoSetDetails.flatMap((sets) =>
-      sets.flatMap((set) => set.setEffects[5]?.attacks),
+      sets.flatMap((set) => set.capabilities.attacks),
     ),
     ...primaryEchoDetails.flatMap((echo) => echo.capabilities.attacks),
-  ].filter((attack) => attack !== undefined);
+  ];
 
   // 2. Map Client Team to Server Team
   const serverTeam = clientTeam.map((clientChar, charIndex) => {
@@ -132,15 +142,13 @@ export const calculateRotation = async (
       ...characterDetails[charIndex].capabilities.permanentStats.map(
         ({ name, originType, parentName, ...stat }) => stat,
       ),
-      ...weaponDetails[charIndex].capabilities[1].permanentStats,
+      ...weaponDetails[charIndex].capabilities.permanentStats,
       ...primaryEchoDetails[charIndex].capabilities.permanentStats,
-      ...echoSetDetails[charIndex].flatMap((set) => set.setEffects[5]?.permanentStats),
-    ]
-      .filter((stat) => stat !== undefined)
-      .map(
-        ({ id, description, ...stat }) =>
-          stat as TaggedStatValue & { stat: CharacterStat },
-      );
+      ...echoSetDetails[charIndex].flatMap((set) => set.capabilities.permanentStats),
+    ].map(
+      ({ id, description, ...stat }) =>
+        stat as TaggedStatValue & { stat: CharacterStat },
+    );
 
     // 2. Gather Echo Stats (Flat Array)
     const echoStats = clientChar.echoStats.flatMap((echo) => {
@@ -237,7 +245,10 @@ export const calculateRotation = async (
             ({
               ...modifier,
               modifiedStats: Object.groupBy(
-                modifier.modifiedStats,
+                modifier.modifiedStats.map(({ value, ...rest }) => ({
+                  ...rest,
+                  value: isUserParameterizedNumber(value) ? value : value, // TODO: fix this
+                })),
                 (stat) => stat.stat,
               ),
             }) as Modifier,
@@ -253,18 +264,7 @@ export const calculateRotation = async (
       },
       modifiers: instance.modifiers,
     }));
-  console.log(
-    JSON.stringify(
-      {
-        team: serverTeam,
-        enemy: serverEnemy,
-        duration: 25,
-        damageInstances,
-      },
-      null,
-      2,
-    ),
-  );
+
   return calculateRotationDamage({
     team: serverTeam,
     enemy: serverEnemy,

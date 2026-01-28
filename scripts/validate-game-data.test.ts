@@ -4,7 +4,7 @@ import path from 'node:path';
 import { describe, it } from 'vitest';
 import { z } from 'zod';
 
-import { CharacterStat } from '@/types/server';
+import { CharacterStat, EnemyStat } from '@/types/server';
 
 // --- Shared Schemas ---
 
@@ -40,7 +40,7 @@ const ParameterizedNumberSchema = z.union([
 
 // New flattened stat structure
 const StatSchema = z.object({
-  stat: z.enum(CharacterStat),
+  stat: z.union([z.enum(CharacterStat), z.enum(EnemyStat)]),
   value: ParameterizedNumberSchema,
   tags: z.array(TagSchema),
 });

@@ -84,9 +84,7 @@ export const getClientCharacterDetailsHandler = async (
       .map((attack) => toClientAttack(attack, attack.parentName, attack.name)),
     modifiers: character.capabilities.modifiers
       .filter((modifier) => isItemActive(modifier, sequence))
-      .map((modifier) =>
-        toClientBuff(modifier, modifier.parentName, 'character', modifier.name),
-      ),
+      .map((modifier) => toClientBuff(modifier, modifier.parentName, modifier.name)),
   };
 };
 

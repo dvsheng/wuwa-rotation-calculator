@@ -96,7 +96,7 @@ export const WeaponSelector = ({ index }: WeaponSelectorProps) => {
       <div className="w-16 shrink-0">
         <Select
           value={String(weapon.refine)}
-          onValueChange={(val) => setRefine(index, parseInt(val))}
+          onValueChange={(val) => setRefine(index, val)}
         >
           <SelectTrigger className="h-9 px-2">
             <SelectValue />

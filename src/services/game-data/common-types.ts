@@ -65,7 +65,6 @@ export interface EnrichedBuff {
   name: string;
   parentName: string;
   description?: string;
-  source: 'character' | 'weapon' | 'echo' | 'echo-set';
   parameters?: Array<{ minimum: number; maximum: number }>;
 }
 

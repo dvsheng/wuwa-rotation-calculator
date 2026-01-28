@@ -1,20 +1,23 @@
 import { createServerFn } from '@tanstack/react-start';
-import { z } from 'zod';
 
 import { toClientAttack, toClientBuff } from '../client-converters';
 import type { GetClientEntityDetailsOutput } from '../common-types';
 import { createFsStore } from '../hakushin-api/fs-store';
 
 import { GetWeaponDetailsInputSchema } from './types';
-import type { GetWeaponDetailsInput, Weapon } from './types';
+import type { GetWeaponDetailsOutput, Weapon } from './types';
 
 const weaponStore = createFsStore<Weapon>();
 
+/**
+ * Returns weapon details with capabilities for the specified refine level.
+ */
 export const getWeaponDetails = createServerFn({
   method: 'GET',
 })
-  .inputValidator(z.string())
-  .handler(async ({ data: id }) => {
+  .inputValidator(GetWeaponDetailsInputSchema)
+  .handler(async ({ data }): Promise<GetWeaponDetailsOutput> => {
+    const { id, refineLevel } = data;
     const key = `weapon/parsed/${id}.json`;
 
     const weaponData = await weaponStore.get(key);
@@ -22,33 +25,35 @@ export const getWeaponDetails = createServerFn({
       throw new Error(`Failed to fetch weapon details for ID ${id}`);
     }
 
-    return weaponData;
+    return {
+      id: weaponData.id,
+      uuid: weaponData.uuid,
+      name: weaponData.name,
+      capabilities: weaponData.capabilities[refineLevel],
+    };
   });
 
-const getClientWeaponDetailsHandler = async (
-  input: GetWeaponDetailsInput,
-): Promise<GetClientEntityDetailsOutput> => {
-  const { id, refineLevel } = input;
-  const key = `weapon/parsed/${id}.json`;
-  const weapon = await weaponStore.get(key);
-  if (!weapon) {
-    throw new Error(`Failed to fetch weapon details for ID ${id}`);
-  }
-  const capabilities = weapon.capabilities[refineLevel];
-  return {
-    attacks: capabilities.attacks.map((attack) =>
-      toClientAttack(attack, weapon.name, 'Weapon Attack'),
-    ),
-    modifiers: capabilities.modifiers.map((modifier, index) =>
-      toClientBuff(modifier, weapon.name, 'weapon', `${weapon.name} Buff ${index + 1}`),
-    ),
-  };
-};
-
+/**
+ * Returns client-facing enriched attacks and modifiers for the specified refine level.
+ */
 export const getClientWeaponDetails = createServerFn({
   method: 'GET',
 })
   .inputValidator(GetWeaponDetailsInputSchema)
-  .handler(async ({ data }) => {
-    return getClientWeaponDetailsHandler(data);
+  .handler(async ({ data }): Promise<GetClientEntityDetailsOutput> => {
+    const { id, refineLevel } = data;
+    const key = `weapon/parsed/${id}.json`;
+    const weapon = await weaponStore.get(key);
+    if (!weapon) {
+      throw new Error(`Failed to fetch weapon details for ID ${id}`);
+    }
+    const capabilities = weapon.capabilities[refineLevel];
+    return {
+      attacks: capabilities.attacks.map((attack) =>
+        toClientAttack(attack, weapon.name, 'Weapon Attack'),
+      ),
+      modifiers: capabilities.modifiers.map((modifier, index) =>
+        toClientBuff(modifier, weapon.name, `${weapon.name} Buff ${index + 1}`),
+      ),
+    };
   });

@@ -54,7 +54,7 @@ export const BuffTimelineCanvas = ({ gridConfig, buffs }: BuffTimelineCanvasProp
     },
     dropConfig: { enabled: true },
     resizeConfig: { enabled: true, handles: ['e'] },
-    style: { minHeight: '100px', minWidth: gridConfig.width },
+    style: { minHeight: '140px', minWidth: gridConfig.width },
     layout: buffs.map((buff) => ({
       i: buff.instanceId,
       x: buff.x,
@@ -70,7 +70,7 @@ export const BuffTimelineCanvas = ({ gridConfig, buffs }: BuffTimelineCanvasProp
     <ScrollArea className="w-full">
       <div
         className={cn(
-          'border-border/50 bg-muted/10 relative min-h-[100px] rounded-lg border transition-colors',
+          'border-border/50 bg-muted/10 relative min-h-[140px] rounded-lg border transition-colors',
         )}
         style={{ minWidth: gridConfig.width }}
       >

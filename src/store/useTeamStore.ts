@@ -4,6 +4,7 @@ import { immer } from 'zustand/middleware/immer';
 import { ECHO_SUBSTAT_VALUES } from '@/schemas/echo';
 import { initialEnemyData } from '@/schemas/enemy';
 import type { Enemy } from '@/schemas/enemy';
+import type { RefineLevel } from '@/services/game-data/weapon/types';
 import type {
   Character,
   EchoCost,
@@ -20,7 +21,7 @@ export interface TeamState {
   setCharacter: (index: number, id: string) => void;
   setSequence: (index: number, sequence: number) => void;
   setWeapon: (index: number, id: string) => void;
-  setRefine: (index: number, refine: number) => void;
+  setRefine: (index: number, refine: string) => void;
   setEchoSet: (index: number, setIndex: number, id: string) => void;
   setEchoSetRequirement: (index: number, setIndex: number, requirement: string) => void;
   setPrimaryEcho: (index: number, id: string) => void;
@@ -105,7 +106,7 @@ const createDefaultCharacter = (
 ): Character => ({
   id,
   sequence: 0,
-  weapon: { id: defaults.weaponId, refine: 1 },
+  weapon: { id: defaults.weaponId, refine: '1' },
   echoSets: [{ id: defaults.echoSetId, requirement: '5' }],
   primarySlotEcho: { id: defaults.primaryEchoId },
   echoStats: [
@@ -147,7 +148,7 @@ export const useTeamStore = create<TeamState>()(
       }),
     setRefine: (index, refine) =>
       set((state) => {
-        state.team[index].weapon.refine = refine;
+        state.team[index].weapon.refine = refine as RefineLevel;
       }),
     setEchoSet: (index, setIndex, id) =>
       set((state) => {

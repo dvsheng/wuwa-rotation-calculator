@@ -30,7 +30,6 @@ export const toClientAttack = (
 export const toClientBuff = (
   modifier: Modifier,
   parentName: string,
-  source: EnrichedBuff['source'],
   name: string,
 ): EnrichedBuff => {
   const parameters = modifier.modifiedStats
@@ -46,7 +45,6 @@ export const toClientBuff = (
     name,
     parentName,
     description: modifier.description,
-    source,
     parameters: parameters.length > 0 ? parameters : undefined,
   };
 };

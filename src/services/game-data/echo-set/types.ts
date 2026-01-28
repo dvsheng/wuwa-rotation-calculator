@@ -10,11 +10,17 @@ export interface EchoSet extends BaseEntity {
   setEffects: Partial<Record<SetEffectRequirement, Capabilities>>;
 }
 
-export const GetClientEchoSetDetailsInputSchema = z.object({
+export const GetEchoSetDetailsInputSchema = z.object({
   id: z.string(),
   requirement: z.enum(SetEffectRequirement),
 });
 
-export type GetClientEchoSetDetailsInput = z.infer<
-  typeof GetClientEchoSetDetailsInputSchema
->;
+export type GetEchoSetDetailsInput = z.infer<typeof GetEchoSetDetailsInputSchema>;
+
+/**
+ * Output for getEchoSetDetails - returns the echo set with combined capabilities
+ * for all set effects where requirement <= input requirement
+ */
+export interface GetEchoSetDetailsOutput extends BaseEntity {
+  capabilities: Capabilities;
+}

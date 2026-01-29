@@ -93,5 +93,5 @@ export const getCalculateEnemyStatsForTag =
         key,
         resolveStatValue(statValues),
       ]),
-    ) as Record<keyof CharacterStats, number>;
+    ) as Record<keyof EnemyStats, number>;
   };

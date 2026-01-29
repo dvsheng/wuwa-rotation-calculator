@@ -63,7 +63,7 @@ export const useRotationStore = create<RotationState>()(
       set((state) => {
         const attack = state.attacks.find((a) => a.instanceId === instanceId);
         values.forEach((value, index) => {
-          if (!attack?.parameters?.[index]?.value) return;
+          if (!attack?.parameters?.[index]) return;
           attack.parameters[index].value = value;
         });
       }),
@@ -104,7 +104,7 @@ export const useRotationStore = create<RotationState>()(
       set((state) => {
         const buff = state.buffs.find((b) => b.instanceId === instanceId);
         values.forEach((value, index) => {
-          if (!buff?.parameters?.[index]?.value) return;
+          if (!buff?.parameters?.[index]) return;
           buff.parameters[index].value = value;
         });
       }),

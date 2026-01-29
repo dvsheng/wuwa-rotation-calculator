@@ -1,11 +1,9 @@
-import { Play } from 'lucide-react';
 import { useState } from 'react';
 import { useContainerWidth } from 'react-grid-layout';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Row, Section } from '@/components/ui/layout';
-import { useRotationCalculation } from '@/hooks/useRotationCalculation';
 import { useTeamAttacks } from '@/hooks/useTeamAttacks';
 import { useTeamModifiers } from '@/hooks/useTeamModifiers';
 import type { Capability } from '@/schemas/rotation';
@@ -14,7 +12,7 @@ import { useTeamStore } from '@/store/useTeamStore';
 
 import { AttackSequenceBuilder } from './AttackSequenceBuilder';
 import { BuffTimelineBuilder } from './BuffTimelineBuilder';
-import { RotationResultDisplay } from './RotationResultDisplay';
+import { RotationSummary } from './RotationSummary';
 import { createSharedGridConfig } from './types';
 
 /**
@@ -26,7 +24,9 @@ export const RotationBuilder = () => {
   const rotationAttacks = useRotationStore((state) => state.attacks);
   const rotationBuffs = useRotationStore((state) => state.buffs);
   const clearAll = useRotationStore((state) => state.clearAll);
-
+  const [showResult, setShowResult] = useState(false);
+  // Measure container width for shared grid config
+  const { width: containerWidth, containerRef } = useContainerWidth();
   // Fetch detailed data from service hooks
   const { attacks: availableAttacks, isLoading: isAttacksLoading } =
     useTeamAttacks(team);
@@ -34,33 +34,14 @@ export const RotationBuilder = () => {
 
   // Enrichment Logic: Combine store state (IDs/Values) with detailed metadata
   const enrichedAttacks = rotationAttacks.map((attack) => ({
-    ...attack,
     ...(availableAttacks.find((a) => a.id === attack.id) as Capability),
+    ...attack,
   }));
-
   const enrichedBuffs = rotationBuffs.map((buff) => ({
-    ...buff,
     ...(availableBuffs.find((b) => b.id === buff.id) as Capability),
+    ...buff,
   }));
-
-  const [showResult, setShowResult] = useState(false);
-  const rotationMutation = useRotationCalculation();
-
-  const handleCalculate = async () => {
-    try {
-      await rotationMutation.mutateAsync();
-      setShowResult(true);
-    } catch (err) {
-      console.error('Calculation failed', err);
-    }
-  };
-
   const isLoading = isAttacksLoading || isBuffsLoading;
-
-  // Measure container width for shared grid config
-  const { width: containerWidth, containerRef } = useContainerWidth();
-
-  // Shared grid config for horizontal alignment between attack sequence and buff canvas
   const sharedGridConfig = createSharedGridConfig(
     enrichedAttacks.length,
     containerWidth - 32, // Account for padding
@@ -68,15 +49,12 @@ export const RotationBuilder = () => {
 
   return (
     <Section ref={containerRef} className="min-h-0 flex-1">
-      {/* Result Display */}
-      {showResult && rotationMutation.data && (
-        <div className="animate-in fade-in slide-in-from-top-4 duration-500">
-          <RotationResultDisplay
-            result={rotationMutation.data}
-            attacks={enrichedAttacks}
-          />
-        </div>
-      )}
+      <RotationSummary
+        enrichedAttacks={enrichedAttacks}
+        isLoading={isLoading}
+        showResult={showResult}
+        onShowResultChange={setShowResult}
+      />
 
       {/* Main Card */}
       <Card className="gap-0 overflow-hidden py-0">
@@ -97,19 +75,6 @@ export const RotationBuilder = () => {
                   className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                 >
                   Clear All
-                </Button>
-              )}
-              {rotationAttacks.length > 0 && (
-                <Button
-                  size="sm"
-                  onClick={handleCalculate}
-                  disabled={rotationMutation.isPending || isLoading}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20 font-bold shadow-lg"
-                >
-                  <Play className="mr-2 h-4 w-4 fill-current" />
-                  {rotationMutation.isPending
-                    ? 'Calculating...'
-                    : 'Calculate Rotation Damage'}
                 </Button>
               )}
             </Row>

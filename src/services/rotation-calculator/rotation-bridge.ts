@@ -134,7 +134,7 @@ export const calculateRotation = async (
 
   // 2. Map Client Team to Server Team
   const serverTeam = clientTeam.map((clientChar, charIndex) => {
-    // 1. Gather Permanent Stats (Flat Array)
+    // 2a. Gather Permanent Stats (Flat Array)
     const permanentStats = [
       ...characterDetails[charIndex].capabilities.permanentStats.map(
         ({ name, originType, parentName, ...stat }) => stat,
@@ -144,7 +144,7 @@ export const calculateRotation = async (
       ...echoSetDetails[charIndex].flatMap((set) => set.capabilities.permanentStats),
     ].map(({ id, description, ...stat }) => stat);
 
-    // 2. Gather Echo Stats (Flat Array)
+    // 2b. Gather Echo Stats (Flat Array)
     const echoStats = clientChar.echoStats.flatMap((echo) => {
       const [mainStatName, mainTags] = ECHO_STAT_MAP[echo.mainStatType];
       const mainStatEntry = {
@@ -164,15 +164,13 @@ export const calculateRotation = async (
       return [mainStatEntry, ...subStatEntries];
     });
 
-    // 3. Group all new incoming stats by their stat name
-    // Note: We combine both sources before grouping to reduce passes
+    // 2c. Group all new incoming stats by their stat name
     const characterInstancePermanentStats = Object.groupBy(
       [...permanentStats, ...echoStats],
       (item) => item.stat,
     );
 
-    // 4. Merge into Base Stats (Immutable Creation)
-    // We iterate over the keys of the Base Stats to ensure the shape is preserved
+    // 2d. Merge into Base Stats
     const finalStats = Object.fromEntries(
       Object.entries(CHARACTER_BASE_STATS).map(([statName, baseValues]) => {
         const statValues =

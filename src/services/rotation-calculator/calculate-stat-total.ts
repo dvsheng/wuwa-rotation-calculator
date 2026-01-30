@@ -1,3 +1,6 @@
+import { isSubset } from 'es-toolkit/array';
+import { mapValues } from 'es-toolkit/object';
+
 import { AbilityAttribute, Tag } from '@/types';
 import type { CharacterStats, EnemyStats, TaggedStatValue } from '@/types';
 
@@ -17,12 +20,10 @@ export const getCalculateStatValueFn =
   (tags: Array<string>) => (statValues: Array<TaggedStatValue> | undefined) => {
     if (!statValues) return 0;
     // 1. Convert target tags to a Set once for O(1) lookups
-    const tagSet = new Set(tags);
     return statValues.reduce((sum, statValue) => {
       // 2. Check if statValue has Tag.ALL OR any overlapping tag
       const isApplicable =
-        statValue.tags.includes(Tag.ALL) ||
-        statValue.tags.some((tag) => tagSet.has(tag));
+        statValue.tags.includes(Tag.ALL) || isSubset(statValue.tags, tags);
 
       if (!isApplicable) return sum;
 
@@ -62,22 +63,13 @@ export const getCalculateCharacterStatsForTag =
   (stats: CharacterStats): Record<keyof CharacterStats | AbilityAttribute, number> => {
     const resolveStatValue = getCalculateStatValueFn(tags);
     const resolveAbilityAttribute = getCalculateAbilityAttributeValueFn(tags);
-
-    // 1. Resolve all base character stats (the raw arrays)
-    const baseStats = Object.fromEntries(
-      Object.entries(stats).map(([key, statValues]) => [
-        key,
-        resolveStatValue(statValues),
-      ]),
-    ) as Record<keyof CharacterStats, number>;
+    const baseStats = mapValues(stats, (statValues) => resolveStatValue(statValues));
     const abilityAttributes = Object.fromEntries(
       Object.values(AbilityAttribute).map((attr) => [
         attr,
         resolveAbilityAttribute(stats, attr),
       ]),
     ) as Record<AbilityAttribute, number>;
-
-    // 3. Merge them into a single record
     return {
       ...baseStats,
       ...abilityAttributes,
@@ -88,10 +80,5 @@ export const getCalculateEnemyStatsForTag =
   (tags: Array<string>) =>
   (stats: EnemyStats): Record<keyof EnemyStats, number> => {
     const resolveStatValue = getCalculateStatValueFn(tags);
-    return Object.fromEntries(
-      Object.entries(stats).map(([key, statValues]) => [
-        key,
-        resolveStatValue(statValues),
-      ]),
-    ) as Record<keyof EnemyStats, number>;
+    return mapValues(stats, (statValues) => resolveStatValue(statValues));
   };

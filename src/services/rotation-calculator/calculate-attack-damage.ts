@@ -1,6 +1,9 @@
+import { sum } from 'es-toolkit/math';
+
 import type { CharacterDamageInstance, Enemy, Team } from '@/types';
 
 import { calculateDamage } from '../damage-calculator';
+import type { CalculateDamageProps } from '../damage-calculator/types';
 
 import {
   getCalculateAbilityAttributeValueFn,
@@ -40,16 +43,14 @@ export const calculateAttackDamage = (
     criticalDamage: getStatValue(character.stats.criticalDamage),
     damageBonusFinal: getStatValue(character.stats.finalDamageBonus),
   };
-  return instance.motionValues.reduce((sum, motionValue) => {
-    return (
-      sum +
-      calculateDamage({
-        character: calculateDamageCharacterProps,
-        enemy: calculateDamageEnemyProps,
-        skill: { motionValue },
-      })
-    );
-  }, 0);
+  const totalMotionValue = sum(instance.motionValues);
+  const calculateDamageProps: CalculateDamageProps = {
+    character: calculateDamageCharacterProps,
+    enemy: calculateDamageEnemyProps,
+    skill: { motionValue: totalMotionValue },
+  };
+  return {
+    result: calculateDamage(calculateDamageProps),
+    inputs: calculateDamageProps,
+  };
 };
-
-export { getCalculateStatValueFn };

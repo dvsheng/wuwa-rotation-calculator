@@ -1,3 +1,4 @@
+import type { CalculateDamageProps } from '@/services/damage-calculator/types';
 import type { CharacterDamageInstance, Enemy, Team } from '@/types';
 
 import { applyModifiers } from './apply-modifiers';
@@ -21,14 +22,15 @@ export const calculateRotationDamage = (rotation: Rotation): RotationResult => {
       });
       const { totalDamage, damageInstances, damageDetails } = reducer;
       return {
-        totalDamage: totalDamage + instanceDamage,
-        damageInstances: [...damageInstances, instanceDamage],
+        totalDamage: totalDamage + instanceDamage.result,
+        damageInstances: [...damageInstances, instanceDamage.result],
         damageDetails: [
           ...damageDetails,
           {
             team,
             enemy,
             instance,
+            resolvedStats: instanceDamage.inputs,
           },
         ],
       };
@@ -40,6 +42,7 @@ export const calculateRotationDamage = (rotation: Rotation): RotationResult => {
         team: Team;
         enemy: Enemy;
         instance: CharacterDamageInstance;
+        resolvedStats: CalculateDamageProps;
       }>(),
     } as RotationResult,
   );

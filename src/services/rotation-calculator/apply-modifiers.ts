@@ -1,37 +1,25 @@
+import { mergeWith } from 'es-toolkit/object';
 import { produce } from 'immer';
 
 import type {
   Character,
   CharacterModifier,
-  CharacterStats,
   Enemy,
   EnemyModifier,
-  EnemyStats,
   Modifier,
-  TaggedStatValue,
   Team,
 } from '@/types';
 
 const applyModifierToCharacter = (target: Character, modifier: CharacterModifier) => {
-  const stats = target.stats;
-  (
-    Object.entries(modifier.modifiedStats) as Array<
-      [keyof CharacterStats, Array<TaggedStatValue>]
-    >
-  ).forEach(([statName, modifierStatValues]) => {
-    stats[statName] = [...stats[statName], ...modifierStatValues];
-  });
+  target.stats = mergeWith(target.stats, modifier.modifiedStats, (objValue, srcValue) =>
+    objValue.concat(srcValue),
+  );
 };
 
 const applyModifierToEnemy = (target: Enemy, modifier: EnemyModifier) => {
-  const stats = target.stats;
-  (
-    Object.entries(modifier.modifiedStats) as Array<
-      [keyof EnemyStats, Array<TaggedStatValue>]
-    >
-  ).forEach(([statName, modifierStatValues]) => {
-    stats[statName] = [...stats[statName], ...modifierStatValues];
-  });
+  target.stats = mergeWith(target.stats, modifier.modifiedStats, (objValue, srcValue) =>
+    objValue.concat(srcValue),
+  );
 };
 
 const applyModifierToTeamAndEnemy = (

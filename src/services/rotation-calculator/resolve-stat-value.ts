@@ -1,5 +1,7 @@
+import { mapValues } from 'es-toolkit/object';
+
 import { Tag } from '@/types';
-import type { Enemy, StatValue, Team } from '@/types';
+import type { Enemy, StatValue, TaggedStatValue, Team } from '@/types';
 import { calculateParameterizedNumberValue } from '@/utils/math-utils';
 
 import {
@@ -35,19 +37,18 @@ export const resolveStatValuesInRotation = (rotation: Rotation): Rotation => {
         modifiers: instance.modifiers.map((modifier) => {
           return {
             ...modifier,
-            value: Object.fromEntries(
-              Object.entries(modifier.modifiedStats).map(([key, values]) => {
-                const resolvedValues = values.map((value) => {
-                  if (typeof value.value === 'number') {
-                    return value;
+            modifiedStats: mapValues(
+              modifier.modifiedStats as Record<string, Array<TaggedStatValue>>,
+              (stats) =>
+                stats.map((stat) => {
+                  if (typeof stat.value === 'number') {
+                    return stat;
                   }
                   return {
-                    ...value,
-                    value: resolveStatValue(value.value),
+                    ...stat,
+                    value: resolveStatValue(stat.value),
                   };
-                });
-                return [key, resolvedValues];
-              }),
+                }),
             ),
           };
         }),

@@ -1,16 +1,23 @@
-import type { EchoMainStatOptionType, EchoSubstatOptionType } from '@/schemas/echo';
+import { compact } from 'es-toolkit/array';
+import { cloneDeep, mergeWith } from 'es-toolkit/object';
+
+import { EchoMainStatOption } from '@/schemas/echo';
+import type {
+  EchoCost,
+  EchoMainStatOptionType,
+  EchoSubstatOptionType,
+} from '@/schemas/echo';
 import type { Enemy as ClientEnemy } from '@/schemas/enemy';
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import type { Team as ClientTeam } from '@/schemas/team';
 import { getCharacterDetails } from '@/services/game-data/character/get-character-details';
-import type { Attack as ServerAttack } from '@/services/game-data/common-types';
+import type { Attack as ServerAttack, Stat } from '@/services/game-data/common-types';
 import { getEchoDetails } from '@/services/game-data/echo/get-echo-details';
 import { getWeaponDetails } from '@/services/game-data/weapon/get-weapon-details';
 import { CharacterStat, Tag, isUserParameterizedNumber } from '@/types';
 import type {
   CharacterStats,
   Enemy,
-  EnemyStat,
   EnemyStats,
   Integer,
   Modifier,
@@ -80,6 +87,119 @@ const CHARACTER_BASE_STATS: CharacterStats = {
   [CharacterStat.HEALING_BONUS]: [],
 };
 
+const ECHO_SECONDARY_STAT_BY_COST: Record<EchoCost, Stat> = {
+  1: { stat: CharacterStat.HP_FLAT_BONUS, value: 2280, tags: [Tag.ALL] },
+  3: { stat: CharacterStat.ATTACK_FLAT_BONUS, value: 100, tags: [Tag.ALL] },
+  4: { stat: CharacterStat.ATTACK_FLAT_BONUS, value: 150, tags: [Tag.ALL] },
+} as const;
+
+const ECHO_PRIMARY_STAT_BY_COST_BY_STAT: Record<
+  EchoCost,
+  Partial<Record<EchoMainStatOptionType, Stat>>
+> = {
+  1: {
+    [EchoMainStatOption.HP_PERCENT]: {
+      stat: CharacterStat.HP_SCALING_BONUS,
+      value: 0.18,
+      tags: [Tag.ALL],
+    },
+    [EchoMainStatOption.ATK_PERCENT]: {
+      stat: CharacterStat.ATTACK_SCALING_BONUS,
+      value: 0.18,
+      tags: [Tag.ALL],
+    },
+    [EchoMainStatOption.DEF_PERCENT]: {
+      stat: CharacterStat.DEFENSE_SCALING_BONUS,
+      value: 0.228,
+      tags: [Tag.ALL],
+    },
+  },
+  3: {
+    [EchoMainStatOption.HP_PERCENT]: {
+      stat: CharacterStat.HP_SCALING_BONUS,
+      value: 0.3,
+      tags: [Tag.ALL],
+    },
+    [EchoMainStatOption.ATK_PERCENT]: {
+      stat: CharacterStat.ATTACK_SCALING_BONUS,
+      value: 0.3,
+      tags: [Tag.ALL],
+    },
+    [EchoMainStatOption.DEF_PERCENT]: {
+      stat: CharacterStat.DEFENSE_SCALING_BONUS,
+      value: 0.38,
+      tags: [Tag.ALL],
+    },
+    [EchoMainStatOption.DAMAGE_BONUS_AERO]: {
+      stat: CharacterStat.DAMAGE_BONUS,
+      value: 0.3,
+      tags: [Tag.AERO],
+    },
+    [EchoMainStatOption.DAMAGE_BONUS_ELECTRO]: {
+      stat: CharacterStat.DAMAGE_BONUS,
+      value: 0.3,
+      tags: [Tag.ELECTRO],
+    },
+    [EchoMainStatOption.DAMAGE_BONUS_GLACIO]: {
+      stat: CharacterStat.DAMAGE_BONUS,
+      value: 0.3,
+      tags: [Tag.GLACIO],
+    },
+    [EchoMainStatOption.DAMAGE_BONUS_FUSION]: {
+      stat: CharacterStat.DAMAGE_BONUS,
+      value: 0.3,
+      tags: [Tag.FUSION],
+    },
+    [EchoMainStatOption.DAMAGE_BONUS_HAVOC]: {
+      stat: CharacterStat.DAMAGE_BONUS,
+      value: 0.3,
+      tags: [Tag.HAVOC],
+    },
+    [EchoMainStatOption.DAMAGE_BONUS_SPECTRO]: {
+      stat: CharacterStat.DAMAGE_BONUS,
+      value: 0.3,
+      tags: [Tag.SPECTRO],
+    },
+    [EchoMainStatOption.ENERGY_REGEN]: {
+      stat: CharacterStat.ENERGY_REGEN,
+      value: 0.32,
+      tags: [Tag.ALL],
+    },
+  },
+  4: {
+    [EchoMainStatOption.HP_PERCENT]: {
+      stat: CharacterStat.HP_SCALING_BONUS,
+      value: 0.33,
+      tags: [Tag.ALL],
+    },
+    [EchoMainStatOption.ATK_PERCENT]: {
+      stat: CharacterStat.ATTACK_SCALING_BONUS,
+      value: 0.33,
+      tags: [Tag.ALL],
+    },
+    [EchoMainStatOption.DEF_PERCENT]: {
+      stat: CharacterStat.DEFENSE_SCALING_BONUS,
+      value: 0.415,
+      tags: [Tag.ALL],
+    },
+    [EchoMainStatOption.CRIT_DMG]: {
+      stat: CharacterStat.CRITICAL_DAMAGE,
+      value: 0.22,
+      tags: [Tag.ALL],
+    },
+    [EchoMainStatOption.CRIT_RATE]: {
+      stat: CharacterStat.CRITICAL_RATE,
+      value: 0.44,
+      tags: [Tag.ALL],
+    },
+    [EchoMainStatOption.HEALING_BONUS]: {
+      stat: CharacterStat.HEALING_BONUS,
+      value: 0.26,
+      tags: [Tag.ALL],
+    },
+  },
+};
+
 /**
  * Bridge service to connect frontend store data to the rotation calculator.
  */
@@ -142,17 +262,18 @@ export const calculateRotation = async (
       ...weaponDetails[charIndex].capabilities.permanentStats,
       ...primaryEchoDetails[charIndex].capabilities.permanentStats,
       ...echoSetDetails[charIndex].flatMap((set) => set.capabilities.permanentStats),
-    ].map(({ id, description, ...stat }) => stat);
+    ];
 
     // 2b. Gather Echo Stats (Flat Array)
     const echoStats = clientChar.echoStats.flatMap((echo) => {
       const [mainStatName, mainTags] = ECHO_STAT_MAP[echo.mainStatType];
       const mainStatEntry = {
         stat: mainStatName,
-        // TODO: get actual value map
-        value: 0,
+        value:
+          ECHO_PRIMARY_STAT_BY_COST_BY_STAT[echo.cost][echo.mainStatType]?.value ?? 0,
         tags: mainTags,
       };
+      const secondaryStatEntry = ECHO_SECONDARY_STAT_BY_COST[echo.cost];
       const subStatEntries = echo.substats.map((substat) => {
         const [subName, subTags] = ECHO_STAT_MAP[substat.stat];
         return {
@@ -161,7 +282,7 @@ export const calculateRotation = async (
           tags: subTags,
         };
       });
-      return [mainStatEntry, ...subStatEntries];
+      return [mainStatEntry, secondaryStatEntry, ...subStatEntries];
     });
 
     // 2c. Group all new incoming stats by their stat name
@@ -170,16 +291,12 @@ export const calculateRotation = async (
       (item) => item.stat,
     );
 
-    // 2d. Merge into Base Stats
-    const finalStats = Object.fromEntries(
-      Object.entries(CHARACTER_BASE_STATS).map(([statName, baseValues]) => {
-        const statValues =
-          characterInstancePermanentStats[statName as CharacterStat | EnemyStat] ?? [];
-        const sanitizedStatValues = statValues.map(({ stat, ...rest }) => rest);
+    const finalStats = mergeWith(
+      cloneDeep(CHARACTER_BASE_STATS),
+      characterInstancePermanentStats,
+      (objValue, srcValue) => objValue.concat(srcValue),
+    ) as CharacterStats;
 
-        return [statName, [...baseValues, ...sanitizedStatValues]];
-      }),
-    );
     return {
       id: clientChar.id,
       level: 90,
@@ -212,10 +329,8 @@ export const calculateRotation = async (
       (attack) =>
         ({
           ...attack,
-          parameterValues: attack.parameters
-            ?.map((p) => p.value)
-            .filter((p) => p !== undefined),
           ...attackDetails.find((attackDetail) => attackDetail.id === attack.id),
+          parameterValues: compact(attack.parameters?.map((p) => p.value) ?? []),
         }) as ServerAttack & AttackInstance & { parameterValues: Array<number> },
     )
     .map((attack) => ({
@@ -241,7 +356,7 @@ export const calculateRotation = async (
           return { ...buff, ...modifier };
         })
         .filter((modifier) => modifier !== undefined)
-        .map(({ description, id, ...modifier }) => ({
+        .map((modifier) => ({
           ...modifier,
           modifiedStats: Object.groupBy(
             modifier.modifiedStats.map(({ value, ...rest }) => ({
@@ -274,10 +389,12 @@ export const calculateRotation = async (
       modifiers: instance.modifiers,
     }));
 
-  return calculateRotationDamage({
+  const result = calculateRotationDamage({
     team: serverTeam,
     enemy: serverEnemy,
     duration: 25,
     damageInstances,
   });
+  console.log(JSON.stringify(result, null, 2));
+  return result;
 };

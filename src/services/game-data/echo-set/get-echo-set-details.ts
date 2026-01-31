@@ -1,25 +1,23 @@
 import { createServerFn } from '@tanstack/react-start';
 
 import { toClientAttack, toClientBuff } from '../client-converters';
-import type {
-  GetClientEntityDetailsOutput,
-  GetEntityDetailsOutput,
-} from '../common-types';
 import { createFsStore } from '../hakushin-api/fs-store';
 
 import { GetEchoSetDetailsInputSchema, SetEffectRequirement } from './types';
 import type {
   EchoSet,
+  GetClientEchoSetDetailsOutput,
   GetEchoSetDetailsInput,
   SetEffectRequirement as SetEffectRequirementType,
+  StoreEchoSet,
 } from './types';
 
-const echoSetStore = createFsStore<EchoSet>();
+const echoSetStore = createFsStore<StoreEchoSet>();
 
 /**
  * Shared handler for fetching echo set data.
  */
-const getEchoSetDataHandler = async (id: string): Promise<EchoSet> => {
+const getEchoSetDataHandler = async (id: string): Promise<StoreEchoSet> => {
   const key = `echo-set/parsed/${id}.json`;
 
   const echoSetData = await echoSetStore.get(key);
@@ -45,7 +43,7 @@ const getApplicableRequirements = (
  */
 export const getEchoSetDetailsHandler = async (
   input: GetEchoSetDetailsInput,
-): Promise<GetEntityDetailsOutput> => {
+): Promise<EchoSet> => {
   const { id, requirement } = input;
   const echoSetData = await getEchoSetDataHandler(id);
   const applicableRequirements = getApplicableRequirements(requirement);
@@ -81,7 +79,7 @@ export const getEchoSetDetails = createServerFn({
   method: 'GET',
 })
   .inputValidator(GetEchoSetDetailsInputSchema)
-  .handler(async ({ data }): Promise<GetEntityDetailsOutput> => {
+  .handler(async ({ data }): Promise<EchoSet> => {
     return getEchoSetDetailsHandler(data);
   });
 
@@ -93,26 +91,14 @@ export const getClientEchoSetDetails = createServerFn({
   method: 'GET',
 })
   .inputValidator(GetEchoSetDetailsInputSchema)
-  .handler(async ({ data }): Promise<GetClientEntityDetailsOutput> => {
-    const { id, requirement } = data;
-    const echoSet = await getEchoSetDataHandler(id);
-    const applicableRequirements = getApplicableRequirements(requirement);
-
-    const attacks = applicableRequirements.flatMap((req) => {
-      const setEffect = echoSet.setEffects[req];
-      if (!setEffect) return [];
-      return setEffect.attacks.map((attack) =>
-        toClientAttack(attack, echoSet.name, `${echoSet.name} (${req}pc) Attack`),
-      );
-    });
-
-    const modifiers = applicableRequirements.flatMap((req) => {
-      const setEffect = echoSet.setEffects[req];
-      if (!setEffect) return [];
-      return setEffect.modifiers.map((modifier) =>
-        toClientBuff(modifier, echoSet.name, `${echoSet.name} (${req}pc) Buff`),
-      );
-    });
-
-    return { attacks, modifiers };
+  .handler(async ({ data }): Promise<GetClientEchoSetDetailsOutput> => {
+    const echoSet = await getEchoSetDetailsHandler(data);
+    return {
+      attacks: echoSet.capabilities.attacks.map((attack) =>
+        toClientAttack(attack, echoSet.name, 'Weapon Attack'),
+      ),
+      modifiers: echoSet.capabilities.modifiers.map((modifier, index) =>
+        toClientBuff(modifier, echoSet.name, `${echoSet.name} Buff ${index + 1}`),
+      ),
+    };
   });

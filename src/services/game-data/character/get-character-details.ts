@@ -5,14 +5,15 @@ import { toClientAttack, toClientBuff } from '../client-converters';
 import type { ClientCapability } from '../common-types';
 import { createFsStore } from '../hakushin-api/fs-store';
 
-import { GetClientCharacterDetailsInputSchema, Sequence } from './types';
+import { GetCharacterDetailsInputSchema, Sequence } from './types';
 import type {
   Character,
   CharacterCapabilityProperties,
-  GetClientCharacterDetailsInput,
+  GetCharacterDetailsInput,
+  StoreCharacter,
 } from './types';
 
-const characterStore = createFsStore<Character>();
+const characterStore = createFsStore<StoreCharacter>();
 
 export interface GetClientCharacterDetailsOutput {
   id: string;
@@ -24,17 +25,38 @@ export interface GetClientCharacterDetailsOutput {
 /**
  * Shared handler for fetching character details.
  */
-export const getCharacterDetailsHandler = async (id: string): Promise<Character> => {
+export const getCharacterDetailsHandler = async (
+  id: string,
+  sequence?: number,
+): Promise<StoreCharacter> => {
   const key = `character/parsed/${id}.json`;
 
   const characterData = await characterStore.get(key);
   if (!characterData) {
     throw new Error(`Failed to fetch character details for ID ${id}`);
   }
-  characterData.capabilities.attacks.forEach((attack) => {
-    attack.attribute = characterData.attribute;
-    attack.tags = [attack.attribute, ...attack.tags];
-  });
+
+  const isCapabilityActive = (item: CharacterCapabilityProperties): boolean => {
+    if (sequence === undefined) return true;
+    const unlockedAt = sequenceToNumber(item.unlockedAt);
+    const disabledAt = item.disabledAt ? sequenceToNumber(item.disabledAt) : Infinity;
+
+    return sequence >= unlockedAt && sequence < disabledAt;
+  };
+
+  characterData.capabilities.attacks = characterData.capabilities.attacks
+    .filter(isCapabilityActive)
+    .map((attack) => {
+      attack.attribute = characterData.attribute;
+      attack.tags = [attack.attribute, ...attack.tags];
+      return attack;
+    });
+
+  characterData.capabilities.modifiers =
+    characterData.capabilities.modifiers.filter(isCapabilityActive);
+
+  characterData.capabilities.permanentStats =
+    characterData.capabilities.permanentStats.filter(isCapabilityActive);
 
   return characterData;
 };
@@ -67,38 +89,28 @@ const sequenceToNumber = (sequence?: Sequence): number => {
   }
 };
 
-const isItemActive = (
-  item: CharacterCapabilityProperties,
-  currentSequence: number,
-): boolean => {
-  const unlockedAt = sequenceToNumber(item.unlockedAt);
-  const disabledAt = item.disabledAt ? sequenceToNumber(item.disabledAt) : Infinity;
-
-  return currentSequence >= unlockedAt && currentSequence < disabledAt;
-};
-
 export const getClientCharacterDetailsHandler = async (
-  input: GetClientCharacterDetailsInput,
+  input: GetCharacterDetailsInput,
 ): Promise<GetClientCharacterDetailsOutput> => {
   const { id, sequence } = input;
-  const character = await getCharacterDetailsHandler(id);
+  const character = await getCharacterDetailsHandler(id, sequence);
 
   return {
     id: character.id,
     name: character.name,
-    attacks: character.capabilities.attacks
-      .filter((attack) => isItemActive(attack, sequence))
-      .map((attack) => toClientAttack(attack, attack.parentName, attack.name)),
-    modifiers: character.capabilities.modifiers
-      .filter((modifier) => isItemActive(modifier, sequence))
-      .map((modifier) => toClientBuff(modifier, modifier.parentName, modifier.name)),
+    attacks: character.capabilities.attacks.map((attack) =>
+      toClientAttack(attack, attack.parentName, attack.name),
+    ),
+    modifiers: character.capabilities.modifiers.map((modifier) =>
+      toClientBuff(modifier, modifier.parentName, modifier.name),
+    ),
   };
 };
 
 export const getClientCharacterDetails = createServerFn({
   method: 'GET',
 })
-  .inputValidator(GetClientCharacterDetailsInputSchema)
+  .inputValidator(GetCharacterDetailsInputSchema)
   .handler(async ({ data }): Promise<GetClientCharacterDetailsOutput> => {
     return getClientCharacterDetailsHandler(data);
   });

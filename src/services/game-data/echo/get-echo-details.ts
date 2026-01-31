@@ -2,17 +2,16 @@ import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 
 import { toClientAttack, toClientBuff } from '../client-converters';
-import type { GetClientEntityDetailsOutput } from '../common-types';
 import { createFsStore } from '../hakushin-api/fs-store';
 
-import type { Echo } from './types';
+import type { Echo, GetClientEchoDetailsOutput, StoreEcho } from './types';
 
-const echoStore = createFsStore<Echo>();
+const echoStore = createFsStore<StoreEcho>();
 
 /**
  * Shared handler for fetching echo details.
  */
-export const getEchoDetailsHandler = async (id: string): Promise<Echo> => {
+export const getEchoDetailsHandler = async (id: string): Promise<StoreEcho> => {
   const key = `echo/parsed/${id}.json`;
 
   const echoData = await echoStore.get(key);
@@ -35,7 +34,7 @@ export const getClientEchoDetails = createServerFn({
   method: 'GET',
 })
   .inputValidator(z.string())
-  .handler(async ({ data: id }): Promise<GetClientEntityDetailsOutput> => {
+  .handler(async ({ data: id }): Promise<GetClientEchoDetailsOutput> => {
     const echo = await getEchoDetailsHandler(id);
     return {
       attacks: echo.capabilities.attacks.map((attack) =>

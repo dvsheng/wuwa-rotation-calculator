@@ -1,5 +1,4 @@
 import { createServerFn } from '@tanstack/react-start';
-import { z } from 'zod';
 
 import { toClientAttack, toClientBuff } from '../client-converters';
 import type { ClientCapability } from '../common-types';
@@ -48,7 +47,7 @@ export const getCharacterDetailsHandler = async (
     .filter(isCapabilityActive)
     .map((attack) => {
       attack.attribute = characterData.attribute;
-      attack.tags = [attack.attribute, ...attack.tags];
+      attack.tags = [attack.name, attack.attribute, ...attack.tags];
       return attack;
     });
 
@@ -60,14 +59,6 @@ export const getCharacterDetailsHandler = async (
 
   return characterData;
 };
-
-export const getCharacterDetails = createServerFn({
-  method: 'GET',
-})
-  .inputValidator(z.string())
-  .handler(async ({ data: id }): Promise<Character> => {
-    return getCharacterDetailsHandler(id);
-  });
 
 const sequenceToNumber = (sequence?: Sequence): number => {
   if (!sequence) return 0;
@@ -88,6 +79,14 @@ const sequenceToNumber = (sequence?: Sequence): number => {
       return 0;
   }
 };
+
+export const getCharacterDetails = createServerFn({
+  method: 'GET',
+})
+  .inputValidator(GetCharacterDetailsInputSchema)
+  .handler(async ({ data }): Promise<Character> => {
+    return getCharacterDetailsHandler(data.id, data.sequence);
+  });
 
 export const getClientCharacterDetailsHandler = async (
   input: GetCharacterDetailsInput,

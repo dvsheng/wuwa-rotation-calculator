@@ -3,8 +3,8 @@ import type { Capability } from '@/schemas/rotation';
 import { CapabilitySchema } from '@/schemas/rotation';
 import { useRotationStore } from '@/store/useRotationStore';
 
-import { BuffPalette } from './timeline/BuffPalette';
-import { BuffTimelineCanvas } from './timeline/BuffTimelineCanvas';
+import { BuffCanvas } from './BuffCanvas';
+import { BuffPalette } from './BuffPalette';
 
 export const BuffTimelineBuilder = () => {
   const addBuff = useRotationStore((state) => state.addBuff);
@@ -27,7 +27,7 @@ export const BuffTimelineBuilder = () => {
 
   return (
     <>
-      <BuffTimelineCanvas onDropBuff={handleDropBuff} />
+      <BuffCanvas onDropBuff={handleDropBuff} />
       <BuffPalette onClickBuff={handleAddBuff} onDragBuff={handleDragStart} />
     </>
   );

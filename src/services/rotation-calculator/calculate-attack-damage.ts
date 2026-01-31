@@ -1,4 +1,4 @@
-import { sum } from 'es-toolkit/math';
+import { clamp, sum } from 'es-toolkit/math';
 
 import type { CharacterDamageInstance, Enemy, Team } from '@/types';
 
@@ -39,7 +39,7 @@ export const calculateAttackDamage = (
     damageAmplify: getStatValue(character.stats.damageAmplification),
     defenseIgnore: getStatValue(character.stats.defenseIgnore),
     resistancePenetration: getStatValue(character.stats.resistancePenetration),
-    criticalRate: getStatValue(character.stats.criticalRate),
+    criticalRate: clamp(getStatValue(character.stats.criticalRate), 1),
     criticalDamage: getStatValue(character.stats.criticalDamage),
     damageBonusFinal: getStatValue(character.stats.finalDamageBonus),
   };

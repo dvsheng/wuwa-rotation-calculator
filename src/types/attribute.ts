@@ -5,6 +5,7 @@ export const Attribute = {
   ELECTRO: 'electro',
   HAVOC: 'havoc',
   SPECTRO: 'spectro',
+  PHYSICAL: 'physical',
 } as const;
 
 export type Attribute = (typeof Attribute)[keyof typeof Attribute];

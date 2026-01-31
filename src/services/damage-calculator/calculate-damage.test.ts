@@ -46,14 +46,17 @@ describe('calculateDamage', () => {
   it('applies damageMultiplierBonus correctly', () => {
     const props = {
       ...baseProps,
+      skill: { motionValue: 0.5 },
       character: {
         ...baseProps.character,
         damageMultiplierBonus: 0.2, // 20% multiplier bonus
       },
     };
-    // expected = 451.187 * 1.2 = 541.424
+    // baseDamage = 1000 * (0.5 + 0.2) + 0 = 700
+    // defense/res = 0.50131926 * 0.9 = 0.451187334
+    // expected = 700 * 0.451187334 = 315.8311338
     const result = calculateDamage(props);
-    expect(result).toBeCloseTo(541.42, 2);
+    expect(result).toBeCloseTo(315.83, 2);
   });
 
   it('applies damageBonusFinal correctly', () => {
@@ -72,6 +75,7 @@ describe('calculateDamage', () => {
   it('combines multiple multipliers correctly', () => {
     const props = {
       ...baseProps,
+      skill: { motionValue: 0.5 },
       character: {
         ...baseProps.character,
         damageBonus: 0.5,
@@ -79,12 +83,12 @@ describe('calculateDamage', () => {
         damageBonusFinal: 0.1,
       },
     };
-    // baseDamage = 1000
+    // baseDamage = 1000 * (0.5 + 0.2) = 700
     // multipliers:
-    // (1 + 0.5) * (1 + 0.2) * (1 + 0.1) = 1.5 * 1.2 * 1.1 = 1.8 * 1.1 = 1.98
+    // (1 + 0.5) * (1 + 0.1) = 1.5 * 1.1 = 1.65
     // defense/res = 0.50131926 * 0.9 = 0.451187334
-    // expected = 1000 * 1.98 * 0.451187334 = 893.35092
+    // expected = 700 * 1.65 * 0.451187334 = 521.12137
     const result = calculateDamage(props);
-    expect(result).toBeCloseTo(893.35, 2);
+    expect(result).toBeCloseTo(521.12, 2);
   });
 });

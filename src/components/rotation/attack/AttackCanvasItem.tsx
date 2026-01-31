@@ -3,13 +3,17 @@ import { useRotationStore } from '@/store/useRotationStore';
 
 import { CanvasItem } from '../../common/CanvasItem';
 
-interface RotationAttackProps {
+interface AttackCanvasItemProps {
   attack: AttackInstance;
   index: number;
   onRemove: (instanceId: string) => void;
 }
 
-export const RotationAttack = ({ attack, index, onRemove }: RotationAttackProps) => {
+export const AttackCanvasItem = ({
+  attack,
+  index,
+  onRemove,
+}: AttackCanvasItemProps) => {
   const updateAttackParameters = useRotationStore(
     (state) => state.updateAttackParameters,
   );

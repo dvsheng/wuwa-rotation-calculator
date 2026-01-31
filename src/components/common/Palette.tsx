@@ -8,7 +8,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Text } from '@/components/ui/typography';
 import { cn } from '@/lib/utils';
 
@@ -52,53 +52,32 @@ export function Palette<T>({
     </div>
   ) : (
     <ScrollArea className="w-full">
-      <div className="flex gap-0">
+      <div className="flex flex-col">
         {groups.map((group, groupIndex) => {
-          const hasSubgroupItems = group.subgroups.some((sg) => sg.items.length > 0);
-          if (!hasSubgroupItems) return null;
+          const allItems = group.subgroups.flatMap((sg) => sg.items);
+          if (allItems.length === 0) return null;
 
           return (
-            <Fragment key={group.name}>
-              <div
-                className={cn(
-                  'flex min-w-[200px] flex-1 flex-col',
-                  groupIndex > 0 && 'border-border border-l',
-                )}
-              >
-                <div className="border-b px-3 py-2">
-                  <Text className="text-primary text-xs font-bold tracking-wider uppercase">
-                    {group.name}
-                  </Text>
-                </div>
-                <div className="flex flex-col gap-2 p-3">
-                  {group.subgroups.map((subgroup) => {
-                    if (subgroup.items.length === 0) return null;
-
-                    return (
-                      <div key={subgroup.name} className="flex flex-col gap-1">
-                        <Text
-                          variant="small"
-                          className="text-muted-foreground text-[10px] font-semibold uppercase"
-                        >
-                          {subgroup.name}
-                        </Text>
-                        <div className="flex flex-wrap gap-1">
-                          {subgroup.items.map((item) => (
-                            <Fragment key={getItemKey(item)}>
-                              {renderItem(item)}
-                            </Fragment>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+            <div
+              key={group.name}
+              className={cn(
+                'flex items-start gap-3 px-3 py-2',
+                groupIndex > 0 && 'border-border border-t',
+              )}
+            >
+              <Text className="text-primary w-24 shrink-0 pt-0.5 text-[10px] font-bold tracking-wider uppercase">
+                {group.name}
+              </Text>
+              <div className="border-border h-auto self-stretch border-l" />
+              <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+                {allItems.map((item) => (
+                  <Fragment key={getItemKey(item)}>{renderItem(item)}</Fragment>
+                ))}
               </div>
-            </Fragment>
+            </div>
           );
         })}
       </div>
-      <ScrollBar orientation="horizontal" />
     </ScrollArea>
   );
 

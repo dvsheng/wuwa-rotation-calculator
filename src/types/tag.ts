@@ -16,6 +16,10 @@ export const Tag = {
   TUNE_RUPTURE: 'tuneRupture',
   /** Tag for Tune Strain specific multiplier increases. */
   TUNE_STRAIN: 'tuneStrain',
+  // Character-specific tags for Echoes
+  ROVER_AERO: 'Rover: Aero',
+  CARTETHYIA: 'Cartethyia',
+  AEMEATH: 'Aemeath',
 } as const;
 
 export type Tag = (typeof Tag)[keyof typeof Tag];

@@ -4,7 +4,8 @@ import type { CalculateDamageProps } from './types';
 
 export const calculateDamage = (props: CalculateDamageProps) => {
   const baseDamage =
-    props.character.abilityAttributeValue * props.skill.motionValue +
+    props.character.abilityAttributeValue *
+      (props.skill.motionValue + props.character.damageMultiplierBonus) +
     props.character.flatDamage;
   const damageBonusMultiplier = 1 + props.character.damageBonus;
   const damageAmplifyMultiplier = 1 + props.character.damageAmplify;
@@ -25,7 +26,6 @@ export const calculateDamage = (props: CalculateDamageProps) => {
     baseDamage *
     damageBonusMultiplier *
     damageAmplifyMultiplier *
-    (1 + props.character.damageMultiplierBonus) *
     (1 + props.character.damageBonusFinal) *
     criticalMultiplier *
     defenseMultiplier *

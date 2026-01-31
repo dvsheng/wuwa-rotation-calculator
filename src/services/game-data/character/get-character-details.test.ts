@@ -37,7 +37,11 @@ describe('getCharacterDetailsHandler', () => {
     const result = await getCharacterDetailsHandler('1204');
 
     expect(result.capabilities.attacks[0].attribute).toBe('Fusion');
-    expect(result.capabilities.attacks[0].tags).toEqual(['Fusion', 'Basic Attack']);
+    expect(result.capabilities.attacks[0].tags).toEqual([
+      'Basic Attack 1',
+      'Fusion',
+      'Basic Attack',
+    ]);
   });
 
   it('filters capabilities based on sequence', async () => {

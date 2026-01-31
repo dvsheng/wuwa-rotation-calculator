@@ -7,16 +7,13 @@ import { Text } from '@/components/ui/typography';
 import { useCanvasLayout } from '@/hooks/useCanvasLayout';
 import { useRotationStore } from '@/store/useRotationStore';
 
-import { EmptyRotationState } from './EmptyRotationState';
-import { RotationAttack } from './RotationAttack';
+import { AttackCanvasItem } from './AttackCanvasItem';
 
-export interface RotationAttackSequenceProps {
+export interface AttackCanvasProps {
   onDropAttack: (layout: Layout, item: LayoutItem | undefined, event: Event) => void;
 }
 
-export const RotationAttackSequence = ({
-  onDropAttack,
-}: RotationAttackSequenceProps) => {
+export const AttackCanvas = ({ onDropAttack }: AttackCanvasProps) => {
   const { layout: gridLayoutProps, containerRef } = useCanvasLayout();
   const attacks = useRotationStore((state) => state.attacks);
   const removeAttack = useRotationStore((state) => state.removeAttack);
@@ -70,12 +67,22 @@ export const RotationAttackSequence = ({
 
       <div className="canvas-content">
         <div className="canvas-drop-zone" ref={containerRef}>
-          {attacks.length === 0 && <EmptyRotationState />}
+          {attacks.length === 0 && (
+            <div className="canvas-empty-state">
+              <Text className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
+                Drag attacks here to build your rotation
+              </Text>
+            </div>
+          )}
 
           <GridLayout {...fullLayoutProps}>
             {attacks.map((attack, index) => (
               <div key={attack.instanceId} className="h-full w-full">
-                <RotationAttack attack={attack} index={index} onRemove={removeAttack} />
+                <AttackCanvasItem
+                  attack={attack}
+                  index={index}
+                  onRemove={removeAttack}
+                />
               </div>
             ))}
           </GridLayout>

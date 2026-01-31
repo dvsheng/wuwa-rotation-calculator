@@ -161,7 +161,7 @@ code {
   }
 
   .canvas-drop-zone {
-    @apply border-border/50 bg-muted/10 w-full rounded-lg border transition-colors;
+    @apply border-border/50 bg-muted/10 relative w-full rounded-lg border transition-colors;
   }
 
   .canvas-empty-state {

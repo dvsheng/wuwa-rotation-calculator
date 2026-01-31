@@ -6,13 +6,13 @@ import { Text } from '@/components/ui/typography';
 import { useCanvasLayout } from '@/hooks/useCanvasLayout';
 import { useRotationStore } from '@/store/useRotationStore';
 
-import { BuffTimelineCanvasItem } from './BuffTimelineCanvasItem';
+import { BuffTimelineCanvasItem } from './BuffCanvasItem';
 
-interface BuffTimelineCanvasProps {
+interface BuffCanvasProps {
   onDropBuff: (layout: Layout, item: LayoutItem | undefined, event: Event) => void;
 }
 
-export const BuffTimelineCanvas = ({ onDropBuff }: BuffTimelineCanvasProps) => {
+export const BuffCanvas = ({ onDropBuff }: BuffCanvasProps) => {
   const { layout: gridLayoutProps, containerRef } = useCanvasLayout();
   const buffs = useRotationStore((state) => state.buffs);
   const removeBuff = useRotationStore((state) => state.removeBuff);

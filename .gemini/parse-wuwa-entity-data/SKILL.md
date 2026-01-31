@@ -1,8 +1,3 @@
----
-name: parse_wuwa_entity_data
-description: Transforms raw Hakushin API JSON data for any Wuthering Waves entity (Character, Echo, or Weapon) into the project's internal structured format. Use this to handle data acquisition, pathing, and extraction logic for all game entities.
----
-
 # Skill: parse_wuwa_entity_data
 
 You are a specialized data transformation agent for Wuthering Waves. Your goal is to map raw JSON data from the Hakushin API into our project-specific TypeScript schemas. You must identify the entity type and apply the appropriate extraction logic defined below.
@@ -11,6 +6,7 @@ You are a specialized data transformation agent for Wuthering Waves. Your goal i
 
 ### Reference Schemas
 
+- **All:** `scripts/validate-game-data.test.ts`. Use this one as the primary source of truth for your parsed schemas
 - **Character:** `src/services/game-data/character/types.ts`
 - **Echo / Set:** `src/services/game-data/echo/types.ts`, `src/services/game-data/echo-set/types.ts`
 - **Weapon:** `src/services/game-data/weapon/types.ts`
@@ -43,11 +39,20 @@ You are a specialized data transformation agent for Wuthering Waves. Your goal i
 - **Attacks:**
   - **Source:** Iterate `SkillTrees`. Filter for nodes dealing numerical damage.
   - **Motion Values:** Use **Level 10** values (`RateLv[9]`). Divide by 10000.
-  - **Tags:** `basicAttack`, `resonanceSkill`, `resonanceLiberation`, `intro`, `outro`.
+  - **Tags:** Use primary category tags: `basicAttack`, `heavyAttack`, `resonanceSkill`, `resonanceLiberation`, `intro`, `outro`.
+  - **Restriction:** NEVER tag an attack with its own name. The service handles skill-specific logic automatically.
+  - **Damage Type Overrides:** If the description states damage is "considered as [Type] DMG", use `[Type]` for the primary tag (e.g., `basicAttack`) instead of the origin type (e.g., `resonanceSkill`), as these tags are mutually exclusive.
   - **Scaling:** Map `abilityAttribute` to `atk`, `def`, or `hp` (lowercase).
-- **Modifiers:**
-  - **Targeting:** `self` (default), `activeCharacter` (on-field only), or `team`.
-  - **Versioning:** Use `disabledAt` on base modifiers if a Sequence (S1-S6) replaces them.
+  - **Upgrades:** If a Sequence (S1-S6) replaces or significantly changes an attack's motion values, create multiple versions of the attack using `disabledAt` and `unlockedAt`.
+- **Modifiers & Permanent Stats:**
+  - **Targeting:** `self` (default), `activeCharacter` (on-field only), `team`, or `enemy`. Note: `defenseIgnore` is a character stat and should target `self`.
+  - **Tags:** ALWAYS tag with specific skill names (e.g., `["Art of Violence"]`) if the effect applies only to those skills (common for `damageMultiplierBonus`).
+  - **Versioning & Chaining:** Use `disabledAt` and `unlockedAt` to handle Sequence upgrades (S1-S6) that modify or replace existing effects.
+    - **Replacement Chaining:** If a sequence _upgrades_ an existing effect (e.g., S3 increases a percentage or adds a new stat to the same trigger), create a versioned chain. Example: Base effect (`disabledAt: "s3"`), S3 upgrade (`unlockedAt: "s3"`, `disabledAt: "s6"`), and S6 final version (`unlockedAt: "s6"`).
+    - **Cumulative Behavior:** Each version in the chain MUST contain the _full_ set of stats for that sequence level (the cumulative state), ensuring the rotation calculator sees the correct total values when that sequence is unlocked.
+    - **Additive Splitting:** Only split an effect into multiple active modifiers if the base effect is _always_ active (e.g., a passive) and the sequence adds a _conditional_ bonus (e.g., a temporary buff) that doesn't replace the passive part.
+  - **Stackable Buffs:** If a buff stacks (e.g., "up to 3 times"), use a `UserParameterizedNumber`. Use key `"0"` in `parameterConfigs` for the stack count, set `scale` to the per-stack value, and `maximum` to the max number of stacks.
+  - **Exclusions:** Omit modifiers that only restore flat energy or affect mechanics not tracked in stats (like hit counts, dodge refreshes, character-specific mechanics, healing).
 - **Stats:** Extract **Level 90** base stats from `Stats["6"]["90"]`.
 
 ### B. Echo Logic
@@ -78,5 +83,6 @@ You are a specialized data transformation agent for Wuthering Waves. Your goal i
 
 1.  **Verbatim Text:** `description` fields must be exact copies from the source JSON. Description should be an empty string if the raw data lacks a description.
 2.  **Strict Typing:** Do not invent fields. If it's not in the Type definition, do not include it.
-3.  **Validation:** Run `npm run validate-data` to ensure the generated JSON matches the schema.
-4.  **Error Flagging:** If raw data uses non-standard scaling or ambiguous phrasing, flag it to the user.
+3.  Validation: Run `npm run validate-data` to ensure the generated JSON matches the schema.
+4.  Error Flagging: If raw data uses non-standard scaling or ambiguous phrasing, flag it to the user.
+5.  **UUID Preservation:** When correcting an existing parsed file, NEVER regenerate the top-level `uuid` or the individual capability `id` fields. Always read the existing file first and map the existing UUIDs to the corresponding entities and capabilities in the new version. Only generate new UUIDs for entirely new capability items using the provided scripts.

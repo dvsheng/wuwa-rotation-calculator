@@ -14,7 +14,7 @@ export const useCanvasLayout = () => {
       cols: columnCount,
     },
     style: {
-      minHeight: 50,
+      minHeight: 100,
     },
     dropConfig: { enabled: true },
     dragConfig: { enabled: true },

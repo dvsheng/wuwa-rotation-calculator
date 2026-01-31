@@ -291,7 +291,9 @@ export const calculateRotation = async (
 ): Promise<RotationResult> => {
   // 1. Fetch all necessary game data in parallel
   const entityDetails = await Promise.all([
-    mapAsync(clientTeam, (c) => getCharacterDetails({ data: c.id })),
+    mapAsync(clientTeam, (c) =>
+      getCharacterDetails({ data: { id: c.id, sequence: c.sequence } }),
+    ),
     mapAsync(clientTeam, (c) => getEchoDetails({ data: c.primarySlotEcho.id })),
     mapAsync(clientTeam, (c) =>
       getWeaponDetails({ data: { id: c.weapon.id, refineLevel: c.weapon.refine } }),

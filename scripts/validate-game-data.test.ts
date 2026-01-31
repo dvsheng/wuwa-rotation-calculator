@@ -4,12 +4,21 @@ import path from 'node:path';
 import { describe, it } from 'vitest';
 import { z } from 'zod';
 
-import { Sequence } from '@/services/game-data/character/types';
-import { AbilityAttribute, CharacterStat, EnemyStat } from '@/types';
+import { OriginType, Sequence } from '@/services/game-data/character/types';
+import {
+  AbilityAttribute,
+  Attribute,
+  CharacterStat,
+  DamageType,
+  EnemyStat,
+  Tag,
+} from '@/types';
 
-// --- Shared Schemas ---
+// Valid stat tags: All Tag enum values (Attribute + DamageType + NegativeStatus + extras)
 
-const TagSchema = z.string();
+const BaseStatTagSchema = z.enum(Object.values(Tag));
+
+const BaseAttackStatTagSchema = z.enum(Object.values(Tag)).exclude(['all']);
 
 const LinearScalingParameterConfigSchema = z.object({
   scale: z.number(),
@@ -39,16 +48,6 @@ const ParameterizedNumberSchema = z.union([
   RotationRuntimeResolvableNumberSchema,
 ]);
 
-// New flattened stat structure
-const StatSchema = z.object({
-  stat: z.union([
-    z.enum(Object.values(CharacterStat)),
-    z.enum(Object.values(EnemyStat)),
-  ]),
-  value: ParameterizedNumberSchema,
-  tags: z.array(TagSchema),
-});
-
 const CapabilitySchema = z.object({
   id: z.string(),
   description: z.string(),
@@ -60,43 +59,139 @@ const MUTUALLY_EXCLUSIVE_TAGS = [
   'heavyAttack',
   'resonanceSkill',
   'resonanceLiberation',
+  'echo',
 ] as const;
 
-const AttackTagsSchema = z.array(TagSchema).refine(
-  (tags) => {
-    const exclusiveTagsPresent = tags.filter((tag) =>
-      MUTUALLY_EXCLUSIVE_TAGS.includes(tag as (typeof MUTUALLY_EXCLUSIVE_TAGS)[number]),
-    );
-    return exclusiveTagsPresent.length <= 1;
-  },
-  {
-    message: `Attack must have at most one of: ${MUTUALLY_EXCLUSIVE_TAGS.join(', ')}`,
-  },
+const ATTRIBUTE_TAGS = Object.values(Attribute);
+
+// --- Validation Rules ---
+
+const hasAtMostOneMutuallyExclusiveTag = (tags: Array<string>) => {
+  const count = tags.filter((tag) =>
+    MUTUALLY_EXCLUSIVE_TAGS.includes(tag as (typeof MUTUALLY_EXCLUSIVE_TAGS)[number]),
+  ).length;
+  return count <= 1;
+};
+const MUTUALLY_EXCLUSIVE_TAG_ERROR = {
+  message: `Attack must have at most one of: ${MUTUALLY_EXCLUSIVE_TAGS.join(', ')}`,
+};
+
+const hasExactlyOneAttributeTag = (tags: Array<string>) => {
+  const count = tags.filter((tag) => ATTRIBUTE_TAGS.includes(tag as Attribute)).length;
+  return count === 1;
+};
+const ATTRIBUTE_TAG_ERROR = {
+  message: `Non-character attack must have exactly one attribute tag: ${ATTRIBUTE_TAGS.join(', ')}`,
+};
+
+const doesNotHaveEchoTag = (tags: Array<string>) => !tags.includes(DamageType.ECHO);
+const ECHO_TAG_ERROR = {
+  message: 'Echo attacks must not have the "echo" tag (it is added by the service)',
+};
+
+const hasValidCharacterStatTags = (character: {
+  capabilities: {
+    attacks: Array<{ name: string }>;
+    modifiers: Array<{ modifiedStats: Array<{ tags: Array<string> }> }>;
+    permanentStats: Array<{ tags: Array<string> }>;
+  };
+}) => {
+  const attackNames = new Set(character.capabilities.attacks.map((a) => a.name));
+  const validStatTags = new Set(Object.values(Tag));
+  const isValidTag = (tag: string) =>
+    validStatTags.has(tag as Tag) || attackNames.has(tag);
+
+  for (const modifier of character.capabilities.modifiers) {
+    for (const stat of modifier.modifiedStats) {
+      if (!stat.tags.every(isValidTag)) return false;
+    }
+  }
+  for (const permanentStat of character.capabilities.permanentStats) {
+    if (!permanentStat.tags.every(isValidTag)) return false;
+  }
+  return true;
+};
+const CHARACTER_STAT_TAGS_ERROR = {
+  message:
+    'Modifier and PermanentStat tags must be valid Tag enum values or match an attack name',
+};
+
+// --- Attack Schemas ---
+
+// Attack tags for non-character entities (requires exactly one attribute tag)
+
+const MotionValuesSchema = z
+  .array(z.number().or(UserParameterizedNumberSchema))
+  .nonempty();
+
+const NonCharacterAttackTagsSchema = z
+  .array(BaseAttackStatTagSchema)
+  .refine(hasAtMostOneMutuallyExclusiveTag, MUTUALLY_EXCLUSIVE_TAG_ERROR)
+  .refine(hasExactlyOneAttributeTag, ATTRIBUTE_TAG_ERROR);
+
+const NonCharacterAttackSchema = CapabilitySchema.extend({
+  tags: NonCharacterAttackTagsSchema,
+  scalingStat: z.enum(Object.values(AbilityAttribute)),
+  motionValues: MotionValuesSchema,
+});
+
+// Echo attack tags (no 'echo' tag allowed - it's added by the service)
+const EchoAttackTagsSchema = NonCharacterAttackTagsSchema.refine(
+  doesNotHaveEchoTag,
+  ECHO_TAG_ERROR,
 );
 
-const AttackSchema = CapabilitySchema.extend({
-  tags: AttackTagsSchema,
+const EchoAttackSchema = CapabilitySchema.extend({
+  tags: EchoAttackTagsSchema,
   scalingStat: z.enum(Object.values(AbilityAttribute)),
-  motionValues: z.array(z.number().or(UserParameterizedNumberSchema)),
+  motionValues: MotionValuesSchema,
+});
+
+// Stat schema with strict Tag enum validation (for non-character entities)
+const StrictStatSchema = z.object({
+  stat: z.union([
+    z.enum(Object.values(CharacterStat)),
+    z.enum(Object.values(EnemyStat)),
+  ]),
+  value: ParameterizedNumberSchema,
+  tags: z.array(BaseStatTagSchema),
+});
+
+const StrictModifierSchema = CapabilitySchema.extend({
+  target: z.union([
+    z.enum(['team', 'enemy', 'activeCharacter', 'self']),
+    z.array(z.union([z.literal(1), z.literal(2), z.literal(3)])),
+  ]),
+  modifiedStats: z.array(StrictStatSchema).nonempty(),
+});
+
+const StrictPermanentStatSchema = CapabilitySchema.and(StrictStatSchema);
+
+const StrictCapabilitiesSchema = z.object({
+  attacks: z.array(NonCharacterAttackSchema),
+  modifiers: z.array(StrictModifierSchema),
+  permanentStats: z.array(StrictPermanentStatSchema),
+});
+
+// Stat schema with loose tags (for character entities, validated via refinement)
+const StatSchema = z.object({
+  stat: z.union([
+    z.enum(Object.values(CharacterStat)),
+    z.enum(Object.values(EnemyStat)),
+  ]),
+  value: ParameterizedNumberSchema,
+  tags: z.array(z.string()),
 });
 
 const ModifierSchema = CapabilitySchema.extend({
-  target: z
-    .union([
-      z.enum(['team', 'enemy', 'activeCharacter', 'self']),
-      z.array(z.union([z.literal(1), z.literal(2), z.literal(3)])),
-    ])
-    .optional(),
-  modifiedStats: z.array(StatSchema),
+  target: z.union([
+    z.enum(['team', 'enemy', 'activeCharacter', 'self']),
+    z.array(z.union([z.literal(1), z.literal(2), z.literal(3)])).nonempty(),
+  ]),
+  modifiedStats: z.array(StatSchema).nonempty(),
 });
 
 const PermanentStatSchema = CapabilitySchema.and(StatSchema);
-
-const CapabilitiesSchema = z.object({
-  attacks: z.array(AttackSchema),
-  modifiers: z.array(ModifierSchema),
-  permanentStats: z.array(PermanentStatSchema),
-});
 
 const BaseEntitySchema = z.object({
   id: z.string(),
@@ -106,36 +201,52 @@ const BaseEntitySchema = z.object({
 
 // --- Echo Schemas ---
 
+const EchoCapabilitiesSchema = z.object({
+  attacks: z.array(EchoAttackSchema),
+  modifiers: z.array(StrictModifierSchema),
+  permanentStats: z.array(StrictPermanentStatSchema),
+});
+
 const EchoSchema = BaseEntitySchema.extend({
   echoSetIds: z.array(z.string()),
-  capabilities: CapabilitiesSchema,
+  capabilities: EchoCapabilitiesSchema,
 });
 
 // --- Echo Set Schemas ---
 
 const EchoSetSchema = BaseEntitySchema.extend({
-  setEffects: z.partialRecord(z.enum(['2', '3', '5']), CapabilitiesSchema),
+  setEffects: z.partialRecord(z.enum(['2', '3', '5']), StrictCapabilitiesSchema),
 });
 
 // --- Weapon Schemas ---
 
 const WeaponSchema = BaseEntitySchema.extend({
-  capabilities: z.record(z.enum(['1', '2', '3', '4', '5']), CapabilitiesSchema),
+  capabilities: z.record(z.enum(['1', '2', '3', '4', '5']), StrictCapabilitiesSchema),
 });
 
 // --- Character Schemas ---
 
 const SequenceSchema = z.enum(Object.values(Sequence));
 
+const OriginTypeSchema = z.enum(Object.values(OriginType));
+
 const CharacterBaseItemSchema = z.object({
   name: z.string(),
   parentName: z.string(),
-  originType: z.string(),
+  originType: OriginTypeSchema,
   unlockedAt: SequenceSchema.optional(),
   disabledAt: SequenceSchema.optional(),
 });
 
-const CharacterAttackSchema = AttackSchema.and(CharacterBaseItemSchema);
+const CharacterAttackTagsSchema = z
+  .array(BaseAttackStatTagSchema.exclude(Object.values(Attribute)))
+  .refine(hasAtMostOneMutuallyExclusiveTag, MUTUALLY_EXCLUSIVE_TAG_ERROR);
+
+const CharacterAttackSchema = CapabilitySchema.extend({
+  tags: CharacterAttackTagsSchema,
+  scalingStat: z.enum(Object.values(AbilityAttribute)),
+  motionValues: MotionValuesSchema,
+}).and(CharacterBaseItemSchema);
 
 const CharacterModifierSchema = ModifierSchema.and(CharacterBaseItemSchema);
 
@@ -148,9 +259,9 @@ const CharacterCapabilitiesSchema = z.object({
 });
 
 const CharacterSchema = BaseEntitySchema.extend({
-  attribute: z.string(),
+  attribute: z.enum(Object.values(Attribute)),
   capabilities: CharacterCapabilitiesSchema,
-});
+}).refine(hasValidCharacterStatTags, CHARACTER_STAT_TAGS_ERROR);
 
 // --- Validation Tests ---
 

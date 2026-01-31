@@ -3,8 +3,8 @@ import type { Capability } from '@/schemas/rotation';
 import { CapabilitySchema } from '@/schemas/rotation';
 import { useRotationStore } from '@/store/useRotationStore';
 
-import { AttackPalette } from './step-list/AttackPalette';
-import { RotationAttackSequence } from './step-list/RotationAttackSequence';
+import { AttackCanvas } from './AttackCanvas';
+import { AttackPalette } from './AttackPalette';
 
 export const AttackSequenceBuilder = () => {
   const addAttack = useRotationStore((state) => state.addAttack);
@@ -23,7 +23,7 @@ export const AttackSequenceBuilder = () => {
   return (
     <>
       <AttackPalette onClickAttack={handleAddAttack} onDragAttack={handleDragAttack} />
-      <RotationAttackSequence onDropAttack={handleDropAttack} />
+      <AttackCanvas onDropAttack={handleDropAttack} />
     </>
   );
 };

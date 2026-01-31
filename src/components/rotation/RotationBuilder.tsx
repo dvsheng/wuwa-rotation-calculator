@@ -3,8 +3,8 @@ import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Row, Section } from '@/components/ui/layout';
 import { useRotationStore } from '@/store/useRotationStore';
 
-import { AttackSequenceBuilder } from './AttackSequenceBuilder';
-import { BuffTimelineBuilder } from './BuffTimelineBuilder';
+import { AttackSequenceBuilder } from './attack';
+import { BuffTimelineBuilder } from './buff';
 
 export const RotationBuilder = () => {
   const clearAll = useRotationStore((state) => state.clearAll);

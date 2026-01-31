@@ -11,6 +11,7 @@ export const EnemySchema = z.object({
     [Attribute.ELECTRO]: z.number(),
     [Attribute.HAVOC]: z.number(),
     [Attribute.SPECTRO]: z.number(),
+    [Attribute.PHYSICAL]: z.number(),
   }),
 });
 
@@ -25,5 +26,6 @@ export const initialEnemyData: Enemy = {
     [Attribute.ELECTRO]: 10,
     [Attribute.HAVOC]: 10,
     [Attribute.SPECTRO]: 10,
+    [Attribute.PHYSICAL]: 10,
   },
 };

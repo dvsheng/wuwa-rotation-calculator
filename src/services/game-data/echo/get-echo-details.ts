@@ -1,6 +1,8 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 
+import { DamageType } from '@/types';
+
 import { toClientAttack, toClientBuff } from '../client-converters';
 import { createFsStore } from '../hakushin-api/fs-store';
 
@@ -18,6 +20,10 @@ export const getEchoDetailsHandler = async (id: string): Promise<StoreEcho> => {
   if (!echoData) {
     throw new Error(`Failed to fetch echo details for ID ${id}`);
   }
+  echoData.capabilities.attacks = echoData.capabilities.attacks.map((attack) => ({
+    ...attack,
+    tags: [...attack.tags, DamageType.ECHO],
+  }));
 
   return echoData;
 };

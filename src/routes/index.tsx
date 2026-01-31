@@ -25,10 +25,10 @@ function App() {
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-7xl flex-1 p-6">
+        <main className="w-full flex-1 p-6">
           <Tabs defaultValue="team" className="w-full space-y-6">
             <div className="flex justify-center">
-              <TabsList className="grid w-full max-w-md grid-cols-3">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="team" className="flex items-center gap-2">
                   <User size={16} /> Team
                 </TabsTrigger>

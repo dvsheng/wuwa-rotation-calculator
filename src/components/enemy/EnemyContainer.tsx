@@ -33,7 +33,7 @@ export const EnemyContainer = () => {
         <Heading>Enemy Configuration</Heading>
       </div>
 
-      <Card className="max-w-2xl">
+      <Card className="w-full">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />

@@ -11,7 +11,6 @@ import { useTeamStore } from '@/store/useTeamStore';
 
 import { AttackSequenceBuilder } from './AttackSequenceBuilder';
 import { BuffTimelineBuilder } from './BuffTimelineBuilder';
-import { RotationSummary } from './RotationSummary';
 import { createSharedGridConfig } from './types';
 
 /**
@@ -23,8 +22,10 @@ export const RotationBuilder = () => {
   const rotationAttacks = useRotationStore((state) => state.attacks);
   const rotationBuffs = useRotationStore((state) => state.buffs);
   const clearAll = useRotationStore((state) => state.clearAll);
+
   // Measure container width for shared grid config
   const { width: containerWidth, containerRef } = useContainerWidth();
+
   // Fetch detailed data from service hooks
   const { attacks: availableAttacks, isLoading: isAttacksLoading } =
     useTeamAttacks(team);
@@ -39,7 +40,7 @@ export const RotationBuilder = () => {
     ...(availableBuffs.find((b) => b.id === buff.id) as Capability),
     ...buff,
   }));
-  const isLoading = isAttacksLoading || isBuffsLoading;
+
   const sharedGridConfig = createSharedGridConfig(
     enrichedAttacks.length,
     containerWidth - 32, // Account for padding
@@ -47,8 +48,6 @@ export const RotationBuilder = () => {
 
   return (
     <Section ref={containerRef} className="min-h-0 flex-1">
-      <RotationSummary enrichedAttacks={enrichedAttacks} isLoading={isLoading} />
-
       {/* Main Card */}
       <Card className="gap-0 overflow-hidden py-0">
         <CardHeader className="px-4 py-3">

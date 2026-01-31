@@ -1,4 +1,5 @@
 import { Play } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -12,8 +13,6 @@ import { RotationResultDisplay } from './RotationResultDisplay';
 interface RotationSummaryProps {
   enrichedAttacks: Array<AttackInstance>;
   isLoading?: boolean;
-  showResult: boolean;
-  onShowResultChange: (show: boolean) => void;
 }
 
 /**
@@ -22,10 +21,14 @@ interface RotationSummaryProps {
 export const RotationSummary = ({
   enrichedAttacks,
   isLoading: externalLoading,
-  showResult,
-  onShowResultChange,
 }: RotationSummaryProps) => {
-  const { data: result, refetch, isFetching } = useRotationCalculation();
+  const [showResult, setShowResult] = useState(false);
+  const {
+    data: result,
+    refetch,
+    isFetching,
+    isPlaceholderData,
+  } = useRotationCalculation();
   const rotationAttacks = useRotationStore((state) => state.attacks);
 
   const handleClick = async () => {
@@ -37,7 +40,7 @@ export const RotationSummary = ({
         });
         return;
       }
-      onShowResultChange(true);
+      setShowResult(true);
     } catch (err) {
       console.error('Calculation failed', err);
       toast.error('An unexpected error occurred', {
@@ -48,14 +51,6 @@ export const RotationSummary = ({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Result Display */}
-      {showResult && result && (
-        <div className="animate-in fade-in slide-in-from-top-4 duration-500">
-          <RotationResultDisplay result={result} attacks={enrichedAttacks} />
-        </div>
-      )}
-
-      {/* Calculate Button */}
       <Row className="justify-end">
         {rotationAttacks.length > 0 && (
           <Button
@@ -69,6 +64,15 @@ export const RotationSummary = ({
           </Button>
         )}
       </Row>
+      {showResult && result && (
+        <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+          <RotationResultDisplay
+            result={result}
+            attacks={enrichedAttacks}
+            isStale={isPlaceholderData}
+          />
+        </div>
+      )}
     </div>
   );
 };

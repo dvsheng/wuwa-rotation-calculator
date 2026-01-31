@@ -48,7 +48,6 @@ export const AttackSequenceBuilder = ({
 
   return (
     <>
-      {/* Attack Palette - Collapsible */}
       <Collapsible open={paletteOpen} onOpenChange={setPaletteOpen}>
         <CollapsibleTrigger asChild>
           <div className="hover:bg-accent/50 flex cursor-pointer items-center justify-between border-t border-b px-4 py-2 transition-colors">
@@ -76,8 +75,6 @@ export const AttackSequenceBuilder = ({
           )}
         </CollapsibleContent>
       </Collapsible>
-
-      {/* Attack Sequence */}
       <RotationAttackSequence
         attacks={enrichedAttacks}
         gridConfig={gridConfig}

@@ -1,5 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
+import { AlertCircle } from 'lucide-react';
 import { Fragment, useMemo } from 'react';
 
 import { Card } from '@/components/ui/card';
@@ -21,13 +22,14 @@ import type { RotationResult } from '@/services/rotation-calculator/types';
 interface RotationResultDisplayProps {
   result: RotationResult;
   attacks: Array<AttackInstance>;
+  isStale?: boolean;
 }
 
 type DamageDetail = RotationResult['damageDetails'][number];
 
 interface DamageRow {
   index: number;
-  attack: AttackInstance;
+  attack: AttackInstance | undefined;
   detail: DamageDetail;
   damage: number;
 }
@@ -38,6 +40,7 @@ interface DamageRow {
 export const RotationResultDisplay = ({
   result,
   attacks,
+  isStale,
 }: RotationResultDisplayProps) => {
   const data: Array<DamageRow> = useMemo(() => {
     return result.damageInstances.map((dmg, idx) => ({
@@ -64,7 +67,7 @@ export const RotationResultDisplay = ({
         header: 'Character',
         cell: ({ row }) => (
           <div className="text-primary/80 font-semibold">
-            {row.original.attack.characterName}
+            {row.original.attack?.characterName ?? 'Unknown'}
           </div>
         ),
       },
@@ -73,6 +76,8 @@ export const RotationResultDisplay = ({
         header: 'Attack',
         cell: ({ row }) => {
           const attack = row.original.attack;
+          if (!attack)
+            return <div className="text-muted-foreground italic">Removed</div>;
           return (
             <div className="max-w-[300px] truncate pr-2">
               <Text variant="small" className="font-medium">
@@ -108,6 +113,20 @@ export const RotationResultDisplay = ({
   return (
     <Card className="border-primary/20 bg-primary/5 p-6">
       <Stack spacing="lg">
+        {isStale && (
+          <div className="mb-2 flex items-center gap-3 rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-amber-500">
+            <AlertCircle className="h-5 w-5 shrink-0" />
+            <div className="flex-1">
+              <Text variant="small" className="font-semibold text-amber-500">
+                Outdated Result
+              </Text>
+              <Text variant="tiny" className="text-amber-500/80">
+                The rotation has changed. Recalculate to see updated damage.
+              </Text>
+            </div>
+          </div>
+        )}
+
         <div className="border-primary/10 flex items-center justify-between border-b pb-4">
           <div>
             <Text

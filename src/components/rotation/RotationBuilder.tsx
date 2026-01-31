@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useContainerWidth } from 'react-grid-layout';
 
 import { Button } from '@/components/ui/button';
@@ -24,7 +23,6 @@ export const RotationBuilder = () => {
   const rotationAttacks = useRotationStore((state) => state.attacks);
   const rotationBuffs = useRotationStore((state) => state.buffs);
   const clearAll = useRotationStore((state) => state.clearAll);
-  const [showResult, setShowResult] = useState(false);
   // Measure container width for shared grid config
   const { width: containerWidth, containerRef } = useContainerWidth();
   // Fetch detailed data from service hooks
@@ -49,12 +47,7 @@ export const RotationBuilder = () => {
 
   return (
     <Section ref={containerRef} className="min-h-0 flex-1">
-      <RotationSummary
-        enrichedAttacks={enrichedAttacks}
-        isLoading={isLoading}
-        showResult={showResult}
-        onShowResultChange={setShowResult}
-      />
+      <RotationSummary enrichedAttacks={enrichedAttacks} isLoading={isLoading} />
 
       {/* Main Card */}
       <Card className="gap-0 overflow-hidden py-0">
@@ -68,10 +61,7 @@ export const RotationBuilder = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    clearAll();
-                    setShowResult(false);
-                  }}
+                  onClick={() => clearAll()}
                   className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                 >
                   Clear All

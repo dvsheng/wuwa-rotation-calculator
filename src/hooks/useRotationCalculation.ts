@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
 import { RotationSchema } from '@/schemas/rotation';
 import { calculateRotation } from '@/services/rotation-calculator/rotation-bridge';
@@ -61,6 +61,7 @@ export const useRotationCalculation = () => {
 
       return calculateRotation(team, enemy, attacks, buffs);
     },
+    placeholderData: keepPreviousData,
     enabled: false,
     retry: false,
   });

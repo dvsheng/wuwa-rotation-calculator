@@ -1,6 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
-import { useMemo } from 'react';
+import { Fragment, useMemo } from 'react';
 
 import { Card } from '@/components/ui/card';
 import { Stack } from '@/components/ui/layout';
@@ -16,7 +16,6 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Heading, Text } from '@/components/ui/typography';
 import type { AttackInstance } from '@/schemas/rotation';
-import { getCalculateCharacterStatsForTag } from '@/services/rotation-calculator/calculate-stat-total';
 import type { RotationResult } from '@/services/rotation-calculator/types';
 
 interface RotationResultDisplayProps {
@@ -158,9 +157,7 @@ export const RotationResultDisplay = ({
               </TableHeader>
               <TableBody>
                 {table.getRowModel().rows.map((row) => {
-                  const { detail, attack } = row.original;
-                  const charName = attack.characterName;
-
+                  const { detail } = row.original;
                   return (
                     <Tooltip key={row.id}>
                       <TooltipTrigger asChild>
@@ -177,106 +174,108 @@ export const RotationResultDisplay = ({
                       </TooltipTrigger>
                       <TooltipContent
                         side="bottom"
-                        className="w-80 border-white/10 bg-zinc-900 p-0 text-zinc-100 shadow-xl"
+                        className="w-96 border-white/10 bg-zinc-900 p-0 text-zinc-100 shadow-xl"
                       >
-                        <div className="border-b border-white/10 bg-zinc-800/50 p-2">
+                        <div className="border-b border-white/10 bg-zinc-800/50 p-3">
                           <Text
                             variant="tiny"
                             className="font-bold tracking-wider text-zinc-300 uppercase"
                           >
-                            Calculation Details
+                            Calculation Snapshot
                           </Text>
-                        </div>
-                        <div className="space-y-3 p-3">
-                          <div className="rounded border border-white/5 bg-white/5 p-2">
-                            <Text
-                              variant="tiny"
-                              className="mb-1 font-bold text-blue-400 uppercase"
-                            >
-                              Character Stats
-                            </Text>
-                            <div className="grid grid-cols-2 gap-x-2 text-[10px]">
-                              {(() => {
-                                const char = detail.team.find((c) => c.id === charName);
-                                if (!char) return null;
-
-                                const calculateStats = getCalculateCharacterStatsForTag(
-                                  detail.instance.tags,
-                                );
-                                const stats = calculateStats(char.stats);
-
-                                return (
-                                  <>
-                                    <span className="text-zinc-400">
-                                      Attack (Total):
-                                    </span>
-                                    <span className="text-right font-medium text-zinc-100">
-                                      {Math.round(stats.atk)}
-                                    </span>
-                                    <span className="text-zinc-400">Crit Rate:</span>
-                                    <span className="text-right font-medium text-zinc-100">
-                                      {(stats.criticalRate * 100).toFixed(1)}%
-                                    </span>
-                                    <span className="text-zinc-400">Crit Damage:</span>
-                                    <span className="text-right font-medium text-zinc-100">
-                                      {(stats.criticalDamage * 100).toFixed(1)}%
-                                    </span>
-                                    <span className="text-zinc-400">Damage Bonus:</span>
-                                    <span className="text-right font-medium text-zinc-100">
-                                      {(stats.damageBonus * 100).toFixed(1)}%
-                                    </span>
-                                    <span className="text-zinc-400">
-                                      Defense Ignore:
-                                    </span>
-                                    <span className="text-right font-medium text-zinc-100">
-                                      {(stats.defenseIgnore * 100).toFixed(1)}%
-                                    </span>
-                                  </>
-                                );
-                              })()}
-                            </div>
-                          </div>
-                          <div className="rounded border border-white/5 bg-white/5 p-2">
-                            <Text
-                              variant="tiny"
-                              className="mb-1 font-bold text-blue-400 uppercase"
-                            >
-                              Instance Stats
-                            </Text>
-                            <div className="grid grid-cols-2 gap-x-2 text-[10px]">
-                              <span className="text-zinc-400">Scaling:</span>
-                              <span className="text-right font-medium text-zinc-100 uppercase">
-                                {detail.instance.scalingStat}
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            <span className="rounded bg-zinc-700/50 px-1.5 py-0.5 text-[10px] font-medium text-blue-300 uppercase">
+                              {detail.instance.attribute}
+                            </span>
+                            {detail.instance.tags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="rounded bg-zinc-700/50 px-1.5 py-0.5 text-[10px] text-zinc-400"
+                              >
+                                {tag}
                               </span>
-                              <span className="text-zinc-400">Attribute:</span>
-                              <span className="text-right font-medium text-zinc-100 uppercase">
-                                {detail.instance.attribute}
-                              </span>
-                              <span className="text-zinc-400">MV:</span>
-                              <span className="truncate text-right font-medium text-zinc-100">
-                                {detail.instance.motionValues.join(', ')}
-                              </span>
-                              <span className="text-zinc-400">Tags:</span>
-                              <span className="truncate text-right font-medium text-zinc-100">
-                                {detail.instance.tags.join(', ')}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="rounded border border-white/5 bg-white/5 p-2">
-                            <Text
-                              variant="tiny"
-                              className="mb-1 font-bold text-blue-400 uppercase"
-                            >
-                              Enemy Stats
-                            </Text>
-                            <div className="grid grid-cols-2 gap-x-2 text-[10px]">
-                              <span className="text-zinc-400">Level:</span>
-                              <span className="text-right font-medium text-zinc-100">
-                                {detail.enemy.level}
-                              </span>
-                            </div>
+                            ))}
                           </div>
                         </div>
+
+                        <ScrollArea className="max-h-[500px] p-3">
+                          <div className="space-y-4">
+                            {/* Skill Stats */}
+                            <div className="space-y-2">
+                              <Text
+                                variant="tiny"
+                                className="font-bold text-amber-500 uppercase"
+                              >
+                                Skill
+                              </Text>
+                              <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px]">
+                                <span className="text-zinc-400">Motion Value</span>
+                                <span className="text-right font-mono font-medium text-zinc-100">
+                                  {(
+                                    100 * detail.resolvedStats.skill.motionValue
+                                  ).toFixed(2)}
+                                  %
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Character Stats */}
+                            <div className="space-y-2">
+                              <Text
+                                variant="tiny"
+                                className="font-bold text-blue-400 uppercase"
+                              >
+                                Character Stats
+                              </Text>
+                              <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px]">
+                                {Object.entries(detail.resolvedStats.character).map(
+                                  ([key, value]) => (
+                                    <Fragment key={key}>
+                                      <span className="text-zinc-400 capitalize">
+                                        {key.replace(/([A-Z])/g, ' $1').trim()}
+                                      </span>
+                                      <span className="text-right font-mono font-medium text-zinc-100">
+                                        {[
+                                          'level',
+                                          'abilityAttributeValue',
+                                          'flatDamage',
+                                        ].includes(key)
+                                          ? Math.round(value).toLocaleString()
+                                          : `${(value * 100).toFixed(1)}%`}
+                                      </span>
+                                    </Fragment>
+                                  ),
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Enemy Stats */}
+                            <div className="space-y-2">
+                              <Text
+                                variant="tiny"
+                                className="font-bold text-red-400 uppercase"
+                              >
+                                Enemy Stats
+                              </Text>
+                              <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px]">
+                                {Object.entries(detail.resolvedStats.enemy).map(
+                                  ([key, value]) => (
+                                    <Fragment key={key}>
+                                      <span className="text-zinc-400 capitalize">
+                                        {key.replace(/([A-Z])/g, ' $1').trim()}
+                                      </span>
+                                      <span className="text-right font-mono font-medium text-zinc-100">
+                                        {key === 'level'
+                                          ? Math.round(value).toLocaleString()
+                                          : `${(value * 100).toFixed(1)}%`}
+                                      </span>
+                                    </Fragment>
+                                  ),
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </ScrollArea>
                       </TooltipContent>
                     </Tooltip>
                   );

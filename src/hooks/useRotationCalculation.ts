@@ -59,7 +59,14 @@ export const useRotationCalculation = () => {
         throw new Error(errorMessage);
       }
 
-      return calculateRotation(team, enemy, attacks, buffs);
+      const result = await calculateRotation(team, enemy, attacks, buffs);
+      return {
+        ...result,
+        damageDetails: result.damageDetails.map((detail, index) => ({
+          ...detail,
+          attack: attacks[index],
+        })),
+      };
     },
     placeholderData: keepPreviousData,
     enabled: false,

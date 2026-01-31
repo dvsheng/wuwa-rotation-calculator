@@ -5,23 +5,14 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Row } from '@/components/ui/layout';
 import { useRotationCalculation } from '@/hooks/useRotationCalculation';
-import type { AttackInstance } from '@/schemas/rotation';
 import { useRotationStore } from '@/store/useRotationStore';
 
 import { RotationResultDisplay } from './RotationResultDisplay';
 
-interface RotationSummaryProps {
-  enrichedAttacks: Array<AttackInstance>;
-  isLoading?: boolean;
-}
-
 /**
  * Handles rotation calculation logic and displays the result and controls.
  */
-export const RotationSummary = ({
-  enrichedAttacks,
-  isLoading: externalLoading,
-}: RotationSummaryProps) => {
+export const RotationSummary = () => {
   const [showResult, setShowResult] = useState(false);
   const {
     data: result,
@@ -29,7 +20,9 @@ export const RotationSummary = ({
     isFetching,
     isPlaceholderData,
   } = useRotationCalculation();
-  const rotationAttacks = useRotationStore((state) => state.attacks);
+  const isCalculateButtonVisible = useRotationStore(
+    (state) => state.attacks.length > 0,
+  );
 
   const handleClick = async () => {
     try {
@@ -52,11 +45,11 @@ export const RotationSummary = ({
   return (
     <div className="flex flex-col gap-4">
       <Row className="justify-end">
-        {rotationAttacks.length > 0 && (
+        {isCalculateButtonVisible && (
           <Button
             size="sm"
             onClick={handleClick}
-            disabled={isFetching || externalLoading}
+            disabled={isFetching}
             className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20 font-bold shadow-lg"
           >
             <Play className="mr-2 h-4 w-4 fill-current" />
@@ -66,11 +59,7 @@ export const RotationSummary = ({
       </Row>
       {showResult && result && (
         <div className="animate-in fade-in slide-in-from-top-4 duration-500">
-          <RotationResultDisplay
-            result={result}
-            attacks={enrichedAttacks}
-            isStale={isPlaceholderData}
-          />
+          <RotationResultDisplay result={result} isStale={isPlaceholderData} />
         </div>
       )}
     </div>

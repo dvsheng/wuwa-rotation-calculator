@@ -16,12 +16,12 @@ import {
 } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Heading, Text } from '@/components/ui/typography';
+import type { useRotationCalculation } from '@/hooks/useRotationCalculation';
 import type { AttackInstance } from '@/schemas/rotation';
 import type { RotationResult } from '@/services/rotation-calculator/types';
 
 interface RotationResultDisplayProps {
-  result: RotationResult;
-  attacks: Array<AttackInstance>;
+  result: NonNullable<ReturnType<typeof useRotationCalculation>['data']>;
   isStale?: boolean;
 }
 
@@ -39,17 +39,16 @@ interface DamageRow {
  */
 export const RotationResultDisplay = ({
   result,
-  attacks,
   isStale,
 }: RotationResultDisplayProps) => {
   const data: Array<DamageRow> = useMemo(() => {
     return result.damageInstances.map((dmg, idx) => ({
       index: idx,
-      attack: attacks[idx],
+      attack: result.damageDetails[idx].attack,
       detail: result.damageDetails[idx],
       damage: dmg,
     }));
-  }, [result, attacks]);
+  }, [result]);
 
   const columns = useMemo<Array<ColumnDef<DamageRow>>>(
     () => [
@@ -102,7 +101,6 @@ export const RotationResultDisplay = ({
     ],
     [],
   );
-
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
@@ -147,7 +145,9 @@ export const RotationResultDisplay = ({
               DPS (approx)
             </Text>
             <Heading level={2} className="text-2xl">
-              {Math.round(result.totalDamage / (attacks.length || 1)).toLocaleString()}
+              {Math.round(
+                result.totalDamage / (result.damageDetails.length || 1),
+              ).toLocaleString()}
             </Heading>
           </div>
         </div>

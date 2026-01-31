@@ -58,12 +58,7 @@ export const applyModifiers = (
 ): [Team, Enemy] => {
   return produce([team, enemy], ([draftTeam, draftEnemy]) => {
     modifiers.forEach((modifier) => {
-      applyModifierToTeamAndEnemy(
-        draftTeam,
-        draftEnemy,
-        modifier as any,
-        activeCharacterName,
-      );
+      applyModifierToTeamAndEnemy(draftTeam, draftEnemy, modifier, activeCharacterName);
     });
   });
 };

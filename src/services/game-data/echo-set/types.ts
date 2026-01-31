@@ -16,11 +16,3 @@ export const GetEchoSetDetailsInputSchema = z.object({
 });
 
 export type GetEchoSetDetailsInput = z.infer<typeof GetEchoSetDetailsInputSchema>;
-
-/**
- * Output for getEchoSetDetails - returns the echo set with combined capabilities
- * for all set effects where requirement <= input requirement
- */
-export interface GetEchoSetDetailsOutput extends BaseEntity {
-  capabilities: Capabilities;
-}

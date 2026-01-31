@@ -21,11 +21,12 @@ export const calculateDamage = (props: CalculateDamageProps) => {
     resistanceReduction: props.enemy.resistanceReduction,
     resistancePenetration: props.character.resistancePenetration,
   });
-  const totalDamage = baseDamage;
-  damageBonusMultiplier *
+  const totalDamage =
+    baseDamage *
+    damageBonusMultiplier *
     damageAmplifyMultiplier *
-    props.character.damageMultiplierBonus *
-    props.character.damageBonusFinal *
+    (1 + props.character.damageMultiplierBonus) *
+    (1 + props.character.damageBonusFinal) *
     criticalMultiplier *
     defenseMultiplier *
     resistanceMultiplier;

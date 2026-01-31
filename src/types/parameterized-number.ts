@@ -43,14 +43,6 @@ export type UserParameterizedNumber = LinearParameterizedNumber<'0' | '1' | '2'>
 export const isUserParameterizedNumber = (
   val: unknown,
 ): val is UserParameterizedNumber => {
-  console.log(
-    'determining',
-    val,
-    typeof val === 'object' &&
-      val !== null &&
-      'parameterConfigs' in val &&
-      !('resolveWith' in val),
-  );
   return (
     typeof val === 'object' &&
     val !== null &&

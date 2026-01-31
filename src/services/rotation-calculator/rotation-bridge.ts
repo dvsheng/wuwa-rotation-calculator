@@ -1,4 +1,4 @@
-import { compact } from 'es-toolkit/array';
+import { compact, keyBy, mapAsync } from 'es-toolkit/array';
 import { cloneDeep, mergeWith } from 'es-toolkit/object';
 
 import { EchoMainStatOption } from '@/schemas/echo';
@@ -11,21 +11,25 @@ import type { Enemy as ClientEnemy } from '@/schemas/enemy';
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import type { Team as ClientTeam } from '@/schemas/team';
 import { getCharacterDetails } from '@/services/game-data/character/get-character-details';
-import type { Attack as ServerAttack, Stat } from '@/services/game-data/common-types';
+import type {
+  Attack,
+  BaseCapability,
+  Modifier as GameDataModifier,
+  Stat,
+} from '@/services/game-data/common-types';
 import { getEchoDetails } from '@/services/game-data/echo/get-echo-details';
+import { getEchoSetDetails } from '@/services/game-data/echo-set/get-echo-set-details';
 import { getWeaponDetails } from '@/services/game-data/weapon/get-weapon-details';
 import { CharacterStat, Tag, isUserParameterizedNumber } from '@/types';
 import type {
+  CharacterDamageInstance,
   CharacterStats,
-  Enemy,
-  EnemyStats,
   Integer,
-  Modifier,
+  Modifier as RotationModifier,
   Team,
+  UserParameterizedNumber,
 } from '@/types';
 import { calculateParameterizedNumberValue } from '@/utils/math-utils';
-
-import { getEchoSetDetails } from '../game-data/echo-set/get-echo-set-details';
 
 import { calculateRotationDamage } from './calculate-rotation-damage';
 import type { RotationResult } from './types';
@@ -200,6 +204,82 @@ const ECHO_PRIMARY_STAT_BY_COST_BY_STAT: Record<
   },
 };
 
+const enrichWith = <TCapability extends BaseCapability>(store: Array<TCapability>) => {
+  const map = keyBy(store, (s) => s.id);
+  return <T extends { id: string }>(base: T) => {
+    return {
+      ...base,
+      ...map[base.id],
+    };
+  };
+};
+
+const resolveUserParameterizedNumber = <TNumber>(
+  number: TNumber | UserParameterizedNumber,
+  parameters: Array<TNumber>,
+) => {
+  if (isUserParameterizedNumber(number)) {
+    console.log(number);
+    return calculateParameterizedNumberValue(
+      number,
+      Object.fromEntries(parameters.map((value, index) => [String(index), value])),
+    );
+  }
+  return number;
+};
+
+const resolveUserParameterizedAttack = (attack: AttackInstance & Attack) => {
+  const parameterValues = compact(attack.parameters?.map((p) => p.value) ?? []);
+  return {
+    ...attack,
+    motionValues: attack.motionValues.map((mv) =>
+      resolveUserParameterizedNumber(mv, parameterValues),
+    ),
+  };
+};
+
+const resolveModifierUserParameters = (
+  modifier: ModifierInstance & GameDataModifier,
+) => {
+  const parameterValues = compact(modifier.parameters?.map((p) => p.value) ?? []);
+  const modifiedStats = modifier.modifiedStats.map((stat) => ({
+    ...stat,
+    value: resolveUserParameterizedNumber(stat.value, parameterValues),
+  }));
+  return {
+    ...modifier,
+    modifiedStats,
+  };
+};
+
+const toRotationModifier = (
+  modifier: ModifierInstance & GameDataModifier,
+): RotationModifier => {
+  // TODO: Fix unsafe cast
+  return {
+    target: modifier.target,
+    modifiedStats: Object.groupBy(modifier.modifiedStats, (_stat) => _stat.stat),
+  } as RotationModifier;
+};
+
+const toRotationDamageInstance = (
+  instance: AttackInstance & Attack & { modifiers: Array<RotationModifier> },
+): CharacterDamageInstance => {
+  return {
+    scalingStat: instance.scalingStat,
+    tags: instance.tags,
+    motionValues: instance.motionValues as Array<number>,
+    originCharacterName: instance.characterId,
+  };
+};
+
+const shouldModifierApplyToAttack = (
+  attackIndex: number,
+  modifier: ModifierInstance,
+) => {
+  return attackIndex >= modifier.x && attackIndex < modifier.x + modifier.w;
+};
+
 /**
  * Bridge service to connect frontend store data to the rotation calculator.
  */
@@ -210,59 +290,33 @@ export const calculateRotation = async (
   buffs: Array<ModifierInstance>,
 ): Promise<RotationResult> => {
   // 1. Fetch all necessary game data in parallel
-  const [characterDetails, weaponDetails, primaryEchoDetails, echoSetDetails] =
-    await Promise.all([
-      Promise.all(clientTeam.map((c) => getCharacterDetails({ data: c.id }))),
-      Promise.all(
-        clientTeam.map((c) =>
-          getWeaponDetails({
-            data: { id: c.weapon.id, refineLevel: c.weapon.refine },
-          }),
-        ),
-      ),
-      Promise.all(
-        clientTeam.map((c) => getEchoDetails({ data: c.primarySlotEcho.id })),
-      ),
-      Promise.all(
-        clientTeam.map((c) =>
-          Promise.all(
-            c.echoSets.map((set) =>
-              getEchoSetDetails({ data: { id: set.id, requirement: set.requirement } }),
-            ),
-          ),
-        ),
-      ),
-    ]);
-
-  const modifierDetails = [
-    ...characterDetails.flatMap((char) => char.capabilities.modifiers),
-    ...weaponDetails.flatMap((weapon) => weapon.capabilities.modifiers),
-    ...echoSetDetails.flatMap((sets) =>
-      sets.flatMap((set) => set.capabilities.modifiers),
+  const entityDetails = await Promise.all([
+    mapAsync(clientTeam, (c) => getCharacterDetails({ data: c.id })),
+    mapAsync(clientTeam, (c) => getEchoDetails({ data: c.primarySlotEcho.id })),
+    mapAsync(clientTeam, (c) =>
+      getWeaponDetails({ data: { id: c.weapon.id, refineLevel: c.weapon.refine } }),
     ),
-    ...primaryEchoDetails.flatMap((echo) => echo.capabilities.modifiers),
-  ];
-
-  const attackDetails = [
-    ...characterDetails.flatMap((char) => char.capabilities.attacks),
-    ...weaponDetails.flatMap((weapon) => weapon.capabilities.attacks),
-    ...echoSetDetails.flatMap((sets) =>
-      sets.flatMap((set) => set.capabilities.attacks),
+    mapAsync(
+      clientTeam.flatMap((c) => c.echoSets),
+      (set) =>
+        getEchoSetDetails({ data: { id: set.id, requirement: set.requirement } }),
     ),
-    ...primaryEchoDetails.flatMap((echo) => echo.capabilities.attacks),
-  ];
+  ]);
+  const modifierDetails = entityDetails.flatMap((entity) =>
+    entity.flatMap((e) => e.capabilities.modifiers),
+  );
+  const attackDetails = entityDetails.flatMap((entity) =>
+    entity.flatMap((e) => e.capabilities.attacks),
+  );
+  const enrichAttackWithDetails = enrichWith(attackDetails);
+  const enrichModifierWithDetails = enrichWith(modifierDetails);
 
   // 2. Map Client Team to Server Team
   const serverTeam = clientTeam.map((clientChar, charIndex) => {
     // 2a. Gather Permanent Stats (Flat Array)
-    const permanentStats = [
-      ...characterDetails[charIndex].capabilities.permanentStats.map(
-        ({ name, originType, parentName, ...stat }) => stat,
-      ),
-      ...weaponDetails[charIndex].capabilities.permanentStats,
-      ...primaryEchoDetails[charIndex].capabilities.permanentStats,
-      ...echoSetDetails[charIndex].flatMap((set) => set.capabilities.permanentStats),
-    ];
+    const permanentStats = entityDetails.flatMap(
+      (entity) => entity[charIndex].capabilities.permanentStats,
+    );
 
     // 2b. Gather Echo Stats (Flat Array)
     const echoStats = clientChar.echoStats.flatMap((echo) => {
@@ -305,7 +359,7 @@ export const calculateRotation = async (
   }) as Team;
 
   // 3. Map Client Enemy to Server Enemy
-  const serverEnemy: Enemy = {
+  const serverEnemy = {
     level: clientEnemy.level as Integer,
     stats: {
       baseResistance: Object.entries(clientEnemy.resistances).map(([attr, val]) => ({
@@ -320,72 +374,27 @@ export const calculateRotation = async (
       havocBane: [],
       aeroErosion: [],
       electroFlare: [],
-    } as EnemyStats,
+    },
   };
 
   // 4. Map Attacks and active Buffs to Damage Instances
   const damageInstances = attacks
-    .map(
-      (attack) =>
-        ({
-          ...attack,
-          ...attackDetails.find((attackDetail) => attackDetail.id === attack.id),
-          parameterValues: compact(attack.parameters?.map((p) => p.value) ?? []),
-        }) as ServerAttack & AttackInstance & { parameterValues: Array<number> },
-    )
-    .map((attack) => ({
-      ...attack,
-      motionValues: attack.motionValues.map((mv) =>
-        isUserParameterizedNumber(mv)
-          ? calculateParameterizedNumberValue(
-              mv,
-              Object.fromEntries(
-                attack.parameterValues.map((value, index) => [String(index), value]),
-              ),
-            )
-          : mv,
-      ),
-    }))
+    .map(enrichAttackWithDetails)
+    .map((attack) => {
+      console.log(attack);
+      return attack;
+    })
+    .map(resolveUserParameterizedAttack)
     .map((attack, index) => ({
       ...attack,
       modifiers: buffs
-        .filter((buff) => index >= buff.x && index < buff.x + buff.w)
-        .map((buff) => {
-          const modifier = modifierDetails.find((mod) => mod.id === buff.id);
-          if (!modifier) return undefined;
-          return { ...buff, ...modifier };
-        })
-        .filter((modifier) => modifier !== undefined)
-        .map((modifier) => ({
-          ...modifier,
-          modifiedStats: Object.groupBy(
-            modifier.modifiedStats.map(({ value, ...rest }) => ({
-              ...rest,
-              // TODO: clean this up
-              value: isUserParameterizedNumber(value)
-                ? calculateParameterizedNumberValue(
-                    value,
-                    Object.fromEntries(
-                      (modifier.parameters ?? []).map((parameter, idx) => [
-                        String(idx),
-                        parameter.value,
-                      ]),
-                    ),
-                  )
-                : value,
-            })),
-            (stat) => stat.stat,
-          ),
-        })) as Array<Modifier>,
+        .filter((modifier) => shouldModifierApplyToAttack(index, modifier))
+        .map(enrichModifierWithDetails)
+        .map(resolveModifierUserParameters)
+        .map(toRotationModifier),
     }))
     .map((instance) => ({
-      instance: {
-        scalingStat: instance.scalingStat,
-        tags: instance.tags,
-        motionValues: instance.motionValues,
-        originCharacterName: instance.characterId,
-        attribute: instance.attribute,
-      },
+      instance: toRotationDamageInstance(instance),
       modifiers: instance.modifiers,
     }));
 
@@ -395,6 +404,9 @@ export const calculateRotation = async (
     duration: 25,
     damageInstances,
   });
-  console.log(JSON.stringify(result, null, 2));
+  console.log(
+    JSON.stringify(result.damageDetails[0].resolvedStats, null, 2),
+    result.damageInstances[0],
+  );
   return result;
 };

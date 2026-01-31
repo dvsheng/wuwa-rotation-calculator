@@ -33,6 +33,7 @@ export const getCharacterDetailsHandler = async (id: string): Promise<Character>
   }
   characterData.capabilities.attacks.forEach((attack) => {
     attack.attribute = characterData.attribute;
+    attack.tags = [attack.attribute, ...attack.tags];
   });
 
   return characterData;

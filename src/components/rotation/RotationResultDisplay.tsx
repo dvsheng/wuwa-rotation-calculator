@@ -203,9 +203,6 @@ export const RotationResultDisplay = ({
                             Calculation Snapshot
                           </Text>
                           <div className="mt-2 flex flex-wrap gap-2">
-                            <span className="rounded bg-zinc-700/50 px-1.5 py-0.5 text-[10px] font-medium text-blue-300 uppercase">
-                              {detail.instance.attribute}
-                            </span>
                             {detail.instance.tags.map((tag) => (
                               <span
                                 key={tag}

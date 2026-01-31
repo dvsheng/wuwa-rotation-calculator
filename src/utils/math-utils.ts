@@ -1,11 +1,17 @@
+import { clamp } from 'es-toolkit/math';
+
 import type { LinearParameterizedNumber, LinearScalingParameterConfig } from '@/types';
 
 export const calculateParameterizedNumberValue = <T extends string>(
   parameterizedNumber: LinearParameterizedNumber<T>,
   parameters: Partial<Record<T, number>>,
 ): number => {
-  console.log('resolving');
-  const { parameterConfigs, offset = 0, minimum, maximum } = parameterizedNumber;
+  const {
+    parameterConfigs,
+    offset = 0,
+    minimum = 0,
+    maximum = Infinity,
+  } = parameterizedNumber;
 
   const total = (
     Object.entries(parameterConfigs) as Array<[T, LinearScalingParameterConfig]>
@@ -14,13 +20,11 @@ export const calculateParameterizedNumberValue = <T extends string>(
     const parameterMinimum = parameterConfig.minimum ?? 0;
     const parameterMaximum = parameterConfig.maximum ?? Infinity;
     const statValue = Math.max(
-      Math.min(parameters[key], parameterMaximum) - parameterMinimum,
+      clamp(parameters[key], parameterMaximum) - parameterMinimum,
       0,
     );
     const parameterContribution = parameterConfig.scale * statValue;
     return sum + parameterContribution;
   }, offset);
-  if (minimum !== undefined && total < minimum) return minimum;
-  if (maximum !== undefined && total > maximum) return maximum;
-  return total;
+  return clamp(total, minimum, maximum);
 };

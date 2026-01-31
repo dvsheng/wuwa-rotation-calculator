@@ -1,5 +1,3 @@
-import type { Attribute } from './attribute';
-
 /**
  * Defines the base stat used for damage scaling.
  */
@@ -46,8 +44,6 @@ export type DamageType = (typeof DamageType)[keyof typeof DamageType];
 export interface CharacterDamageInstance {
   /** Name of the character that performed the attack. */
   originCharacterName: string;
-  /** Elemental attribute of the damage (e.g., Fusion, Glacio). */
-  attribute: Attribute;
   /** The primary stat this damage scales with. */
   scalingStat: AbilityAttribute;
   /**

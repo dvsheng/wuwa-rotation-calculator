@@ -1,14 +1,16 @@
 import { createServerFn } from '@tanstack/react-start';
 
 import { toClientAttack, toClientBuff } from '../client-converters';
-import type { GetClientEntityDetailsOutput } from '../common-types';
+import type {
+  GetClientEntityDetailsOutput,
+  GetEntityDetailsOutput,
+} from '../common-types';
 import { createFsStore } from '../hakushin-api/fs-store';
 
 import { GetEchoSetDetailsInputSchema, SetEffectRequirement } from './types';
 import type {
   EchoSet,
   GetEchoSetDetailsInput,
-  GetEchoSetDetailsOutput,
   SetEffectRequirement as SetEffectRequirementType,
 } from './types';
 
@@ -34,8 +36,8 @@ const getEchoSetDataHandler = async (id: string): Promise<EchoSet> => {
 const getApplicableRequirements = (
   requirement: SetEffectRequirementType,
 ): Array<SetEffectRequirementType> => {
-  const requirementValue = parseInt(requirement, 10);
-  return SetEffectRequirement.filter((req) => parseInt(req, 10) <= requirementValue);
+  const requirementValue = parseInt(requirement);
+  return SetEffectRequirement.filter((req) => parseInt(req) <= requirementValue);
 };
 
 /**
@@ -43,7 +45,7 @@ const getApplicableRequirements = (
  */
 export const getEchoSetDetailsHandler = async (
   input: GetEchoSetDetailsInput,
-): Promise<GetEchoSetDetailsOutput> => {
+): Promise<GetEntityDetailsOutput> => {
   const { id, requirement } = input;
   const echoSetData = await getEchoSetDataHandler(id);
   const applicableRequirements = getApplicableRequirements(requirement);
@@ -79,7 +81,7 @@ export const getEchoSetDetails = createServerFn({
   method: 'GET',
 })
   .inputValidator(GetEchoSetDetailsInputSchema)
-  .handler(async ({ data }): Promise<GetEchoSetDetailsOutput> => {
+  .handler(async ({ data }): Promise<GetEntityDetailsOutput> => {
     return getEchoSetDetailsHandler(data);
   });
 

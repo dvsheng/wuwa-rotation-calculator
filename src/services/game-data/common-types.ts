@@ -59,3 +59,7 @@ export interface GetClientEntityDetailsOutput {
   attacks: Array<ClientCapability>;
   modifiers: Array<ClientCapability>;
 }
+
+export interface GetEntityDetailsOutput extends BaseEntity {
+  capabilities: Capabilities;
+}

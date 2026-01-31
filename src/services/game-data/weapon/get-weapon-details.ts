@@ -1,11 +1,14 @@
 import { createServerFn } from '@tanstack/react-start';
 
 import { toClientAttack, toClientBuff } from '../client-converters';
-import type { GetClientEntityDetailsOutput } from '../common-types';
+import type {
+  GetClientEntityDetailsOutput,
+  GetEntityDetailsOutput,
+} from '../common-types';
 import { createFsStore } from '../hakushin-api/fs-store';
 
 import { GetWeaponDetailsInputSchema } from './types';
-import type { GetWeaponDetailsInput, GetWeaponDetailsOutput, Weapon } from './types';
+import type { GetWeaponDetailsInput, Weapon } from './types';
 
 const weaponStore = createFsStore<Weapon>();
 
@@ -14,7 +17,7 @@ const weaponStore = createFsStore<Weapon>();
  */
 export const getWeaponDetailsHandler = async (
   input: GetWeaponDetailsInput,
-): Promise<GetWeaponDetailsOutput> => {
+): Promise<GetEntityDetailsOutput> => {
   const { id, refineLevel } = input;
   const key = `weapon/parsed/${id}.json`;
 
@@ -38,7 +41,7 @@ export const getWeaponDetails = createServerFn({
   method: 'GET',
 })
   .inputValidator(GetWeaponDetailsInputSchema)
-  .handler(async ({ data }): Promise<GetWeaponDetailsOutput> => {
+  .handler(async ({ data }): Promise<GetEntityDetailsOutput> => {
     return getWeaponDetailsHandler(data);
   });
 

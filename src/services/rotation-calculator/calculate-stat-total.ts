@@ -1,4 +1,4 @@
-import { isSubset } from 'es-toolkit/array';
+import { intersection } from 'es-toolkit/array';
 import { mapValues } from 'es-toolkit/object';
 
 import { AbilityAttribute, Tag } from '@/types';
@@ -19,15 +19,11 @@ export const calculateStatTotal = (
 export const getCalculateStatValueFn =
   (tags: Array<string>) => (statValues: Array<TaggedStatValue> | undefined) => {
     if (!statValues) return 0;
-    // 1. Convert target tags to a Set once for O(1) lookups
     return statValues.reduce((sum, statValue) => {
-      // 2. Check if statValue has Tag.ALL OR any overlapping tag
       const isApplicable =
-        statValue.tags.includes(Tag.ALL) || isSubset(statValue.tags, tags);
-
+        statValue.tags.includes(Tag.ALL) ||
+        intersection(statValue.tags, tags).length > 0;
       if (!isApplicable) return sum;
-
-      // 3. Sum only the numeric values
       const value = typeof statValue.value === 'number' ? statValue.value : 0;
       return sum + value;
     }, 0);

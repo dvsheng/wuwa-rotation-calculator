@@ -1,5 +1,3 @@
-import type { GridLayoutProps } from 'react-grid-layout';
-
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
 import type { Capability } from '@/schemas/rotation';
 import { CapabilitySchema } from '@/schemas/rotation';
@@ -8,13 +6,7 @@ import { useRotationStore } from '@/store/useRotationStore';
 import { AttackPalette } from './step-list/AttackPalette';
 import { RotationAttackSequence } from './step-list/RotationAttackSequence';
 
-export interface AttackSequenceBuilderProps {
-  gridLayoutProps: Omit<GridLayoutProps, 'children'>;
-}
-
-export const AttackSequenceBuilder = ({
-  gridLayoutProps,
-}: AttackSequenceBuilderProps) => {
+export const AttackSequenceBuilder = () => {
   const addAttack = useRotationStore((state) => state.addAttack);
   const { handleDragStart: handleDragAttack, createHandleDrop } = useDragAndDrop({
     schema: CapabilitySchema,
@@ -31,10 +23,7 @@ export const AttackSequenceBuilder = ({
   return (
     <>
       <AttackPalette onClickAttack={handleAddAttack} onDragAttack={handleDragAttack} />
-      <RotationAttackSequence
-        gridLayoutProps={gridLayoutProps}
-        onDropAttack={handleDropAttack}
-      />
+      <RotationAttackSequence onDropAttack={handleDropAttack} />
     </>
   );
 };

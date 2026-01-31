@@ -1,23 +1,19 @@
-import { merge } from 'es-toolkit/object';
-import type { GridLayoutProps, Layout, LayoutItem } from 'react-grid-layout';
+import { cloneDeep, merge } from 'es-toolkit/object';
+import type { Layout, LayoutItem } from 'react-grid-layout';
 import GridLayout from 'react-grid-layout';
 
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Text } from '@/components/ui/typography';
-import { cn } from '@/lib/utils';
+import { useCanvasLayout } from '@/hooks/useCanvasLayout';
 import { useRotationStore } from '@/store/useRotationStore';
 
 import { BuffTimelineCanvasItem } from './BuffTimelineCanvasItem';
 
 interface BuffTimelineCanvasProps {
-  gridLayoutProps: Omit<GridLayoutProps, 'children'>;
   onDropBuff: (layout: Layout, item: LayoutItem | undefined, event: Event) => void;
 }
 
-export const BuffTimelineCanvas = ({
-  gridLayoutProps,
-  onDropBuff,
-}: BuffTimelineCanvasProps) => {
+export const BuffTimelineCanvas = ({ onDropBuff }: BuffTimelineCanvasProps) => {
+  const { layout: gridLayoutProps, containerRef } = useCanvasLayout();
   const buffs = useRotationStore((state) => state.buffs);
   const removeBuff = useRotationStore((state) => state.removeBuff);
   const updateBuffLayout = useRotationStore((state) => state.updateBuffLayout);
@@ -30,8 +26,8 @@ export const BuffTimelineCanvas = ({
   };
 
   const additionalLayoutProps = {
+    gridConfig: { rowHeight: 28, margin: [4, 4] as const },
     resizeConfig: { enabled: true, handles: ['e'] },
-    style: { minHeight: '140px' },
     layout: buffs.map((buff) => ({
       i: buff.instanceId,
       x: buff.x,
@@ -39,43 +35,46 @@ export const BuffTimelineCanvas = ({
       w: buff.w,
       h: buff.h,
     })),
+    style: { minHeight: 200 },
     onLayoutChange,
     onDrop: onDropBuff,
   };
-  const fullLayoutProps = merge(gridLayoutProps, additionalLayoutProps);
+  const fullLayoutProps = merge(cloneDeep(gridLayoutProps), additionalLayoutProps);
+
   return (
-    <div className="px-4 pb-4">
-      <ScrollArea className="w-full">
-        <div
-          className={cn(
-            'border-border/50 bg-muted/10 relative min-h-[140px] rounded-lg border transition-colors',
-          )}
-          style={{ minWidth: gridLayoutProps.width }}
-        >
+    <div className="canvas-section">
+      <div className="canvas-header">
+        <Text className="text-sm font-semibold tracking-wider uppercase">
+          Buff Timeline
+        </Text>
+        <Text variant="tiny" className="text-muted-foreground font-medium">
+          {buffs.length} {buffs.length === 1 ? 'Buff' : 'Buffs'}
+        </Text>
+      </div>
+
+      <div className="canvas-content">
+        <div className="canvas-drop-zone" ref={containerRef}>
           {buffs.length === 0 && (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div className="canvas-empty-state">
               <Text className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
-                Align buffs with attacks to include them in damage calculations
+                Drag buffs here to align with attacks
               </Text>
             </div>
           )}
 
-          <div className="p-0">
-            <GridLayout {...fullLayoutProps}>
-              {buffs.map((buff) => (
-                <div key={buff.instanceId} className="group relative">
-                  <BuffTimelineCanvasItem
-                    buff={buff}
-                    onRemove={removeBuff}
-                    onSaveParameters={updateBuffParameters}
-                  />
-                </div>
-              ))}
-            </GridLayout>
-          </div>
+          <GridLayout {...fullLayoutProps}>
+            {buffs.map((buff) => (
+              <div key={buff.instanceId} className="group relative">
+                <BuffTimelineCanvasItem
+                  buff={buff}
+                  onRemove={removeBuff}
+                  onSaveParameters={updateBuffParameters}
+                />
+              </div>
+            ))}
+          </GridLayout>
         </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+      </div>
     </div>
   );
 };

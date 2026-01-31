@@ -1,23 +1,23 @@
-import { merge } from 'es-toolkit/object';
-import type { GridLayoutProps, Layout, LayoutItem } from 'react-grid-layout';
+import { compact } from 'es-toolkit/array';
+import { cloneDeep, merge } from 'es-toolkit/object';
+import type { Layout, LayoutItem } from 'react-grid-layout';
 import GridLayout, { horizontalCompactor } from 'react-grid-layout';
 
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Text } from '@/components/ui/typography';
+import { useCanvasLayout } from '@/hooks/useCanvasLayout';
 import { useRotationStore } from '@/store/useRotationStore';
 
 import { EmptyRotationState } from './EmptyRotationState';
 import { RotationAttack } from './RotationAttack';
 
 export interface RotationAttackSequenceProps {
-  gridLayoutProps: Omit<GridLayoutProps, 'children'>;
   onDropAttack: (layout: Layout, item: LayoutItem | undefined, event: Event) => void;
 }
 
 export const RotationAttackSequence = ({
-  gridLayoutProps,
   onDropAttack,
 }: RotationAttackSequenceProps) => {
+  const { layout: gridLayoutProps, containerRef } = useCanvasLayout();
   const attacks = useRotationStore((state) => state.attacks);
   const removeAttack = useRotationStore((state) => state.removeAttack);
   const setAttacks = useRotationStore((state) => state.setAttacks);
@@ -31,9 +31,11 @@ export const RotationAttackSequence = ({
       (attack, index) => attack.instanceId !== newAttackInstanceIdOrder[index],
     );
     if (hasAttackOrderChanged) {
-      const newAttackOrder = newAttackInstanceIdOrder
-        .map((id) => attacks.find((attack) => attack.id === id))
-        .filter((attack) => attack !== undefined);
+      const newAttackOrder = compact(
+        newAttackInstanceIdOrder.map((id) =>
+          attacks.find((attack) => attack.instanceId === id),
+        ),
+      );
       setAttacks(newAttackOrder);
     }
   };
@@ -53,11 +55,11 @@ export const RotationAttackSequence = ({
     onLayoutChange: handleLayoutChange,
   };
 
-  const fullLayoutProps = merge(gridLayoutProps, additionalLayoutProps);
+  const fullLayoutProps = merge(cloneDeep(gridLayoutProps), additionalLayoutProps);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col border-t">
-      <div className="flex items-center justify-between px-4 py-2">
+    <div className="canvas-section">
+      <div className="canvas-header">
         <Text className="text-sm font-semibold tracking-wider uppercase">
           Attack Sequence
         </Text>
@@ -66,28 +68,18 @@ export const RotationAttackSequence = ({
         </Text>
       </div>
 
-      <div className="px-4 pb-4">
-        <ScrollArea className="w-full">
-          <div
-            className="border-border/50 bg-muted/10 relative min-h-[80px] rounded-lg border transition-colors"
-            style={{ minWidth: gridLayoutProps.width }}
-          >
-            {attacks.length === 0 && <EmptyRotationState />}
+      <div className="canvas-content">
+        <div className="canvas-drop-zone" ref={containerRef}>
+          {attacks.length === 0 && <EmptyRotationState />}
 
-            <GridLayout {...fullLayoutProps}>
-              {attacks.map((attack, index) => (
-                <div key={attack.instanceId} className="h-full w-full">
-                  <RotationAttack
-                    attack={attack}
-                    index={index}
-                    onRemove={removeAttack}
-                  />
-                </div>
-              ))}
-            </GridLayout>
-          </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
+          <GridLayout {...fullLayoutProps}>
+            {attacks.map((attack, index) => (
+              <div key={attack.instanceId} className="h-full w-full">
+                <RotationAttack attack={attack} index={index} onRemove={removeAttack} />
+              </div>
+            ))}
+          </GridLayout>
+        </div>
       </div>
     </div>
   );

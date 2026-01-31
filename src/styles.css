@@ -146,6 +146,29 @@ code {
   }
 }
 
+/* Canvas component styles for rotation builder sections */
+@layer components {
+  .canvas-section {
+    @apply flex min-h-0 flex-1 flex-col border-t;
+  }
+
+  .canvas-header {
+    @apply flex items-center justify-between px-4 py-2;
+  }
+
+  .canvas-content {
+    @apply w-full px-4 pb-4;
+  }
+
+  .canvas-drop-zone {
+    @apply border-border/50 bg-muted/10 w-full rounded-lg border transition-colors;
+  }
+
+  .canvas-empty-state {
+    @apply pointer-events-none absolute inset-0 flex items-center justify-center;
+  }
+}
+
 .react-grid-layout {
   position: relative;
   transition: height 200ms ease;

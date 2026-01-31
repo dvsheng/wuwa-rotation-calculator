@@ -22,8 +22,7 @@ export const BuffTimelineCanvasItem = React.forwardRef<
   return (
     <CanvasItem
       ref={ref}
-      text={buff.name}
-      subtext={buff.characterName}
+      text={`${buff.characterName} - ${buff.name}`}
       hoverText={buff.description}
       parameters={parameters}
       size="xs"

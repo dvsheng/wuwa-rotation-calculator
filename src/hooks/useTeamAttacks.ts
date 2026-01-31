@@ -2,13 +2,14 @@ import { useQueries } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
-import type { Team } from '@/schemas/team';
 import { getClientCharacterDetails } from '@/services/game-data/character/get-character-details';
 import type { GetClientCharacterDetailsOutput } from '@/services/game-data/character/types';
 import { getClientEchoDetails } from '@/services/game-data/echo/get-echo-details';
 import { getClientWeaponDetails } from '@/services/game-data/weapon/get-weapon-details';
+import { useTeamStore } from '@/store/useTeamStore';
 
-export const useTeamAttacks = (team: Team) => {
+export const useTeamAttacks = () => {
+  const team = useTeamStore((state) => state.team);
   const queryMetadata = team.flatMap((character) => [
     {
       characterId: character.id,

@@ -1,5 +1,6 @@
 import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
+import type { GridLayoutProps } from 'react-grid-layout';
 
 import {
   Collapsible,
@@ -8,34 +9,31 @@ import {
 } from '@/components/ui/collapsible';
 import { Text } from '@/components/ui/typography';
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
-import type { Capability, ModifierInstance } from '@/schemas/rotation';
+import type { Capability } from '@/schemas/rotation';
 import { CapabilitySchema } from '@/schemas/rotation';
 import { useRotationStore } from '@/store/useRotationStore';
 
 import { BuffPalette } from './timeline/BuffPalette';
 import { BuffTimelineCanvas } from './timeline/BuffTimelineCanvas';
-import type { SharedGridConfig } from './types';
 
 interface BuffTimelineBuilderProps {
-  availableBuffs: Array<Capability>;
-  enrichedBuffs: Array<ModifierInstance>;
-  gridConfig: SharedGridConfig;
-  isLoading: boolean;
+  gridLayoutProps: Omit<GridLayoutProps, 'children'>;
 }
 
-export const BuffTimelineBuilder = ({
-  availableBuffs,
-  enrichedBuffs,
-  gridConfig,
-  isLoading,
-}: BuffTimelineBuilderProps) => {
+export const BuffTimelineBuilder = ({ gridLayoutProps }: BuffTimelineBuilderProps) => {
   const [paletteOpen, setPaletteOpen] = useState(true);
-
   const addBuff = useRotationStore((state) => state.addBuff);
-
-  // Drag and drop handlers for buffs
-  const { handleDragStart } = useDragAndDrop({
+  const { handleDragStart, createHandleDrop } = useDragAndDrop({
     schema: CapabilitySchema,
+  });
+
+  const handleDropBuff = createHandleDrop((buff, item) => {
+    addBuff(buff, {
+      x: item.x,
+      y: item.y,
+      w: item.w,
+      h: item.h,
+    });
   });
 
   const handleAddBuff = (buff: Capability) => {
@@ -52,7 +50,10 @@ export const BuffTimelineBuilder = ({
           </Text>
         </div>
         <div className="px-4 pb-4">
-          <BuffTimelineCanvas buffs={enrichedBuffs} gridConfig={gridConfig} />
+          <BuffTimelineCanvas
+            gridLayoutProps={gridLayoutProps}
+            onDropBuff={handleDropBuff}
+          />
         </div>
       </div>
 
@@ -71,17 +72,7 @@ export const BuffTimelineBuilder = ({
           </div>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center p-4">
-              <Text variant="muted">Loading buffs...</Text>
-            </div>
-          ) : (
-            <BuffPalette
-              buffs={availableBuffs}
-              onClickBuff={handleAddBuff}
-              onDragBuff={handleDragStart}
-            />
-          )}
+          <BuffPalette onClickBuff={handleAddBuff} onDragBuff={handleDragStart} />
         </CollapsibleContent>
       </Collapsible>
     </>

@@ -1,30 +1,27 @@
+import { merge } from 'es-toolkit/object';
 import type { GridLayoutProps, Layout, LayoutItem } from 'react-grid-layout';
-import GridLayout from 'react-grid-layout';
+import GridLayout, { horizontalCompactor } from 'react-grid-layout';
 
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Text } from '@/components/ui/typography';
-import type { AttackInstance } from '@/schemas/rotation';
-
-import type { SharedGridConfig } from '../types';
+import { useRotationStore } from '@/store/useRotationStore';
 
 import { EmptyRotationState } from './EmptyRotationState';
 import { RotationAttack } from './RotationAttack';
 
 export interface RotationAttackSequenceProps {
-  attacks: Array<AttackInstance>;
-  gridConfig: SharedGridConfig;
-  onRemove: (instanceId: string) => void;
-  onReorder: (instanceIds: Array<AttackInstance>) => void;
+  gridLayoutProps: Omit<GridLayoutProps, 'children'>;
   onDropAttack: (layout: Layout, item: LayoutItem | undefined, event: Event) => void;
 }
 
 export const RotationAttackSequence = ({
-  attacks,
-  gridConfig,
-  onRemove,
-  onReorder,
+  gridLayoutProps,
   onDropAttack,
 }: RotationAttackSequenceProps) => {
+  const attacks = useRotationStore((state) => state.attacks);
+  const removeAttack = useRotationStore((state) => state.removeAttack);
+  const setAttacks = useRotationStore((state) => state.setAttacks);
+
   const handleLayoutChange = (layout: Layout) => {
     if (layout.length !== attacks.length) return;
     const newAttackInstanceIdOrder = [...layout]
@@ -37,18 +34,11 @@ export const RotationAttackSequence = ({
       const newAttackOrder = newAttackInstanceIdOrder
         .map((id) => attacks.find((attack) => attack.id === id))
         .filter((attack) => attack !== undefined);
-      onReorder(newAttackOrder);
+      setAttacks(newAttackOrder);
     }
   };
 
-  const layoutProps: Omit<GridLayoutProps, 'children'> = {
-    width: gridConfig.width,
-    gridConfig: {
-      cols: gridConfig.cols,
-      rowHeight: 64,
-      margin: gridConfig.margin,
-      containerPadding: gridConfig.containerPadding,
-    },
+  const additionalLayoutProps = {
     layout: attacks.map((attack, index) => ({
       i: attack.instanceId,
       x: index,
@@ -56,13 +46,14 @@ export const RotationAttackSequence = ({
       w: 1,
       h: 1,
     })),
-    style: { minHeight: '80px', minWidth: gridConfig.width },
-    dropConfig: { enabled: true },
-    dragConfig: { enabled: true },
+    gridConfig: { maxRows: 1 },
+    compactor: horizontalCompactor,
     resizeConfig: { enabled: false },
     onDrop: onDropAttack,
     onLayoutChange: handleLayoutChange,
   };
+
+  const fullLayoutProps = merge(gridLayoutProps, additionalLayoutProps);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col border-t">
@@ -79,14 +70,18 @@ export const RotationAttackSequence = ({
         <ScrollArea className="w-full">
           <div
             className="border-border/50 bg-muted/10 relative min-h-[80px] rounded-lg border transition-colors"
-            style={{ minWidth: gridConfig.width }}
+            style={{ minWidth: gridLayoutProps.width }}
           >
             {attacks.length === 0 && <EmptyRotationState />}
 
-            <GridLayout {...layoutProps}>
+            <GridLayout {...fullLayoutProps}>
               {attacks.map((attack, index) => (
                 <div key={attack.instanceId} className="h-full w-full">
-                  <RotationAttack attack={attack} index={index} onRemove={onRemove} />
+                  <RotationAttack
+                    attack={attack}
+                    index={index}
+                    onRemove={removeAttack}
+                  />
                 </div>
               ))}
             </GridLayout>

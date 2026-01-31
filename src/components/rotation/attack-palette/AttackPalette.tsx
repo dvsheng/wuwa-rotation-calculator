@@ -1,9 +1,9 @@
 import { Palette } from '@/components/common/Palette';
 import { PaletteItem } from '@/components/common/PaletteItem';
+import { useTeamAttacks } from '@/hooks/useTeamAttacks';
 import type { Capability } from '@/schemas/rotation';
 
 export interface AttackPaletteProps {
-  attacks: Array<Capability>;
   onAddAttack?: (attack: Capability) => void;
   onClickAttack?: (attack: Capability) => void;
   onDragAttack?: (attack: Capability, event: React.DragEvent) => void;
@@ -20,12 +20,12 @@ const SKILL_ORDER = [
 ] as const;
 
 export const AttackPalette = ({
-  attacks,
   onAddAttack,
   onClickAttack,
   onDragAttack,
   className,
 }: AttackPaletteProps) => {
+  const { attacks } = useTeamAttacks();
   const byCharacter = Object.groupBy(attacks, (a) => a.characterName);
 
   const groups = Object.entries(byCharacter).map(([charName, charAttacks]) => {

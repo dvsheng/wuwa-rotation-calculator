@@ -1,5 +1,6 @@
 import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
+import type { GridLayoutProps } from 'react-grid-layout';
 
 import {
   Collapsible,
@@ -8,32 +9,22 @@ import {
 } from '@/components/ui/collapsible';
 import { Text } from '@/components/ui/typography';
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
-import type { AttackInstance, Capability } from '@/schemas/rotation';
+import type { Capability } from '@/schemas/rotation';
 import { CapabilitySchema } from '@/schemas/rotation';
 import { useRotationStore } from '@/store/useRotationStore';
 
 import { AttackPalette } from './attack-palette/AttackPalette';
 import { RotationAttackSequence } from './step-list/RotationAttackSequence';
-import type { SharedGridConfig } from './types';
 
-interface AttackSequenceBuilderProps {
-  availableAttacks: Array<Capability>;
-  enrichedAttacks: Array<AttackInstance>;
-  gridConfig: SharedGridConfig;
-  isLoading: boolean;
+export interface AttackSequenceBuilderProps {
+  gridLayoutProps: Omit<GridLayoutProps, 'children'>;
 }
 
 export const AttackSequenceBuilder = ({
-  availableAttacks,
-  enrichedAttacks,
-  gridConfig,
-  isLoading,
+  gridLayoutProps,
 }: AttackSequenceBuilderProps) => {
-  const [paletteOpen, setPaletteOpen] = useState(true);
-
   const addAttack = useRotationStore((state) => state.addAttack);
-  const removeAttack = useRotationStore((state) => state.removeAttack);
-  const setAttacks = useRotationStore((state) => state.setAttacks);
+  const [paletteOpen, setPaletteOpen] = useState(true);
   const { handleDragStart: handleDragAttack, createHandleDrop } = useDragAndDrop({
     schema: CapabilitySchema,
   });
@@ -62,24 +53,14 @@ export const AttackSequenceBuilder = ({
           </div>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center p-4">
-              <Text variant="muted">Loading attacks...</Text>
-            </div>
-          ) : (
-            <AttackPalette
-              attacks={availableAttacks}
-              onClickAttack={handleAddAttack}
-              onDragAttack={handleDragAttack}
-            />
-          )}
+          <AttackPalette
+            onClickAttack={handleAddAttack}
+            onDragAttack={handleDragAttack}
+          />
         </CollapsibleContent>
       </Collapsible>
       <RotationAttackSequence
-        attacks={enrichedAttacks}
-        gridConfig={gridConfig}
-        onRemove={removeAttack}
-        onReorder={setAttacks}
+        gridLayoutProps={gridLayoutProps}
         onDropAttack={handleDropAttack}
       />
     </>

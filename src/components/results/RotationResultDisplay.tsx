@@ -1,19 +1,13 @@
-import type { ColumnDef } from '@tanstack/react-table';
-import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
+import type { ColumnDef, Row } from '@tanstack/react-table';
+import { flexRender } from '@tanstack/react-table';
 import { AlertCircle } from 'lucide-react';
 import { Fragment, useMemo } from 'react';
 
 import { Card } from '@/components/ui/card';
+import { DataTable } from '@/components/ui/data-table';
 import { Stack } from '@/components/ui/layout';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { TableCell, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Heading, Text } from '@/components/ui/typography';
 import type { useRotationCalculation } from '@/hooks/useRotationCalculation';
@@ -101,15 +95,112 @@ export const RotationResultDisplay = ({
     ],
     [],
   );
-  // eslint-disable-next-line react-hooks/incompatible-library
-  const table = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
+
+  const renderRow = (row: Row<DamageRow>) => {
+    const { detail } = row.original;
+    return (
+      <Tooltip key={row.id}>
+        <TooltipTrigger asChild>
+          <TableRow className="hover:bg-muted/30 cursor-help transition-colors">
+            {row.getVisibleCells().map((cell) => (
+              <TableCell key={cell.id}>
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              </TableCell>
+            ))}
+          </TableRow>
+        </TooltipTrigger>
+        <TooltipContent
+          side="bottom"
+          className="w-96 border-white/10 bg-zinc-900 p-0 text-zinc-100 shadow-xl"
+        >
+          <div className="border-b border-white/10 bg-zinc-800/50 p-3">
+            <Text
+              variant="tiny"
+              className="font-bold tracking-wider text-zinc-300 uppercase"
+            >
+              Calculation Snapshot
+            </Text>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {detail.instance.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded bg-zinc-700/50 px-1.5 py-0.5 text-[10px] text-zinc-400"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <ScrollArea className="max-h-[500px] p-3">
+            <div className="space-y-4">
+              {/* Skill Stats */}
+              <div className="space-y-2">
+                <Text variant="tiny" className="font-bold text-amber-500 uppercase">
+                  Skill
+                </Text>
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px]">
+                  <span className="text-zinc-400">Motion Value</span>
+                  <span className="text-right font-mono font-medium text-zinc-100">
+                    {(100 * detail.resolvedStats.skill.motionValue).toFixed(2)}%
+                  </span>
+                </div>
+              </div>
+
+              {/* Character Stats */}
+              <div className="space-y-2">
+                <Text variant="tiny" className="font-bold text-blue-400 uppercase">
+                  Character Stats
+                </Text>
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px]">
+                  {Object.entries(detail.resolvedStats.character).map(
+                    ([key, value]) => (
+                      <Fragment key={key}>
+                        <span className="text-zinc-400 capitalize">
+                          {key.replace(/([A-Z])/g, ' $1').trim()}
+                        </span>
+                        <span className="text-right font-mono font-medium text-zinc-100">
+                          {['level', 'abilityAttributeValue', 'flatDamage'].includes(
+                            key,
+                          )
+                            ? Math.round(value as number).toLocaleString()
+                            : `${((value as number) * 100).toFixed(1)}%`}
+                        </span>
+                      </Fragment>
+                    ),
+                  )}
+                </div>
+              </div>
+
+              {/* Enemy Stats */}
+              <div className="space-y-2">
+                <Text variant="tiny" className="font-bold text-red-400 uppercase">
+                  Enemy Stats
+                </Text>
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px]">
+                  {Object.entries(detail.resolvedStats.enemy).map(([key, value]) => (
+                    <Fragment key={key}>
+                      <span className="text-zinc-400 capitalize">
+                        {key.replace(/([A-Z])/g, ' $1').trim()}
+                      </span>
+                      <span className="text-right font-mono font-medium text-zinc-100">
+                        {key === 'level'
+                          ? Math.round(value as number).toLocaleString()
+                          : `${((value as number) * 100).toFixed(1)}%`}
+                      </span>
+                    </Fragment>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </ScrollArea>
+        </TooltipContent>
+      </Tooltip>
+    );
+  };
 
   return (
-    <Card className="border-primary/20 bg-primary/5 p-6">
+    <Card className="border-primary/20 bg-primary/5 overflow-hidden p-6">
       <Stack spacing="lg">
         {isStale && (
           <div className="mb-2 flex items-center gap-3 rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-amber-500">
@@ -137,169 +228,20 @@ export const RotationResultDisplay = ({
               {Math.round(result.totalDamage).toLocaleString()}
             </Heading>
           </div>
-          <div className="text-right">
-            <Text
-              variant="small"
-              className="text-muted-foreground font-bold tracking-wider uppercase"
-            >
-              DPS (approx)
-            </Text>
-            <Heading level={2} className="text-2xl">
-              {Math.round(
-                result.totalDamage / (result.damageDetails.length || 1),
-              ).toLocaleString()}
-            </Heading>
-          </div>
         </div>
 
-        <div className="bg-card/50 overflow-hidden rounded-lg border">
-          <ScrollArea className="max-h-[400px]">
-            <Table>
-              <TableHeader className="bg-muted/50 sticky top-0 z-10">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id} className="hover:bg-transparent">
-                    {headerGroup.headers.map((header) => (
-                      <TableHead
-                        key={header.id}
-                        className="text-[10px] font-bold tracking-wider uppercase"
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => {
-                  const { detail } = row.original;
-                  return (
-                    <Tooltip key={row.id}>
-                      <TooltipTrigger asChild>
-                        <TableRow className="hover:bg-muted/30 cursor-help transition-colors">
-                          {row.getVisibleCells().map((cell) => (
-                            <TableCell key={cell.id}>
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext(),
-                              )}
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      </TooltipTrigger>
-                      <TooltipContent
-                        side="bottom"
-                        className="w-96 border-white/10 bg-zinc-900 p-0 text-zinc-100 shadow-xl"
-                      >
-                        <div className="border-b border-white/10 bg-zinc-800/50 p-3">
-                          <Text
-                            variant="tiny"
-                            className="font-bold tracking-wider text-zinc-300 uppercase"
-                          >
-                            Calculation Snapshot
-                          </Text>
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            {detail.instance.tags.map((tag) => (
-                              <span
-                                key={tag}
-                                className="rounded bg-zinc-700/50 px-1.5 py-0.5 text-[10px] text-zinc-400"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-
-                        <ScrollArea className="max-h-[500px] p-3">
-                          <div className="space-y-4">
-                            {/* Skill Stats */}
-                            <div className="space-y-2">
-                              <Text
-                                variant="tiny"
-                                className="font-bold text-amber-500 uppercase"
-                              >
-                                Skill
-                              </Text>
-                              <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px]">
-                                <span className="text-zinc-400">Motion Value</span>
-                                <span className="text-right font-mono font-medium text-zinc-100">
-                                  {(
-                                    100 * detail.resolvedStats.skill.motionValue
-                                  ).toFixed(2)}
-                                  %
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Character Stats */}
-                            <div className="space-y-2">
-                              <Text
-                                variant="tiny"
-                                className="font-bold text-blue-400 uppercase"
-                              >
-                                Character Stats
-                              </Text>
-                              <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px]">
-                                {Object.entries(detail.resolvedStats.character).map(
-                                  ([key, value]) => (
-                                    <Fragment key={key}>
-                                      <span className="text-zinc-400 capitalize">
-                                        {key.replace(/([A-Z])/g, ' $1').trim()}
-                                      </span>
-                                      <span className="text-right font-mono font-medium text-zinc-100">
-                                        {[
-                                          'level',
-                                          'abilityAttributeValue',
-                                          'flatDamage',
-                                        ].includes(key)
-                                          ? Math.round(value).toLocaleString()
-                                          : `${(value * 100).toFixed(1)}%`}
-                                      </span>
-                                    </Fragment>
-                                  ),
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Enemy Stats */}
-                            <div className="space-y-2">
-                              <Text
-                                variant="tiny"
-                                className="font-bold text-red-400 uppercase"
-                              >
-                                Enemy Stats
-                              </Text>
-                              <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px]">
-                                {Object.entries(detail.resolvedStats.enemy).map(
-                                  ([key, value]) => (
-                                    <Fragment key={key}>
-                                      <span className="text-zinc-400 capitalize">
-                                        {key.replace(/([A-Z])/g, ' $1').trim()}
-                                      </span>
-                                      <span className="text-right font-mono font-medium text-zinc-100">
-                                        {key === 'level'
-                                          ? Math.round(value).toLocaleString()
-                                          : `${(value * 100).toFixed(1)}%`}
-                                      </span>
-                                    </Fragment>
-                                  ),
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </ScrollArea>
-                      </TooltipContent>
-                    </Tooltip>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </ScrollArea>
-        </div>
+        <DataTable
+          columns={columns}
+          data={data}
+          renderRow={renderRow}
+          classNames={{
+            wrapper: 'bg-card/50 border-0 min-w-0',
+            scrollArea: 'max-h-[400px]',
+            header: 'bg-muted/50 sticky top-0 z-10',
+            headerRow: 'hover:bg-transparent',
+            headerCell: 'text-[10px] font-bold tracking-wider uppercase',
+          }}
+        />
       </Stack>
     </Card>
   );

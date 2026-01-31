@@ -50,6 +50,8 @@ export const AttackPalette = ({
       getItemKey={(attack) => attack.id}
       emptyMessage="No attacks available"
       className={className}
+      isCollapsible={true}
+      headerText="Attack Palette"
       renderItem={(attack) => (
         <PaletteItem
           text={attack.name}

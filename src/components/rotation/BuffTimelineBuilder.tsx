@@ -1,12 +1,5 @@
-import { ChevronDown } from 'lucide-react';
-import { useState } from 'react';
 import type { GridLayoutProps } from 'react-grid-layout';
 
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import { Text } from '@/components/ui/typography';
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
 import type { Capability } from '@/schemas/rotation';
@@ -21,7 +14,6 @@ interface BuffTimelineBuilderProps {
 }
 
 export const BuffTimelineBuilder = ({ gridLayoutProps }: BuffTimelineBuilderProps) => {
-  const [paletteOpen, setPaletteOpen] = useState(true);
   const addBuff = useRotationStore((state) => state.addBuff);
   const { handleDragStart, createHandleDrop } = useDragAndDrop({
     schema: CapabilitySchema,
@@ -57,24 +49,7 @@ export const BuffTimelineBuilder = ({ gridLayoutProps }: BuffTimelineBuilderProp
         </div>
       </div>
 
-      {/* Buff Palette - Collapsible */}
-      <Collapsible open={paletteOpen} onOpenChange={setPaletteOpen}>
-        <CollapsibleTrigger asChild>
-          <div className="hover:bg-accent/50 flex cursor-pointer items-center justify-between border-t px-4 py-2 transition-colors">
-            <Text className="text-sm font-semibold tracking-wider uppercase">
-              Buff Palette
-            </Text>
-            <ChevronDown
-              className={`text-muted-foreground h-4 w-4 transition-transform ${
-                paletteOpen ? 'rotate-180' : ''
-              }`}
-            />
-          </div>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <BuffPalette onClickBuff={handleAddBuff} onDragBuff={handleDragStart} />
-        </CollapsibleContent>
-      </Collapsible>
+      <BuffPalette onClickBuff={handleAddBuff} onDragBuff={handleDragStart} />
     </>
   );
 };

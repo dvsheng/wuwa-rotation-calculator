@@ -1,6 +1,13 @@
-import { Fragment } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { Fragment, useState } from 'react';
 import type { ReactNode } from 'react';
 
+import { Button } from '@/components/ui/button';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Text } from '@/components/ui/typography';
 import { cn } from '@/lib/utils';
@@ -21,6 +28,9 @@ export interface PaletteProps<T> {
   getItemKey: (item: T) => string;
   emptyMessage?: string;
   className?: string;
+  isCollapsible?: boolean;
+  headerText?: string;
+  defaultOpen?: boolean;
 }
 
 export function Palette<T>({
@@ -29,19 +39,19 @@ export function Palette<T>({
   getItemKey,
   emptyMessage = 'No items available',
   className,
+  isCollapsible = false,
+  headerText,
+  defaultOpen = true,
 }: PaletteProps<T>) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const hasItems = groups.some((g) => g.subgroups.some((sg) => sg.items.length > 0));
 
-  if (!hasItems) {
-    return (
-      <div className="text-muted-foreground flex items-center justify-center py-4 text-sm font-medium italic">
-        {emptyMessage}
-      </div>
-    );
-  }
-
-  return (
-    <ScrollArea className={cn('w-full', className)}>
+  const content = !hasItems ? (
+    <div className="text-muted-foreground flex items-center justify-center py-4 text-sm font-medium italic">
+      {emptyMessage}
+    </div>
+  ) : (
+    <ScrollArea className="w-full">
       <div className="flex gap-0">
         {groups.map((group, groupIndex) => {
           const hasSubgroupItems = group.subgroups.some((sg) => sg.items.length > 0);
@@ -90,5 +100,39 @@ export function Palette<T>({
       </div>
       <ScrollBar orientation="horizontal" />
     </ScrollArea>
+  );
+
+  if (isCollapsible) {
+    return (
+      <div className={cn('bg-background border-border border', className)}>
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <CollapsibleTrigger asChild>
+            <Button
+              variant="ghost"
+              className="flex w-full items-center justify-between px-4 py-2 hover:bg-transparent"
+            >
+              <Text className="text-sm font-semibold">{headerText}</Text>
+              {isOpen ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="border-t">{content}</CollapsibleContent>
+        </Collapsible>
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn('bg-background border-border border', className)}>
+      {headerText && (
+        <div className="border-border border-b px-4 py-2">
+          <Text className="text-sm font-semibold">{headerText}</Text>
+        </div>
+      )}
+      {content}
+    </div>
   );
 }

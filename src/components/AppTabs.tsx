@@ -2,8 +2,8 @@ import { Loader2, Shield, Sword, User } from 'lucide-react';
 import { Suspense } from 'react';
 
 import { EnemyContainer } from '@/components/enemy/EnemyContainer';
+import { RotationSummary } from '@/components/results/RotationSummary';
 import { RotationBuilder } from '@/components/rotation/RotationBuilder';
-import { RotationSummary } from '@/components/rotation/RotationSummary';
 import { TeamContainer } from '@/components/team/TeamContainer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 

@@ -50,6 +50,8 @@ export const BuffPalette = ({
       getItemKey={(buff) => buff.id}
       emptyMessage="No buffs available"
       className={className}
+      isCollapsible={true}
+      headerText="Buff Palette"
       renderItem={(buff) => (
         <PaletteItem
           text={buff.name}

@@ -1,14 +1,14 @@
 import { createServerFn } from '@tanstack/react-start';
 
 import { toClientAttack, toClientBuff } from '../client-converters';
-import type { ClientCapability } from '../common-types';
+import type { Attack, ClientCapability } from '../common-types';
 import { createFsStore } from '../hakushin-api/fs-store';
 
-import { GetCharacterDetailsInputSchema, Sequence } from './types';
+import { GetCharacterDetailsInputSchema } from './types';
 import type {
-  Character,
-  CharacterCapabilityProperties,
+  CharacterCapabilities,
   GetCharacterDetailsInput,
+  Sequence,
   StoreCharacter,
 } from './types';
 
@@ -22,12 +22,85 @@ export interface GetClientCharacterDetailsOutput {
 }
 
 /**
+ * Resolved character with attribute added to attacks.
+ */
+export interface ResolvedCharacter extends Omit<StoreCharacter, 'capabilities'> {
+  capabilities: {
+    attacks: Array<Attack & { name: string; parentName: string }>;
+    modifiers: CharacterCapabilities['modifiers'];
+    permanentStats: CharacterCapabilities['permanentStats'];
+  };
+}
+
+/**
+ * Convert sequence string to number (e.g., 's1' -> 1, 's2' -> 2).
+ */
+const sequenceToNumber = (sequence?: Sequence): number => {
+  if (!sequence) return 0;
+  return parseInt(sequence.slice(1), 10);
+};
+
+/**
+ * Get the highest applicable sequence from alternativeDefinitions.
+ */
+const getApplicableSequence = (
+  alternativeDefinitions: Partial<Record<Sequence, unknown>> | undefined,
+  sequence: number,
+): Sequence | undefined => {
+  if (!alternativeDefinitions) return undefined;
+
+  const applicableSequences = (Object.keys(alternativeDefinitions) as Array<Sequence>)
+    .filter((seq) => sequenceToNumber(seq) <= sequence)
+    .sort((a, b) => sequenceToNumber(b) - sequenceToNumber(a));
+
+  return applicableSequences[0];
+};
+
+/**
+ * Resolve a capability by merging the highest applicable alternativeDefinition.
+ */
+const resolveCapability = <
+  TChild,
+  T extends { alternativeDefinitions?: Partial<Record<Sequence, TChild>> },
+>(
+  capability: T,
+  sequence: number,
+): Omit<T, 'alternativeDefinitions'> => {
+  const applicableSeq = getApplicableSequence(
+    capability.alternativeDefinitions,
+    sequence,
+  );
+
+  const { alternativeDefinitions, ...base } = capability;
+
+  if (!applicableSeq || !alternativeDefinitions) {
+    return base;
+  }
+
+  const override = alternativeDefinitions[applicableSeq];
+  return { ...base, ...override };
+};
+
+/**
+ * Check if a capability is active at the given sequence.
+ */
+const isCapabilityActive = (
+  item: { unlockedAt?: Sequence },
+  sequence: number | undefined,
+): boolean => {
+  if (sequence === undefined) return true;
+  const unlockedAt = sequenceToNumber(item.unlockedAt);
+  return sequence >= unlockedAt;
+};
+
+/**
  * Shared handler for fetching character details.
+ * Resolves alternativeDefinitions based on the requested sequence.
  */
 export const getCharacterDetailsHandler = async (
   id: string,
   sequence?: number,
-): Promise<StoreCharacter> => {
+): Promise<ResolvedCharacter> => {
   const key = `character/parsed/${id}.json`;
 
   const characterData = await characterStore.get(key);
@@ -35,56 +108,46 @@ export const getCharacterDetailsHandler = async (
     throw new Error(`Failed to fetch character details for ID ${id}`);
   }
 
-  const isCapabilityActive = (item: CharacterCapabilityProperties): boolean => {
-    if (sequence === undefined) return true;
-    const unlockedAt = sequenceToNumber(item.unlockedAt);
-    const disabledAt = item.disabledAt ? sequenceToNumber(item.disabledAt) : Infinity;
+  const seq = sequence ?? 0;
+  const attribute = characterData.attribute;
 
-    return sequence >= unlockedAt && sequence < disabledAt;
-  };
-
-  characterData.capabilities.attacks = characterData.capabilities.attacks
-    .filter(isCapabilityActive)
+  // Filter and resolve attacks, adding attribute
+  const attacks = characterData.capabilities.attacks
+    .filter((attack) => isCapabilityActive(attack, sequence))
     .map((attack) => {
-      attack.attribute = characterData.attribute;
-      attack.tags = [attack.name, attack.attribute, ...attack.tags];
-      return attack;
+      const resolved = resolveCapability(attack, seq);
+      return {
+        ...resolved,
+        attribute,
+        tags: [resolved.name, attribute, ...resolved.tags],
+      };
     });
 
-  characterData.capabilities.modifiers =
-    characterData.capabilities.modifiers.filter(isCapabilityActive);
+  // Filter and resolve modifiers
+  const modifiers = characterData.capabilities.modifiers
+    .filter((modifier) => isCapabilityActive(modifier, sequence))
+    .map((modifier) => resolveCapability(modifier, seq));
 
-  characterData.capabilities.permanentStats =
-    characterData.capabilities.permanentStats.filter(isCapabilityActive);
+  // Filter and resolve permanent stats
+  const permanentStats = characterData.capabilities.permanentStats
+    .filter((stat) => isCapabilityActive(stat, sequence))
+    .map((stat) => resolveCapability(stat, seq));
 
-  return characterData;
-};
-
-const sequenceToNumber = (sequence?: Sequence): number => {
-  if (!sequence) return 0;
-  switch (sequence) {
-    case Sequence.S1:
-      return 1;
-    case Sequence.S2:
-      return 2;
-    case Sequence.S3:
-      return 3;
-    case Sequence.S4:
-      return 4;
-    case Sequence.S5:
-      return 5;
-    case Sequence.S6:
-      return 6;
-    default:
-      return 0;
-  }
+  return {
+    ...characterData,
+    capabilities: {
+      attacks,
+      modifiers,
+      permanentStats,
+    },
+  };
 };
 
 export const getCharacterDetails = createServerFn({
   method: 'GET',
 })
   .inputValidator(GetCharacterDetailsInputSchema)
-  .handler(async ({ data }): Promise<Character> => {
+  .handler(async ({ data }): Promise<ResolvedCharacter> => {
     return getCharacterDetailsHandler(data.id, data.sequence);
   });
 

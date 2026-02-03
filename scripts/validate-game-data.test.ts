@@ -198,16 +198,6 @@ const StatSchema = z.object({
   tags: z.array(z.string()),
 });
 
-const ModifierSchema = CapabilitySchema.extend({
-  target: z.union([
-    z.enum(['team', 'enemy', 'activeCharacter', 'self']),
-    z.array(z.union([z.literal(1), z.literal(2), z.literal(3)])).nonempty(),
-  ]),
-  modifiedStats: z.array(StatSchema).nonempty(),
-});
-
-const PermanentStatSchema = CapabilitySchema.and(StatSchema);
-
 const BaseEntitySchema = z.object({
   id: z.string(),
   uuid: z.string(),
@@ -328,27 +318,86 @@ const SequenceSchema = z.enum(Object.values(Sequence));
 
 const OriginTypeSchema = z.enum(Object.values(OriginType));
 
-const CharacterBaseItemSchema = z.object({
-  name: z.string(),
-  parentName: z.string(),
-  originType: OriginTypeSchema,
-  unlockedAt: SequenceSchema.optional(),
-  disabledAt: SequenceSchema.optional(),
-});
-
 const CharacterAttackTagsSchema = z
   .array(BaseAttackStatTagSchema.exclude(Object.values(Attribute)))
   .refine(hasAtMostOneMutuallyExclusiveTag, MUTUALLY_EXCLUSIVE_TAG_ERROR);
 
-const CharacterAttackSchema = CapabilitySchema.extend({
+// Child schemas for alternativeDefinitions (only allowed override fields)
+const CharacterChildAttackSchema = z.strictObject({
+  description: z.string().optional(),
+  motionValues: MotionValuesSchema.optional(),
+  tags: CharacterAttackTagsSchema.optional(),
+});
+
+const CharacterChildModifierSchema = z.strictObject({
+  description: z.string().optional(),
+  target: z
+    .union([
+      z.enum(['team', 'enemy', 'activeCharacter', 'self']),
+      z.array(z.union([z.literal(1), z.literal(2), z.literal(3)])).nonempty(),
+    ])
+    .optional(),
+  modifiedStats: z.array(StatSchema).nonempty().optional(),
+});
+
+const CharacterChildPermanentStatSchema = z.strictObject({
+  description: z.string().optional(),
+  stat: z
+    .union([z.enum(Object.values(CharacterStat)), z.enum(Object.values(EnemyStat))])
+    .optional(),
+  value: ParameterizedNumberSchema.optional(),
+  tags: z.array(z.string()).optional(),
+});
+
+const CharacterAttackSchema = z.strictObject({
+  id: z.string(),
+  description: z.string(),
+  name: z.string(),
+  parentName: z.string(),
+  originType: OriginTypeSchema,
+  unlockedAt: SequenceSchema.optional(),
   tags: CharacterAttackTagsSchema,
   scalingStat: z.enum(Object.values(AbilityAttribute)),
   motionValues: MotionValuesSchema,
-}).and(CharacterBaseItemSchema);
+  alternativeDefinitions: z
+    .partialRecord(SequenceSchema, CharacterChildAttackSchema)
+    .optional(),
+});
 
-const CharacterModifierSchema = ModifierSchema.and(CharacterBaseItemSchema);
+const CharacterModifierSchema = z.strictObject({
+  id: z.string(),
+  description: z.string(),
+  name: z.string(),
+  parentName: z.string(),
+  originType: OriginTypeSchema,
+  unlockedAt: SequenceSchema.optional(),
+  target: z.union([
+    z.enum(['team', 'enemy', 'activeCharacter', 'self']),
+    z.array(z.union([z.literal(1), z.literal(2), z.literal(3)])).nonempty(),
+  ]),
+  modifiedStats: z.array(StatSchema).nonempty(),
+  alternativeDefinitions: z
+    .partialRecord(SequenceSchema, CharacterChildModifierSchema)
+    .optional(),
+});
 
-const CharacterPermanentStatSchema = PermanentStatSchema.and(CharacterBaseItemSchema);
+const CharacterPermanentStatSchema = z.strictObject({
+  id: z.string(),
+  description: z.string(),
+  name: z.string(),
+  parentName: z.string(),
+  originType: OriginTypeSchema,
+  unlockedAt: SequenceSchema.optional(),
+  stat: z.union([
+    z.enum(Object.values(CharacterStat)),
+    z.enum(Object.values(EnemyStat)),
+  ]),
+  value: ParameterizedNumberSchema,
+  tags: z.array(z.string()),
+  alternativeDefinitions: z
+    .partialRecord(SequenceSchema, CharacterChildPermanentStatSchema)
+    .optional(),
+});
 
 const CharacterCapabilitiesSchema = z.object({
   attacks: z.array(CharacterAttackSchema),

@@ -4,10 +4,10 @@ import type { Capability } from '@/schemas/rotation';
 import type { Attribute } from '@/types';
 
 import { GetEntityDetailsInputSchema } from '../common-types';
-import type { BaseEntity, Capabilities } from '../common-types';
+import type { Attack, BaseEntity, Modifier, PermanentStat } from '../common-types';
 
 /**
- * The Resonance Chains equence at which a skill or bonus is unlocked.
+ * The Resonance Chain sequence at which a skill or bonus is unlocked.
  */
 export const Sequence = {
   S1: 's1',
@@ -48,9 +48,9 @@ export const OriginType = {
 export type OriginType = (typeof OriginType)[keyof typeof OriginType];
 
 /**
- * Additional fields for all character capabilities to track origin and unlock conditions.
+ * Base properties shared by all character capabilities.
  */
-export interface CharacterCapabilityProperties {
+interface CharacterCapabilityBase {
   /** Name of the capability */
   name: string;
   /** The name of the parent skill or node (e.g., "Ground State Calibration"). */
@@ -59,12 +59,57 @@ export interface CharacterCapabilityProperties {
   originType: OriginType;
   /** The sequence to unlock this entry. If undefined, it's part of the base kit. */
   unlockedAt?: Sequence;
-  /**
-   * The sequence at which this is disabled.
-   * Usually because a sequence upgradessa buff in a way that is hard to express in a
-   * parameterizable way, i.e. Aemeath s3.
-   */
-  disabledAt?: Sequence;
+}
+
+/**
+ * Fields that can be overridden in an alternative definition (excludes id and alternativeDefinition).
+ */
+type CharacterAttack = Omit<Attack, 'attribute'> & CharacterCapabilityBase;
+
+type CharacterChildAttack = Pick<
+  CharacterAttack,
+  'description' | 'motionValues' | 'tags'
+>;
+
+type CharacterParentAttack = CharacterAttack & {
+  alternativeDefinitions?: Partial<Record<Sequence, CharacterChildAttack>>;
+};
+
+type CharacterModifier = Modifier & CharacterCapabilityBase;
+
+type CharacterChildModifier = Pick<
+  CharacterModifier,
+  'description' | 'target' | 'modifiedStats'
+>;
+
+type CharacterParentModifier = CharacterModifier & {
+  alternativeDefinitions?: Partial<Record<Sequence, CharacterChildModifier>>;
+};
+
+/**
+ * A character modifier with optional sequence-based alternatives.
+ */
+type CharacterPermanentStat = PermanentStat & CharacterCapabilityBase;
+
+type CharacterChildPermanentStat = Pick<
+  CharacterPermanentStat,
+  'description' | 'value' | 'tags' | 'stat'
+>;
+
+/**
+ * A character permanent stat with optional sequence-based alternatives.
+ */
+type CharacterParentPermanentStat = CharacterPermanentStat & {
+  alternativeDefinitions?: Partial<Record<Sequence, CharacterChildPermanentStat>>;
+};
+
+/**
+ * Container for all character capabilities.
+ */
+export interface CharacterCapabilities {
+  attacks: Array<CharacterParentAttack>;
+  modifiers: Array<CharacterParentModifier>;
+  permanentStats: Array<CharacterParentPermanentStat>;
 }
 
 /**
@@ -74,7 +119,7 @@ export interface StoreCharacter extends BaseEntity {
   /** Elemental attribute of the character (e.g., Fusion, Glacio) */
   attribute: Attribute;
   /** Collection of attacks, modifiers, and stats for this character */
-  capabilities: Capabilities<CharacterCapabilityProperties>;
+  capabilities: CharacterCapabilities;
 }
 
 /**

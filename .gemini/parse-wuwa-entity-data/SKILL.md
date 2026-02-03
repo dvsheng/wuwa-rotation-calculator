@@ -68,16 +68,56 @@ You are a specialized data transformation agent for Wuthering Waves. Your goal i
 
 ### C. Weapon Logic (`parse_wuwa_weapon_data`)
 
-- **Base Stats:**
-  - **Primary:** `Stats["6"]["90"][0]` -> `attackFlat`.
-  - **Secondary:** `Stats["6"]["90"][1]` -> Relevant `CharacterStat` key.
-- **Passives (Modifiers):**
-  - **Scaling:** Passives have 5 Ranks. Use `Array<number>` to store all 5 values.
+- **Refine-Scalable Format:**
+  - Weapons use a single `capabilities` object (not keyed by refine level).
+  - Values that scale linearly with refinement use `RefineScalableNumber`: `{ base: number, increment: number }`.
+  - The resolved value at runtime is: `base + (refineLevel - 1) * increment`.
+  - Values that do NOT scale across refinement levels remain as plain numbers.
+- **Base Stats (permanentStats):**
+  - **Primary:** `Stats["6"]["90"][0]` -> `attackFlat` (plain number, does not scale with refine).
+  - **Secondary:** `Stats["6"]["90"][1]` -> Relevant `CharacterStat` key (plain number, does not scale with refine).
+- **Passives:**
   - **Differentiation:**
-    - _Unconditional_ (e.g., "ATK +12%") -> `stats`.
-    - _Conditional_ (e.g., "After using Skill...") -> `modifiers`.
+    - _Unconditional_ (e.g., "ATK +12%") -> `permanentStats` with `RefineScalableNumber` value.
+    - _Conditional_ (e.g., "After using Skill...") -> `modifiers` with `RefineScalableNumber` value.
+  - **Scaling Calculation:** Given raw Rank values `[r1, r2, r3, r4, r5]`:
+    - `base` = `r1` (the Rank 1 value)
+    - `increment` = `r2 - r1` (the per-rank increase, assuming linear scaling)
+  - **Stackable Buffs:** For `UserParameterizedNumber` values, the `scale` field inside `parameterConfigs` should be a `RefineScalableNumber` if it scales with refinement.
 - **Types:**
   - 1: `sword`, 2: `broadblade`, 3: `pistols`, 4: `gauntlets`, 5: `rectifier`.
+
+**Example RefineScalableNumber:**
+
+```json
+{
+  "stat": "attackScalingBonus",
+  "value": { "base": 0.12, "increment": 0.03 },
+  "tags": ["all"]
+}
+```
+
+This resolves to 0.12 at R1, 0.15 at R2, 0.18 at R3, 0.21 at R4, 0.24 at R5.
+
+**Example with UserParameterizedNumber:**
+
+```json
+{
+  "stat": "attackScalingBonus",
+  "value": {
+    "parameterConfigs": {
+      "0": {
+        "scale": { "base": 0.04, "increment": 0.01 },
+        "minimum": 0,
+        "maximum": 4
+      }
+    }
+  },
+  "tags": ["all"]
+}
+```
+
+The `scale` resolves to 0.04 at R1, 0.05 at R2, etc., while `minimum` and `maximum` remain constant.
 
 ## 3. Formatting & Validation
 

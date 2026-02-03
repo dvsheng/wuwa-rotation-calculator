@@ -1,17 +1,57 @@
 import { createServerFn } from '@tanstack/react-start';
+import { mapValues } from 'es-toolkit/object';
 
 import { toClientAttack, toClientBuff } from '../client-converters';
+import type { Capabilities } from '../common-types';
 import { createFsStore } from '../hakushin-api/fs-store';
 
 import { GetWeaponDetailsInputSchema } from './types';
 import type {
   GetClientWeaponDetailsOutput,
   GetWeaponDetailsInput,
+  RefineScalableNumber,
   StoreWeapon,
   Weapon,
 } from './types';
 
 const weaponStore = createFsStore<StoreWeapon>();
+
+/**
+ * Checks if a value is a RefineScalableNumber.
+ */
+export const isRefineScalableNumber = (val: unknown): val is RefineScalableNumber =>
+  typeof val === 'object' &&
+  val !== null &&
+  'base' in val &&
+  'increment' in val &&
+  typeof (val as RefineScalableNumber).base === 'number' &&
+  typeof (val as RefineScalableNumber).increment === 'number';
+
+/**
+ * Resolves all RefineScalableNumber values in an object tree to plain numbers.
+ * Preserves the structure of UserParameterizedNumber and other nested objects.
+ */
+export const resolveRefineScaling = <T>(value: T, refineLevel: number): T => {
+  // Resolve RefineScalableNumber to plain number
+  if (isRefineScalableNumber(value)) {
+    return (value.base + (refineLevel - 1) * value.increment) as T;
+  }
+
+  // Recursively process arrays
+  if (Array.isArray(value)) {
+    return value.map((v) => resolveRefineScaling(v, refineLevel)) as T;
+  }
+
+  // Recursively process objects
+  if (typeof value === 'object' && value !== null) {
+    return mapValues(value as Record<string, unknown>, (v) =>
+      resolveRefineScaling(v, refineLevel),
+    ) as T;
+  }
+
+  // Pass through primitives unchanged
+  return value;
+};
 
 /**
  * Shared handler for fetching weapon details with capabilities for the specified refine level.
@@ -27,11 +67,16 @@ export const getWeaponDetailsHandler = async (
     throw new Error(`Failed to fetch weapon details for ID ${id}`);
   }
 
+  const resolvedCapabilities = resolveRefineScaling(
+    weaponData.capabilities,
+    parseInt(refineLevel),
+  ) as Capabilities;
+
   return {
     id: weaponData.id,
     uuid: weaponData.uuid,
     name: weaponData.name,
-    capabilities: weaponData.capabilities[refineLevel],
+    capabilities: resolvedCapabilities,
   };
 };
 

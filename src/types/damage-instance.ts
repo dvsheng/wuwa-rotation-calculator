@@ -32,6 +32,7 @@ export const DamageType = {
   INTRO: 'intro',
   /** Tag for Outro skill specific modifiers. */
   OUTRO: 'outro',
+  DODGE_COUNTER: 'dodgeCounter',
   /** Tag for mid-air/aerial attacks. */
   AERIAL: 'aerial',
 } as const;

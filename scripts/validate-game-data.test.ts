@@ -26,21 +26,36 @@ const LinearScalingParameterConfigSchema = z.object({
   maximum: z.number().optional(),
 });
 
-const LinearParameterizedNumberSchema = z.object({
+// Valid keys for UserParameterizedNumber: '0', '1', '2'
+const UserParameterConfigKeySchema = z.enum(['0', '1', '2']);
+
+// Valid keys for RotationRuntimeResolvableNumber: CharacterStat | EnemyStat | AbilityAttribute
+const RuntimeParameterConfigKeySchema = z.enum([
+  ...Object.values(CharacterStat),
+  ...Object.values(EnemyStat),
+  ...Object.values(AbilityAttribute),
+]);
+
+const UserParameterizedNumberSchema = z.object({
   minimum: z.number().optional(),
   maximum: z.number().optional(),
-  parameterConfigs: z.record(
-    z.union([z.string(), z.number()]),
+  parameterConfigs: z.partialRecord(
+    UserParameterConfigKeySchema,
     LinearScalingParameterConfigSchema,
   ),
   offset: z.number().optional(),
 });
 
-const RotationRuntimeResolvableNumberSchema = LinearParameterizedNumberSchema.extend({
+const RotationRuntimeResolvableNumberSchema = z.object({
+  minimum: z.number().optional(),
+  maximum: z.number().optional(),
+  parameterConfigs: z.partialRecord(
+    RuntimeParameterConfigKeySchema,
+    LinearScalingParameterConfigSchema,
+  ),
+  offset: z.number().optional(),
   resolveWith: z.string(),
 });
-
-const UserParameterizedNumberSchema = LinearParameterizedNumberSchema;
 
 const ParameterizedNumberSchema = z.union([
   z.number(),
@@ -220,8 +235,91 @@ const EchoSetSchema = BaseEntitySchema.extend({
 
 // --- Weapon Schemas ---
 
+// RefineScalableNumber: { base: number, increment: number }
+const RefineScalableNumberSchema = z.object({
+  base: z.number(),
+  increment: z.number(),
+});
+
+// StoredNumber: number | RefineScalableNumber
+const StoredNumberSchema = z.union([z.number(), RefineScalableNumberSchema]);
+
+// LinearScalingParameterConfig with StoredNumber values
+const StoredLinearScalingParameterConfigSchema = z.object({
+  scale: StoredNumberSchema,
+  minimum: StoredNumberSchema.optional(),
+  maximum: StoredNumberSchema.optional(),
+});
+
+// UserParameterizedNumber with StoredNumber values
+const StoredUserParameterizedNumberSchema = z.object({
+  minimum: StoredNumberSchema.optional(),
+  maximum: StoredNumberSchema.optional(),
+  parameterConfigs: z.partialRecord(
+    UserParameterConfigKeySchema,
+    StoredLinearScalingParameterConfigSchema,
+  ),
+  offset: StoredNumberSchema.optional(),
+});
+
+// RotationRuntimeResolvableNumber with StoredNumber values
+const StoredRotationRuntimeResolvableNumberSchema = z.object({
+  minimum: StoredNumberSchema.optional(),
+  maximum: StoredNumberSchema.optional(),
+  parameterConfigs: z.partialRecord(
+    RuntimeParameterConfigKeySchema,
+    StoredLinearScalingParameterConfigSchema,
+  ),
+  offset: StoredNumberSchema.optional(),
+  resolveWith: z.string(),
+});
+
+// Parameterized number that may contain RefineScalableNumber
+const StoredParameterizedNumberSchema = z.union([
+  StoredNumberSchema,
+  StoredUserParameterizedNumberSchema,
+  StoredRotationRuntimeResolvableNumberSchema,
+]);
+
+// Stat schema for weapons (with StoredNumber values)
+const WeaponStatSchema = z.object({
+  stat: z.union([
+    z.enum(Object.values(CharacterStat)),
+    z.enum(Object.values(EnemyStat)),
+  ]),
+  value: StoredParameterizedNumberSchema,
+  tags: z.array(BaseStatTagSchema),
+});
+
+const WeaponModifierSchema = CapabilitySchema.extend({
+  target: z.union([
+    z.enum(['team', 'enemy', 'activeCharacter', 'self']),
+    z.array(z.union([z.literal(1), z.literal(2), z.literal(3)])),
+  ]),
+  modifiedStats: z.array(WeaponStatSchema).nonempty(),
+});
+
+const WeaponPermanentStatSchema = CapabilitySchema.and(WeaponStatSchema);
+
+// Motion values for weapons (may contain RefineScalableNumber)
+const WeaponMotionValuesSchema = z
+  .array(StoredNumberSchema.or(StoredUserParameterizedNumberSchema))
+  .nonempty();
+
+const WeaponAttackSchema = CapabilitySchema.extend({
+  tags: NonCharacterAttackTagsSchema,
+  scalingStat: z.enum(Object.values(AbilityAttribute)),
+  motionValues: WeaponMotionValuesSchema,
+});
+
+const WeaponCapabilitiesSchema = z.object({
+  attacks: z.array(WeaponAttackSchema),
+  modifiers: z.array(WeaponModifierSchema),
+  permanentStats: z.array(WeaponPermanentStatSchema),
+});
+
 const WeaponSchema = BaseEntitySchema.extend({
-  capabilities: z.record(z.enum(['1', '2', '3', '4', '5']), StrictCapabilitiesSchema),
+  capabilities: WeaponCapabilitiesSchema,
 });
 
 // --- Character Schemas ---

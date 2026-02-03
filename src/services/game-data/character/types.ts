@@ -61,7 +61,7 @@ export interface CharacterCapabilityProperties {
   unlockedAt?: Sequence;
   /**
    * The sequence at which this is disabled.
-   * Usually because a sequence upgrades a buff in a way that is hard to express in a
+   * Usually because a sequence upgradessa buff in a way that is hard to express in a
    * parameterizable way, i.e. Aemeath s3.
    */
   disabledAt?: Sequence;

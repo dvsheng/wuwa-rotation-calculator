@@ -1,6 +1,6 @@
 import type { Integer } from '@/types';
 
-interface SkillProps {
+interface SkillProperties {
   motionValue: number;
 }
 
@@ -25,8 +25,8 @@ interface EnemyStats {
   defenseReduction: number;
 }
 
-export interface CalculateDamageProps {
+export interface CalculateDamageProperties {
   character: CharacterStats;
   enemy: EnemyStats;
-  skill: SkillProps;
+  skill: SkillProperties;
 }

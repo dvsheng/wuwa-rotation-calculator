@@ -3,7 +3,7 @@ import { useRotationStore } from '@/store/useRotationStore';
 
 import { CanvasItem } from '../../common/CanvasItem';
 
-interface AttackCanvasItemProps {
+interface AttackCanvasItemProperties {
   attack: DetailedAttackInstance;
   index: number;
   onRemove: (instanceId: string) => void;
@@ -13,7 +13,7 @@ export const AttackCanvasItem = ({
   attack,
   index,
   onRemove,
-}: AttackCanvasItemProps) => {
+}: AttackCanvasItemProperties) => {
   const updateAttackParameters = useRotationStore(
     (state) => state.updateAttackParameters,
   );

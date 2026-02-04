@@ -16,7 +16,7 @@ import type { Parameter } from '@/schemas/rotation';
 
 import { ParameterConfigurationDialog } from './ParameterConfigurationDialog';
 
-export interface CanvasItemProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface CanvasItemProperties extends React.HTMLAttributes<HTMLDivElement> {
   ref?: React.Ref<HTMLDivElement>;
   text: string;
   subtext?: string;
@@ -44,23 +44,23 @@ export function CanvasItem({
   style,
   onClick,
   children,
-  ...props
-}: CanvasItemProps) {
+  ...properties
+}: CanvasItemProperties) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const hasParameters = (parameters?.length ?? 0) > 0;
   const shouldShowWarning =
     hasParameters && parameters?.some((p) => p.value === undefined);
 
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (hasParameters) {
       setIsDialogOpen(true);
     }
-    onClick?.(e);
+    onClick?.(event);
   };
 
   return (
     <>
-      <div ref={ref} style={style} className={cn('h-full', className)} {...props}>
+      <div ref={ref} style={style} className={cn('h-full', className)} {...properties}>
         <Tooltip>
           <TooltipTrigger asChild>
             <Item
@@ -111,9 +111,9 @@ export function CanvasItem({
                     'text-muted-foreground hover:text-destructive hover:bg-destructive/10',
                     size === 'xs' ? 'h-4 w-4' : 'h-6 w-6',
                   )}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={(event) => {
+                    event.stopPropagation();
                     onRemove();
                   }}
                 >
@@ -137,9 +137,9 @@ export function CanvasItem({
             )}
             {hasParameters && !shouldShowWarning && (
               <div className="mt-1 space-y-0.5">
-                {parameters?.map((p, i) => (
-                  <Text key={i} variant="tiny" className="text-primary font-bold">
-                    {parameters.length > 1 ? `Value ${i + 1}: ` : 'Value: '}
+                {parameters?.map((p, index_) => (
+                  <Text key={index_} variant="tiny" className="text-primary font-bold">
+                    {parameters.length > 1 ? `Value ${index_ + 1}: ` : 'Value: '}
                     {p.value}
                   </Text>
                 ))}
@@ -150,7 +150,7 @@ export function CanvasItem({
       </div>
 
       {isDialogOpen && (
-        <div onClick={(e) => e.stopPropagation()}>
+        <div onClick={(event) => event.stopPropagation()}>
           <ParameterConfigurationDialog
             key="open-dialog"
             title={text}

@@ -33,11 +33,12 @@ export interface TeamState {
   updateEnemy: (updater: (draft: Enemy) => void) => void;
 }
 
+const getEchoSubstatValue = (stat: EchoSubstatOptionType) =>
+  ECHO_SUBSTAT_VALUES[stat][0];
+
 const createDefaultEchoStats = (cost: EchoCost): EchoPiece => {
   const mainStatType =
     cost === 4 ? EchoMainStatOption.CRIT_DMG : EchoMainStatOption.ATK_PERCENT;
-
-  const getVal = (stat: EchoSubstatOptionType) => ECHO_SUBSTAT_VALUES[stat][0];
 
   return {
     cost,
@@ -45,23 +46,23 @@ const createDefaultEchoStats = (cost: EchoCost): EchoPiece => {
     substats: [
       {
         stat: EchoSubstatOption.HP_PERCENT,
-        value: getVal(EchoSubstatOption.HP_PERCENT),
+        value: getEchoSubstatValue(EchoSubstatOption.HP_PERCENT),
       },
       {
         stat: EchoSubstatOption.ATK_PERCENT,
-        value: getVal(EchoSubstatOption.ATK_PERCENT),
+        value: getEchoSubstatValue(EchoSubstatOption.ATK_PERCENT),
       },
       {
         stat: EchoSubstatOption.DEF_PERCENT,
-        value: getVal(EchoSubstatOption.DEF_PERCENT),
+        value: getEchoSubstatValue(EchoSubstatOption.DEF_PERCENT),
       },
       {
         stat: EchoSubstatOption.CRIT_RATE,
-        value: getVal(EchoSubstatOption.CRIT_RATE),
+        value: getEchoSubstatValue(EchoSubstatOption.CRIT_RATE),
       },
       {
         stat: EchoSubstatOption.CRIT_DMG,
-        value: getVal(EchoSubstatOption.CRIT_DMG),
+        value: getEchoSubstatValue(EchoSubstatOption.CRIT_DMG),
       },
     ],
   };

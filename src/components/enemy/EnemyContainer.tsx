@@ -42,9 +42,9 @@ export const EnemyContainer = () => {
         </CardHeader>
         <CardContent>
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
+            onSubmit={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
               form.handleSubmit();
             }}
             className="space-y-6"
@@ -59,39 +59,42 @@ export const EnemyContainer = () => {
                     type="number"
                     value={field.state.value}
                     onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(Number(e.target.value))}
+                    onChange={(event) => field.handleChange(Number(event.target.value))}
                   />
                   {field.state.meta.errors.length > 0 ? (
                     <p className="text-destructive text-sm">
                       {field.state.meta.errors.join(', ')}
                     </p>
-                  ) : null}
+                  ) : undefined}
                 </div>
               )}
             />
 
             <div className="grid grid-cols-2 gap-4">
-              {Object.values(Attribute).map((attr) => (
+              {Object.values(Attribute).map((attribute) => (
                 <form.Field
-                  key={attr}
-                  name={`resistances.${attr}`}
+                  key={attribute}
+                  name={`resistances.${attribute}`}
                   children={(field) => (
                     <div className="space-y-2">
                       <Label htmlFor={field.name}>
-                        {attr.charAt(0).toUpperCase() + attr.slice(1)} Resistance (%)
+                        {attribute.charAt(0).toUpperCase() + attribute.slice(1)}{' '}
+                        Resistance (%)
                       </Label>
                       <Input
                         id={field.name}
                         type="number"
                         value={field.state.value}
                         onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(Number(e.target.value))}
+                        onChange={(event) =>
+                          field.handleChange(Number(event.target.value))
+                        }
                       />
                       {field.state.meta.errors.length > 0 ? (
                         <p className="text-destructive text-sm">
                           {field.state.meta.errors.join(', ')}
                         </p>
-                      ) : null}
+                      ) : undefined}
                     </div>
                   )}
                 />

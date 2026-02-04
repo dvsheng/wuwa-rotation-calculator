@@ -50,20 +50,20 @@ function addUuidsToCapabilities(capabilities: Capabilities): number {
 }
 
 function processCharacters(): number {
-  const dir = path.join(DATA_ROOT, 'character/parsed');
-  if (!fs.existsSync(dir)) return 0;
+  const directory = path.join(DATA_ROOT, 'character/parsed');
+  if (!fs.existsSync(directory)) return 0;
 
-  const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json'));
+  const files = fs.readdirSync(directory).filter((f) => f.endsWith('.json'));
   let totalAdded = 0;
 
   for (const file of files) {
-    const filePath = path.join(dir, file);
-    const content = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    const filePath = path.join(directory, file);
+    const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
     if (content.capabilities) {
       const added = addUuidsToCapabilities(content.capabilities);
       totalAdded += added;
-      fs.writeFileSync(filePath, JSON.stringify(content, null, 2));
+      fs.writeFileSync(filePath, JSON.stringify(content, undefined, 2));
     }
   }
 
@@ -74,15 +74,15 @@ function processCharacters(): number {
 }
 
 function processWeapons(): number {
-  const dir = path.join(DATA_ROOT, 'weapon/parsed');
-  if (!fs.existsSync(dir)) return 0;
+  const directory = path.join(DATA_ROOT, 'weapon/parsed');
+  if (!fs.existsSync(directory)) return 0;
 
-  const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json'));
+  const files = fs.readdirSync(directory).filter((f) => f.endsWith('.json'));
   let totalAdded = 0;
 
   for (const file of files) {
-    const filePath = path.join(dir, file);
-    const content = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    const filePath = path.join(directory, file);
+    const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
     if (content.capabilities) {
       // Weapons have capabilities keyed by refine level ("1" through "5")
@@ -90,7 +90,7 @@ function processWeapons(): number {
         const added = addUuidsToCapabilities(content.capabilities[refineLevel]);
         totalAdded += added;
       }
-      fs.writeFileSync(filePath, JSON.stringify(content, null, 2));
+      fs.writeFileSync(filePath, JSON.stringify(content, undefined, 2));
     }
   }
 
@@ -99,20 +99,20 @@ function processWeapons(): number {
 }
 
 function processEchoes(): number {
-  const dir = path.join(DATA_ROOT, 'echo/parsed');
-  if (!fs.existsSync(dir)) return 0;
+  const directory = path.join(DATA_ROOT, 'echo/parsed');
+  if (!fs.existsSync(directory)) return 0;
 
-  const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json'));
+  const files = fs.readdirSync(directory).filter((f) => f.endsWith('.json'));
   let totalAdded = 0;
 
   for (const file of files) {
-    const filePath = path.join(dir, file);
-    const content = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    const filePath = path.join(directory, file);
+    const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
     if (content.capabilities) {
       const added = addUuidsToCapabilities(content.capabilities);
       totalAdded += added;
-      fs.writeFileSync(filePath, JSON.stringify(content, null, 2));
+      fs.writeFileSync(filePath, JSON.stringify(content, undefined, 2));
     }
   }
 
@@ -121,15 +121,15 @@ function processEchoes(): number {
 }
 
 function processEchoSets(): number {
-  const dir = path.join(DATA_ROOT, 'echo-set/parsed');
-  if (!fs.existsSync(dir)) return 0;
+  const directory = path.join(DATA_ROOT, 'echo-set/parsed');
+  if (!fs.existsSync(directory)) return 0;
 
-  const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json'));
+  const files = fs.readdirSync(directory).filter((f) => f.endsWith('.json'));
   let totalAdded = 0;
 
   for (const file of files) {
-    const filePath = path.join(dir, file);
-    const content = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    const filePath = path.join(directory, file);
+    const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
     if (content.setEffects) {
       // Echo sets have setEffects keyed by requirement ("2", "3", "5")
@@ -139,7 +139,7 @@ function processEchoSets(): number {
           totalAdded += added;
         }
       }
-      fs.writeFileSync(filePath, JSON.stringify(content, null, 2));
+      fs.writeFileSync(filePath, JSON.stringify(content, undefined, 2));
     }
   }
 
@@ -169,4 +169,4 @@ async function main(): Promise<void> {
   console.log('='.repeat(60));
 }
 
-main().catch(console.error);
+await main();

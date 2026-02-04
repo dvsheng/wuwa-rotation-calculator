@@ -11,14 +11,18 @@ import type {
 } from '@/types';
 
 const applyModifierToCharacter = (target: Character, modifier: CharacterModifier) => {
-  target.stats = mergeWith(target.stats, modifier.modifiedStats, (objValue, srcValue) =>
-    objValue.concat(srcValue),
+  target.stats = mergeWith(
+    target.stats,
+    modifier.modifiedStats,
+    (objectValue, sourceValue) => [...objectValue, ...sourceValue],
   );
 };
 
 const applyModifierToEnemy = (target: Enemy, modifier: EnemyModifier) => {
-  target.stats = mergeWith(target.stats, modifier.modifiedStats, (objValue, srcValue) =>
-    objValue.concat(srcValue),
+  target.stats = mergeWith(
+    target.stats,
+    modifier.modifiedStats,
+    (objectValue, sourceValue) => [...objectValue, ...sourceValue],
   );
 };
 
@@ -30,23 +34,37 @@ const applyModifierToTeamAndEnemy = (
 ) => {
   const { target } = modifier;
 
-  if (target === 'enemy') {
-    applyModifierToEnemy(draftEnemy, modifier);
-  } else if (target === 'team') {
-    draftTeam.forEach((character) => applyModifierToCharacter(character, modifier));
-  } else if (target === 'activeCharacter' || target === 'self') {
-    const activeCharacter = draftTeam.find(
-      (character) => character.id === activeCharacterName,
-    );
-    if (!activeCharacter) {
-      throw new Error(`Character ${activeCharacterName} not found in team`);
+  switch (target) {
+    case 'enemy': {
+      applyModifierToEnemy(draftEnemy, modifier);
+
+      break;
     }
-    applyModifierToCharacter(activeCharacter, modifier);
-  } else if (target instanceof Set) {
-    target.forEach((slotId) => {
-      const character = draftTeam[slotId - 1];
-      applyModifierToCharacter(character, modifier);
-    });
+    case 'team': {
+      for (const character of draftTeam) applyModifierToCharacter(character, modifier);
+
+      break;
+    }
+    case 'activeCharacter':
+    case 'self': {
+      const activeCharacter = draftTeam.find(
+        (character) => character.id === activeCharacterName,
+      );
+      if (!activeCharacter) {
+        throw new Error(`Character ${activeCharacterName} not found in team`);
+      }
+      applyModifierToCharacter(activeCharacter, modifier);
+
+      break;
+    }
+    default: {
+      if (target instanceof Set) {
+        for (const slotId of target) {
+          const character = draftTeam[slotId - 1];
+          applyModifierToCharacter(character, modifier);
+        }
+      }
+    }
   }
 };
 
@@ -57,8 +75,8 @@ export const applyModifiers = (
   activeCharacterName: string,
 ): [Team, Enemy] => {
   return produce([team, enemy], ([draftTeam, draftEnemy]) => {
-    modifiers.forEach((modifier) => {
+    for (const modifier of modifiers) {
       applyModifierToTeamAndEnemy(draftTeam, draftEnemy, modifier, activeCharacterName);
-    });
+    }
   });
 };

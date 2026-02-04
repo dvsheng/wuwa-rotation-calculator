@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { Parameter } from '@/schemas/rotation';
 
-interface ParameterConfigurationDialogProps {
+interface ParameterConfigurationDialogProperties {
   title: string;
   description?: string;
   parameters?: Array<Parameter>;
@@ -29,7 +29,7 @@ export const ParameterConfigurationDialog = ({
   open,
   onOpenChange,
   onSaveParameters,
-}: ParameterConfigurationDialogProps) => {
+}: ParameterConfigurationDialogProperties) => {
   // Use a function to initialize state only once when needed,
   // though for controlled dialogs, re-initializing when 'open' changes
   // is often handled via keys or effects. To fix the lint error and
@@ -58,7 +58,7 @@ export const ParameterConfigurationDialog = ({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-6 py-4">
-          {parameters.map((param, index) => (
+          {parameters.map((parameter, index) => (
             <div key={index} className="space-y-2">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor={`parameter-${index}`} className="text-right">
@@ -68,14 +68,14 @@ export const ParameterConfigurationDialog = ({
                   id={`parameter-${index}`}
                   type="number"
                   value={values[index] ?? ''}
-                  onChange={(e) => handleValueChange(index, e.target.value)}
+                  onChange={(event) => handleValueChange(index, event.target.value)}
                   className="col-span-3"
-                  placeholder={`Min: ${param.minimum}`}
+                  placeholder={`Min: ${parameter.minimum}`}
                 />
               </div>
               <div className="text-muted-foreground ml-[25%] pl-4 text-xs">
-                Minimum: {param.minimum}
-                {param.maximum ? `, Maximum: ${param.maximum}` : ''}
+                Minimum: {parameter.minimum}
+                {parameter.maximum ? `, Maximum: ${parameter.maximum}` : ''}
               </div>
             </div>
           ))}

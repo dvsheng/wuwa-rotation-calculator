@@ -5,13 +5,22 @@ import prettierPlugin from 'eslint-plugin-prettier';
 import reactCompiler from 'eslint-plugin-react-compiler';
 import reactHooks from 'eslint-plugin-react-hooks';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
+import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 
 export default [
   {
-    ignores: ['.output/**', 'node_modules/**', 'dist/**', '.tanstack/**'],
+    ignores: [
+      '.output/**',
+      'node_modules/**',
+      'dist/**',
+      '.tanstack/**',
+      'src/routeTree.gen.ts',
+      'src/lib/utils.ts',
+    ],
   },
 
   ...tanstackConfig,
+  eslintPluginUnicorn.configs.recommended,
   {
     plugins: {
       'react-compiler': reactCompiler,
@@ -55,6 +64,17 @@ export default [
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
       'import/no-relative-parent-imports': 'error',
+      'unicorn/no-array-reduce': 'off',
+      'unicorn/filename-case': [
+        'error',
+        {
+          cases: {
+            kebabCase: true,
+            pascalCase: true,
+            camelCase: true,
+          },
+        },
+      ],
     },
   },
   prettier,

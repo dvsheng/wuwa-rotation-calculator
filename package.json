@@ -11,7 +11,7 @@
     "lint:fix": "eslint --fix",
     "format": "prettier",
     "validate-data": "vitest run scripts/validate-game-data.test.ts",
-    "check": "prettier --write . && eslint --fix && tsc && npm run test"
+    "check": "eslint --fix && tsc && prettier --write . && npm run test "
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",
@@ -70,12 +70,14 @@
     "@vitejs/plugin-react": "^5.0.4",
     "babel-plugin-react-compiler": "^1.0.0",
     "concurrently": "^9.2.1",
+    "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-prettier": "^5.5.5",
     "eslint-plugin-react-compiler": "^19.1.0-rc.2",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
+    "eslint-plugin-unicorn": "^62.0.0",
     "jsdom": "^27.0.0",
     "prettier": "^3.8.0",
     "prettier-plugin-tailwindcss": "^0.7.2",

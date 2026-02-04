@@ -13,7 +13,7 @@ import { useTeamStore } from '@/store/useTeamStore';
 import { STAT_LABELS } from './constants';
 import { EchoSubstatEditor } from './EchoSubstatEditor';
 
-interface EchoPieceEditorProps {
+interface EchoPieceEditorProperties {
   characterIndex: number;
   echoIndex: number;
 }
@@ -21,14 +21,14 @@ interface EchoPieceEditorProps {
 export const EchoPieceEditor = ({
   characterIndex,
   echoIndex,
-}: EchoPieceEditorProps) => {
+}: EchoPieceEditorProperties) => {
   const echo = useTeamStore((state) => state.team[characterIndex].echoStats[echoIndex]);
   const updateEchoPiece = useTeamStore((state) => state.updateEchoPiece);
 
   const mainStatOptions = VALID_MAIN_STATS[echo.cost];
 
-  const handleCostChange = (val: string) => {
-    const newCost = parseInt(val) as EchoCost;
+  const handleCostChange = (value: string) => {
+    const newCost = Number.parseInt(value) as EchoCost;
     updateEchoPiece(characterIndex, echoIndex, (draft) => {
       draft.cost = newCost;
       const newValidOptions = VALID_MAIN_STATS[newCost];
@@ -63,10 +63,10 @@ export const EchoPieceEditor = ({
               <LabelText className="px-1">Main Stat</LabelText>
               <Select
                 value={echo.mainStatType}
-                onValueChange={(val) =>
+                onValueChange={(value) =>
                   updateEchoPiece(characterIndex, echoIndex, (draft) => {
                     // @ts-ignore - dynamic enum cast
-                    draft.mainStatType = val;
+                    draft.mainStatType = value;
                   })
                 }
               >

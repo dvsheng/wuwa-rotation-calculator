@@ -19,9 +19,9 @@ export const useTeamModifierInstances = () => {
   const fullBuffs: Array<DetailedModifierInstance> = compact(
     storedBuffs.map((stored) => {
       const gameData = buffMap.get(stored.id);
-      if (!gameData) return undefined;
-      const parameters = gameData.parameters?.map((param, index) => ({
-        ...param,
+      if (!gameData) return;
+      const parameters = gameData.parameters?.map((parameter, index) => ({
+        ...parameter,
         value: stored.parameterValues?.[index],
       }));
       return {

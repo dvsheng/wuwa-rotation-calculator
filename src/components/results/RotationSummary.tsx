@@ -34,8 +34,8 @@ export const RotationSummary = () => {
         return;
       }
       setShowResult(true);
-    } catch (err) {
-      console.error('Calculation failed', err);
+    } catch (error) {
+      console.error('Calculation failed', error);
       toast.error('An unexpected error occurred', {
         description: 'Please try again later.',
       });

@@ -9,24 +9,24 @@ import { useRotationStore } from '@/store/useRotationStore';
 
 import { BuffTimelineCanvasItem } from './BuffCanvasItem';
 
-interface BuffCanvasProps {
+interface BuffCanvasProperties {
   onDropBuff: (layout: Layout, item: LayoutItem | undefined, event: Event) => void;
 }
 
-export const BuffCanvas = ({ onDropBuff }: BuffCanvasProps) => {
-  const { layout: gridLayoutProps, containerRef } = useCanvasLayout();
+export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
+  const { layout: gridLayoutProperties, containerRef } = useCanvasLayout();
   const { buffs } = useTeamModifierInstances();
   const removeBuff = useRotationStore((state) => state.removeBuff);
   const updateBuffLayout = useRotationStore((state) => state.updateBuffLayout);
   const updateBuffParameters = useRotationStore((state) => state.updateBuffParameters);
 
   const onLayoutChange = (layout: Layout) => {
-    layout.forEach((item) => {
+    for (const item of layout) {
       updateBuffLayout(item.i, { x: item.x, y: item.y, w: item.w, h: item.h });
-    });
+    }
   };
 
-  const additionalLayoutProps = {
+  const additionalLayoutProperties = {
     gridConfig: { rowHeight: 28, margin: [4, 4] as const },
     resizeConfig: { enabled: true, handles: ['e'] },
     layout: buffs.map((buff) => ({
@@ -40,7 +40,10 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProps) => {
     onLayoutChange,
     onDrop: onDropBuff,
   };
-  const fullLayoutProps = merge(cloneDeep(gridLayoutProps), additionalLayoutProps);
+  const fullLayoutProperties = merge(
+    cloneDeep(gridLayoutProperties),
+    additionalLayoutProperties,
+  );
 
   return (
     <div className="canvas-section">
@@ -63,7 +66,7 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProps) => {
             </div>
           )}
 
-          <GridLayout {...fullLayoutProps}>
+          <GridLayout {...fullLayoutProperties}>
             {buffs.map((buff) => (
               <div key={buff.instanceId} className="group relative">
                 <BuffTimelineCanvasItem

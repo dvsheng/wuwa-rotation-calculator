@@ -88,7 +88,7 @@ describe('SelectionDialog', () => {
     ]);
 
     const filteredItems = items.filter((item) => {
-      return Array.from(activeFilters.entries()).every(([filterIndex, filterValue]) => {
+      return [...activeFilters.entries()].every(([filterIndex, filterValue]) => {
         const filter = filters[filterIndex];
         return filter.getValue(item) === filterValue;
       });
@@ -107,9 +107,9 @@ describe('SelectionDialog', () => {
       { id: 3, name: 'Item C' },
     ];
 
-    const excludeNames = ['Item A', 'Item B'];
+    const excludeNames = new Set(['Item A', 'Item B']);
 
-    const filteredItems = items.filter((item) => !excludeNames.includes(item.name));
+    const filteredItems = items.filter((item) => !excludeNames.has(item.name));
 
     expect(filteredItems.length).toBe(1);
     expect(filteredItems[0].name).toBe('Item C');
@@ -148,7 +148,7 @@ describe('SelectionDialog', () => {
       { id: 4, name: 'Item D', rarity: 3 },
     ];
 
-    const sortFn = (a: TestItem, b: TestItem) => {
+    const sortFunction = (a: TestItem, b: TestItem) => {
       // Sort by rarity descending, then by name
       if (a.rarity !== b.rarity) {
         return b.rarity - a.rarity;
@@ -156,7 +156,7 @@ describe('SelectionDialog', () => {
       return a.name.localeCompare(b.name);
     };
 
-    const sortedItems = [...items].sort(sortFn);
+    const sortedItems = [...items].toSorted(sortFunction);
 
     expect(sortedItems[0].name).toBe('Item A'); // 5★ A
     expect(sortedItems[1].name).toBe('Item C'); // 5★ C

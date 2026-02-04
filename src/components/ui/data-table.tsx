@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 
-interface DataTableProps<TData, TValue> {
+interface DataTableProperties<TData, TValue> {
   columns: Array<ColumnDef<TData, TValue>>;
   data: Array<TData>;
   onRowClick?: (row: TData, index: number) => void;
@@ -37,7 +37,7 @@ export function DataTable<TData, TValue>({
   renderRow,
   classNames,
   emptyMessage = 'No results.',
-}: DataTableProps<TData, TValue>) {
+}: DataTableProperties<TData, TValue>) {
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
@@ -56,7 +56,7 @@ export function DataTable<TData, TValue>({
                   return (
                     <TableHead key={header.id} className={classNames?.headerCell}>
                       {header.isPlaceholder
-                        ? null
+                        ? undefined
                         : flexRender(
                             header.column.columnDef.header,
                             header.getContext(),
@@ -68,7 +68,7 @@ export function DataTable<TData, TValue>({
             ))}
           </TableHeader>
           <TableBody className={classNames?.body}>
-            {table.getRowModel().rows.length ? (
+            {table.getRowModel().rows.length > 0 ? (
               table.getRowModel().rows.map((row, index) => {
                 const defaultRow = (
                   <TableRow

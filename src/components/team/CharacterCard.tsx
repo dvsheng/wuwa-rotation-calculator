@@ -7,11 +7,11 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Row, Stack } from '@/components/ui/layout';
 import { ECHO_PIECE_COUNT } from '@/schemas/echo';
 
-interface CharacterCardProps {
+interface CharacterCardProperties {
   index: number;
 }
 
-export const CharacterCard = ({ index }: CharacterCardProps) => {
+export const CharacterCard = ({ index }: CharacterCardProperties) => {
   return (
     <Card className="flex h-full flex-col shadow-lg">
       <CardHeader className="bg-secondary/20 pb-2">

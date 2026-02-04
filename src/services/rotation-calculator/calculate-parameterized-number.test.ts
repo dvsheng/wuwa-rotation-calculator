@@ -199,14 +199,14 @@ describe('calculateParameterizedNumberValue', () => {
       const parameterizedNumber: LinearParameterizedNumber<'0'> = {
         parameterConfigs: {},
         conditionals: [
-          { parameter: '0', operator: '==', threshold: 5, valueIfTrue: 1.0 },
+          { parameter: '0', operator: '==', threshold: 5, valueIfTrue: 1 },
         ],
       };
       expect(calculateParameterizedNumberValue(parameterizedNumber, { '0': 4 })).toBe(
         0,
       );
       expect(calculateParameterizedNumberValue(parameterizedNumber, { '0': 5 })).toBe(
-        1.0,
+        1,
       );
       expect(calculateParameterizedNumberValue(parameterizedNumber, { '0': 6 })).toBe(
         0,

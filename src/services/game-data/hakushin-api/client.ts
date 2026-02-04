@@ -3,8 +3,10 @@ import { createFsStore } from './fs-store';
 import type { HakushinCharacterDetail } from './types';
 
 const HAKUSHIN_API_BASE = 'https://api.hakush.in/ww/data';
+
 const DEFAULT_LOCAL_DATA_PATH =
-  typeof window === 'undefined' ? `${process.cwd()}/.local/data//` : '';
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  globalThis.window === undefined ? `${process.cwd()}/.local/data//` : '';
 
 export const fsStore = createFsStore<any>(DEFAULT_LOCAL_DATA_PATH);
 
@@ -22,9 +24,10 @@ export type HakushinCharacterData = Record<string, HakushinCharacter>;
 
 export const fetchDataPath =
   <T>(store: DataStore<T>, pathTemplate: string) =>
-  async (...args: Array<string | number>): Promise<T> => {
-    const apiPath = args.reduce<string>(
-      (acc, arg, i) => acc.split(`{${i}}`).join(String(arg)),
+  async (...arguments_: Array<string | number>): Promise<T> => {
+    const apiPath = arguments_.reduce<string>(
+      (accumulator, argument, index) =>
+        accumulator.split(`{${index}}`).join(String(argument)),
       pathTemplate,
     );
     const cachedData = await store.get(apiPath);

@@ -9,20 +9,20 @@ import { useTeamStore } from '@/store/useTeamStore';
 
 import { AssetIcon } from '../common/AssetIcon';
 
-interface PrimaryEchoSelectorProps {
+interface PrimaryEchoSelectorProperties {
   index: number;
 }
 
-export const PrimaryEchoSelector = ({ index }: PrimaryEchoSelectorProps) => {
+export const PrimaryEchoSelector = ({ index }: PrimaryEchoSelectorProperties) => {
   const echo = useTeamStore((state) => state.team[index].primarySlotEcho);
   const selectedEchoSets = useTeamStore((state) => state.team[index].echoSets);
   const setEcho = useTeamStore((state) => state.setPrimaryEcho);
   const { data: echoList = [] } = useEchoList();
 
   // Filter echoes by selected echo set IDs
-  const selectedSetIds = selectedEchoSets.map((set) => set.id);
+  const selectedSetIds = new Set(selectedEchoSets.map((set) => set.id));
   const primaryEchoOptions = echoList.filter((_echo) =>
-    _echo.sets.some((set) => selectedSetIds.includes(set)),
+    _echo.sets.some((set) => selectedSetIds.has(set)),
   );
 
   // Cost filter

@@ -84,36 +84,32 @@ describe('getCharacterDetailsHandler', () => {
       },
     };
 
-    mockGet.mockImplementation(() =>
-      Promise.resolve(JSON.parse(JSON.stringify(mockCharacter))),
-    );
+    mockGet.mockImplementation(() => Promise.resolve(structuredClone(mockCharacter)));
 
     // Sequence 0 (Base)
-    const res0 = await getCharacterDetailsHandler('1204', 0);
-    expect(res0.capabilities.attacks).toHaveLength(1);
-    expect(res0.capabilities.attacks[0].id).toBe('attack-base');
-    expect(res0.capabilities.modifiers).toHaveLength(0);
-    expect(res0.capabilities.permanentStats).toHaveLength(0);
+    const result0 = await getCharacterDetailsHandler('1204', 0);
+    expect(result0.capabilities.attacks).toHaveLength(1);
+    expect(result0.capabilities.attacks[0].id).toBe('attack-base');
+    expect(result0.capabilities.modifiers).toHaveLength(0);
+    expect(result0.capabilities.permanentStats).toHaveLength(0);
 
     // Sequence 1
-    const res1 = await getCharacterDetailsHandler('1204', 1);
-    expect(res1.capabilities.attacks).toHaveLength(2);
-    expect(res1.capabilities.modifiers).toHaveLength(0);
+    const result1 = await getCharacterDetailsHandler('1204', 1);
+    expect(result1.capabilities.attacks).toHaveLength(2);
+    expect(result1.capabilities.modifiers).toHaveLength(0);
 
     // Sequence 2
-    const res2 = await getCharacterDetailsHandler('1204', 2);
-    expect(res2.capabilities.modifiers).toHaveLength(1);
-    expect(res2.capabilities.modifiers[0].id).toBe('mod-s2');
+    const result2 = await getCharacterDetailsHandler('1204', 2);
+    expect(result2.capabilities.modifiers).toHaveLength(1);
+    expect(result2.capabilities.modifiers[0].id).toBe('mod-s2');
 
     // Sequence 3
-    const res3 = await getCharacterDetailsHandler('1204', 3);
-    expect(res3.capabilities.permanentStats).toHaveLength(1);
-    expect(res3.capabilities.permanentStats[0].id).toBe('stat-s3');
+    const result3 = await getCharacterDetailsHandler('1204', 3);
+    expect(result3.capabilities.permanentStats).toHaveLength(1);
+    expect(result3.capabilities.permanentStats[0].id).toBe('stat-s3');
   });
 
   it('throws error if character not found', async () => {
-    mockGet.mockResolvedValue(null);
-
     await expect(getCharacterDetailsHandler('9999')).rejects.toThrow(
       'Failed to fetch character details for ID 9999',
     );
@@ -186,9 +182,7 @@ describe('getCharacterDetailsHandler', () => {
     };
 
     beforeEach(() => {
-      mockGet.mockImplementation(() =>
-        Promise.resolve(JSON.parse(JSON.stringify(mockAugusta))),
-      );
+      mockGet.mockImplementation(() => Promise.resolve(structuredClone(mockAugusta)));
     });
 
     it('returns base definition at sequence 0', async () => {

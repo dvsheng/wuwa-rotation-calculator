@@ -18,21 +18,21 @@ interface Entity {
 }
 
 function processDirectory(
-  dirPath: string,
+  directoryPath: string,
   entityType: string,
 ): { processed: number; added: number; errors: Array<string> } {
-  if (!fs.existsSync(dirPath)) {
+  if (!fs.existsSync(directoryPath)) {
     return { processed: 0, added: 0, errors: [] };
   }
 
-  const files = fs.readdirSync(dirPath).filter((f) => f.endsWith('.json'));
+  const files = fs.readdirSync(directoryPath).filter((f) => f.endsWith('.json'));
   let added = 0;
   const errors: Array<string> = [];
 
   for (const file of files) {
-    const filePath = path.join(dirPath, file);
+    const filePath = path.join(directoryPath, file);
     try {
-      const content = fs.readFileSync(filePath, 'utf-8');
+      const content = fs.readFileSync(filePath, 'utf8');
       const entity: Entity = JSON.parse(content);
 
       if (!entity.uuid) {
@@ -49,11 +49,11 @@ function processDirectory(
           }
         }
 
-        fs.writeFileSync(filePath, JSON.stringify(newEntity, null, 2));
+        fs.writeFileSync(filePath, JSON.stringify(newEntity, undefined, 2));
         added++;
       }
-    } catch (err) {
-      errors.push(`${file}: ${err instanceof Error ? err.message : String(err)}`);
+    } catch (error) {
+      errors.push(`${file}: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -100,4 +100,4 @@ async function main(): Promise<void> {
   console.log('='.repeat(60));
 }
 
-main().catch(console.error);
+await main();

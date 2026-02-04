@@ -10,12 +10,12 @@ import { useRotationStore } from '@/store/useRotationStore';
 
 import { AttackCanvasItem } from './AttackCanvasItem';
 
-export interface AttackCanvasProps {
+export interface AttackCanvasProperties {
   onDropAttack: (layout: Layout, item: LayoutItem | undefined, event: Event) => void;
 }
 
-export const AttackCanvas = ({ onDropAttack }: AttackCanvasProps) => {
-  const { layout: gridLayoutProps, containerRef } = useCanvasLayout();
+export const AttackCanvas = ({ onDropAttack }: AttackCanvasProperties) => {
+  const { layout: gridLayoutProperties, containerRef } = useCanvasLayout();
   const { attacks } = useTeamAttackInstances();
   const storedAttacks = useRotationStore((state) => state.attacks);
   const removeAttack = useRotationStore((state) => state.removeAttack);
@@ -24,7 +24,7 @@ export const AttackCanvas = ({ onDropAttack }: AttackCanvasProps) => {
   const handleLayoutChange = (layout: Layout) => {
     if (layout.length !== storedAttacks.length) return;
     const newAttackInstanceIdOrder = [...layout]
-      .sort((a, b) => a.x - b.x)
+      .toSorted((a, b) => a.x - b.x)
       .map((layoutItem) => layoutItem.i);
     const hasAttackOrderChanged = storedAttacks.some(
       (attack, index) => attack.instanceId !== newAttackInstanceIdOrder[index],
@@ -39,7 +39,7 @@ export const AttackCanvas = ({ onDropAttack }: AttackCanvasProps) => {
     }
   };
 
-  const additionalLayoutProps = {
+  const additionalLayoutProperties = {
     layout: attacks.map((attack, index) => ({
       i: attack.instanceId,
       x: index,
@@ -54,7 +54,10 @@ export const AttackCanvas = ({ onDropAttack }: AttackCanvasProps) => {
     onLayoutChange: handleLayoutChange,
   };
 
-  const fullLayoutProps = merge(cloneDeep(gridLayoutProps), additionalLayoutProps);
+  const fullLayoutProperties = merge(
+    cloneDeep(gridLayoutProperties),
+    additionalLayoutProperties,
+  );
 
   return (
     <div className="canvas-section">
@@ -77,7 +80,7 @@ export const AttackCanvas = ({ onDropAttack }: AttackCanvasProps) => {
             </div>
           )}
 
-          <GridLayout {...fullLayoutProps}>
+          <GridLayout {...fullLayoutProperties}>
             {attacks.map((attack, index) => (
               <div key={attack.instanceId} className="h-full w-full">
                 <AttackCanvasItem

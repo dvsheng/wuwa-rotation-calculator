@@ -12,14 +12,16 @@ import {
 } from '@/components/ui/select';
 import { useTeamStore } from '@/store/useTeamStore';
 
-interface CharacterSelectorProps {
+interface CharacterSelectorProperties {
   index: number;
 }
 
-export const CharacterSelector = ({ index }: CharacterSelectorProps) => {
+export const CharacterSelector = ({ index }: CharacterSelectorProperties) => {
   const character = useTeamStore((state) => state.team[index]);
   const otherSelectedCharacterIds = useTeamStore(
-    useShallow((s) => s.team.flatMap((c, i) => (i !== index && c.id ? [c.id] : []))),
+    useShallow((s) =>
+      s.team.flatMap((c, index_) => (index_ !== index && c.id ? [c.id] : [])),
+    ),
   );
   const setCharacter = useTeamStore((state) => state.setCharacter);
   const setSequence = useTeamStore((state) => state.setSequence);
@@ -37,7 +39,7 @@ export const CharacterSelector = ({ index }: CharacterSelectorProps) => {
       <div className="w-16 shrink-0">
         <Select
           value={String(character.sequence)}
-          onValueChange={(val) => setSequence(index, parseInt(val))}
+          onValueChange={(value) => setSequence(index, Number.parseInt(value))}
         >
           <SelectTrigger className="h-9 px-2">
             <SelectValue />

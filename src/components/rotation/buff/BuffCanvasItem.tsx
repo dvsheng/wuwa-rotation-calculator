@@ -4,7 +4,7 @@ import type { DetailedModifierInstance } from '@/schemas/rotation';
 
 import { CanvasItem } from '../../common/CanvasItem';
 
-interface BuffTimelineCanvasItemProps extends React.HTMLAttributes<HTMLDivElement> {
+interface BuffTimelineCanvasItemProperties extends React.HTMLAttributes<HTMLDivElement> {
   buff: DetailedModifierInstance;
   onRemove: (instanceId: string) => void;
   onSaveParameters: (instanceId: string, parameterValues: Array<number>) => void;
@@ -12,8 +12,8 @@ interface BuffTimelineCanvasItemProps extends React.HTMLAttributes<HTMLDivElemen
 
 export const BuffTimelineCanvasItem = React.forwardRef<
   HTMLDivElement,
-  BuffTimelineCanvasItemProps
->(({ buff, onRemove, onSaveParameters, ...props }, ref) => {
+  BuffTimelineCanvasItemProperties
+>(({ buff, onRemove, onSaveParameters, ...properties }, reference) => {
   const parameters = buff.parameters?.map((p) => ({
     ...p,
     value: p.value ?? p.minimum,
@@ -21,7 +21,7 @@ export const BuffTimelineCanvasItem = React.forwardRef<
 
   return (
     <CanvasItem
-      ref={ref}
+      ref={reference}
       text={`${buff.characterName} - ${buff.name}`}
       hoverText={buff.description}
       parameters={parameters}
@@ -33,7 +33,7 @@ export const BuffTimelineCanvasItem = React.forwardRef<
           vals.map((v) => v ?? 0),
         )
       }
-      {...props}
+      {...properties}
     />
   );
 });

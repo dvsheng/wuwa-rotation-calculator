@@ -72,27 +72,27 @@ const groupCapabilitiesByBaseId = (
 /**
  * Find capabilities that form a chain (base -> s1 -> s2 -> etc.)
  */
-const findChain = (capabilities: Array<Capability>): Array<Capability> | null => {
+const findChain = (capabilities: Array<Capability>): Array<Capability> | undefined => {
   // Sort by unlockedAt sequence
-  const sorted = [...capabilities].sort(
+  const sorted = [...capabilities].toSorted(
     (a, b) => getSequenceIndex(a.unlockedAt) - getSequenceIndex(b.unlockedAt),
   );
 
   // Check if they form a valid chain
   // A valid chain: base has disabledAt, each subsequent has unlockedAt matching previous disabledAt
-  if (sorted.length < 2) return null;
+  if (sorted.length < 2) return undefined;
 
   const base = sorted[0];
-  if (!base.disabledAt) return null;
+  if (!base.disabledAt) return undefined;
 
   // Verify the chain
-  for (let i = 1; i < sorted.length; i++) {
-    const prev = sorted[i - 1];
-    const curr = sorted[i];
+  for (let index = 1; index < sorted.length; index++) {
+    const previous = sorted[index - 1];
+    const current = sorted[index];
 
     // Current should unlock when previous is disabled
-    if (curr.unlockedAt !== prev.disabledAt) {
-      return null;
+    if (current.unlockedAt !== previous.disabledAt) {
+      return undefined;
     }
   }
 
@@ -185,8 +185,8 @@ const convertChain = (
         ? getModifierChildFields
         : getPermanentStatChildFields;
 
-  for (let i = 1; i < chain.length; i++) {
-    const child = chain[i];
+  for (let index = 1; index < chain.length; index++) {
+    const child = chain[index];
     const seq = child.unlockedAt;
     if (seq) {
       alternatives[seq] = getChildFields(base, child);
@@ -238,7 +238,7 @@ const processCapabilityType = (
  * Process a single character file
  */
 const processCharacter = (filePath: string): boolean => {
-  const content = JSON.parse(fs.readFileSync(filePath, 'utf-8')) as Character;
+  const content = JSON.parse(fs.readFileSync(filePath, 'utf8')) as Character;
   const fileName = path.basename(filePath);
 
   console.log(`Processing ${content.name} (${fileName})...`);
@@ -282,7 +282,7 @@ const processCharacter = (filePath: string): boolean => {
     },
   };
 
-  fs.writeFileSync(filePath, JSON.stringify(updated, null, 2) + '\n');
+  fs.writeFileSync(filePath, JSON.stringify(updated, undefined, 2) + '\n');
   console.log(`  Saved ${totalChanges} consolidated capabilities`);
 
   return true;

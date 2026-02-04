@@ -37,7 +37,7 @@ export interface ResolvedCharacter extends Omit<StoreCharacter, 'capabilities'> 
  */
 const sequenceToNumber = (sequence?: Sequence): number => {
   if (!sequence) return 0;
-  return parseInt(sequence.slice(1), 10);
+  return Number.parseInt(sequence.slice(1), 10);
 };
 
 /**
@@ -51,7 +51,7 @@ const getApplicableSequence = (
 
   const applicableSequences = (Object.keys(alternativeDefinitions) as Array<Sequence>)
     .filter((seq) => sequenceToNumber(seq) <= sequence)
-    .sort((a, b) => sequenceToNumber(b) - sequenceToNumber(a));
+    .toSorted((a, b) => sequenceToNumber(b) - sequenceToNumber(a));
 
   return applicableSequences[0];
 };

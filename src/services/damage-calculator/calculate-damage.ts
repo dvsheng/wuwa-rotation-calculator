@@ -1,32 +1,32 @@
 import { calculateDefenseMultiplier } from './defense';
 import { calculateResistanceMultiplier } from './resistance';
-import type { CalculateDamageProps } from './types';
+import type { CalculateDamageProperties } from './types';
 
-export const calculateDamage = (props: CalculateDamageProps) => {
+export const calculateDamage = (properties: CalculateDamageProperties) => {
   const baseDamage =
-    props.character.abilityAttributeValue *
-      (props.skill.motionValue + props.character.damageMultiplierBonus) +
-    props.character.flatDamage;
-  const damageBonusMultiplier = 1 + props.character.damageBonus;
-  const damageAmplifyMultiplier = 1 + props.character.damageAmplify;
+    properties.character.abilityAttributeValue *
+      (properties.skill.motionValue + properties.character.damageMultiplierBonus) +
+    properties.character.flatDamage;
+  const damageBonusMultiplier = 1 + properties.character.damageBonus;
+  const damageAmplifyMultiplier = 1 + properties.character.damageAmplify;
   const criticalMultiplier =
-    1 + props.character.criticalRate * props.character.criticalDamage;
+    1 + properties.character.criticalRate * properties.character.criticalDamage;
   const defenseMultiplier = calculateDefenseMultiplier({
-    characterLevel: props.character.level,
-    enemyLevel: props.enemy.level,
-    defenseReduction: props.enemy.defenseReduction,
-    defenseIgnore: props.character.defenseIgnore,
+    characterLevel: properties.character.level,
+    enemyLevel: properties.enemy.level,
+    defenseReduction: properties.enemy.defenseReduction,
+    defenseIgnore: properties.character.defenseIgnore,
   });
   const resistanceMultiplier = calculateResistanceMultiplier({
-    baseResistance: props.enemy.baseResistance,
-    resistanceReduction: props.enemy.resistanceReduction,
-    resistancePenetration: props.character.resistancePenetration,
+    baseResistance: properties.enemy.baseResistance,
+    resistanceReduction: properties.enemy.resistanceReduction,
+    resistancePenetration: properties.character.resistancePenetration,
   });
   const totalDamage =
     baseDamage *
     damageBonusMultiplier *
     damageAmplifyMultiplier *
-    (1 + props.character.damageBonusFinal) *
+    (1 + properties.character.damageBonusFinal) *
     criticalMultiplier *
     defenseMultiplier *
     resistanceMultiplier;

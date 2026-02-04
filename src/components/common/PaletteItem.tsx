@@ -6,7 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Text } from '@/components/ui/typography';
 import { cn } from '@/lib/utils';
 
-interface PaletteItemProps {
+interface PaletteItemProperties {
   text: string;
   hoverText?: string;
   onAdd?: () => void;
@@ -22,7 +22,7 @@ export const PaletteItem = ({
   onClick,
   onDragStart,
   className,
-}: PaletteItemProps) => {
+}: PaletteItemProperties) => {
   const isDraggable = onDragStart !== undefined;
   return (
     <Tooltip>
@@ -44,9 +44,9 @@ export const PaletteItem = ({
               variant="ghost"
               size="icon"
               className="hover:bg-primary hover:text-primary-foreground -mr-1 ml-1 h-4 w-4 cursor-pointer transition-colors"
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation();
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
                 onAdd();
               }}
             >

@@ -11,21 +11,24 @@ import { ECHO_SUBSTAT_VALUES } from '@/schemas/echo';
 
 import { STAT_LABELS, SUBSTAT_OPTIONS } from './constants';
 
-interface EchoSubstatEditorProps {
+interface EchoSubstatEditorProperties {
   substat: EchoSubstat;
   onUpdate: (updater: (draft: EchoSubstat) => void) => void;
 }
 
-export const EchoSubstatEditor = ({ substat, onUpdate }: EchoSubstatEditorProps) => {
+export const EchoSubstatEditor = ({
+  substat,
+  onUpdate,
+}: EchoSubstatEditorProperties) => {
   const possibleValues = ECHO_SUBSTAT_VALUES[substat.stat];
 
   return (
     <FormGrid>
       <Select
         value={substat.stat}
-        onValueChange={(val) =>
+        onValueChange={(value) =>
           onUpdate((draft) => {
-            const newStat = val as EchoSubstatOptionType;
+            const newStat = value as EchoSubstatOptionType;
             draft.stat = newStat;
             const newValues = ECHO_SUBSTAT_VALUES[newStat];
             draft.value = newValues[0];
@@ -45,9 +48,9 @@ export const EchoSubstatEditor = ({ substat, onUpdate }: EchoSubstatEditorProps)
       </Select>
       <Select
         value={String(substat.value)}
-        onValueChange={(val) =>
+        onValueChange={(value) =>
           onUpdate((draft) => {
-            draft.value = parseFloat(val) || 0;
+            draft.value = Number.parseFloat(value) || 0;
           })
         }
       >
@@ -55,9 +58,9 @@ export const EchoSubstatEditor = ({ substat, onUpdate }: EchoSubstatEditorProps)
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {possibleValues.map((val) => (
-            <SelectItem key={val} value={String(val)}>
-              {val}
+          {possibleValues.map((value) => (
+            <SelectItem key={value} value={String(value)}>
+              {value}
             </SelectItem>
           ))}
         </SelectContent>

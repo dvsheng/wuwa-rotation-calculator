@@ -3,11 +3,11 @@ import { clamp, sum } from 'es-toolkit/math';
 import type { CharacterDamageInstance, Enemy, Team } from '@/types';
 
 import { calculateDamage } from '../damage-calculator';
-import type { CalculateDamageProps } from '../damage-calculator/types';
+import type { CalculateDamageProperties } from '../damage-calculator/types';
 
 import {
-  getCalculateAbilityAttributeValueFn,
-  getCalculateStatValueFn,
+  getCalculateAbilityAttributeValueFunction,
+  getCalculateStatValueFunction,
 } from './calculate-stat-total';
 
 export const calculateAttackDamage = (
@@ -17,20 +17,20 @@ export const calculateAttackDamage = (
     enemy: Enemy;
   },
 ) => {
-  const getStatValue = getCalculateStatValueFn(instance.tags);
-  const getScalingStatValue = getCalculateAbilityAttributeValueFn(instance.tags);
+  const getStatValue = getCalculateStatValueFunction(instance.tags);
+  const getScalingStatValue = getCalculateAbilityAttributeValueFunction(instance.tags);
   const { team, enemy } = context;
   const character = team.find((c) => c.id === instance.originCharacterName);
   if (!character) {
     throw new Error(`Character ${instance.originCharacterName} not found`);
   }
-  const calculateDamageEnemyProps = {
+  const calculateDamageEnemyProperties = {
     level: enemy.level,
     baseResistance: getStatValue(enemy.stats.baseResistance),
     resistanceReduction: getStatValue(enemy.stats.resistanceReduction),
     defenseReduction: getStatValue(enemy.stats.defenseReduction),
   };
-  const calculateDamageCharacterProps = {
+  const calculateDamageCharacterProperties = {
     level: character.level,
     abilityAttributeValue: getScalingStatValue(character.stats, instance.scalingStat),
     flatDamage: getStatValue(character.stats.flatDamage),
@@ -44,13 +44,13 @@ export const calculateAttackDamage = (
     damageBonusFinal: getStatValue(character.stats.finalDamageBonus),
   };
   const totalMotionValue = sum(instance.motionValues);
-  const calculateDamageProps: CalculateDamageProps = {
-    character: calculateDamageCharacterProps,
-    enemy: calculateDamageEnemyProps,
+  const calculateDamageProperties: CalculateDamageProperties = {
+    character: calculateDamageCharacterProperties,
+    enemy: calculateDamageEnemyProperties,
     skill: { motionValue: totalMotionValue },
   };
   return {
-    result: calculateDamage(calculateDamageProps),
-    inputs: calculateDamageProps,
+    result: calculateDamage(calculateDamageProperties),
+    inputs: calculateDamageProperties,
   };
 };

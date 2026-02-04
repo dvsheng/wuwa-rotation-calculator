@@ -15,11 +15,11 @@ import { useTeamStore } from '@/store/useTeamStore';
 
 import { AssetIcon } from '../common/AssetIcon';
 
-interface EchoSetSelectorProps {
+interface EchoSetSelectorProperties {
   index: number;
 }
 
-export const EchoSetSelector = ({ index }: EchoSetSelectorProps) => {
+export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
   const selectedEchoSets = useTeamStore((state) => state.team[index].echoSets);
   const { data: echoSetList = [] } = useEchoSetList();
   const setEchoSet = useTeamStore((state) => state.setEchoSet);
@@ -72,7 +72,9 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProps) => {
                 <div className="w-20 shrink-0">
                   <Select
                     value={String(set.requirement)}
-                    onValueChange={(val) => setEchoSetRequirement(index, setIndex, val)}
+                    onValueChange={(value) =>
+                      setEchoSetRequirement(index, setIndex, value)
+                    }
                   >
                     <SelectTrigger className="h-8 px-2 text-[10px]">
                       <SelectValue />

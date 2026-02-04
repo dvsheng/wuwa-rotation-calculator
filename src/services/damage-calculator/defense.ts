@@ -8,15 +8,20 @@ const LEVEL_MULTIPLER = 8;
  * Calculates the defense multiplier based on the Wuthering Waves damage formula.
  * @see https://wutheringwaves.fandom.com/wiki/Damage#DEF_Multiplier
  */
-export const calculateDefenseMultiplier = (props: {
+export const calculateDefenseMultiplier = (properties: {
   characterLevel: Integer;
   enemyLevel: Integer;
   defenseReduction: number;
   defenseIgnore: number;
 }) => {
-  const enemyDefense = calculateEnemyDefense(props.enemyLevel, props.defenseReduction);
-  const playerDefense = calculatePlayerDefense(props.characterLevel);
-  return playerDefense / (playerDefense + enemyDefense * (1 - props.defenseIgnore));
+  const enemyDefense = calculateEnemyDefense(
+    properties.enemyLevel,
+    properties.defenseReduction,
+  );
+  const playerDefense = calculatePlayerDefense(properties.characterLevel);
+  return (
+    playerDefense / (playerDefense + enemyDefense * (1 - properties.defenseIgnore))
+  );
 };
 
 const calculateEnemyDefense = (enemyLevel: Integer, defenseReduction: number) => {

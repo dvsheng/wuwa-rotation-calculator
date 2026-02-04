@@ -28,7 +28,7 @@ export interface FilterConfig<T> {
   renderBadge?: (option: FilterOption, isSelected: boolean) => ReactNode;
 }
 
-export interface SelectionDialogProps<T extends { id: string; name: string }> {
+export interface SelectionDialogProperties<T extends { id: string; name: string }> {
   // Data
   items: Array<T>;
 
@@ -71,7 +71,7 @@ export const SelectionDialog = <T extends { id: string; name: string }>({
   getItemStyle,
   sortFn,
   gridCols = { default: 2, md: 3 },
-}: SelectionDialogProps<T>) => {
+}: SelectionDialogProperties<T>) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilters, setActiveFilters] = useState<Map<number, string | number>>(
@@ -83,7 +83,7 @@ export const SelectionDialog = <T extends { id: string; name: string }>({
   // Multi-criteria filtering
   const filteredItems = items.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilters = Array.from(activeFilters.entries()).every(
+    const matchesFilters = [...activeFilters.entries()].every(
       ([filterIndex, filterValue]) => {
         const filter = filters[filterIndex];
         return filter.getValue(item) === filterValue;
@@ -94,7 +94,7 @@ export const SelectionDialog = <T extends { id: string; name: string }>({
   });
 
   // Apply custom sorting
-  const sortedItems = sortFn ? [...filteredItems].sort(sortFn) : filteredItems;
+  const sortedItems = sortFn ? [...filteredItems].toSorted(sortFn) : filteredItems;
 
   const handleSelect = (item: T) => {
     onValueChange(item.id);

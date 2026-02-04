@@ -43,7 +43,7 @@ export const listEchoes = createServerFn({
         id: id,
         name: echo.en,
         cost,
-        sets: echo.group.map((gId) => String(gId)),
+        sets: echo.group.map(String),
       };
     });
 });

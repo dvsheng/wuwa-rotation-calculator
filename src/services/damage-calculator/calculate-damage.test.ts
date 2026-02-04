@@ -3,10 +3,10 @@ import { describe, expect, it } from 'vitest';
 import type { Integer } from '@/types';
 
 import { calculateDamage } from './calculate-damage';
-import type { CalculateDamageProps } from './types';
+import type { CalculateDamageProperties } from './types';
 
 describe('calculateDamage', () => {
-  const baseProps: CalculateDamageProps = {
+  const baseProperties: CalculateDamageProperties = {
     character: {
       level: 90 as Integer,
       abilityAttributeValue: 1000,
@@ -39,45 +39,45 @@ describe('calculateDamage', () => {
     // defenseMultiplier = 1520 / (1520 + 1512) = 1520 / 3032 ≈ 0.50131926
     // resistanceMultiplier = 1 - 0.1 = 0.9
     // expected = 1000 * 0.50131926 * 0.9 = 451.187334
-    const result = calculateDamage(baseProps);
+    const result = calculateDamage(baseProperties);
     expect(result).toBeCloseTo(451.19, 2);
   });
 
   it('applies damageMultiplierBonus correctly', () => {
-    const props = {
-      ...baseProps,
+    const properties = {
+      ...baseProperties,
       skill: { motionValue: 0.5 },
       character: {
-        ...baseProps.character,
+        ...baseProperties.character,
         damageMultiplierBonus: 0.2, // 20% multiplier bonus
       },
     };
     // baseDamage = 1000 * (0.5 + 0.2) + 0 = 700
     // defense/res = 0.50131926 * 0.9 = 0.451187334
     // expected = 700 * 0.451187334 = 315.8311338
-    const result = calculateDamage(props);
+    const result = calculateDamage(properties);
     expect(result).toBeCloseTo(315.83, 2);
   });
 
   it('applies damageBonusFinal correctly', () => {
-    const props = {
-      ...baseProps,
+    const properties = {
+      ...baseProperties,
       character: {
-        ...baseProps.character,
+        ...baseProperties.character,
         damageBonusFinal: 0.1, // 10% final damage bonus
       },
     };
     // expected = 451.187 * 1.1 = 496.306
-    const result = calculateDamage(props);
+    const result = calculateDamage(properties);
     expect(result).toBeCloseTo(496.31, 2);
   });
 
   it('combines multiple multipliers correctly', () => {
-    const props = {
-      ...baseProps,
+    const properties = {
+      ...baseProperties,
       skill: { motionValue: 0.5 },
       character: {
-        ...baseProps.character,
+        ...baseProperties.character,
         damageBonus: 0.5,
         damageMultiplierBonus: 0.2,
         damageBonusFinal: 0.1,
@@ -88,7 +88,7 @@ describe('calculateDamage', () => {
     // (1 + 0.5) * (1 + 0.1) = 1.5 * 1.1 = 1.65
     // defense/res = 0.50131926 * 0.9 = 0.451187334
     // expected = 700 * 1.65 * 0.451187334 = 521.12137
-    const result = calculateDamage(props);
+    const result = calculateDamage(properties);
     expect(result).toBeCloseTo(521.12, 2);
   });
 });

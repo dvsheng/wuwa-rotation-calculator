@@ -19,11 +19,11 @@ export const useTeamAttackInstances = () => {
   const fullAttacks: Array<DetailedAttackInstance> = compact(
     storedAttacks.map((stored) => {
       const gameData = attackMap.get(stored.id);
-      if (!gameData) return undefined;
+      if (!gameData) return;
 
-      const parameters = gameData.parameters?.map((param, index) => ({
-        ...param,
-        value: stored.parameterValues?.[index] ?? param.minimum,
+      const parameters = gameData.parameters?.map((parameter, index) => ({
+        ...parameter,
+        value: stored.parameterValues?.[index] ?? parameter.minimum,
       }));
 
       return {

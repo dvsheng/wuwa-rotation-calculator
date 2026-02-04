@@ -38,18 +38,18 @@ export const useDragAndDrop = <T>({ schema }: UseDragAndDropOptions<T>) => {
       }
 
       try {
-        const dataStr =
+        const dataString =
           dragEvent.dataTransfer.getData(PALETTE_DRAG_TYPE) ||
           dragEvent.dataTransfer.getData('application/json');
 
-        if (dataStr === '') return;
+        if (dataString === '') return;
 
-        const rawData = JSON.parse(dataStr);
+        const rawData = JSON.parse(dataString);
         const validatedData = schema.parse(rawData);
 
         onDrop(validatedData, item, layout);
-      } catch (err) {
-        if (err instanceof z.ZodError) {
+      } catch (error) {
+        if (error instanceof z.ZodError) {
           toast.error('Invalid item type for this area');
         } else {
           toast.error('Failed to drop item');

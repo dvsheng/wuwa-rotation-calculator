@@ -16,7 +16,7 @@ import type { DetailedAttackInstance } from '@/schemas/rotation';
 import type { RotationResult } from '@/services/rotation-calculator/types';
 import { useRotationStore } from '@/store/useRotationStore';
 
-interface RotationResultDisplayProps {
+interface RotationResultDisplayProperties {
   result: NonNullable<ReturnType<typeof useRotationCalculation>['data']>;
   isStale?: boolean;
 }
@@ -36,7 +36,7 @@ interface DamageRow {
 export const RotationResultDisplay = ({
   result,
   isStale,
-}: RotationResultDisplayProps) => {
+}: RotationResultDisplayProperties) => {
   const storedAttacks = useRotationStore((state) => state.attacks);
   const { attacks: resolvedAttacks } = useTeamAttackInstances();
 
@@ -44,10 +44,10 @@ export const RotationResultDisplay = ({
     // Build a map from instanceId to resolved attack for quick lookup
     const attackMap = new Map(resolvedAttacks.map((a) => [a.instanceId, a]));
 
-    return result.damageInstances.map((dmg, idx) => ({
-      index: idx,
-      attack: attackMap.get(storedAttacks[idx]?.instanceId),
-      detail: result.damageDetails[idx],
+    return result.damageInstances.map((dmg, index) => ({
+      index: index,
+      attack: attackMap.get(storedAttacks[index]?.instanceId),
+      detail: result.damageDetails[index],
       damage: dmg,
     }));
   }, [result, storedAttacks, resolvedAttacks]);
@@ -165,7 +165,7 @@ export const RotationResultDisplay = ({
                     ([key, value]) => (
                       <Fragment key={key}>
                         <span className="text-zinc-400 capitalize">
-                          {key.replace(/([A-Z])/g, ' $1').trim()}
+                          {key.replaceAll(/([A-Z])/g, ' $1').trim()}
                         </span>
                         <span className="text-right font-mono font-medium text-zinc-100">
                           {['level', 'abilityAttributeValue', 'flatDamage'].includes(
@@ -189,7 +189,7 @@ export const RotationResultDisplay = ({
                   {Object.entries(detail.resolvedStats.enemy).map(([key, value]) => (
                     <Fragment key={key}>
                       <span className="text-zinc-400 capitalize">
-                        {key.replace(/([A-Z])/g, ' $1').trim()}
+                        {key.replaceAll(/([A-Z])/g, ' $1').trim()}
                       </span>
                       <span className="text-right font-mono font-medium text-zinc-100">
                         {key === 'level'

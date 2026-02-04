@@ -11,13 +11,13 @@ const ICON_MAP = {
   weapon,
 } as const;
 
-interface AssetIconProps {
+interface AssetIconProperties {
   name: keyof typeof ICON_MAP;
   size?: number;
   className?: string;
 }
 
-export const AssetIcon = ({ name, size = 24, className }: AssetIconProps) => (
+export const AssetIcon = ({ name, size = 24, className }: AssetIconProperties) => (
   <img
     src={ICON_MAP[name]}
     width={size}

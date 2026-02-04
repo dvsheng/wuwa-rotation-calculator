@@ -6,13 +6,15 @@ const HIGH_RESISTANCE_FACTOR = 5;
  * Resistance calculations based on the Wuthering Waves damage formula.
  * @see https://wutheringwaves.fandom.com/wiki/Damage#RES_Multiplier
  */
-export const calculateResistanceMultiplier = (props: {
+export const calculateResistanceMultiplier = (properties: {
   baseResistance: number;
   resistanceReduction: number;
   resistancePenetration: number;
 }) => {
   const netResistance =
-    props.baseResistance - props.resistanceReduction - props.resistancePenetration;
+    properties.baseResistance -
+    properties.resistanceReduction -
+    properties.resistancePenetration;
   if (netResistance < 0) {
     return 1 - netResistance / 2;
   }

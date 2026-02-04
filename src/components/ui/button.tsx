@@ -42,7 +42,7 @@ function Button({
   variant = 'default',
   size = 'default',
   asChild = false,
-  ...props
+  ...properties
 }: React.ComponentProps<'button'> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
@@ -55,7 +55,7 @@ function Button({
       data-variant={variant}
       data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
+      {...properties}
     />
   );
 }

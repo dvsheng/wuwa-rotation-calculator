@@ -228,11 +228,11 @@ const resolveUserParameterizedNumber = <TNumber>(
 };
 
 const resolveUserParameterizedAttack = (attack: AttackInstance & Attack) => {
-  const paramValues = attack.parameterValues ?? [];
+  const parameterValues = attack.parameterValues ?? [];
   return {
     ...attack,
     motionValues: attack.motionValues.map((mv) =>
-      resolveUserParameterizedNumber(mv, paramValues),
+      resolveUserParameterizedNumber(mv, parameterValues),
     ),
   };
 };
@@ -240,10 +240,10 @@ const resolveUserParameterizedAttack = (attack: AttackInstance & Attack) => {
 const resolveModifierUserParameters = (
   modifier: ModifierInstance & GameDataModifier,
 ) => {
-  const paramValues = modifier.parameterValues ?? [];
+  const parameterValues = modifier.parameterValues ?? [];
   const modifiedStats = modifier.modifiedStats.map((stat) => ({
     ...stat,
-    value: resolveUserParameterizedNumber(stat.value, paramValues),
+    value: resolveUserParameterizedNumber(stat.value, parameterValues),
   }));
   return {
     ...modifier,
@@ -304,10 +304,10 @@ export const calculateRotation = async (
     ),
   ]);
   const modifierDetails = entityDetails.flatMap((entity) =>
-    entity.flatMap((e) => e.capabilities.modifiers),
+    entity.flatMap((detail) => detail.capabilities.modifiers),
   );
   const attackDetails = entityDetails.flatMap((entity) =>
-    entity.flatMap((e) => e.capabilities.attacks),
+    entity.flatMap((detail) => detail.capabilities.attacks),
   );
   const enrichAttackWithDetails = enrichWith(attackDetails);
   const enrichModifierWithDetails = enrichWith(modifierDetails);
@@ -349,7 +349,7 @@ export const calculateRotation = async (
     const finalStats = mergeWith(
       cloneDeep(CHARACTER_BASE_STATS),
       characterInstancePermanentStats,
-      (objValue, srcValue) => objValue.concat(srcValue),
+      (objectValue, sourceValue) => [...objectValue, ...sourceValue],
     ) as CharacterStats;
 
     return {
@@ -363,10 +363,12 @@ export const calculateRotation = async (
   const serverEnemy = {
     level: clientEnemy.level as Integer,
     stats: {
-      baseResistance: Object.entries(clientEnemy.resistances).map(([attr, val]) => ({
-        value: val / 100,
-        tags: [attr],
-      })),
+      baseResistance: Object.entries(clientEnemy.resistances).map(
+        ([attribute, value]) => ({
+          value: value / 100,
+          tags: [attribute],
+        }),
+      ),
       defenseReduction: [],
       resistanceReduction: [],
       glacioChafe: [],
@@ -380,15 +382,15 @@ export const calculateRotation = async (
 
   // 4. Map Attacks and active Buffs to Damage Instances
   const damageInstances = attacks
-    .map(enrichAttackWithDetails)
-    .map(resolveUserParameterizedAttack)
+    .map((attack) => enrichAttackWithDetails(attack))
+    .map((attack) => resolveUserParameterizedAttack(attack))
     .map((attack, index) => ({
       ...attack,
       modifiers: buffs
         .filter((modifier) => shouldModifierApplyToAttack(index, modifier))
-        .map(enrichModifierWithDetails)
-        .map(resolveModifierUserParameters)
-        .map(toRotationModifier),
+        .map((modifier) => enrichModifierWithDetails(modifier))
+        .map((modifier) => resolveModifierUserParameters(modifier))
+        .map((modifier) => toRotationModifier(modifier)),
     }))
     .map((instance) => ({
       instance: toRotationDamageInstance(instance),

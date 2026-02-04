@@ -139,11 +139,11 @@ const hasValidCharacterStatTags = (character: {
 
   for (const modifier of character.capabilities.modifiers) {
     for (const stat of modifier.modifiedStats) {
-      if (!stat.tags.every(isValidTag)) return false;
+      if (!stat.tags.every((tag) => isValidTag(tag))) return false;
     }
   }
   for (const permanentStat of character.capabilities.permanentStats) {
-    if (!permanentStat.tags.every(isValidTag)) return false;
+    if (!permanentStat.tags.every((tag) => isValidTag(tag))) return false;
   }
   return true;
 };
@@ -435,48 +435,52 @@ const CharacterSchema = BaseEntitySchema.extend({
 
 const DATA_ROOT = path.join(process.cwd(), '.local/data');
 
-describe('Game Data Validation', () => {
-  const validateDir = (dir: string, schema: z.ZodSchema) => {
-    const fullPath = path.join(DATA_ROOT, dir);
-    if (!fs.existsSync(fullPath)) return;
+const validateDirectory = (directory: string, schema: z.ZodSchema) => {
+  const fullPath = path.join(DATA_ROOT, directory);
+  if (!fs.existsSync(fullPath)) return;
 
-    const files = fs.readdirSync(fullPath).filter((f) => f.endsWith('.json'));
+  const files = fs.readdirSync(fullPath).filter((f) => f.endsWith('.json'));
 
-    files.forEach((file) => {
-      it(`validates ${dir}/${file}`, () => {
-        const filePath = path.join(fullPath, file);
-        const content = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-        try {
-          schema.parse(content);
-        } catch (error) {
-          if (error instanceof z.ZodError) {
-            const issues = error.issues.map((issue) => {
-              const pathStr = issue.path.join('.');
-              return `  - ${pathStr}: ${issue.message}`;
-            });
-            throw new Error(
-              `Validation failed for ${dir}/${file}:\n${issues.join('\n')}`,
-            );
-          }
-          throw error;
+  for (const file of files) {
+    it(`validates ${directory}/${file}`, () => {
+      const filePath = path.join(fullPath, file);
+      const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      try {
+        schema.parse(content);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          const issues = error.issues.map((issue) => {
+            const pathString = issue.path.join('.');
+            return `  - ${pathString}: ${issue.message}`;
+          });
+          throw new Error(
+            `Validation failed for ${directory}/${file}:\n${issues.join('\n')}`,
+          );
         }
-      });
+        throw error;
+      }
     });
-  };
+  }
+};
+
+describe('Game Data Validation', () => {
+  describe('Characters', () => {
+    validateDirectory('character/parsed', CharacterSchema);
+  });
 
   describe('Echoes', () => {
-    validateDir('echo/parsed', EchoSchema);
+    validateDirectory('echo/parsed', EchoSchema);
   });
 
   describe('Echo Sets', () => {
-    validateDir('echo-set/parsed', EchoSetSchema);
+    validateDirectory('echo-set/parsed', EchoSetSchema);
   });
 
   describe('Weapons', () => {
-    validateDir('weapon/parsed', WeaponSchema);
+    validateDirectory('weapon/parsed', WeaponSchema);
   });
 
   describe('Characters', () => {
-    validateDir('character/parsed', CharacterSchema);
+    validateDirectory('character/parsed', CharacterSchema);
   });
 });

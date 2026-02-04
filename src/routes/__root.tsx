@@ -18,6 +18,7 @@ export const Route = createRootRouteWithContext<{
   head: () => ({
     meta: [
       {
+        // eslint-disable-next-line unicorn/text-encoding-identifier-case
         charSet: 'utf-8',
       },
       {

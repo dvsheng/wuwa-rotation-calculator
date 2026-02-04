@@ -19,13 +19,18 @@ const weaponStore = createFsStore<StoreWeapon>();
 /**
  * Checks if a value is a RefineScalableNumber.
  */
-export const isRefineScalableNumber = (val: unknown): val is RefineScalableNumber =>
-  typeof val === 'object' &&
-  val !== null &&
-  'base' in val &&
-  'increment' in val &&
-  typeof (val as RefineScalableNumber).base === 'number' &&
-  typeof (val as RefineScalableNumber).increment === 'number';
+export const isRefineScalableNumber = (
+  value: unknown,
+): value is RefineScalableNumber => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'base' in value &&
+    'increment' in value &&
+    typeof (value as RefineScalableNumber).base === 'number' &&
+    typeof (value as RefineScalableNumber).increment === 'number'
+  );
+};
 
 /**
  * Resolves all RefineScalableNumber values in an object tree to plain numbers.
@@ -69,7 +74,7 @@ export const getWeaponDetailsHandler = async (
 
   const resolvedCapabilities = resolveRefineScaling(
     weaponData.capabilities,
-    parseInt(refineLevel),
+    Number.parseInt(refineLevel),
   ) as Capabilities;
 
   return {

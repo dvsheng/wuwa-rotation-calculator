@@ -8,7 +8,7 @@ import {
 import { Toaster as Sonner } from 'sonner';
 import type { ToasterProps } from 'sonner';
 
-const Toaster = ({ ...props }: ToasterProps) => {
+const Toaster = ({ ...properties }: ToasterProps) => {
   return (
     <Sonner
       theme="dark"
@@ -28,7 +28,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
           '--border-radius': 'var(--radius)',
         } as React.CSSProperties
       }
-      {...props}
+      {...properties}
     />
   );
 };

@@ -3,7 +3,7 @@ import { PaletteItem } from '@/components/common/PaletteItem';
 import { useTeamModifiers } from '@/hooks/useTeamModifiers';
 import type { Capability } from '@/schemas/rotation';
 
-export interface BuffPaletteProps {
+export interface BuffPaletteProperties {
   onClickBuff?: (buff: Capability) => void;
   onDragBuff?: (buff: Capability, event: React.DragEvent) => void;
   className?: string;
@@ -22,7 +22,7 @@ export const BuffPalette = ({
   onClickBuff,
   onDragBuff,
   className,
-}: BuffPaletteProps) => {
+}: BuffPaletteProperties) => {
   const { buffs } = useTeamModifiers();
   const byCharacter = Object.groupBy(buffs, (b) => b.characterName);
 
@@ -56,7 +56,7 @@ export const BuffPalette = ({
         <PaletteItem
           text={buff.name}
           hoverText={buff.description}
-          onDragStart={onDragBuff ? (e) => onDragBuff(buff, e) : undefined}
+          onDragStart={onDragBuff ? (event) => onDragBuff(buff, event) : undefined}
           onClick={onClickBuff ? () => onClickBuff(buff) : undefined}
         />
       )}

@@ -34,8 +34,10 @@ const getEchoSetDataHandler = async (id: string): Promise<StoreEchoSet> => {
 const getApplicableRequirements = (
   requirement: SetEffectRequirementType,
 ): Array<SetEffectRequirementType> => {
-  const requirementValue = parseInt(requirement);
-  return SetEffectRequirement.filter((req) => parseInt(req) <= requirementValue);
+  const requirementValue = Number.parseInt(requirement);
+  return SetEffectRequirement.filter(
+    (request) => Number.parseInt(request) <= requirementValue,
+  );
 };
 
 /**
@@ -48,18 +50,18 @@ export const getEchoSetDetailsHandler = async (
   const echoSetData = await getEchoSetDataHandler(id);
   const applicableRequirements = getApplicableRequirements(requirement);
 
-  const attacks = applicableRequirements.flatMap((req) => {
-    const setEffect = echoSetData.setEffects[req];
+  const attacks = applicableRequirements.flatMap((request) => {
+    const setEffect = echoSetData.setEffects[request];
     return setEffect?.attacks ?? [];
   });
 
-  const modifiers = applicableRequirements.flatMap((req) => {
-    const setEffect = echoSetData.setEffects[req];
+  const modifiers = applicableRequirements.flatMap((request) => {
+    const setEffect = echoSetData.setEffects[request];
     return setEffect?.modifiers ?? [];
   });
 
-  const permanentStats = applicableRequirements.flatMap((req) => {
-    const setEffect = echoSetData.setEffects[req];
+  const permanentStats = applicableRequirements.flatMap((request) => {
+    const setEffect = echoSetData.setEffects[request];
     return setEffect?.permanentStats ?? [];
   });
 

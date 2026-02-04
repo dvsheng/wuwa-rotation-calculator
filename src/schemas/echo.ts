@@ -25,7 +25,7 @@ export const ECHO_SUBSTAT_VALUES: Record<EchoSubstatOptionType, Array<number>> =
   [EchoSubstatOption.ATK_FLAT]: [30, 40, 50, 60],
   [EchoSubstatOption.DEF_FLAT]: [40, 50, 60, 70],
   [EchoSubstatOption.HP_FLAT]: [320, 360, 390, 430, 470, 510, 540, 580],
-  [EchoSubstatOption.DEF_PERCENT]: [8.1, 9.0, 10.0, 10.9, 11.8, 12.8, 13.8, 14.7],
+  [EchoSubstatOption.DEF_PERCENT]: [8.1, 9, 10, 10.9, 11.8, 12.8, 13.8, 14.7],
   [EchoSubstatOption.ATK_PERCENT]: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6],
   [EchoSubstatOption.HP_PERCENT]: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6],
   [EchoSubstatOption.DAMAGE_BONUS_RESONANCE_LIBERATION]: [
@@ -40,9 +40,9 @@ export const ECHO_SUBSTAT_VALUES: Record<EchoSubstatOptionType, Array<number>> =
   [EchoSubstatOption.DAMAGE_BONUS_BASIC_ATTACK]: [
     6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6,
   ],
-  [EchoSubstatOption.ENERGY_REGEN]: [6.8, 7.6, 8.4, 9.2, 10.0, 10.8, 11.6, 12.4],
+  [EchoSubstatOption.ENERGY_REGEN]: [6.8, 7.6, 8.4, 9.2, 10, 10.8, 11.6, 12.4],
   [EchoSubstatOption.CRIT_RATE]: [6.3, 6.9, 7.5, 8.1, 8.7, 9.3, 9.9, 10.5],
-  [EchoSubstatOption.CRIT_DMG]: [12.6, 13.8, 15.0, 16.2, 17.4, 18.6, 19.8, 21.0],
+  [EchoSubstatOption.CRIT_DMG]: [12.6, 13.8, 15, 16.2, 17.4, 18.6, 19.8, 21],
 } as const;
 
 export const EchoMainStatOption = {
@@ -108,10 +108,10 @@ export const EchoSubstatSchema = z
     stat: EchoSubstatOptionSchema,
     value: z.number(),
   })
-  .superRefine((data, ctx) => {
+  .superRefine((data, context) => {
     const validValues = ECHO_SUBSTAT_VALUES[data.stat];
     if (!validValues.includes(data.value)) {
-      ctx.addIssue({
+      context.addIssue({
         code: 'custom',
         message: `Invalid value for ${data.stat}. Expected one of: ${validValues.join(', ')}`,
         path: ['value'],
@@ -127,10 +127,10 @@ export const EchoPieceSchema = z
     mainStatType: EchoMainStatOptionSchema,
     substats: z.array(EchoSubstatSchema).length(5),
   })
-  .superRefine((data, ctx) => {
+  .superRefine((data, context) => {
     const validMainStats = VALID_MAIN_STATS[data.cost];
     if (!validMainStats.includes(data.mainStatType)) {
-      ctx.addIssue({
+      context.addIssue({
         code: 'custom',
         message: `Invalid main stat ${data.mainStatType} for cost ${data.cost}. Expected one of: ${validMainStats.join(', ')}`,
         path: ['mainStatType'],

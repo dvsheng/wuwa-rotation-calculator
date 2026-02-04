@@ -2,7 +2,10 @@ import { cn } from '@/lib/utils';
 import type { EntityType, ImageType } from '@/services/image-service';
 import { resolveImagePath } from '@/services/image-service';
 
-interface GameImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'id'> {
+interface GameImageProperties extends Omit<
+  React.ImgHTMLAttributes<HTMLImageElement>,
+  'id'
+> {
   entity: EntityType;
   type: ImageType;
   id: string | number;
@@ -17,9 +20,9 @@ export const GameImage = ({
   id,
   className,
   alt,
-  ...props
-}: GameImageProps) => {
-  const src = resolveImagePath(entity, type, id);
+  ...properties
+}: GameImageProperties) => {
+  const source = resolveImagePath(entity, type, id);
 
-  return <img src={src} alt={alt} className={cn(className)} {...props} />;
+  return <img src={source} alt={alt} className={cn(className)} {...properties} />;
 };

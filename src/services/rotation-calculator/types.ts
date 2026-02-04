@@ -1,6 +1,6 @@
 import type { CharacterDamageInstance, Enemy, Modifier, Team } from '@/types';
 
-import type { CalculateDamageProps } from '../damage-calculator/types';
+import type { CalculateDamageProperties } from '../damage-calculator/types';
 
 export interface Rotation {
   team: Team;
@@ -19,6 +19,6 @@ export interface RotationResult {
     team: Team;
     enemy: Enemy;
     instance: CharacterDamageInstance;
-    resolvedStats: CalculateDamageProps;
+    resolvedStats: CalculateDamageProperties;
   }>;
 }

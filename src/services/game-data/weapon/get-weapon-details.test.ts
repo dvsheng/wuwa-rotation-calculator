@@ -21,7 +21,9 @@ describe('isRefineScalableNumber', () => {
   });
 
   it('returns false for null and undefined', () => {
+    // eslint-disable-next-line unicorn/no-null
     expect(isRefineScalableNumber(null)).toBe(false);
+    // eslint-disable-next-line unicorn/no-useless-undefined
     expect(isRefineScalableNumber(undefined)).toBe(false);
   });
 });

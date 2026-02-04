@@ -3,7 +3,7 @@ import { PaletteItem } from '@/components/common/PaletteItem';
 import { useTeamAttacks } from '@/hooks/useTeamAttacks';
 import type { Capability } from '@/schemas/rotation';
 
-export interface AttackPaletteProps {
+export interface AttackPaletteProperties {
   onAddAttack?: (attack: Capability) => void;
   onClickAttack?: (attack: Capability) => void;
   onDragAttack?: (attack: Capability, event: React.DragEvent) => void;
@@ -24,7 +24,7 @@ export const AttackPalette = ({
   onClickAttack,
   onDragAttack,
   className,
-}: AttackPaletteProps) => {
+}: AttackPaletteProperties) => {
   const { attacks } = useTeamAttacks();
   const byCharacter = Object.groupBy(attacks, (a) => a.characterName);
 
@@ -56,7 +56,9 @@ export const AttackPalette = ({
         <PaletteItem
           text={attack.name}
           hoverText={attack.description}
-          onDragStart={onDragAttack ? (e) => onDragAttack(attack, e) : undefined}
+          onDragStart={
+            onDragAttack ? (event) => onDragAttack(attack, event) : undefined
+          }
           onAdd={onAddAttack ? () => onAddAttack(attack) : undefined}
           onClick={onClickAttack ? () => onClickAttack(attack) : undefined}
         />

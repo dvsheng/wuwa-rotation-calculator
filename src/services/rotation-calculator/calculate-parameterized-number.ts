@@ -18,21 +18,26 @@ const evaluateConditional = <T extends string>(
 
   let conditionMet = false;
   switch (operator) {
-    case '>=':
+    case '>=': {
       conditionMet = parameterValue >= threshold;
       break;
-    case '>':
+    }
+    case '>': {
       conditionMet = parameterValue > threshold;
       break;
-    case '<=':
+    }
+    case '<=': {
       conditionMet = parameterValue <= threshold;
       break;
-    case '<':
+    }
+    case '<': {
       conditionMet = parameterValue < threshold;
       break;
-    case '==':
+    }
+    case '==': {
       conditionMet = parameterValue === threshold;
       break;
+    }
   }
 
   return conditionMet ? valueIfTrue : valueIfFalse;

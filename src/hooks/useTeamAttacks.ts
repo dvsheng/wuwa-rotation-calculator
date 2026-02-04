@@ -54,15 +54,15 @@ export const useTeamAttacks = () => {
     ]),
     combine: (results) => {
       const characterNameMap = new Map<string, string>();
-      results.forEach((characterResult, index) => {
+      for (const [index, characterResult] of results.entries()) {
         const meta = queryMetadata[index];
-        if (meta.queryType !== 'character') return;
-        if (!characterResult.data) return;
+        if (meta.queryType !== 'character') continue;
+        if (!characterResult.data) continue;
         characterNameMap.set(
           meta.characterId,
           (characterResult.data as unknown as GetClientCharacterDetailsOutput).name,
         );
-      });
+      }
       const attacks = results.flatMap((queryResult, index) => {
         const data = queryResult.data;
         if (!data) return [];
@@ -77,8 +77,8 @@ export const useTeamAttacks = () => {
 
       return {
         attacks,
-        isLoading: results.some((res) => res.isLoading),
-        isError: results.some((res) => res.isError),
+        isLoading: results.some((r) => r.isLoading),
+        isError: results.some((r) => r.isError),
         rawResults: results,
       };
     },

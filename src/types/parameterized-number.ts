@@ -60,13 +60,13 @@ export type UserParameterizedNumber = LinearParameterizedNumber<'0' | '1' | '2'>
  * Checks if a value is a UserParameterizedNumber.
  */
 export const isUserParameterizedNumber = (
-  val: unknown,
-): val is UserParameterizedNumber => {
+  value: unknown,
+): value is UserParameterizedNumber => {
   return (
-    typeof val === 'object' &&
-    val !== null &&
-    'parameterConfigs' in val &&
-    !('resolveWith' in val)
+    typeof value === 'object' &&
+    value !== null &&
+    'parameterConfigs' in value &&
+    !('resolveWith' in value)
   );
 };
 
@@ -74,12 +74,12 @@ export const isUserParameterizedNumber = (
  * Checks if a value is a RotationRuntimeResolvableNumber.
  */
 export const isRotationRuntimeResolvableNumber = (
-  val: unknown,
-): val is RotationRuntimeResolvableNumber => {
+  value: unknown,
+): value is RotationRuntimeResolvableNumber => {
   return (
-    typeof val === 'object' &&
-    val !== null &&
-    'parameterConfigs' in val &&
-    'resolveWith' in val
+    typeof value === 'object' &&
+    value !== null &&
+    'parameterConfigs' in value &&
+    'resolveWith' in value
   );
 };

@@ -10,10 +10,12 @@ export const toClientAttack = (
   parentName: string,
   name: string,
 ): ClientCapability => {
-  const parameters = attack.motionValues.filter(isUserParameterizedNumber).map((v) => ({
-    minimum: v.minimum ?? 0,
-    maximum: v.maximum ?? 100,
-  }));
+  const parameters = attack.motionValues
+    .filter((v) => isUserParameterizedNumber(v))
+    .map((v) => ({
+      minimum: v.minimum ?? 0,
+      maximum: v.maximum ?? 100,
+    }));
 
   return {
     id: attack.id,
@@ -34,7 +36,7 @@ export const toClientBuff = (
 ): ClientCapability => {
   const parameters = modifier.modifiedStats
     .map((s) => s.value)
-    .filter(isUserParameterizedNumber)
+    .filter((v) => isUserParameterizedNumber(v))
     .map((v) => ({
       minimum: v.minimum ?? 0,
       maximum: v.maximum ?? 100,

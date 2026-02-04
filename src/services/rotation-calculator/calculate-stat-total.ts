@@ -16,7 +16,7 @@ export const calculateStatTotal = (
   return flat * (1 + scalingBonus) + flatBonus;
 };
 
-export const getCalculateStatValueFn =
+export const getCalculateStatValueFunction =
   (tags: Array<string>) => (statValues: Array<TaggedStatValue> | undefined) => {
     if (!statValues) return 0;
     return statValues.reduce((sum, statValue) => {
@@ -29,41 +29,44 @@ export const getCalculateStatValueFn =
     }, 0);
   };
 
-export const getCalculateAbilityAttributeValueFn =
+export const getCalculateAbilityAttributeValueFunction =
   (tags: Array<string>) => (stats: CharacterStats, attribute: AbilityAttribute) => {
-    const resolveStatValue = getCalculateStatValueFn(tags);
+    const resolveStatValue = getCalculateStatValueFunction(tags);
     switch (attribute) {
-      case AbilityAttribute.ATK:
+      case AbilityAttribute.ATK: {
         return calculateStatTotal(
           resolveStatValue(stats.attackFlat),
           resolveStatValue(stats.attackScalingBonus),
           resolveStatValue(stats.attackFlatBonus),
         );
-      case AbilityAttribute.DEF:
+      }
+      case AbilityAttribute.DEF: {
         return calculateStatTotal(
           resolveStatValue(stats.defenseFlat),
           resolveStatValue(stats.defenseScalingBonus),
           resolveStatValue(stats.defenseFlatBonus),
         );
-      case AbilityAttribute.HP:
+      }
+      case AbilityAttribute.HP: {
         return calculateStatTotal(
           resolveStatValue(stats.hpFlat),
           resolveStatValue(stats.hpScalingBonus),
           resolveStatValue(stats.hpFlatBonus),
         );
+      }
     }
   };
 
 export const getCalculateCharacterStatsForTag =
   (tags: Array<string>) =>
   (stats: CharacterStats): Record<keyof CharacterStats | AbilityAttribute, number> => {
-    const resolveStatValue = getCalculateStatValueFn(tags);
-    const resolveAbilityAttribute = getCalculateAbilityAttributeValueFn(tags);
+    const resolveStatValue = getCalculateStatValueFunction(tags);
+    const resolveAbilityAttribute = getCalculateAbilityAttributeValueFunction(tags);
     const baseStats = mapValues(stats, (statValues) => resolveStatValue(statValues));
     const abilityAttributes = Object.fromEntries(
-      Object.values(AbilityAttribute).map((attr) => [
-        attr,
-        resolveAbilityAttribute(stats, attr),
+      Object.values(AbilityAttribute).map((attribute) => [
+        attribute,
+        resolveAbilityAttribute(stats, attribute),
       ]),
     ) as Record<AbilityAttribute, number>;
     return {
@@ -75,6 +78,6 @@ export const getCalculateCharacterStatsForTag =
 export const getCalculateEnemyStatsForTag =
   (tags: Array<string>) =>
   (stats: EnemyStats): Record<keyof EnemyStats, number> => {
-    const resolveStatValue = getCalculateStatValueFn(tags);
+    const resolveStatValue = getCalculateStatValueFunction(tags);
     return mapValues(stats, (statValues) => resolveStatValue(statValues));
   };

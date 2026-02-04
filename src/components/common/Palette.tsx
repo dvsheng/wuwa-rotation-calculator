@@ -22,7 +22,7 @@ export interface PaletteGroup<T> {
   subgroups: Array<PaletteSubgroup<T>>;
 }
 
-export interface PaletteProps<T> {
+export interface PaletteProperties<T> {
   groups: Array<PaletteGroup<T>>;
   renderItem: (item: T) => ReactNode;
   getItemKey: (item: T) => string;
@@ -42,20 +42,16 @@ export function Palette<T>({
   isCollapsible = false,
   headerText,
   defaultOpen = true,
-}: PaletteProps<T>) {
+}: PaletteProperties<T>) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const hasItems = groups.some((g) => g.subgroups.some((sg) => sg.items.length > 0));
 
-  const content = !hasItems ? (
-    <div className="text-muted-foreground flex items-center justify-center py-4 text-sm font-medium italic">
-      {emptyMessage}
-    </div>
-  ) : (
+  const content = hasItems ? (
     <ScrollArea className="w-full">
       <div className="flex flex-col">
         {groups.map((group, groupIndex) => {
           const allItems = group.subgroups.flatMap((sg) => sg.items);
-          if (allItems.length === 0) return null;
+          if (allItems.length === 0) return;
 
           return (
             <div
@@ -79,6 +75,10 @@ export function Palette<T>({
         })}
       </div>
     </ScrollArea>
+  ) : (
+    <div className="text-muted-foreground flex items-center justify-center py-4 text-sm font-medium italic">
+      {emptyMessage}
+    </div>
   );
 
   if (isCollapsible) {

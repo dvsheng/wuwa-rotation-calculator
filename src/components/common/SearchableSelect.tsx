@@ -13,7 +13,7 @@ interface Item {
   name: string;
 }
 
-interface SearchableSelectProps {
+interface SearchableSelectProperties {
   items: Array<Item>;
   onItemClick: (item: Item) => void;
   value?: string;
@@ -27,7 +27,7 @@ export const SearchableSelect = ({
   value,
   placeholder = 'Select...',
   className,
-}: SearchableSelectProps) => {
+}: SearchableSelectProperties) => {
   return (
     <Combobox items={items} itemToStringLabel={(item: Item) => item.name}>
       <ComboboxInput

@@ -18,11 +18,11 @@ import type { WeaponType } from '@/types';
 
 import { AssetIcon } from '../common/AssetIcon';
 
-interface WeaponSelectorProps {
+interface WeaponSelectorProperties {
   index: number;
 }
 
-export const WeaponSelector = ({ index }: WeaponSelectorProps) => {
+export const WeaponSelector = ({ index }: WeaponSelectorProperties) => {
   const characterId = useTeamStore((state) => state.team[index].id);
   const weapon = useTeamStore((state) => state.team[index].weapon);
   const setWeapon = useTeamStore((state) => state.setWeapon);
@@ -96,7 +96,7 @@ export const WeaponSelector = ({ index }: WeaponSelectorProps) => {
       <div className="w-16 shrink-0">
         <Select
           value={String(weapon.refine)}
-          onValueChange={(val) => setRefine(index, val)}
+          onValueChange={(value) => setRefine(index, value)}
         >
           <SelectTrigger className="h-9 px-2">
             <SelectValue />

@@ -10,7 +10,7 @@ import { Attribute } from '@/types';
 
 import { ATTRIBUTE_COLORS } from './constants';
 
-interface CharacterSelectionDialogProps {
+interface CharacterSelectionDialogProperties {
   value?: string;
   onValueChange: (id: string) => void;
   excludeIds?: Array<string>;
@@ -23,16 +23,16 @@ export const CharacterSelectionDialog = ({
   value,
   onValueChange,
   excludeIds = [],
-}: CharacterSelectionDialogProps) => {
+}: CharacterSelectionDialogProperties) => {
   const { data: characterList = [] } = useCharacterList();
 
   const attributeFilter: FilterConfig<ListCharactersResponseItem> = {
     label: 'Attribute',
-    options: ATTRIBUTES.map((attr) => ({
-      value: attr,
-      label: attr,
-      icon: resolveImagePath('attribute', 'icon', attr),
-      color: ATTRIBUTE_COLORS[attr],
+    options: ATTRIBUTES.map((attribute) => ({
+      value: attribute,
+      label: attribute,
+      icon: resolveImagePath('attribute', 'icon', attribute),
+      color: ATTRIBUTE_COLORS[attribute],
     })),
     getValue: (char) => char.attribute,
     renderBadge: (option, isSelected) => (

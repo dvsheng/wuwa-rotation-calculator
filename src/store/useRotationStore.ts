@@ -42,7 +42,12 @@ export const useRotationStore = create<RotationState>()(
 
       addAttack: (attack, atIndex) =>
         set((state) => {
-          const newAttack = { ...attack, instanceId: crypto.randomUUID() };
+          const newAttack: AttackInstance = {
+            instanceId: crypto.randomUUID(),
+            id: attack.id,
+            characterId: attack.characterId,
+            parameterValues: attack.parameters?.map((p) => p.value ?? p.minimum),
+          };
           if (atIndex !== undefined && atIndex !== -1) {
             state.attacks.splice(atIndex, 0, newAttack);
           } else {
@@ -64,10 +69,9 @@ export const useRotationStore = create<RotationState>()(
       updateAttackParameters: (instanceId, values) =>
         set((state) => {
           const attack = state.attacks.find((a) => a.instanceId === instanceId);
-          values.forEach((value, index) => {
-            if (!attack?.parameters?.[index]) return;
-            attack.parameters[index].value = value;
-          });
+          if (attack) {
+            attack.parameterValues = values;
+          }
         }),
 
       setAttacks: (attacks) =>
@@ -82,11 +86,14 @@ export const useRotationStore = create<RotationState>()(
 
       addBuff: (buff, position) =>
         set((state) => {
-          state.buffs.push({
+          const newBuff: ModifierInstance = {
             instanceId: crypto.randomUUID(),
-            ...buff,
+            id: buff.id,
+            characterId: buff.characterId,
+            parameterValues: buff.parameters?.map((p) => p.value ?? p.minimum),
             ...position,
-          });
+          };
+          state.buffs.push(newBuff);
         }),
 
       removeBuff: (instanceId) =>
@@ -105,10 +112,9 @@ export const useRotationStore = create<RotationState>()(
       updateBuffParameters: (instanceId, values) =>
         set((state) => {
           const buff = state.buffs.find((b) => b.instanceId === instanceId);
-          values.forEach((value, index) => {
-            if (!buff?.parameters?.[index]) return;
-            buff.parameters[index].value = value;
-          });
+          if (buff) {
+            buff.parameterValues = values;
+          }
         }),
 
       clearBuffs: () =>

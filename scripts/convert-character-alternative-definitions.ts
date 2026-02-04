@@ -72,9 +72,7 @@ const groupCapabilitiesByBaseId = (
 /**
  * Find capabilities that form a chain (base -> s1 -> s2 -> etc.)
  */
-const findChain = (
-  capabilities: Array<Capability>,
-): Array<Capability> | null => {
+const findChain = (capabilities: Array<Capability>): Array<Capability> | null => {
   // Sort by unlockedAt sequence
   const sorted = [...capabilities].sort(
     (a, b) => getSequenceIndex(a.unlockedAt) - getSequenceIndex(b.unlockedAt),

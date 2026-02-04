@@ -4,6 +4,7 @@ import GridLayout from 'react-grid-layout';
 
 import { Text } from '@/components/ui/typography';
 import { useCanvasLayout } from '@/hooks/useCanvasLayout';
+import { useTeamModifierInstances } from '@/hooks/useTeamModifierInstances';
 import { useRotationStore } from '@/store/useRotationStore';
 
 import { BuffTimelineCanvasItem } from './BuffCanvasItem';
@@ -14,7 +15,7 @@ interface BuffCanvasProps {
 
 export const BuffCanvas = ({ onDropBuff }: BuffCanvasProps) => {
   const { layout: gridLayoutProps, containerRef } = useCanvasLayout();
-  const buffs = useRotationStore((state) => state.buffs);
+  const { buffs } = useTeamModifierInstances();
   const removeBuff = useRotationStore((state) => state.removeBuff);
   const updateBuffLayout = useRotationStore((state) => state.updateBuffLayout);
   const updateBuffParameters = useRotationStore((state) => state.updateBuffParameters);

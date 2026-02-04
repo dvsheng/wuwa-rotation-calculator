@@ -11,8 +11,10 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Heading, Text } from '@/components/ui/typography';
 import type { useRotationCalculation } from '@/hooks/useRotationCalculation';
-import type { AttackInstance } from '@/schemas/rotation';
+import { useTeamAttackInstances } from '@/hooks/useTeamAttackInstances';
+import type { DetailedAttackInstance } from '@/schemas/rotation';
 import type { RotationResult } from '@/services/rotation-calculator/types';
+import { useRotationStore } from '@/store/useRotationStore';
 
 interface RotationResultDisplayProps {
   result: NonNullable<ReturnType<typeof useRotationCalculation>['data']>;
@@ -23,7 +25,7 @@ type DamageDetail = RotationResult['damageDetails'][number];
 
 interface DamageRow {
   index: number;
-  attack: AttackInstance | undefined;
+  attack: DetailedAttackInstance | undefined;
   detail: DamageDetail;
   damage: number;
 }
@@ -35,14 +37,20 @@ export const RotationResultDisplay = ({
   result,
   isStale,
 }: RotationResultDisplayProps) => {
+  const storedAttacks = useRotationStore((state) => state.attacks);
+  const { attacks: resolvedAttacks } = useTeamAttackInstances();
+
   const data: Array<DamageRow> = useMemo(() => {
+    // Build a map from instanceId to resolved attack for quick lookup
+    const attackMap = new Map(resolvedAttacks.map((a) => [a.instanceId, a]));
+
     return result.damageInstances.map((dmg, idx) => ({
       index: idx,
-      attack: result.damageDetails[idx].attack,
+      attack: attackMap.get(storedAttacks[idx]?.instanceId),
       detail: result.damageDetails[idx],
       damage: dmg,
     }));
-  }, [result]);
+  }, [result, storedAttacks, resolvedAttacks]);
 
   const columns = useMemo<Array<ColumnDef<DamageRow>>>(
     () => [

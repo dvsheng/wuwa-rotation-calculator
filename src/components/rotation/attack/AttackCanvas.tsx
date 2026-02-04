@@ -5,6 +5,7 @@ import GridLayout, { horizontalCompactor } from 'react-grid-layout';
 
 import { Text } from '@/components/ui/typography';
 import { useCanvasLayout } from '@/hooks/useCanvasLayout';
+import { useTeamAttackInstances } from '@/hooks/useTeamAttackInstances';
 import { useRotationStore } from '@/store/useRotationStore';
 
 import { AttackCanvasItem } from './AttackCanvasItem';
@@ -15,22 +16,23 @@ export interface AttackCanvasProps {
 
 export const AttackCanvas = ({ onDropAttack }: AttackCanvasProps) => {
   const { layout: gridLayoutProps, containerRef } = useCanvasLayout();
-  const attacks = useRotationStore((state) => state.attacks);
+  const { attacks } = useTeamAttackInstances();
+  const storedAttacks = useRotationStore((state) => state.attacks);
   const removeAttack = useRotationStore((state) => state.removeAttack);
   const setAttacks = useRotationStore((state) => state.setAttacks);
 
   const handleLayoutChange = (layout: Layout) => {
-    if (layout.length !== attacks.length) return;
+    if (layout.length !== storedAttacks.length) return;
     const newAttackInstanceIdOrder = [...layout]
       .sort((a, b) => a.x - b.x)
       .map((layoutItem) => layoutItem.i);
-    const hasAttackOrderChanged = attacks.some(
+    const hasAttackOrderChanged = storedAttacks.some(
       (attack, index) => attack.instanceId !== newAttackInstanceIdOrder[index],
     );
     if (hasAttackOrderChanged) {
       const newAttackOrder = compact(
         newAttackInstanceIdOrder.map((id) =>
-          attacks.find((attack) => attack.instanceId === id),
+          storedAttacks.find((attack) => attack.instanceId === id),
         ),
       );
       setAttacks(newAttackOrder);

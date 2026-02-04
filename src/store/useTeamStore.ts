@@ -137,7 +137,7 @@ export const useTeamStore = create<TeamState>()(
         }),
       setCharacter: (index, id) =>
         set((state) => {
-          state.team[index] = createDefaultCharacter(id);
+          state.team[index].id = id;
         }),
       setSequence: (index, sequence) =>
         set((state) => {

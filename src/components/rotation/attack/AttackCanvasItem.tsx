@@ -1,10 +1,10 @@
-import type { AttackInstance } from '@/schemas/rotation';
+import type { DetailedAttackInstance } from '@/schemas/rotation';
 import { useRotationStore } from '@/store/useRotationStore';
 
 import { CanvasItem } from '../../common/CanvasItem';
 
 interface AttackCanvasItemProps {
-  attack: AttackInstance;
+  attack: DetailedAttackInstance;
   index: number;
   onRemove: (instanceId: string) => void;
 }

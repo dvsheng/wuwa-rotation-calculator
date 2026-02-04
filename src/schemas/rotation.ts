@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import type { ClientCapability } from '@/services/game-data/common-types';
+
 export const ParameterSchema = z.object({
   minimum: z.number(),
   maximum: z.number(),
@@ -32,23 +34,28 @@ export const CapabilitySchema = z.object({
 
 export type Capability = z.infer<typeof CapabilitySchema>;
 
-/**
- * Schema for stored attack instances in the rotation.
- * Contains only the minimal data needed to identify and configure the attack.
- * Full capability metadata (name, description, etc.) is resolved via game-data services.
- */
-export const AttackInstanceSchema = CapabilitySchema.extend({
-  instanceId: z.string(), // Unique UUID for this specific instance in the sequence
+const CapabilityInstanceSchema = z.object({
+  instanceId: z.string(),
+  id: z.string(),
+  characterId: z.string(),
+  parameterValues: z.array(z.number()).optional(),
 });
+
+/**
+ * Schema for stored attack instances in the rotation store.
+ * Contains only client-side data: instance identifier, capability ID, and user parameter values.
+ * Full capability metadata is resolved via useTeamAttackInstances hook.
+ */
+export const AttackInstanceSchema = CapabilityInstanceSchema;
 
 export type AttackInstance = z.infer<typeof AttackInstanceSchema>;
 
 /**
- * Schema for stored modifier/buff instances in the rotation.
- * Contains the minimal data to identify the buff plus its timeline position.
+ * Schema for stored modifier instances in the rotation store.
+ * Contains only client-side data: instance identifier, capability ID, user parameter values, and position.
+ * Full capability metadata is resolved via useTeamModifierInstances hook.
  */
-export const ModifierInstanceSchema = CapabilitySchema.extend({
-  instanceId: z.string(), // Unique UUID for this specific placement
+export const ModifierInstanceSchema = CapabilityInstanceSchema.extend({
   x: z.number(),
   y: z.number(),
   w: z.number(),
@@ -63,3 +70,16 @@ export const RotationSchema = z.object({
 });
 
 export type Rotation = z.infer<typeof RotationSchema>;
+
+export interface ClientCharacterDetails {
+  characterId: string;
+  characterName: string;
+}
+
+export type DetailedAttackInstance = AttackInstance &
+  ClientCapability &
+  ClientCharacterDetails;
+
+export type DetailedModifierInstance = ModifierInstance &
+  ClientCapability &
+  ClientCharacterDetails;

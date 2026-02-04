@@ -1,4 +1,4 @@
-import { compact, keyBy, mapAsync } from 'es-toolkit/array';
+import { keyBy, mapAsync } from 'es-toolkit/array';
 import { cloneDeep, mergeWith } from 'es-toolkit/object';
 
 import { EchoMainStatOption } from '@/schemas/echo';
@@ -20,6 +20,7 @@ import type {
 import { getEchoDetails } from '@/services/game-data/echo/get-echo-details';
 import { getEchoSetDetails } from '@/services/game-data/echo-set/get-echo-set-details';
 import { getWeaponDetails } from '@/services/game-data/weapon/get-weapon-details';
+import { calculateParameterizedNumberValue } from '@/services/rotation-calculator/calculate-parameterized-number';
 import { CharacterStat, Tag, isUserParameterizedNumber } from '@/types';
 import type {
   CharacterDamageInstance,
@@ -29,7 +30,6 @@ import type {
   Team,
   UserParameterizedNumber,
 } from '@/types';
-import { calculateParameterizedNumberValue } from '@/services/rotation-calculator/calculate-parameterized-number';
 
 import { calculateRotationDamage } from './calculate-rotation-damage';
 import type { RotationResult } from './types';
@@ -228,11 +228,11 @@ const resolveUserParameterizedNumber = <TNumber>(
 };
 
 const resolveUserParameterizedAttack = (attack: AttackInstance & Attack) => {
-  const parameterValues = compact(attack.parameters?.map((p) => p.value) ?? []);
+  const paramValues = attack.parameterValues ?? [];
   return {
     ...attack,
     motionValues: attack.motionValues.map((mv) =>
-      resolveUserParameterizedNumber(mv, parameterValues),
+      resolveUserParameterizedNumber(mv, paramValues),
     ),
   };
 };
@@ -240,10 +240,10 @@ const resolveUserParameterizedAttack = (attack: AttackInstance & Attack) => {
 const resolveModifierUserParameters = (
   modifier: ModifierInstance & GameDataModifier,
 ) => {
-  const parameterValues = compact(modifier.parameters?.map((p) => p.value) ?? []);
+  const paramValues = modifier.parameterValues ?? [];
   const modifiedStats = modifier.modifiedStats.map((stat) => ({
     ...stat,
-    value: resolveUserParameterizedNumber(stat.value, parameterValues),
+    value: resolveUserParameterizedNumber(stat.value, paramValues),
   }));
   return {
     ...modifier,
@@ -381,10 +381,6 @@ export const calculateRotation = async (
   // 4. Map Attacks and active Buffs to Damage Instances
   const damageInstances = attacks
     .map(enrichAttackWithDetails)
-    .map((attack) => {
-      console.log(attack);
-      return attack;
-    })
     .map(resolveUserParameterizedAttack)
     .map((attack, index) => ({
       ...attack,
@@ -405,9 +401,5 @@ export const calculateRotation = async (
     duration: 25,
     damageInstances,
   });
-  console.log(
-    JSON.stringify(result.damageDetails[0].resolvedStats, null, 2),
-    result.damageInstances[0],
-  );
   return result;
 };

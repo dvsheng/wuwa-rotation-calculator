@@ -48,6 +48,7 @@ export const useTeamModifiers = () => {
             data: { id: character.id, sequence: character.sequence },
           }),
         enabled: !!character.id,
+        staleTime: Infinity,
       },
       {
         queryKey: ['modifiers', 'weapon', character.id, character.weapon.id],
@@ -59,11 +60,13 @@ export const useTeamModifiers = () => {
             },
           }),
         enabled: !!character.weapon.id,
+        staleTime: Infinity,
       },
       {
         queryKey: ['modifiers', 'echo', character.id, character.primarySlotEcho.id],
         queryFn: () => getClientEchoDetails({ data: character.primarySlotEcho.id }),
         enabled: !!character.primarySlotEcho.id,
+        staleTime: Infinity,
       },
       ...character.echoSets.map((set) => ({
         queryKey: ['modifiers', 'echo-set', character.id, set.id, set.requirement],
@@ -72,6 +75,7 @@ export const useTeamModifiers = () => {
             data: { id: set.id, requirement: set.requirement as any },
           }),
         enabled: !!set.id,
+        staleTime: Infinity,
       })),
     ]),
     combine: (results) => {

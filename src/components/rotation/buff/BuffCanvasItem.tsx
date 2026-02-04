@@ -1,11 +1,11 @@
 import React from 'react';
 
-import type { ModifierInstance } from '@/schemas/rotation';
+import type { DetailedModifierInstance } from '@/schemas/rotation';
 
 import { CanvasItem } from '../../common/CanvasItem';
 
 interface BuffTimelineCanvasItemProps extends React.HTMLAttributes<HTMLDivElement> {
-  buff: ModifierInstance;
+  buff: DetailedModifierInstance;
   onRemove: (instanceId: string) => void;
   onSaveParameters: (instanceId: string, parameterValues: Array<number>) => void;
 }

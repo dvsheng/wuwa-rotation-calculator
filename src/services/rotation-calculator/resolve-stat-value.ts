@@ -2,7 +2,7 @@ import { mapValues } from 'es-toolkit/object';
 
 import { Tag } from '@/types';
 import type { Enemy, StatValue, TaggedStatValue, Team } from '@/types';
-import { calculateParameterizedNumberValue } from '@/utils/math-utils';
+import { calculateParameterizedNumberValue } from '@/services/rotation-calculator/calculate-parameterized-number';
 
 import {
   getCalculateCharacterStatsForTag,

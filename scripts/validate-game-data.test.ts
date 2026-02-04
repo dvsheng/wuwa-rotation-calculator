@@ -36,6 +36,25 @@ const RuntimeParameterConfigKeySchema = z.enum([
   ...Object.values(AbilityAttribute),
 ]);
 
+// Conditional bonus schema for step functions
+const ConditionalBonusOperatorSchema = z.enum(['>=', '>', '<=', '<', '==']);
+
+const UserConditionalBonusSchema = z.object({
+  parameter: UserParameterConfigKeySchema,
+  operator: ConditionalBonusOperatorSchema,
+  threshold: z.number(),
+  valueIfTrue: z.number(),
+  valueIfFalse: z.number().optional(),
+});
+
+const RuntimeConditionalBonusSchema = z.object({
+  parameter: RuntimeParameterConfigKeySchema,
+  operator: ConditionalBonusOperatorSchema,
+  threshold: z.number(),
+  valueIfTrue: z.number(),
+  valueIfFalse: z.number().optional(),
+});
+
 const UserParameterizedNumberSchema = z.object({
   minimum: z.number().optional(),
   maximum: z.number().optional(),
@@ -44,6 +63,7 @@ const UserParameterizedNumberSchema = z.object({
     LinearScalingParameterConfigSchema,
   ),
   offset: z.number().optional(),
+  conditionals: z.array(UserConditionalBonusSchema).optional(),
 });
 
 const RotationRuntimeResolvableNumberSchema = z.object({
@@ -54,6 +74,7 @@ const RotationRuntimeResolvableNumberSchema = z.object({
     LinearScalingParameterConfigSchema,
   ),
   offset: z.number().optional(),
+  conditionals: z.array(RuntimeConditionalBonusSchema).optional(),
   resolveWith: z.string(),
 });
 

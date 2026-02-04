@@ -29,7 +29,7 @@ import type {
   Team,
   UserParameterizedNumber,
 } from '@/types';
-import { calculateParameterizedNumberValue } from '@/utils/math-utils';
+import { calculateParameterizedNumberValue } from '@/services/rotation-calculator/calculate-parameterized-number';
 
 import { calculateRotationDamage } from './calculate-rotation-damage';
 import type { RotationResult } from './types';
@@ -219,7 +219,6 @@ const resolveUserParameterizedNumber = <TNumber>(
   parameters: Array<TNumber>,
 ) => {
   if (isUserParameterizedNumber(number)) {
-    console.log(number);
     return calculateParameterizedNumberValue(
       number,
       Object.fromEntries(parameters.map((value, index) => [String(index), value])),

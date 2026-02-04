@@ -1,10 +1,6 @@
 import type { CharacterStats } from './character';
 import type { EnemyStats } from './enemy';
-import { isUserParameterizedNumber } from './parameterized-number';
-import type {
-  RotationRuntimeResolvableNumber,
-  UserParameterizedNumber,
-} from './parameterized-number';
+import type { RotationRuntimeResolvableNumber } from './parameterized-number';
 
 /**
  * Defines the potential targets for a modifier.
@@ -57,31 +53,3 @@ export interface EnemyModifier<T = RotationRuntimeResolvableNumber | number> {
 export type Modifier<T = RotationRuntimeResolvableNumber | number> =
   | CharacterModifier<T>
   | EnemyModifier<T>;
-
-/**
- * Helper to check if a modifier has any stats that are parameterized by the user.
- */
-export const isUserParameterizedModifier = (modifier: Modifier<any>): boolean => {
-  const modifiedStats = modifier.modifiedStats;
-  return Object.values(modifiedStats).some((statValues) => {
-    return (statValues as Array<any>).some((sv) => isUserParameterizedNumber(sv.value));
-  });
-};
-
-/**
- * Extracts all UserParameterizedNumbers found within a modifier's stats.
- */
-export const extractUserParameters = (
-  modifier: Modifier,
-): Array<UserParameterizedNumber> => {
-  const modifiedStats = modifier.modifiedStats;
-  const params: Array<UserParameterizedNumber> = [];
-  Object.values(modifiedStats).forEach((statValues) => {
-    (statValues as Array<any>).forEach((sv) => {
-      if (isUserParameterizedNumber(sv.value)) {
-        params.push(sv.value);
-      }
-    });
-  });
-  return params;
-};

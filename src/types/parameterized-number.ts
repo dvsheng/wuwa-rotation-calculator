@@ -15,11 +15,30 @@ export interface LinearScalingParameterConfig {
   maximum?: number;
 }
 
+/**
+ * Defines a conditional bonus that adds a value when a parameter meets a threshold.
+ * Evaluates as: IF(parameter <operator> threshold, valueIfTrue, valueIfFalse)
+ */
+export interface ConditionalBonus<T extends string> {
+  /** The parameter key to check (e.g., '0', '1', '2' for user parameters). */
+  parameter: T;
+  /** The comparison operator. */
+  operator: '>=' | '>' | '<=' | '<' | '==';
+  /** The threshold value to compare against. */
+  threshold: number;
+  /** The value to add if the condition is true. */
+  valueIfTrue: number;
+  /** The value to add if the condition is false (defaults to 0). */
+  valueIfFalse?: number;
+}
+
 export interface LinearParameterizedNumber<T extends string> {
   minimum?: number;
   maximum?: number;
   parameterConfigs: Partial<Record<T, LinearScalingParameterConfig>>;
   offset?: number;
+  /** Optional array of conditional bonuses evaluated as step functions. */
+  conditionals?: Array<ConditionalBonus<T>>;
 }
 
 /**

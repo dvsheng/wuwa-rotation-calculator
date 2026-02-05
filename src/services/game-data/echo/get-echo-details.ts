@@ -44,10 +44,10 @@ export const getClientEchoDetails = createServerFn({
     const echo = await getEchoDetailsHandler(id);
     return {
       attacks: echo.capabilities.attacks.map((attack) =>
-        toClientAttack(attack, echo.name, `${echo.name} Attack`),
+        toClientAttack(attack, echo.name, `${echo.name} Attack`, 'Echo'),
       ),
       modifiers: echo.capabilities.modifiers.map((modifier) =>
-        toClientBuff(modifier, echo.name, `${echo.name} Buff`),
+        toClientBuff(modifier, echo.name, `${echo.name} Buff`, 'Echo'),
       ),
     };
   });

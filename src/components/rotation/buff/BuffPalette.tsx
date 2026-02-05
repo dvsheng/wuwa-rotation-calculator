@@ -1,7 +1,7 @@
 import { Palette } from '@/components/common/Palette';
 import { PaletteItem } from '@/components/common/PaletteItem';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
-import type { Capability } from '@/schemas/rotation';
+import type { Capability, OriginType } from '@/schemas/rotation';
 import { Target } from '@/services/game-data/common-types';
 
 export interface BuffPaletteProperties {
@@ -10,14 +10,19 @@ export interface BuffPaletteProperties {
   className?: string;
 }
 
-const SKILL_ORDER = [
-  'Basic Attack',
+const SKILL_ORDER: Array<OriginType> = [
+  'Normal Attack',
   'Resonance Skill',
   'Resonance Liberation',
   'Forte Circuit',
   'Intro Skill',
   'Outro Skill',
-] as const;
+  'Inherent Skill',
+  'Tune Break',
+  'Echo',
+  'Weapon',
+  'Echo Set',
+];
 
 export const BuffPalette = ({
   onClickBuff,
@@ -28,12 +33,12 @@ export const BuffPalette = ({
   const byCharacter = Object.groupBy(buffs, (b) => b.characterName);
 
   const groups = Object.entries(byCharacter).map(([charName, charBuffs]) => {
-    const bySkill = Object.groupBy(charBuffs ?? [], (b) => b.parentName);
+    const bySkill = Object.groupBy(charBuffs ?? [], (b) => b.originType);
 
     // Get ordered skills first, then any remaining skills not in the order
     const orderedSkills = SKILL_ORDER.filter((skill) => bySkill[skill]?.length);
-    const remainingSkills = Object.keys(bySkill).filter(
-      (skill) => !SKILL_ORDER.includes(skill as (typeof SKILL_ORDER)[number]),
+    const remainingSkills = (Object.keys(bySkill) as Array<OriginType>).filter(
+      (skill) => !SKILL_ORDER.includes(skill),
     );
 
     return {
@@ -45,15 +50,21 @@ export const BuffPalette = ({
     };
   });
 
+  const legend = Object.entries(TARGET_LABELS).map(([target, label]) => ({
+    label,
+    className: TARGET_COLORS[target],
+  }));
+
   return (
     <Palette
       groups={groups}
       getItemKey={(buff) => buff.id}
+      getItemLegendLabel={(buff) => TARGET_LABELS[buff.target]}
       emptyMessage="No buffs available"
       className={className}
       isCollapsible={true}
       headerText="Buff Palette"
-      headerContent={<TargetLegend />}
+      legend={legend}
       renderItem={(buff) => (
         <PaletteItem
           text={buff.name}
@@ -71,10 +82,10 @@ export const BuffPalette = ({
  * Color classes for each modifier target type.
  */
 const TARGET_COLORS: Record<string, string> = {
-  [Target.SELF]: 'border-blue-400/60 bg-blue-500/10 text-blue-300',
-  [Target.TEAM]: 'border-green-400/60 bg-green-500/10 text-green-300',
-  [Target.ACTIVE_CHARACTER]: 'border-amber-400/60 bg-amber-500/10 text-amber-300',
-  [Target.ENEMY]: 'border-red-400/60 bg-red-500/10 text-red-300',
+  [Target.SELF]: 'border-blue-400 bg-blue-100 text-black',
+  [Target.TEAM]: 'border-green-400 bg-green-100 text-black',
+  [Target.ACTIVE_CHARACTER]: 'border-amber-400 bg-amber-100 text-black',
+  [Target.ENEMY]: 'border-red-400 bg-red-100 text-black',
 };
 
 const TARGET_LABELS: Record<string, string> = {
@@ -83,19 +94,3 @@ const TARGET_LABELS: Record<string, string> = {
   [Target.ACTIVE_CHARACTER]: 'Active',
   [Target.ENEMY]: 'Enemy',
 };
-
-/**
- * Legend component showing the color meaning for each target type.
- */
-const TargetLegend = () => (
-  <div className="flex flex-wrap gap-2 px-2 pb-2">
-    {Object.entries(TARGET_LABELS).map(([target, label]) => (
-      <div
-        key={target}
-        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-medium ${TARGET_COLORS[target]}`}
-      >
-        {label}
-      </div>
-    ))}
-  </div>
-);

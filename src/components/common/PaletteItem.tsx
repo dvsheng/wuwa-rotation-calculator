@@ -32,7 +32,7 @@ export const PaletteItem = ({
           onDragStart={onDragStart}
           onClick={onClick}
           className={cn(
-            'inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium transition-colors',
+            'inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium transition-all hover:brightness-95',
             isDraggable && 'cursor-grab active:cursor-grabbing',
             onClick && 'cursor-pointer',
             className,

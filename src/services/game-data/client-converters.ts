@@ -1,3 +1,4 @@
+import type { OriginType } from '@/schemas/rotation';
 import { isUserParameterizedNumber } from '@/types';
 
 import type { Attack, ClientCapability, Modifier, Target } from './common-types';
@@ -9,6 +10,7 @@ export const toClientAttack = (
   attack: Attack,
   parentName: string,
   name: string,
+  originType: OriginType,
 ): ClientCapability => {
   const parameters = attack.motionValues
     .filter((v) => isUserParameterizedNumber(v))
@@ -21,6 +23,7 @@ export const toClientAttack = (
     id: attack.id,
     name,
     parentName,
+    originType,
     description: attack.description,
     parameters: parameters.length > 0 ? parameters : undefined,
   };
@@ -33,6 +36,7 @@ export const toClientBuff = (
   modifier: Modifier,
   parentName: string,
   name: string,
+  originType: OriginType,
 ): ClientCapability & { target: Target } => {
   const parameters = modifier.modifiedStats
     .map((s) => s.value)
@@ -47,6 +51,7 @@ export const toClientBuff = (
     name,
     target: modifier.target,
     parentName,
+    originType,
     description: modifier.description,
     parameters: parameters.length > 0 ? parameters : undefined,
   };

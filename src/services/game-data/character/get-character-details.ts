@@ -8,6 +8,7 @@ import { GetCharacterDetailsInputSchema } from './types';
 import type {
   CharacterCapabilities,
   GetClientCharacterDetailsOutput,
+  OriginType,
   Sequence,
   StoreCharacter,
 } from './types';
@@ -19,7 +20,9 @@ const characterStore = createFsStore<StoreCharacter>();
  */
 export interface ResolvedCharacter extends Omit<StoreCharacter, 'capabilities'> {
   capabilities: {
-    attacks: Array<Attack & { name: string; parentName: string }>;
+    attacks: Array<
+      Attack & { name: string; parentName: string; originType: OriginType }
+    >;
     modifiers: CharacterCapabilities['modifiers'];
     permanentStats: CharacterCapabilities['permanentStats'];
   };
@@ -155,10 +158,10 @@ export const getClientCharacterDetails = createServerFn({
       id: character.id,
       name: character.name,
       attacks: character.capabilities.attacks.map((attack) =>
-        toClientAttack(attack, attack.parentName, attack.name),
+        toClientAttack(attack, attack.parentName, attack.name, attack.originType),
       ),
       modifiers: character.capabilities.modifiers.map((modifier) =>
-        toClientBuff(modifier, modifier.parentName, modifier.name),
+        toClientBuff(modifier, modifier.parentName, modifier.name, modifier.originType),
       ),
     };
   });

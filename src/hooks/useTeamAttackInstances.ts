@@ -34,6 +34,7 @@ export const useTeamAttackInstances = () => {
         description: gameData.description,
         characterId: gameData.characterId,
         characterName: gameData.characterName,
+        originType: gameData.originType,
         parameters,
       };
     }),

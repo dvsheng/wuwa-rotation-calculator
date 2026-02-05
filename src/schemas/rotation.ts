@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { OriginType as CharacterOriginType } from '@/services/game-data/character/types';
 import type { ClientCapability } from '@/services/game-data/common-types';
 
 export const ParameterSchema = z.object({
@@ -10,14 +11,23 @@ export const ParameterSchema = z.object({
 
 export type Parameter = z.infer<typeof ParameterSchema>;
 
+export const OriginTypeSchema = z.enum([
+  ...Object.values(CharacterOriginType),
+  'Weapon',
+  'Echo',
+  'Echo Set',
+]);
+
+export type OriginType = z.infer<typeof OriginTypeSchema>;
+
 /**
  * Schema for validating capability data during drag/drop operations.
- * Matches the Capability type from @/types/client/capability.
  */
 export const CapabilitySchema = z.object({
   id: z.string(),
   name: z.string(),
   parentName: z.string(),
+  originType: OriginTypeSchema,
   description: z.string().optional(),
   characterName: z.string(),
   characterId: z.string(),

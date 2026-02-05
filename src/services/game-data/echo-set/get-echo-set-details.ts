@@ -97,10 +97,15 @@ export const getClientEchoSetDetails = createServerFn({
     const echoSet = await getEchoSetDetailsHandler(data);
     return {
       attacks: echoSet.capabilities.attacks.map((attack) =>
-        toClientAttack(attack, echoSet.name, 'Weapon Attack'),
+        toClientAttack(attack, echoSet.name, 'Weapon Attack', 'Echo Set'),
       ),
       modifiers: echoSet.capabilities.modifiers.map((modifier, index) =>
-        toClientBuff(modifier, echoSet.name, `${echoSet.name} Buff ${index + 1}`),
+        toClientBuff(
+          modifier,
+          echoSet.name,
+          `${echoSet.name} Buff ${index + 1}`,
+          'Echo Set',
+        ),
       ),
     };
   });

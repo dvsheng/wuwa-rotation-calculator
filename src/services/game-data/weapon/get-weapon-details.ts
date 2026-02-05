@@ -107,10 +107,15 @@ export const getClientWeaponDetails = createServerFn({
     const weapon = await getWeaponDetailsHandler(data);
     return {
       attacks: weapon.capabilities.attacks.map((attack) =>
-        toClientAttack(attack, weapon.name, 'Weapon Attack'),
+        toClientAttack(attack, weapon.name, 'Weapon Attack', 'Weapon'),
       ),
       modifiers: weapon.capabilities.modifiers.map((modifier, index) =>
-        toClientBuff(modifier, weapon.name, `${weapon.name} Buff ${index + 1}`),
+        toClientBuff(
+          modifier,
+          weapon.name,
+          `${weapon.name} Buff ${index + 1}`,
+          'Weapon',
+        ),
       ),
     };
   });

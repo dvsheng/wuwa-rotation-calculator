@@ -1,6 +1,6 @@
 import { Palette } from '@/components/common/Palette';
 import { PaletteItem } from '@/components/common/PaletteItem';
-import { useTeamAttacks } from '@/hooks/useTeamAttacks';
+import { useTeamDetails } from '@/hooks/useTeamDetails';
 import type { Capability } from '@/schemas/rotation';
 
 export interface AttackPaletteProperties {
@@ -25,7 +25,7 @@ export const AttackPalette = ({
   onDragAttack,
   className,
 }: AttackPaletteProperties) => {
-  const { attacks } = useTeamAttacks();
+  const { attacks } = useTeamDetails();
   const byCharacter = Object.groupBy(attacks, (a) => a.characterName);
 
   const groups = Object.entries(byCharacter).map(([charName, charAttacks]) => {

@@ -3,7 +3,7 @@ import { compact } from 'es-toolkit/array';
 import type { DetailedModifierInstance } from '@/schemas/rotation';
 import { useRotationStore } from '@/store/useRotationStore';
 
-import { useTeamModifiers } from './useTeamModifiers';
+import { useTeamDetails } from './useTeamDetails';
 
 /**
  * Hook that combines stored modifier instances from the rotation store
@@ -13,7 +13,7 @@ import { useTeamModifiers } from './useTeamModifiers';
  */
 export const useTeamModifierInstances = () => {
   const storedBuffs = useRotationStore((state) => state.buffs);
-  const { buffs: gameDataBuffs, isLoading, isError } = useTeamModifiers();
+  const { buffs: gameDataBuffs, isLoading, isError } = useTeamDetails();
 
   const buffMap = new Map(gameDataBuffs.map((buff) => [buff.id, buff]));
   const fullBuffs: Array<DetailedModifierInstance> = compact(

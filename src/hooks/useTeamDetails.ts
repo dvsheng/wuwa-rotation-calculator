@@ -9,7 +9,7 @@ import { getClientEchoSetDetails } from '@/services/game-data/echo-set/get-echo-
 import { getClientWeaponDetails } from '@/services/game-data/weapon/get-weapon-details';
 import { useTeamStore } from '@/store/useTeamStore';
 
-export const useTeamModifiers = () => {
+export const useTeamDetails = () => {
   const team = useTeamStore((state) => state.team);
   const queryMetadata = team.flatMap((character) => {
     const items = [
@@ -42,7 +42,7 @@ export const useTeamModifiers = () => {
   const result = useQueries({
     queries: team.flatMap((character) => [
       {
-        queryKey: ['modifiers', 'character', character.id, character.sequence],
+        queryKey: ['team-details', 'character', character.id, character.sequence],
         queryFn: () =>
           getClientCharacterDetails({
             data: { id: character.id, sequence: character.sequence },
@@ -51,7 +51,7 @@ export const useTeamModifiers = () => {
         staleTime: Infinity,
       },
       {
-        queryKey: ['modifiers', 'weapon', character.id, character.weapon.id],
+        queryKey: ['team-details', 'weapon', character.id, character.weapon.id],
         queryFn: () =>
           getClientWeaponDetails({
             data: {
@@ -63,13 +63,13 @@ export const useTeamModifiers = () => {
         staleTime: Infinity,
       },
       {
-        queryKey: ['modifiers', 'echo', character.id, character.primarySlotEcho.id],
+        queryKey: ['team-details', 'echo', character.id, character.primarySlotEcho.id],
         queryFn: () => getClientEchoDetails({ data: character.primarySlotEcho.id }),
         enabled: !!character.primarySlotEcho.id,
         staleTime: Infinity,
       },
       ...character.echoSets.map((set) => ({
-        queryKey: ['modifiers', 'echo-set', character.id, set.id, set.requirement],
+        queryKey: ['team-details', 'echo-set', character.id, set.id, set.requirement],
         queryFn: () =>
           getClientEchoSetDetails({
             data: { id: set.id, requirement: set.requirement as any },
@@ -89,9 +89,24 @@ export const useTeamModifiers = () => {
           (characterResult.data as unknown as GetClientCharacterDetailsOutput).name,
         );
       }
+
+      const attacks = results.flatMap((queryResult, index) => {
+        const data = queryResult.data;
+        if (!data || !('attacks' in data)) return [];
+
+        const { characterId } = queryMetadata[index];
+        const characterName = characterNameMap.get(characterId) ?? 'Unknown';
+
+        return data.attacks.map((attack) => ({
+          ...attack,
+          characterId,
+          characterName,
+        }));
+      });
+
       const buffs = results.flatMap((queryResult, index) => {
         const data = queryResult.data;
-        if (!data) return [];
+        if (!data || !('modifiers' in data)) return [];
 
         const { characterId } = queryMetadata[index];
         const characterName = characterNameMap.get(characterId) ?? 'Unknown';
@@ -104,6 +119,7 @@ export const useTeamModifiers = () => {
       });
 
       return {
+        attacks,
         buffs,
         isLoading: results.some((r) => r.isLoading),
         isError: results.some((r) => r.isError),
@@ -113,7 +129,7 @@ export const useTeamModifiers = () => {
 
   useEffect(() => {
     if (!result.isError) return;
-    toast.error('Failed to load some modifiers');
+    toast.error('Failed to load some team details');
   }, [result.isError]);
 
   return result;

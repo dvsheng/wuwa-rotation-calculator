@@ -3,7 +3,7 @@ import { compact } from 'es-toolkit/array';
 import type { DetailedAttackInstance } from '@/schemas/rotation';
 import { useRotationStore } from '@/store/useRotationStore';
 
-import { useTeamAttacks } from './useTeamAttacks';
+import { useTeamDetails } from './useTeamDetails';
 
 /**
  * Hook that combines stored attack instances from the rotation store
@@ -13,7 +13,7 @@ import { useTeamAttacks } from './useTeamAttacks';
  */
 export const useTeamAttackInstances = () => {
   const storedAttacks = useRotationStore((state) => state.attacks);
-  const { attacks: gameDataAttacks, isLoading, isError } = useTeamAttacks();
+  const { attacks: gameDataAttacks, isLoading, isError } = useTeamDetails();
 
   const attackMap = new Map(gameDataAttacks.map((attack) => [attack.id, attack]));
   const fullAttacks: Array<DetailedAttackInstance> = compact(

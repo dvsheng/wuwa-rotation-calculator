@@ -1,6 +1,6 @@
 import { Palette } from '@/components/common/Palette';
 import { PaletteItem } from '@/components/common/PaletteItem';
-import { useTeamModifiers } from '@/hooks/useTeamModifiers';
+import { useTeamDetails } from '@/hooks/useTeamDetails';
 import type { Capability } from '@/schemas/rotation';
 import { Target } from '@/services/game-data/common-types';
 
@@ -24,7 +24,7 @@ export const BuffPalette = ({
   onDragBuff,
   className,
 }: BuffPaletteProperties) => {
-  const { buffs } = useTeamModifiers();
+  const { buffs } = useTeamDetails();
   const byCharacter = Object.groupBy(buffs, (b) => b.characterName);
 
   const groups = Object.entries(byCharacter).map(([charName, charBuffs]) => {

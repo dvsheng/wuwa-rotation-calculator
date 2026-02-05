@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import type { AbilityAttribute, CharacterStat, EnemyStat, Target } from '@/types';
+import type { AbilityAttribute, CharacterStat, EnemyStat } from '@/types';
 
 import { GetEntityDetailsInputSchema } from '../common-types';
 import type {
@@ -8,6 +8,7 @@ import type {
   BaseEntity,
   Capabilities,
   GetClientEntityDetailsOutput,
+  Target,
 } from '../common-types';
 
 /**

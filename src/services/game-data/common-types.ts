@@ -8,7 +8,6 @@ import type {
   EnemyStat,
   RotationRuntimeResolvableNumber,
   Tagged,
-  Target,
   UserParameterizedNumber,
 } from '@/types';
 
@@ -43,6 +42,21 @@ interface PermanentStatBase extends Stat, BaseCapability {}
  * A permanent stat bonus, often from passive nodes, base stats, or equipment.
  */
 export type PermanentStat<T = {}> = PermanentStatBase & T;
+
+/**
+ * Defines the potential targets for a modifier.
+ */
+export const Target = {
+  /** Applies to all characters in the current team. */
+  TEAM: 'team',
+  /** Applies to the enemy target. */
+  ENEMY: 'enemy',
+  /** Applies only to the character currently on field. */
+  ACTIVE_CHARACTER: 'activeCharacter',
+  SELF: 'self',
+} as const;
+
+export type Target = (typeof Target)[keyof typeof Target];
 
 /**
  * Internal base for modifiers.

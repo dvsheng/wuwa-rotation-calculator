@@ -3,36 +3,16 @@ import type { EnemyStats } from './enemy';
 import type { RotationRuntimeResolvableNumber } from './parameterized-number';
 
 /**
- * Defines the potential targets for a modifier.
+ * Refers to a specific character slot index (0, 1, or 2) in the team.
  */
-export const Target = {
-  /** Applies to all characters in the current team. */
-  TEAM: 'team',
-  /** Applies to the enemy target. */
-  ENEMY: 'enemy',
-  /** Applies only to the character currently on field. */
-  ACTIVE_CHARACTER: 'activeCharacter',
-  SELF: 'self',
-} as const;
-
-export type TargetEnum = (typeof Target)[keyof typeof Target];
-
-/**
- * Refers to a specific character slot (1, 2, or 3) in the team.
- */
-export type CharacterSlotNumber = 1 | 2 | 3;
-
-/**
- * A modifier's target can be a predefined group or a specific set of character slots.
- */
-export type Target = TargetEnum | Array<CharacterSlotNumber>;
+export type CharacterSlotNumber = 0 | 1 | 2;
 
 /**
  * Represents a temporary or conditional modification to character stats.
  */
 export interface CharacterModifier<T = RotationRuntimeResolvableNumber | number> {
   /** Group or slots affected by this modifier. */
-  target: Exclude<Target, 'enemy'>;
+  targets: Array<CharacterSlotNumber>;
   /** Collection of stats to modify. */
   modifiedStats: Partial<CharacterStats<T>>;
 }
@@ -41,8 +21,6 @@ export interface CharacterModifier<T = RotationRuntimeResolvableNumber | number>
  * Represents a temporary or conditional modification to enemy stats.
  */
 export interface EnemyModifier<T = RotationRuntimeResolvableNumber | number> {
-  /** Targets the enemy. */
-  target: 'enemy';
   /** Collection of enemy stats to modify. */
   modifiedStats: Partial<EnemyStats<T>>;
 }
@@ -53,3 +31,9 @@ export interface EnemyModifier<T = RotationRuntimeResolvableNumber | number> {
 export type Modifier<T = RotationRuntimeResolvableNumber | number> =
   | CharacterModifier<T>
   | EnemyModifier<T>;
+
+export const isCharacterModifier = <T>(
+  modifier: Modifier<T>,
+): modifier is CharacterModifier<T> => {
+  return 'targets' in modifier;
+};

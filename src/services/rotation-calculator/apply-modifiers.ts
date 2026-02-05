@@ -1,6 +1,7 @@
 import { mergeWith } from 'es-toolkit/object';
 import { produce } from 'immer';
 
+import { isCharacterModifier } from '@/types';
 import type {
   Character,
   CharacterModifier,
@@ -30,41 +31,18 @@ const applyModifierToTeamAndEnemy = (
   draftTeam: Team,
   draftEnemy: Enemy,
   modifier: Modifier,
-  activeCharacterName: string,
 ) => {
-  const { target } = modifier;
-
-  switch (target) {
-    case 'enemy': {
-      applyModifierToEnemy(draftEnemy, modifier);
-
-      break;
+  if (isCharacterModifier(modifier)) {
+    const { targets, modifiedStats } = modifier;
+    for (const targetIndex of targets) {
+      const character = draftTeam[targetIndex];
+      applyModifierToCharacter(character, {
+        targets: [targetIndex],
+        modifiedStats,
+      });
     }
-    case 'team': {
-      for (const character of draftTeam) applyModifierToCharacter(character, modifier);
-
-      break;
-    }
-    case 'activeCharacter':
-    case 'self': {
-      const activeCharacter = draftTeam.find(
-        (character) => character.id === activeCharacterName,
-      );
-      if (!activeCharacter) {
-        throw new Error(`Character ${activeCharacterName} not found in team`);
-      }
-      applyModifierToCharacter(activeCharacter, modifier);
-
-      break;
-    }
-    default: {
-      if (target instanceof Set) {
-        for (const slotId of target) {
-          const character = draftTeam[slotId - 1];
-          applyModifierToCharacter(character, modifier);
-        }
-      }
-    }
+  } else {
+    applyModifierToEnemy(draftEnemy, modifier);
   }
 };
 
@@ -72,11 +50,10 @@ export const applyModifiers = (
   team: Team,
   enemy: Enemy,
   modifiers: Array<Modifier>,
-  activeCharacterName: string,
 ): [Team, Enemy] => {
   return produce([team, enemy], ([draftTeam, draftEnemy]) => {
     for (const modifier of modifiers) {
-      applyModifierToTeamAndEnemy(draftTeam, draftEnemy, modifier, activeCharacterName);
+      applyModifierToTeamAndEnemy(draftTeam, draftEnemy, modifier);
     }
   });
 };

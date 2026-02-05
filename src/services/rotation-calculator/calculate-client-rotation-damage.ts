@@ -24,7 +24,9 @@ import { calculateParameterizedNumberValue } from '@/services/rotation-calculato
 import { CharacterStat, Tag, isUserParameterizedNumber } from '@/types';
 import type {
   CharacterDamageInstance,
+  CharacterSlotNumber,
   CharacterStats,
+  EnemyStats,
   Integer,
   Modifier as RotationModifier,
   Team,
@@ -253,12 +255,39 @@ const resolveModifierUserParameters = (
 
 const toRotationModifier = (
   modifier: ModifierInstance & GameDataModifier,
+  attack: AttackInstance & Attack,
+  characterIdToSlotNumberMap: Record<string, number>,
 ): RotationModifier => {
-  // TODO: Fix unsafe cast
-  return {
-    target: modifier.target,
-    modifiedStats: Object.groupBy(modifier.modifiedStats, (_stat) => _stat.stat),
-  } as RotationModifier;
+  const modifiedStats = Object.groupBy(modifier.modifiedStats, (_stat) => _stat.stat);
+  switch (modifier.target) {
+    case 'self': {
+      return {
+        targets: [
+          characterIdToSlotNumberMap[modifier.characterId] as CharacterSlotNumber,
+        ],
+        modifiedStats: modifiedStats as CharacterStats,
+      };
+    }
+    case 'team': {
+      return {
+        targets: [0, 1, 2],
+        modifiedStats: modifiedStats as CharacterStats,
+      };
+    }
+    case 'activeCharacter': {
+      return {
+        targets: [
+          characterIdToSlotNumberMap[attack.characterId] as CharacterSlotNumber,
+        ],
+        modifiedStats: modifiedStats as CharacterStats,
+      };
+    }
+    default: {
+      return {
+        modifiedStats: modifiedStats as EnemyStats,
+      };
+    }
+  }
 };
 
 const toRotationDamageInstance = (
@@ -381,6 +410,9 @@ export const calculateRotation = async (
   };
 
   // 4. Map Attacks and active Buffs to Damage Instances
+  const characterIdToSlotNumberMap = Object.fromEntries(
+    clientTeam.map((c, index) => [c.id, index]),
+  );
   const damageInstances = attacks
     .map((attack) => enrichAttackWithDetails(attack))
     .map((attack) => resolveUserParameterizedAttack(attack))
@@ -390,7 +422,9 @@ export const calculateRotation = async (
         .filter((modifier) => shouldModifierApplyToAttack(index, modifier))
         .map((modifier) => enrichModifierWithDetails(modifier))
         .map((modifier) => resolveModifierUserParameters(modifier))
-        .map((modifier) => toRotationModifier(modifier)),
+        .map((modifier) =>
+          toRotationModifier(modifier, attack, characterIdToSlotNumberMap),
+        ),
     }))
     .map((instance) => ({
       instance: toRotationDamageInstance(instance),

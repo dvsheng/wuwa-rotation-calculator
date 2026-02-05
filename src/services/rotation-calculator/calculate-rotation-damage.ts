@@ -10,12 +10,7 @@ export const calculateRotationDamage = (rotation: Rotation): RotationResult => {
   const resolvedRotation = resolveStatValuesInRotation(rotation);
   return resolvedRotation.damageInstances.reduce(
     (reducer, { instance, modifiers }) => {
-      const [team, enemy] = applyModifiers(
-        rotation.team,
-        rotation.enemy,
-        modifiers,
-        instance.originCharacterName,
-      );
+      const [team, enemy] = applyModifiers(rotation.team, rotation.enemy, modifiers);
       const instanceDamage = calculateAttackDamage(instance, {
         team,
         enemy,

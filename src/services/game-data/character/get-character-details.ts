@@ -1,25 +1,18 @@
 import { createServerFn } from '@tanstack/react-start';
 
 import { toClientAttack, toClientBuff } from '../client-converters';
-import type { Attack, ClientCapability } from '../common-types';
+import type { Attack } from '../common-types';
 import { createFsStore } from '../hakushin-api/fs-store';
 
 import { GetCharacterDetailsInputSchema } from './types';
 import type {
   CharacterCapabilities,
-  GetCharacterDetailsInput,
+  GetClientCharacterDetailsOutput,
   Sequence,
   StoreCharacter,
 } from './types';
 
 const characterStore = createFsStore<StoreCharacter>();
-
-export interface GetClientCharacterDetailsOutput {
-  id: string;
-  name: string;
-  attacks: Array<ClientCapability>;
-  modifiers: Array<ClientCapability>;
-}
 
 /**
  * Resolved character with attribute added to attacks.
@@ -151,28 +144,21 @@ export const getCharacterDetails = createServerFn({
     return getCharacterDetailsHandler(data.id, data.sequence);
   });
 
-export const getClientCharacterDetailsHandler = async (
-  input: GetCharacterDetailsInput,
-): Promise<GetClientCharacterDetailsOutput> => {
-  const { id, sequence } = input;
-  const character = await getCharacterDetailsHandler(id, sequence);
-
-  return {
-    id: character.id,
-    name: character.name,
-    attacks: character.capabilities.attacks.map((attack) =>
-      toClientAttack(attack, attack.parentName, attack.name),
-    ),
-    modifiers: character.capabilities.modifiers.map((modifier) =>
-      toClientBuff(modifier, modifier.parentName, modifier.name),
-    ),
-  };
-};
-
 export const getClientCharacterDetails = createServerFn({
   method: 'GET',
 })
   .inputValidator(GetCharacterDetailsInputSchema)
   .handler(async ({ data }): Promise<GetClientCharacterDetailsOutput> => {
-    return getClientCharacterDetailsHandler(data);
+    const { id, sequence } = data;
+    const character = await getCharacterDetailsHandler(id, sequence);
+    return {
+      id: character.id,
+      name: character.name,
+      attacks: character.capabilities.attacks.map((attack) =>
+        toClientAttack(attack, attack.parentName, attack.name),
+      ),
+      modifiers: character.capabilities.modifiers.map((modifier) =>
+        toClientBuff(modifier, modifier.parentName, modifier.name),
+      ),
+    };
   });

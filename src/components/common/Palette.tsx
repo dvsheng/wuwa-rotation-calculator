@@ -30,6 +30,7 @@ export interface PaletteProperties<T> {
   className?: string;
   isCollapsible?: boolean;
   headerText?: string;
+  headerContent?: ReactNode;
   defaultOpen?: boolean;
 }
 
@@ -41,6 +42,7 @@ export function Palette<T>({
   className,
   isCollapsible = false,
   headerText,
+  headerContent,
   defaultOpen = true,
 }: PaletteProperties<T>) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -98,7 +100,10 @@ export function Palette<T>({
               )}
             </Button>
           </CollapsibleTrigger>
-          <CollapsibleContent className="border-t">{content}</CollapsibleContent>
+          <CollapsibleContent className="border-t">
+            {headerContent}
+            {content}
+          </CollapsibleContent>
         </Collapsible>
       </div>
     );
@@ -111,6 +116,7 @@ export function Palette<T>({
           <Text className="text-sm font-semibold">{headerText}</Text>
         </div>
       )}
+      {headerContent}
       {content}
     </div>
   );

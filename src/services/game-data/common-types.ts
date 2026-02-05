@@ -134,6 +134,10 @@ export type GetClientEntityDetailsInput = z.infer<typeof GetEntityDetailsInputSc
  */
 export type ClientCapability = Omit<Capability, 'characterId' | 'characterName'>;
 
+export interface ClientModifier extends ClientCapability {
+  target: Target;
+}
+
 /**
  * Base output format for client-facing entity details.
  */
@@ -141,5 +145,5 @@ export interface GetClientEntityDetailsOutput {
   /** Active attacks for the entity */
   attacks: Array<ClientCapability>;
   /** Active modifiers for the entity */
-  modifiers: Array<ClientCapability>;
+  modifiers: Array<ClientModifier>;
 }

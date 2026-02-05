@@ -1,10 +1,15 @@
 import { z } from 'zod';
 
-import type { Capability } from '@/schemas/rotation';
 import type { Attribute } from '@/types';
 
 import { GetEntityDetailsInputSchema } from '../common-types';
-import type { Attack, BaseEntity, Modifier, PermanentStat } from '../common-types';
+import type {
+  Attack,
+  BaseEntity,
+  GetClientEntityDetailsOutput,
+  Modifier,
+  PermanentStat,
+} from '../common-types';
 
 /**
  * The Resonance Chain sequence at which a skill or bonus is unlocked.
@@ -143,11 +148,8 @@ export type Character = StoreCharacter;
 /**
  * Representation of a Character returned through client-facing character details REST service
  */
-export interface GetClientCharacterDetailsOutput {
+export interface GetClientCharacterDetailsOutput extends GetClientEntityDetailsOutput {
+  id: string;
   /** Name of the character */
   name: string;
-  /** List of available attacks for the given sequence */
-  attacks: Array<Omit<Capability, 'id' | 'characterName'>>;
-  /** List of available stat modifiers for the given sequence */
-  modifiers: Array<Omit<Capability, 'id' | 'characterName'>>;
 }

@@ -1,6 +1,6 @@
 import { isUserParameterizedNumber } from '@/types';
 
-import type { Attack, ClientCapability, Modifier } from './common-types';
+import type { Attack, ClientCapability, Modifier, Target } from './common-types';
 
 /**
  * Converts a game-data Attack into a client-facing enriched Attack structure.
@@ -33,7 +33,7 @@ export const toClientBuff = (
   modifier: Modifier,
   parentName: string,
   name: string,
-): ClientCapability => {
+): ClientCapability & { target: Target } => {
   const parameters = modifier.modifiedStats
     .map((s) => s.value)
     .filter((v) => isUserParameterizedNumber(v))
@@ -45,6 +45,7 @@ export const toClientBuff = (
   return {
     id: modifier.id,
     name,
+    target: modifier.target,
     parentName,
     description: modifier.description,
     parameters: parameters.length > 0 ? parameters : undefined,

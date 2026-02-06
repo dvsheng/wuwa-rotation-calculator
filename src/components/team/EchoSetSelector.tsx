@@ -45,7 +45,10 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
   };
 
   const handleUpdateSet = (setIndex: number, id: string) => {
+    const selectedSetConfig = echoSetList.find((set) => set.id === id);
+    const availableTiers = selectedSetConfig?.tiers || [2, 5];
     setEchoSet(index, setIndex, id);
+    setEchoSetRequirement(index, setIndex, String(availableTiers[0]));
   };
 
   return (
@@ -54,11 +57,10 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
         {selectedEchoSets.map((set, setIndex) => {
           const selectedSetConfig = echoSetList.find((s) => s.id === set.id);
           const availableTiers = selectedSetConfig?.tiers || [2, 5];
-
           return (
-            <Row key={setIndex} className="items-end gap-2 px-1">
-              <AssetIcon name="guord" className="brightness-0" />
-              <div className="min-w-0 flex-1">
+            <Row key={setIndex} className="selector-row">
+              <AssetIcon name="guord" className="selector-icon" />
+              <div className="selector-main">
                 <SearchableSelect
                   items={echoSetList}
                   value={selectedSetConfig?.name}
@@ -68,15 +70,15 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
                 />
               </div>
 
-              {set.id && (
-                <div className="w-20 shrink-0">
+              <div className="selector-secondary">
+                {set.id && (
                   <Select
                     value={String(set.requirement)}
                     onValueChange={(value) =>
                       setEchoSetRequirement(index, setIndex, value)
                     }
                   >
-                    <SelectTrigger className="h-8 px-2 text-[10px]">
+                    <SelectTrigger className="h-9 w-full px-2">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -87,19 +89,20 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-              )}
+                )}
+              </div>
 
-              {selectedEchoSets.length > 1 && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-destructive h-8 w-8"
-                  onClick={() => handleRemoveSet(setIndex)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
+              {selectedEchoSets.length > 1 &&
+                (setIndex === 1 || selectedEchoSets[1]?.id) && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-muted-foreground hover:text-destructive h-8 w-8"
+                    onClick={() => handleRemoveSet(setIndex)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
             </Row>
           );
         })}

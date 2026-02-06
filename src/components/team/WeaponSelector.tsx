@@ -44,9 +44,9 @@ export const WeaponSelector = ({ index }: WeaponSelectorProperties) => {
   };
 
   return (
-    <Row className="gap-2 px-1">
-      <AssetIcon name="weapon" className="brightness-0 dark:invert" />
-      <div className="flex-1">
+    <Row className="selector-row">
+      <AssetIcon name="weapon" className="selector-icon" />
+      <div className="selector-main">
         <SelectionDialog
           key={characterId}
           items={weaponList}
@@ -98,12 +98,12 @@ export const WeaponSelector = ({ index }: WeaponSelectorProperties) => {
           triggerClassName="h-9"
         />
       </div>
-      <div className="w-16 shrink-0">
+      <div className="selector-secondary">
         <Select
           value={String(weapon.refine)}
           onValueChange={(value) => setRefine(index, value)}
         >
-          <SelectTrigger className="h-9 px-2">
+          <SelectTrigger className="h-9 w-full px-2">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

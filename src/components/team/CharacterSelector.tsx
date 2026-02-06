@@ -27,21 +27,21 @@ export const CharacterSelector = ({ index }: CharacterSelectorProperties) => {
   const setSequence = useTeamStore((state) => state.setSequence);
 
   return (
-    <Row className="flex-1 gap-2 overflow-hidden px-1">
-      <AssetIcon name="role" className="brightness-0 dark:invert" />
-      <div className="min-w-0 flex-1">
+    <Row className="selector-row flex-1 overflow-hidden">
+      <AssetIcon name="role" className="selector-icon" />
+      <div className="selector-main">
         <CharacterSelectionDialog
           value={character.id}
           onValueChange={(id) => setCharacter(index, id)}
           excludeIds={otherSelectedCharacterIds}
         />
       </div>
-      <div className="w-16 shrink-0">
+      <div className="selector-secondary">
         <Select
           value={String(character.sequence)}
           onValueChange={(value) => setSequence(index, Number.parseInt(value))}
         >
-          <SelectTrigger className="h-9 px-2">
+          <SelectTrigger className="h-9 w-full px-2">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

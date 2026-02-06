@@ -14,7 +14,7 @@ import { useWeaponList } from '@/hooks/useWeaponList';
 import { cn } from '@/lib/utils';
 import type { ListWeaponsResponseItem } from '@/services/game-data/weapon/list-weapons';
 import { useTeamStore } from '@/store/useTeamStore';
-import type { WeaponType } from '@/types';
+import { WeaponType } from '@/types';
 
 import { AssetIcon } from '../common/AssetIcon';
 
@@ -28,11 +28,15 @@ export const WeaponSelector = ({ index }: WeaponSelectorProperties) => {
   const setWeapon = useTeamStore((state) => state.setWeapon);
   const setRefine = useTeamStore((state) => state.setRefine);
   const { data: characterList = [] } = useCharacterList();
-  const selectedCharacterData = characterList.find((c) => c.id === characterId);
-  const { data: weaponList = [] } = useWeaponList(
-    selectedCharacterData?.weaponType as WeaponType,
-  );
+  const { data: weaponList = [] } = useWeaponList();
 
+  const selectedCharacterData = characterList.find((c) => c.id === characterId);
+  const weaponTypeFilter: FilterConfig<ListWeaponsResponseItem> = {
+    label: 'Type',
+    options: Object.values(WeaponType).map((type) => ({ value: type, label: type })),
+    getValue: (_weapon) => _weapon.weaponType,
+    defaultValue: selectedCharacterData?.weaponType,
+  };
   const rarityFilter: FilterConfig<ListWeaponsResponseItem> = {
     label: 'Rarity',
     options: [5, 4, 3].map((r) => ({ value: r, label: `${r}★` })),
@@ -44,13 +48,14 @@ export const WeaponSelector = ({ index }: WeaponSelectorProperties) => {
       <AssetIcon name="weapon" className="brightness-0 dark:invert" />
       <div className="flex-1">
         <SelectionDialog
+          key={characterId}
           items={weaponList}
           value={weapon.id}
           onValueChange={(id) => setWeapon(index, id)}
           title="Select Weapon"
           placeholder="Select weapon"
           searchPlaceholder="Search weapons..."
-          filters={[rarityFilter]}
+          filters={[weaponTypeFilter, rarityFilter]}
           renderItem={(_weapon) => (
             <>
               <div className="relative flex h-14 w-14 items-center justify-center">

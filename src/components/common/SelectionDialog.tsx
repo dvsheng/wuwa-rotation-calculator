@@ -24,8 +24,9 @@ export interface FilterOption {
 export interface FilterConfig<T> {
   label: string;
   options: Array<FilterOption>;
-  getValue: (item: T) => string | number | null;
+  getValue: (item: T) => string | number | undefined;
   renderBadge?: (option: FilterOption, isSelected: boolean) => ReactNode;
+  defaultValue?: string | number;
 }
 
 export interface SelectionDialogProperties<T extends { id: string; name: string }> {
@@ -74,9 +75,19 @@ export const SelectionDialog = <T extends { id: string; name: string }>({
 }: SelectionDialogProperties<T>) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeFilters, setActiveFilters] = useState<Map<number, string | number>>(
-    new Map(),
-  );
+
+  const getDefaultFilters = () => {
+    const defaults = new Map<number, string | number>();
+    for (const [index, filter] of filters.entries()) {
+      if (filter.defaultValue !== undefined) {
+        defaults.set(index, filter.defaultValue);
+      }
+    }
+    return defaults;
+  };
+
+  const [activeFilters, setActiveFilters] =
+    useState<Map<number, string | number>>(getDefaultFilters);
 
   const selectedItem = items.find((item) => item.id === value);
 
@@ -103,7 +114,7 @@ export const SelectionDialog = <T extends { id: string; name: string }>({
 
   const resetFilters = () => {
     setSearchTerm('');
-    setActiveFilters(new Map());
+    setActiveFilters(getDefaultFilters());
   };
 
   const toggleFilter = (filterIndex: number, filterValue: string | number) => {

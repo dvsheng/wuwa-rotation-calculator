@@ -27,6 +27,10 @@ export interface CanvasItemProperties extends React.HTMLAttributes<HTMLDivElemen
   index?: number;
   variant?: 'outline' | 'muted';
   size?: 'default' | 'sm' | 'xs';
+  /** Additional class names to apply to the inner Item component */
+  itemClassName?: string;
+  /** Additional inline styles to apply to the inner Item component */
+  itemStyle?: React.CSSProperties;
 }
 
 export function CanvasItem({
@@ -40,6 +44,8 @@ export function CanvasItem({
   index,
   variant = 'outline',
   size = 'sm',
+  itemClassName,
+  itemStyle,
   className,
   style,
   onClick,
@@ -67,11 +73,15 @@ export function CanvasItem({
               variant={variant}
               size={size}
               className={cn(
-                'bg-card h-full transition-colors',
+                'bg-card relative h-full overflow-hidden transition-colors',
                 hasParameters && 'hover:bg-accent/50 cursor-pointer',
+                itemClassName,
               )}
+              style={itemStyle}
               onClick={handleClick}
             >
+              {/* Background overlay segments (e.g., alignment indicators) */}
+              {children}
               {index !== undefined && (
                 <Text
                   variant="tiny"

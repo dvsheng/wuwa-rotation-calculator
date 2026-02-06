@@ -33,6 +33,7 @@ export const useTeamModifierInstances = () => {
         characterId: gameData.characterId,
         characterName: gameData.characterName,
         originType: gameData.originType,
+        target: gameData.target,
         parameters,
         x: stored.x,
         y: stored.y,

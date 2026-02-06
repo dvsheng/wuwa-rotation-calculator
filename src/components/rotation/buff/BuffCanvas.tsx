@@ -28,7 +28,7 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
 
   const additionalLayoutProperties = {
     gridConfig: { rowHeight: 28, margin: [4, 4] as const },
-    resizeConfig: { enabled: true, handles: ['e'] },
+    resizeConfig: { enabled: true, handles: ['e', 'w'] },
     layout: buffs.map((buff) => ({
       i: buff.instanceId,
       x: buff.x,

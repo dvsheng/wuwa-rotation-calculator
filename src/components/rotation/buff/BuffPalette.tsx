@@ -81,7 +81,7 @@ export const BuffPalette = ({
 /**
  * Color classes for each modifier target type.
  */
-const TARGET_COLORS: Record<string, string> = {
+export const TARGET_COLORS: Record<string, string> = {
   [Target.SELF]: 'border-blue-400 bg-blue-100 text-black',
   [Target.TEAM]: 'border-green-400 bg-green-100 text-black',
   [Target.ACTIVE_CHARACTER]: 'border-amber-400 bg-amber-100 text-black',

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { OriginType as CharacterOriginType } from '@/services/game-data/character/types';
-import type { ClientCapability } from '@/services/game-data/common-types';
+import type { ClientCapability, ClientModifier } from '@/services/game-data/common-types';
 
 export const ParameterSchema = z.object({
   minimum: z.number(),
@@ -91,5 +91,5 @@ export type DetailedAttackInstance = AttackInstance &
   ClientCharacterDetails;
 
 export type DetailedModifierInstance = ModifierInstance &
-  ClientCapability &
+  ClientModifier &
   ClientCharacterDetails;

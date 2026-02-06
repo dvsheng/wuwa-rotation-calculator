@@ -1,13 +1,15 @@
 import { createServerFn } from '@tanstack/react-start';
 
+import { GetEchoSetDetailsInputSchema } from '@/schemas/game-data-service';
+import type { GetEchoSetDetailsInput } from '@/schemas/game-data-service';
+
 import { toClientAttack, toClientBuff } from '../client-converters';
 import { createFsStore } from '../hakushin-api/fs-store';
 
-import { GetEchoSetDetailsInputSchema, SetEffectRequirement } from './types';
+import { SetEffectRequirement } from './types';
 import type {
   EchoSet,
   GetClientEchoSetDetailsOutput,
-  GetEchoSetDetailsInput,
   SetEffectRequirement as SetEffectRequirementType,
   StoreEchoSet,
 } from './types';

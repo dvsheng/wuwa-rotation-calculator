@@ -1,6 +1,5 @@
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
 import type { Capability } from '@/schemas/rotation';
-import { CapabilitySchema } from '@/schemas/rotation';
 import { useRotationStore } from '@/store/useRotationStore';
 
 import { BuffCanvas } from './BuffCanvas';
@@ -8,9 +7,7 @@ import { BuffPalette } from './BuffPalette';
 
 export const BuffTimelineBuilder = () => {
   const addBuff = useRotationStore((state) => state.addBuff);
-  const { handleDragStart, createHandleDrop } = useDragAndDrop({
-    schema: CapabilitySchema,
-  });
+  const { handleDragStart, createHandleDrop } = useDragAndDrop<Capability>();
 
   const handleDropBuff = createHandleDrop((buff, item) => {
     addBuff(buff, {

@@ -1,4 +1,4 @@
-import type { DetailedAttackInstance } from '@/schemas/rotation';
+import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
 import { useRotationStore } from '@/store/useRotationStore';
 
 import { CanvasItem } from '../../common/CanvasItem';

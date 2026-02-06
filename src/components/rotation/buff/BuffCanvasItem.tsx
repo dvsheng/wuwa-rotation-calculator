@@ -4,7 +4,7 @@ import {
   getAlignmentSegments,
   useSelfBuffAlignment,
 } from '@/hooks/useSelfBuffAlignment';
-import type { DetailedModifierInstance } from '@/schemas/rotation';
+import type { DetailedModifierInstance } from '@/hooks/useTeamModifierInstances';
 import { Target } from '@/services/game-data/common-types';
 
 import { CanvasItem } from '../../common/CanvasItem';

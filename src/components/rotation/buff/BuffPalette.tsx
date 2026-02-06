@@ -1,7 +1,8 @@
 import { Palette } from '@/components/common/Palette';
 import { PaletteItem } from '@/components/common/PaletteItem';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
-import type { Capability, OriginType } from '@/schemas/rotation';
+import type { Capability } from '@/schemas/rotation';
+import type { OriginType } from '@/services/game-data/common-types';
 import { Target } from '@/services/game-data/common-types';
 
 export interface BuffPaletteProperties {
@@ -52,7 +53,7 @@ export const BuffPalette = ({
 
   const legend = Object.entries(TARGET_LABELS).map(([target, label]) => ({
     label,
-    className: TARGET_COLORS[target],
+    className: TARGET_COLORS[target as Target],
   }));
 
   return (
@@ -81,14 +82,14 @@ export const BuffPalette = ({
 /**
  * Color classes for each modifier target type.
  */
-export const TARGET_COLORS: Record<string, string> = {
+export const TARGET_COLORS: Record<Target, string> = {
   [Target.SELF]: 'border-blue-400 bg-blue-100 text-black',
   [Target.TEAM]: 'border-green-400 bg-green-100 text-black',
   [Target.ACTIVE_CHARACTER]: 'border-amber-400 bg-amber-100 text-black',
   [Target.ENEMY]: 'border-red-400 bg-red-100 text-black',
 };
 
-const TARGET_LABELS: Record<string, string> = {
+const TARGET_LABELS: Record<Target, string> = {
   [Target.SELF]: 'Self',
   [Target.TEAM]: 'Team',
   [Target.ACTIVE_CHARACTER]: 'Active',

@@ -1,7 +1,8 @@
+import type { GetClientEntityDetailsInput } from '@/schemas/game-data-service';
+
 import type {
   BaseEntity,
   Capabilities,
-  GetClientEntityDetailsInput,
   GetClientEntityDetailsOutput,
 } from '../common-types';
 

@@ -11,8 +11,8 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Heading, Text } from '@/components/ui/typography';
 import type { useRotationCalculation } from '@/hooks/useRotationCalculation';
+import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
 import { useTeamAttackInstances } from '@/hooks/useTeamAttackInstances';
-import type { DetailedAttackInstance } from '@/schemas/rotation';
 import type { RotationResult } from '@/services/rotation-calculator/types';
 import { useRotationStore } from '@/store/useRotationStore';
 

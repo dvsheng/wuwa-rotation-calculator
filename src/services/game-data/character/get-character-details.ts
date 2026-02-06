@@ -1,32 +1,18 @@
 import { createServerFn } from '@tanstack/react-start';
 
+import { GetCharacterDetailsInputSchema } from '@/schemas/game-data-service';
+
 import { toClientAttack, toClientBuff } from '../client-converters';
-import type { Attack } from '../common-types';
 import { createFsStore } from '../hakushin-api/fs-store';
 
-import { GetCharacterDetailsInputSchema } from './types';
 import type {
-  CharacterCapabilities,
+  Character,
   GetClientCharacterDetailsOutput,
-  OriginType,
   Sequence,
   StoreCharacter,
 } from './types';
 
 const characterStore = createFsStore<StoreCharacter>();
-
-/**
- * Resolved character with attribute added to attacks.
- */
-export interface ResolvedCharacter extends Omit<StoreCharacter, 'capabilities'> {
-  capabilities: {
-    attacks: Array<
-      Attack & { name: string; parentName: string; originType: OriginType }
-    >;
-    modifiers: CharacterCapabilities['modifiers'];
-    permanentStats: CharacterCapabilities['permanentStats'];
-  };
-}
 
 /**
  * Convert sequence string to number (e.g., 's1' -> 1, 's2' -> 2).
@@ -96,7 +82,7 @@ const isCapabilityActive = (
 export const getCharacterDetailsHandler = async (
   id: string,
   sequence?: number,
-): Promise<ResolvedCharacter> => {
+): Promise<Character> => {
   const key = `character/parsed/${id}.json`;
 
   const characterData = await characterStore.get(key);
@@ -143,7 +129,7 @@ export const getCharacterDetails = createServerFn({
   method: 'GET',
 })
   .inputValidator(GetCharacterDetailsInputSchema)
-  .handler(async ({ data }): Promise<ResolvedCharacter> => {
+  .handler(async ({ data }): Promise<Character> => {
     return getCharacterDetailsHandler(data.id, data.sequence);
   });
 

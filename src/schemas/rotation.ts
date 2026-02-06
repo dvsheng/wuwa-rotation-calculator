@@ -1,46 +1,6 @@
 import { z } from 'zod';
 
-import { OriginType as CharacterOriginType } from '@/services/game-data/character/types';
-import type { ClientCapability, ClientModifier } from '@/services/game-data/common-types';
-
-export const ParameterSchema = z.object({
-  minimum: z.number(),
-  maximum: z.number(),
-  value: z.number().optional(),
-});
-
-export type Parameter = z.infer<typeof ParameterSchema>;
-
-export const OriginTypeSchema = z.enum([
-  ...Object.values(CharacterOriginType),
-  'Weapon',
-  'Echo',
-  'Echo Set',
-]);
-
-export type OriginType = z.infer<typeof OriginTypeSchema>;
-
-/**
- * Schema for validating capability data during drag/drop operations.
- */
-export const CapabilitySchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  parentName: z.string(),
-  originType: OriginTypeSchema,
-  description: z.string().optional(),
-  characterName: z.string(),
-  characterId: z.string(),
-  parameters: z
-    .array(
-      z.object({
-        minimum: z.number(),
-        maximum: z.number(),
-        value: z.number().optional(),
-      }),
-    )
-    .optional(),
-});
+export const CapabilitySchema = z.object({ id: z.string(), characterId: z.string() });
 
 export type Capability = z.infer<typeof CapabilitySchema>;
 
@@ -80,16 +40,3 @@ export const RotationSchema = z.object({
 });
 
 export type Rotation = z.infer<typeof RotationSchema>;
-
-export interface ClientCharacterDetails {
-  characterId: string;
-  characterName: string;
-}
-
-export type DetailedAttackInstance = AttackInstance &
-  ClientCapability &
-  ClientCharacterDetails;
-
-export type DetailedModifierInstance = ModifierInstance &
-  ClientModifier &
-  ClientCharacterDetails;

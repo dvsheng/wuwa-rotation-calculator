@@ -2,7 +2,7 @@ import { useId } from 'react';
 import type React from 'react';
 import type { Layout, LayoutItem } from 'react-grid-layout';
 import { toast } from 'sonner';
-import { z } from 'zod';
+import type { z } from 'zod';
 
 export const PALETTE_DRAG_TYPE = 'application/palette-item';
 export const PALETTE_UUID_TYPE = 'application/x-palette-uuid';
@@ -11,7 +11,7 @@ export interface UseDragAndDropOptions<T> {
   schema: z.ZodSchema<T>;
 }
 
-export const useDragAndDrop = <T>({ schema }: UseDragAndDropOptions<T>) => {
+export const useDragAndDrop = <T>() => {
   const instanceId = useId();
 
   const handleDragStart = (data: T, event: React.DragEvent) => {
@@ -45,15 +45,10 @@ export const useDragAndDrop = <T>({ schema }: UseDragAndDropOptions<T>) => {
         if (dataString === '') return;
 
         const rawData = JSON.parse(dataString);
-        const validatedData = schema.parse(rawData);
 
-        onDrop(validatedData, item, layout);
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          toast.error('Invalid item type for this area');
-        } else {
-          toast.error('Failed to drop item');
-        }
+        onDrop(rawData, item, layout);
+      } catch {
+        toast.error('Failed to drop item');
       }
     };
   };

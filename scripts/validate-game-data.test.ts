@@ -4,7 +4,8 @@ import path from 'node:path';
 import { describe, it } from 'vitest';
 import { z } from 'zod';
 
-import { OriginType, Sequence } from '@/services/game-data/character/types';
+import { Sequence } from '@/services/game-data/character/types';
+import { OriginType } from '@/services/game-data/common-types';
 import {
   AbilityAttribute,
   Attribute,
@@ -337,7 +338,9 @@ const WeaponSchema = BaseEntitySchema.extend({
 
 const SequenceSchema = z.enum(Object.values(Sequence));
 
-const OriginTypeSchema = z.enum(Object.values(OriginType));
+const CharacterOriginTypeSchema = z
+  .enum(Object.values(OriginType))
+  .exclude(['Echo', 'Echo Set', 'Weapon']);
 
 const CharacterAttackTagsSchema = z
   .array(BaseAttackStatTagSchema.exclude(Object.values(Attribute)))
@@ -375,7 +378,7 @@ const CharacterAttackSchema = z.strictObject({
   description: z.string(),
   name: z.string(),
   parentName: z.string(),
-  originType: OriginTypeSchema,
+  originType: CharacterOriginTypeSchema.exclude(['Base Stats', 'Inherent Skill']),
   unlockedAt: SequenceSchema.optional(),
   tags: CharacterAttackTagsSchema,
   scalingStat: z.enum(Object.values(AbilityAttribute)),
@@ -390,7 +393,7 @@ const CharacterModifierSchema = z.strictObject({
   description: z.string(),
   name: z.string(),
   parentName: z.string(),
-  originType: OriginTypeSchema,
+  originType: CharacterOriginTypeSchema,
   unlockedAt: SequenceSchema.optional(),
   target: z.union([
     z.enum(['team', 'enemy', 'activeCharacter', 'self']),
@@ -407,7 +410,7 @@ const CharacterPermanentStatSchema = z.strictObject({
   description: z.string(),
   name: z.string(),
   parentName: z.string(),
-  originType: OriginTypeSchema,
+  originType: CharacterOriginTypeSchema,
   unlockedAt: SequenceSchema.optional(),
   stat: z.union([
     z.enum(Object.values(CharacterStat)),

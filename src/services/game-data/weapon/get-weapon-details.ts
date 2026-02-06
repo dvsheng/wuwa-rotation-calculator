@@ -1,14 +1,15 @@
 import { createServerFn } from '@tanstack/react-start';
 import { mapValues } from 'es-toolkit/object';
 
+import { GetWeaponDetailsInputSchema } from '@/schemas/game-data-service';
+import type { GetWeaponDetailsInput } from '@/schemas/game-data-service';
+
 import { toClientAttack, toClientBuff } from '../client-converters';
 import type { Capabilities } from '../common-types';
 import { createFsStore } from '../hakushin-api/fs-store';
 
-import { GetWeaponDetailsInputSchema } from './types';
 import type {
   GetClientWeaponDetailsOutput,
-  GetWeaponDetailsInput,
   RefineScalableNumber,
   StoreWeapon,
   Weapon,

@@ -1,6 +1,3 @@
-import z from 'zod';
-
-import type { Capability } from '@/schemas/rotation';
 import type {
   AbilityAttribute,
   Attribute,
@@ -10,6 +7,43 @@ import type {
   Tagged,
   UserParameterizedNumber,
 } from '@/types';
+
+import { Sequence } from './character/types';
+
+/**
+ * The source of a capability.
+ *
+ * A capability either comes from a character's abilities
+ * or from external sources like weapons or echoes.
+ */
+export const OriginType = {
+  /** Capabilities from the character's unique mechanic */
+  FORTE_CIRCUIT: 'Forte Circuit',
+  /** Standard weapon attacks */
+  NORMAL_ATTACK: 'Normal Attack',
+  /** Character's E skill */
+  RESONANCE_SKILL: 'Resonance Skill',
+  /** Character's R ability */
+  RESONANCE_LIBERATION: 'Resonance Liberation',
+  /** Attack performed when switching the character in */
+  INTRO_SKILL: 'Intro Skill',
+  /** Buff/Effect triggered when switching the character out */
+  OUTRO_SKILL: 'Outro Skill',
+  /** Passive abilities unlocked at character breakpoints */
+  INHERENT_SKILL: 'Inherent Skill',
+  /** Base stats of the character */
+  BASE_STATS: 'Base Stats',
+  /** Specialized mechanics for certain characters */
+  TUNE_BREAK: 'Tune Break',
+  ...Sequence,
+  WEAPON: 'Weapon',
+  ECHO: 'Echo',
+  ECHO_SET: 'Echo Set',
+} as const;
+
+export type OriginType = (typeof OriginType)[keyof typeof OriginType];
+
+export type AttackOriginType = Exclude<OriginType, 'Inherent Skill' | 'Base Stats'>;
 
 /**
  * Base properties for any capability (Attack, Modifier, PermanentStat)
@@ -22,7 +56,7 @@ export interface BaseCapability {
 }
 
 /**
- * Represents a statistical bonus or property.
+ * A stat and its value on a character or enemy.
  */
 export interface Stat extends Tagged {
   /** The specific stat being modified */
@@ -117,24 +151,28 @@ export interface BaseEntity {
 }
 
 /**
- * Base schema for fetching an entity by its ID.
+ * Interfaces for client-facing entity details outputs.
  */
-export const GetEntityDetailsInputSchema = z.object({
-  /** The ID of the entity to fetch */
-  id: z.string(),
-});
+export interface Parameter {
+  minimum: number;
+  maximum: number;
+  value?: number;
+}
 
-/**
- * Base input for services that fetch client-facing entity details.
- */
-export type GetClientEntityDetailsInput = z.infer<typeof GetEntityDetailsInputSchema>;
+export interface ClientCapability {
+  id: string;
+  name: string;
+  parentName: string;
+  description?: string;
+  parameters?: Array<Parameter>;
+}
 
-/**
- * Subset of capability data intended for client-side display.
- */
-export type ClientCapability = Omit<Capability, 'characterId' | 'characterName'>;
+export interface ClientAttack extends ClientCapability {
+  originType: AttackOriginType;
+}
 
 export interface ClientModifier extends ClientCapability {
+  originType: OriginType;
   target: Target;
 }
 
@@ -143,7 +181,7 @@ export interface ClientModifier extends ClientCapability {
  */
 export interface GetClientEntityDetailsOutput {
   /** Active attacks for the entity */
-  attacks: Array<ClientCapability>;
+  attacks: Array<ClientAttack>;
   /** Active modifiers for the entity */
   modifiers: Array<ClientModifier>;
 }

@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { Parameter } from '@/schemas/rotation';
+import type { Parameter } from '@/services/game-data/common-types';
 
 interface ParameterConfigurationDialogProperties {
   title: string;

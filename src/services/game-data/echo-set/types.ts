@@ -1,6 +1,3 @@
-import { z } from 'zod';
-
-import { GetEntityDetailsInputSchema } from '../common-types';
 import type {
   BaseEntity,
   Capabilities,
@@ -21,19 +18,6 @@ export interface StoreEchoSet extends BaseEntity {
   /** Map of piece requirements to their respective effects (Capabilities) */
   setEffects: Partial<Record<SetEffectRequirement, Capabilities>>;
 }
-
-/**
- * Zod schema for echo set details service input.
- */
-export const GetEchoSetDetailsInputSchema = GetEntityDetailsInputSchema.extend({
-  /** The number of pieces equipped from this set */
-  requirement: z.enum(SetEffectRequirement),
-});
-
-/**
- * Input for fetching echo set details.
- */
-export type GetEchoSetDetailsInput = z.infer<typeof GetEchoSetDetailsInputSchema>;
 
 /**
  * Output format for client-facing echo set details.

@@ -43,10 +43,8 @@ export const useRotationStore = create<RotationState>()(
       addAttack: (attack, atIndex) =>
         set((state) => {
           const newAttack: AttackInstance = {
+            ...attack,
             instanceId: crypto.randomUUID(),
-            id: attack.id,
-            characterId: attack.characterId,
-            parameterValues: attack.parameters?.map((p) => p.value ?? p.minimum),
           };
           if (atIndex !== undefined && atIndex !== -1) {
             state.attacks.splice(atIndex, 0, newAttack);
@@ -87,11 +85,9 @@ export const useRotationStore = create<RotationState>()(
       addBuff: (buff, position) =>
         set((state) => {
           const newBuff: ModifierInstance = {
-            instanceId: crypto.randomUUID(),
-            id: buff.id,
-            characterId: buff.characterId,
-            parameterValues: buff.parameters?.map((p) => p.value ?? p.minimum),
+            ...buff,
             ...position,
+            instanceId: crypto.randomUUID(),
           };
           state.buffs.push(newBuff);
         }),

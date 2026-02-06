@@ -1,7 +1,13 @@
-import type { OriginType } from '@/schemas/rotation';
 import { isUserParameterizedNumber } from '@/types';
 
-import type { Attack, ClientCapability, Modifier, Target } from './common-types';
+import type {
+  Attack,
+  AttackOriginType,
+  ClientAttack,
+  ClientModifier,
+  Modifier,
+  OriginType,
+} from './common-types';
 
 /**
  * Converts a game-data Attack into a client-facing enriched Attack structure.
@@ -10,8 +16,8 @@ export const toClientAttack = (
   attack: Attack,
   parentName: string,
   name: string,
-  originType: OriginType,
-): ClientCapability => {
+  originType: AttackOriginType,
+): ClientAttack => {
   const parameters = attack.motionValues
     .filter((v) => isUserParameterizedNumber(v))
     .map((v) => ({
@@ -37,7 +43,7 @@ export const toClientBuff = (
   parentName: string,
   name: string,
   originType: OriginType,
-): ClientCapability & { target: Target } => {
+): ClientModifier => {
   const parameters = modifier.modifiedStats
     .map((s) => s.value)
     .filter((v) => isUserParameterizedNumber(v))

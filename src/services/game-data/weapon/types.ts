@@ -1,8 +1,5 @@
-import { z } from 'zod';
-
 import type { AbilityAttribute, CharacterStat, EnemyStat } from '@/types';
 
-import { GetEntityDetailsInputSchema } from '../common-types';
 import type {
   BaseCapability,
   BaseEntity,
@@ -115,19 +112,6 @@ export interface StoredCapabilities {
 export interface StoreWeapon extends BaseEntity {
   capabilities: StoredCapabilities;
 }
-
-/**
- * Zod schema for weapon details service input.
- */
-export const GetWeaponDetailsInputSchema = GetEntityDetailsInputSchema.extend({
-  /** The refinement level of the weapon (1-5) */
-  refineLevel: z.enum(RefineLevel),
-});
-
-/**
- * Input for fetching weapon details.
- */
-export type GetWeaponDetailsInput = z.infer<typeof GetWeaponDetailsInputSchema>;
 
 /**
  * Output format for client-facing weapon details.

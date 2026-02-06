@@ -1,13 +1,12 @@
-import { z } from 'zod';
-
 import type { Attribute } from '@/types';
 
-import { GetEntityDetailsInputSchema } from '../common-types';
 import type {
   Attack,
+  AttackOriginType,
   BaseEntity,
   GetClientEntityDetailsOutput,
   Modifier,
+  OriginType,
   PermanentStat,
 } from '../common-types';
 
@@ -26,33 +25,6 @@ export const Sequence = {
 export type Sequence = (typeof Sequence)[keyof typeof Sequence];
 
 /**
- * Categorizes the source of a character's capability.
- */
-export const OriginType = {
-  /** Capabilities from the character's unique mechanic */
-  FORTE_CIRCUIT: 'Forte Circuit',
-  /** Standard weapon attacks */
-  NORMAL_ATTACK: 'Normal Attack',
-  /** Character's E skill */
-  RESONANCE_SKILL: 'Resonance Skill',
-  /** Character's R ability */
-  RESONANCE_LIBERATION: 'Resonance Liberation',
-  /** Attack performed when switching the character in */
-  INTRO_SKILL: 'Intro Skill',
-  /** Buff/Effect triggered when switching the character out */
-  OUTRO_SKILL: 'Outro Skill',
-  /** Passive abilities unlocked at character breakpoints */
-  INHERENT_SKILL: 'Inherent Skill',
-  /** Base stats of the character */
-  BASE_STATS: 'Base Stats',
-  /** Specialized mechanics for certain characters */
-  TUNE_BREAK: 'Tune Break',
-  ...Sequence,
-} as const;
-
-export type OriginType = (typeof OriginType)[keyof typeof OriginType];
-
-/**
  * Base properties shared by all character capabilities.
  */
 interface CharacterCapabilityBase {
@@ -61,7 +33,7 @@ interface CharacterCapabilityBase {
   /** The name of the parent skill or node (e.g., "Ground State Calibration"). */
   parentName: string;
   /** Where this capability originates from in the character's kit */
-  originType: OriginType;
+  originType: Exclude<OriginType, 'Weapon' | 'Echo' | 'Echo Set'>;
   /** The sequence to unlock this entry. If undefined, it's part of the base kit. */
   unlockedAt?: Sequence;
 }
@@ -69,7 +41,10 @@ interface CharacterCapabilityBase {
 /**
  * Fields that can be overridden in an alternative definition (excludes id and alternativeDefinition).
  */
-type CharacterAttack = Omit<Attack, 'attribute'> & CharacterCapabilityBase;
+type CharacterAttack = Omit<
+  Attack<CharacterCapabilityBase>,
+  'attribute' | 'originType'
+> & { originType: Exclude<AttackOriginType, 'Weapon' | 'Echo' | 'Echo Set'> };
 
 type CharacterChildAttack = Pick<
   CharacterAttack,
@@ -128,22 +103,17 @@ export interface StoreCharacter extends BaseEntity {
 }
 
 /**
- * Zod schema for character details service input.
+ * Resolved character with attribute added to attacks.
  */
-export const GetCharacterDetailsInputSchema = GetEntityDetailsInputSchema.extend({
-  /** The resonance chain sequence (0-6) of the character */
-  sequence: z.number().min(0).max(6).default(0),
-});
-
-/**
- * Input to the character details service (whether internal or client-facing)
- */
-export type GetCharacterDetailsInput = z.infer<typeof GetCharacterDetailsInputSchema>;
-
-/**
- * Representation of a Character returned through the internal character details service
- */
-export type Character = StoreCharacter;
+export interface Character extends Omit<StoreCharacter, 'capabilities'> {
+  capabilities: {
+    attacks: Array<
+      Attack & { name: string; parentName: string; originType: AttackOriginType }
+    >;
+    modifiers: CharacterCapabilities['modifiers'];
+    permanentStats: CharacterCapabilities['permanentStats'];
+  };
+}
 
 /**
  * Representation of a Character returned through client-facing character details REST service

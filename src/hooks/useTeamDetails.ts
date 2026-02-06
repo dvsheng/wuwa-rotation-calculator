@@ -4,12 +4,29 @@ import { toast } from 'sonner';
 
 import { getClientCharacterDetails } from '@/services/game-data/character/get-character-details';
 import type { GetClientCharacterDetailsOutput } from '@/services/game-data/character/types';
+import type { ClientAttack, ClientModifier } from '@/services/game-data/common-types';
 import { getClientEchoDetails } from '@/services/game-data/echo/get-echo-details';
 import { getClientEchoSetDetails } from '@/services/game-data/echo-set/get-echo-set-details';
 import { getClientWeaponDetails } from '@/services/game-data/weapon/get-weapon-details';
 import { useTeamStore } from '@/store/useTeamStore';
 
-export const useTeamDetails = () => {
+interface ClientCharacterDetails {
+  characterId: string;
+  characterName: string;
+}
+
+export type DetailedAttack = ClientCharacterDetails & ClientAttack;
+
+export type DetailedModifier = ClientCharacterDetails & ClientModifier;
+
+export interface UseTeamDetailsResult {
+  attacks: Array<DetailedAttack>;
+  buffs: Array<DetailedModifier>;
+  isLoading: boolean;
+  isError: boolean;
+}
+
+export const useTeamDetails = (): UseTeamDetailsResult => {
   const team = useTeamStore((state) => state.team);
   const queryMetadata = team.flatMap((character) => {
     const items = [

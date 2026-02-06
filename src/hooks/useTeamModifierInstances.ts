@@ -1,9 +1,18 @@
 import { compact } from 'es-toolkit/array';
 
-import type { DetailedModifierInstance } from '@/schemas/rotation';
+import type { ModifierInstance } from '@/schemas/rotation';
 import { useRotationStore } from '@/store/useRotationStore';
 
 import { useTeamDetails } from './useTeamDetails';
+
+export type DetailedModifierInstance = ModifierInstance &
+  ReturnType<typeof useTeamDetails>['buffs'][number];
+
+export interface UseTeamModifierInstancesResult {
+  buffs: Array<DetailedModifierInstance>;
+  isLoading: boolean;
+  isError: boolean;
+}
 
 /**
  * Hook that combines stored modifier instances from the rotation store
@@ -11,12 +20,12 @@ import { useTeamDetails } from './useTeamDetails';
  *
  * Returns fully resolved ModifierInstance objects for component consumption.
  */
-export const useTeamModifierInstances = () => {
+export const useTeamModifierInstances = (): UseTeamModifierInstancesResult => {
   const storedBuffs = useRotationStore((state) => state.buffs);
   const { buffs: gameDataBuffs, isLoading, isError } = useTeamDetails();
 
   const buffMap = new Map(gameDataBuffs.map((buff) => [buff.id, buff]));
-  const fullBuffs: Array<DetailedModifierInstance> = compact(
+  const fullBuffs = compact(
     storedBuffs.map((stored) => {
       const gameData = buffMap.get(stored.id);
       if (!gameData) return;

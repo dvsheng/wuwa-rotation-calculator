@@ -3,7 +3,7 @@ import type {
   Attribute,
   CharacterStat,
   EnemyStat,
-  RotationRuntimeResolvableNumber,
+  LinearParameterizedNumber,
   Tagged,
   UserParameterizedNumber,
 } from '@/types';
@@ -55,27 +55,29 @@ export interface BaseCapability {
   description: string;
 }
 
-/**
- * A stat and its value on a character or enemy.
- */
-export interface Stat extends Tagged {
-  /** The specific stat being modified */
-  stat: CharacterStat | EnemyStat;
-  /** The value of the stat, which can be a literal number or a resolvable parameter */
-  value: number | RotationRuntimeResolvableNumber | UserParameterizedNumber;
-  /** Tags associated with this stat for filtering and conditional logic */
-  tags: Array<string>;
+export interface GameDataRotationRuntimeResolvableNumber extends LinearParameterizedNumber<
+  CharacterStat | EnemyStat | AbilityAttribute
+> {
+  /**
+   * The reference to the character whose stats are used to resolve the value at rotation runtime.
+   */
+  resolveWith: 'self';
 }
 
 /**
  * Internal base for permanent stats.
  */
-interface PermanentStatBase extends Stat, BaseCapability {}
+export interface PermanentStatBase extends Tagged {
+  /** The specific stat being modified */
+  stat: CharacterStat | EnemyStat;
+  /** The value of the stat, which can be a literal number or a resolvable parameter */
+  value: number | GameDataRotationRuntimeResolvableNumber;
+}
 
 /**
  * A permanent stat bonus, often from passive nodes, base stats, or equipment.
  */
-export type PermanentStat<T = {}> = PermanentStatBase & T;
+export type PermanentStat<T = {}> = PermanentStatBase & BaseCapability & T;
 
 /**
  * Defines the potential targets for a modifier.
@@ -93,13 +95,23 @@ export const Target = {
 export type Target = (typeof Target)[keyof typeof Target];
 
 /**
+ * A stat and its value on a character or enemy for a modifier.
+ */
+export interface ModifierStat extends Tagged {
+  /** The specific stat being modified */
+  stat: CharacterStat | EnemyStat;
+  /** The value of the stat, which can be a literal number or a resolvable parameter. Modifier stats can also be user-parameterized. */
+  value: number | GameDataRotationRuntimeResolvableNumber | UserParameterizedNumber;
+}
+
+/**
  * Internal base for modifiers.
  */
 interface ModifierBase extends BaseCapability {
   /** The entity this modifier applies to (e.g., Self, Team, Enemy) */
   target: Target;
   /** The list of stats modified by this effect */
-  modifiedStats: Array<Stat>;
+  modifiedStats: Array<ModifierStat>;
 }
 
 /**

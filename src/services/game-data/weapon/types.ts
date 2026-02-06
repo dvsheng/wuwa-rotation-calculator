@@ -54,7 +54,7 @@ export interface StoredUserParameterizedNumber {
  * RotationRuntimeResolvableNumber with refine-scalable numbers.
  */
 export interface StoredRotationRuntimeResolvableNumber extends StoredUserParameterizedNumber {
-  resolveWith: string;
+  resolveWith: 'self';
 }
 
 /**

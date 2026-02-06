@@ -15,7 +15,7 @@ import type {
   Attack,
   BaseCapability,
   Modifier as GameDataModifier,
-  Stat,
+  PermanentStatBase,
 } from '@/services/game-data/common-types';
 import { getEchoDetails } from '@/services/game-data/echo/get-echo-details';
 import { getEchoSetDetails } from '@/services/game-data/echo-set/get-echo-set-details';
@@ -26,10 +26,12 @@ import type {
   CharacterDamageInstance,
   CharacterSlotNumber,
   CharacterStats,
+  EnemyStat,
   EnemyStats,
   Integer,
   Modifier as RotationModifier,
-  Team,
+  RotationRuntimeResolvableNumber,
+  TaggedStatValue,
   UserParameterizedNumber,
 } from '@/types';
 
@@ -93,7 +95,7 @@ const CHARACTER_BASE_STATS: CharacterStats = {
   [CharacterStat.HEALING_BONUS]: [],
 };
 
-const ECHO_SECONDARY_STAT_BY_COST: Record<EchoCost, Stat> = {
+const ECHO_SECONDARY_STAT_BY_COST: Record<EchoCost, PermanentStatBase> = {
   1: { stat: CharacterStat.HP_FLAT_BONUS, value: 2280, tags: [Tag.ALL] },
   3: { stat: CharacterStat.ATTACK_FLAT_BONUS, value: 100, tags: [Tag.ALL] },
   4: { stat: CharacterStat.ATTACK_FLAT_BONUS, value: 150, tags: [Tag.ALL] },
@@ -101,7 +103,7 @@ const ECHO_SECONDARY_STAT_BY_COST: Record<EchoCost, Stat> = {
 
 const ECHO_PRIMARY_STAT_BY_COST_BY_STAT: Record<
   EchoCost,
-  Partial<Record<EchoMainStatOptionType, Stat>>
+  Partial<Record<EchoMainStatOptionType, PermanentStatBase>>
 > = {
   1: {
     [EchoMainStatOption.HP_PERCENT]: {
@@ -253,25 +255,48 @@ const resolveModifierUserParameters = (
   };
 };
 
-const toRotationModifier = (
+export const toRotationModifier = (
   modifier: ModifierInstance & GameDataModifier,
   attack: AttackInstance & Attack,
   characterIdToSlotNumberMap: Record<string, number>,
 ): RotationModifier => {
-  const modifiedStats = Object.groupBy(modifier.modifiedStats, (_stat) => _stat.stat);
+  // Map resolveWith from 'self' to character index for each stat value
+  const characterSlotNumber = characterIdToSlotNumberMap[
+    modifier.characterId
+  ] as CharacterSlotNumber;
+  const statsWithResolvedIndex = modifier.modifiedStats
+    .map((stat) => {
+      if (typeof stat.value === 'object' && !isUserParameterizedNumber(stat.value)) {
+        return {
+          ...stat,
+          value: {
+            ...stat.value,
+            resolveWith: characterSlotNumber,
+          } satisfies RotationRuntimeResolvableNumber,
+        };
+      }
+      return stat;
+    })
+    .filter((stat) => !isUserParameterizedNumber(stat.value)) as Array<
+    TaggedStatValue & { stat: CharacterStat | EnemyStat }
+  >;
+
+  const modifiedStats: Partial<CharacterStats> | Partial<EnemyStats> = Object.groupBy(
+    statsWithResolvedIndex,
+    (_stat) => _stat.stat,
+  );
+
   switch (modifier.target) {
     case 'self': {
       return {
-        targets: [
-          characterIdToSlotNumberMap[modifier.characterId] as CharacterSlotNumber,
-        ],
-        modifiedStats: modifiedStats as CharacterStats,
+        targets: [characterSlotNumber],
+        modifiedStats: modifiedStats,
       };
     }
     case 'team': {
       return {
         targets: [0, 1, 2],
-        modifiedStats: modifiedStats as CharacterStats,
+        modifiedStats: modifiedStats,
       };
     }
     case 'activeCharacter': {
@@ -279,15 +304,33 @@ const toRotationModifier = (
         targets: [
           characterIdToSlotNumberMap[attack.characterId] as CharacterSlotNumber,
         ],
-        modifiedStats: modifiedStats as CharacterStats,
+        modifiedStats: modifiedStats,
       };
     }
     default: {
       return {
-        modifiedStats: modifiedStats as EnemyStats,
+        targets: ['enemy'],
+        modifiedStats: modifiedStats,
       };
     }
   }
+};
+
+export const toRotationPermanentStat = (
+  stat: PermanentStatBase,
+  characterIndex: number,
+): TaggedStatValue & { stat: CharacterStat | EnemyStat } => {
+  const value =
+    typeof stat.value === 'object'
+      ? ({
+          ...stat.value,
+          resolveWith: characterIndex as CharacterSlotNumber,
+        } satisfies RotationRuntimeResolvableNumber)
+      : stat.value;
+  return {
+    ...stat,
+    value,
+  };
 };
 
 const toRotationDamageInstance = (
@@ -349,7 +392,7 @@ export const calculateRotation = async (
     );
 
     // 2b. Gather Echo Stats (Flat Array)
-    const echoStats = clientChar.echoStats.flatMap((echo) => {
+    const echoStats: Array<PermanentStatBase> = clientChar.echoStats.flatMap((echo) => {
       const [mainStatName, mainTags] = ECHO_STAT_MAP[echo.mainStatType];
       const mainStatEntry = {
         stat: mainStatName,
@@ -371,7 +414,9 @@ export const calculateRotation = async (
 
     // 2c. Group all new incoming stats by their stat name
     const characterInstancePermanentStats = Object.groupBy(
-      [...permanentStats, ...echoStats],
+      [...permanentStats, ...echoStats].map((stat) =>
+        toRotationPermanentStat(stat, charIndex),
+      ),
       (item) => item.stat,
     );
 
@@ -379,14 +424,14 @@ export const calculateRotation = async (
       cloneDeep(CHARACTER_BASE_STATS),
       characterInstancePermanentStats,
       (objectValue, sourceValue) => [...objectValue, ...sourceValue],
-    ) as CharacterStats;
+    );
 
     return {
       id: clientChar.id,
-      level: 90,
+      level: 90 as Integer,
       stats: finalStats,
     };
-  }) as Team;
+  });
 
   // 3. Map Client Enemy to Server Enemy
   const serverEnemy = {
@@ -431,11 +476,10 @@ export const calculateRotation = async (
       modifiers: instance.modifiers,
     }));
 
-  const result = calculateRotationDamage({
+  return calculateRotationDamage({
     team: serverTeam,
     enemy: serverEnemy,
     duration: 25,
     damageInstances,
   });
-  return result;
 };

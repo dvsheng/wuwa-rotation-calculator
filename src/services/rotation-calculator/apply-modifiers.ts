@@ -1,17 +1,9 @@
 import { mergeWith } from 'es-toolkit/object';
 import { produce } from 'immer';
 
-import { isCharacterModifier } from '@/types';
-import type {
-  Character,
-  CharacterModifier,
-  Enemy,
-  EnemyModifier,
-  Modifier,
-  Team,
-} from '@/types';
+import type { Character, Enemy, Modifier, Team } from '@/types';
 
-const applyModifierToCharacter = (target: Character, modifier: CharacterModifier) => {
+const applyModifierToCharacter = (target: Character, modifier: Modifier) => {
   target.stats = mergeWith(
     target.stats,
     modifier.modifiedStats,
@@ -19,7 +11,7 @@ const applyModifierToCharacter = (target: Character, modifier: CharacterModifier
   );
 };
 
-const applyModifierToEnemy = (target: Enemy, modifier: EnemyModifier) => {
+const applyModifierToEnemy = (target: Enemy, modifier: Modifier) => {
   target.stats = mergeWith(
     target.stats,
     modifier.modifiedStats,
@@ -32,17 +24,13 @@ const applyModifierToTeamAndEnemy = (
   draftEnemy: Enemy,
   modifier: Modifier,
 ) => {
-  if (isCharacterModifier(modifier)) {
-    const { targets, modifiedStats } = modifier;
-    for (const targetIndex of targets) {
+  for (const targetIndex of modifier.targets) {
+    if (targetIndex === 'enemy') {
+      applyModifierToEnemy(draftEnemy, modifier);
+    } else {
       const character = draftTeam[targetIndex];
-      applyModifierToCharacter(character, {
-        targets: [targetIndex],
-        modifiedStats,
-      });
+      applyModifierToCharacter(character, modifier);
     }
-  } else {
-    applyModifierToEnemy(draftEnemy, modifier);
   }
 };
 

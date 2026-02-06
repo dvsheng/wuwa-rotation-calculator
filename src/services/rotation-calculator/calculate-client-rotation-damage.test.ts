@@ -5,9 +5,17 @@ import { EchoMainStatOption, EchoSubstatOption } from '@/schemas/echo';
 import type { Enemy } from '@/schemas/enemy';
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import type { Team } from '@/schemas/team';
-import { Attribute, CharacterStat, Tag } from '@/types';
-
-import { calculateRotation } from './calculate-client-rotation-damage';
+import type {
+  Attack,
+  Modifier as GameDataModifier,
+  GameDataRotationRuntimeResolvableNumber,
+} from '@/services/game-data/common-types';
+import {
+  calculateRotation,
+  toRotationModifier,
+  toRotationPermanentStat,
+} from '@/services/rotation-calculator/calculate-client-rotation-damage';
+import { AbilityAttribute, Attribute, CharacterStat, Tag } from '@/types';
 
 // Use vi.hoisted to define mocks used in vi.mock
 const {
@@ -192,6 +200,340 @@ const createMockEchoSetData = () => ({
     modifiers: [],
     permanentStats: [],
   },
+});
+
+/**
+ * Helper to create mock modifiers for testing toRotationModifier
+ */
+const createMockModifier = (
+  id: string,
+  characterId: string,
+  target: 'self' | 'team' | 'activeCharacter' | 'enemy',
+  modifiedStats: Array<{
+    stat: CharacterStat;
+    value: number | GameDataRotationRuntimeResolvableNumber;
+    tags: Array<string>;
+  }>,
+): ModifierInstance & GameDataModifier => ({
+  instanceId: `modifier-${id}`,
+  id,
+  characterId,
+  x: 0,
+  y: 0,
+  w: 1,
+  h: 1,
+  description: 'Test modifier description',
+  target,
+  modifiedStats,
+});
+
+/**
+ * Helper to create mock attacks for testing toRotationModifier
+ */
+const createMockAttack = (
+  id: string,
+  characterId: string,
+): AttackInstance & Attack => ({
+  instanceId: `attack-${id}`,
+  id,
+  characterId,
+  description: 'Test attack description',
+  scalingStat: AbilityAttribute.ATK,
+  attribute: Attribute.PHYSICAL,
+  tags: [Tag.BASIC_ATTACK],
+  motionValues: [1],
+});
+
+describe('toRotationPermanentStat', () => {
+  it('maps literal number values unchanged', () => {
+    const stat = {
+      stat: CharacterStat.ATTACK_FLAT,
+      tags: [Tag.ALL],
+      value: 500,
+    };
+
+    const result = toRotationPermanentStat(stat, 0);
+
+    expect(result.stat).toBe(CharacterStat.ATTACK_FLAT);
+    expect(result.tags).toEqual([Tag.ALL]);
+    expect(result.value).toBe(500);
+  });
+
+  it('maps resolveWith from "self" to character index 0', () => {
+    const stat = {
+      stat: CharacterStat.DAMAGE_BONUS,
+      tags: [Tag.ELECTRO],
+      value: {
+        resolveWith: 'self' as const,
+        parameterConfigs: {
+          energyRegen: {
+            scale: 0.15,
+            minimum: 0.1,
+            maximum: 0.5,
+          },
+        },
+      },
+    };
+
+    const result = toRotationPermanentStat(stat, 0);
+
+    expect(result.stat).toBe(CharacterStat.DAMAGE_BONUS);
+    expect(result.tags).toEqual([Tag.ELECTRO]);
+    expect(typeof result.value).toBe('object');
+    if (typeof result.value === 'object') {
+      expect(result.value.resolveWith).toBe(0);
+      expect(result.value.parameterConfigs).toEqual(stat.value.parameterConfigs);
+    }
+  });
+
+  it('maps resolveWith from "self" to character index 1', () => {
+    const stat = {
+      stat: CharacterStat.DAMAGE_BONUS,
+      tags: [Tag.GLACIO],
+      value: {
+        resolveWith: 'self' as const,
+        parameterConfigs: {
+          energyRegen: {
+            scale: 0.2,
+          },
+        },
+      },
+    };
+
+    const result = toRotationPermanentStat(stat, 1);
+
+    expect(typeof result.value).toBe('object');
+    if (typeof result.value === 'object') {
+      expect(result.value.resolveWith).toBe(1);
+    }
+  });
+
+  it('maps resolveWith from "self" to character index 2', () => {
+    const stat = {
+      stat: CharacterStat.DAMAGE_BONUS,
+      tags: [Tag.FUSION],
+      value: {
+        resolveWith: 'self' as const,
+        parameterConfigs: {
+          energyRegen: {
+            scale: 0.3,
+          },
+        },
+      },
+    };
+
+    const result = toRotationPermanentStat(stat, 2);
+
+    expect(typeof result.value).toBe('object');
+    if (typeof result.value === 'object') {
+      expect(result.value.resolveWith).toBe(2);
+    }
+  });
+
+  it('preserves parameterConfigs and offset', () => {
+    const stat = {
+      stat: CharacterStat.DAMAGE_BONUS,
+      tags: [Tag.ALL],
+      value: {
+        resolveWith: 'self' as const,
+        parameterConfigs: {
+          energyRegen: {
+            scale: 1,
+            minimum: 0.5,
+            maximum: 2,
+          },
+        },
+        offset: 0.25,
+      },
+    };
+
+    const result = toRotationPermanentStat(stat, 1);
+
+    expect(typeof result.value).toBe('object');
+    if (typeof result.value === 'object') {
+      expect(result.value.resolveWith).toBe(1);
+      expect(result.value.parameterConfigs).toEqual(stat.value.parameterConfigs);
+      expect(result.value.offset).toBe(0.25);
+    }
+  });
+});
+
+describe('toRotationModifier', () => {
+  it('maps self target modifier with resolveWith "self" to character slot 0', () => {
+    const modifier = createMockModifier('mod-1', 'char1', 'self', [
+      {
+        stat: CharacterStat.DAMAGE_BONUS,
+        value: {
+          resolveWith: 'self',
+          parameterConfigs: {
+            energyRegen: {
+              scale: 0.15,
+            },
+          },
+        },
+        tags: [Tag.ELECTRO],
+      },
+    ]);
+    const attack = createMockAttack('atk-1', 'char1');
+    const characterIdToSlotNumberMap = { char1: 0, char2: 1, char3: 2 };
+
+    const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
+
+    expect(result.targets).toEqual([0]);
+    expect(result.modifiedStats[CharacterStat.DAMAGE_BONUS]).toBeDefined();
+    const damageBonus = result.modifiedStats[CharacterStat.DAMAGE_BONUS]![0];
+    expect(damageBonus.tags).toEqual([Tag.ELECTRO]);
+    expect(typeof damageBonus.value).toBe('object');
+    if (typeof damageBonus.value === 'object') {
+      expect(damageBonus.value.resolveWith).toBe(0);
+    }
+  });
+
+  it('maps self target modifier with resolveWith "self" to character slot 1', () => {
+    const modifier = createMockModifier('mod-1', 'char2', 'self', [
+      {
+        stat: CharacterStat.DAMAGE_BONUS,
+        value: {
+          resolveWith: 'self',
+          parameterConfigs: {
+            energyRegen: {
+              scale: 0.2,
+            },
+          },
+        },
+        tags: [Tag.GLACIO],
+      },
+    ]);
+    const attack = createMockAttack('atk-1', 'char2');
+    const characterIdToSlotNumberMap = { char1: 0, char2: 1, char3: 2 };
+
+    const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
+
+    expect(result.targets).toEqual([1]);
+    const damageBonus = result.modifiedStats[CharacterStat.DAMAGE_BONUS]![0];
+    if (typeof damageBonus.value === 'object') {
+      expect(damageBonus.value.resolveWith).toBe(1);
+    }
+  });
+
+  it('maps team target modifier to all character slots', () => {
+    const modifier = createMockModifier('mod-1', 'char1', 'team', [
+      {
+        stat: CharacterStat.DAMAGE_AMPLIFICATION,
+        value: 0.15,
+        tags: [Tag.ALL],
+      },
+    ]);
+    const attack = createMockAttack('atk-1', 'char1');
+    const characterIdToSlotNumberMap = { char1: 0, char2: 1, char3: 2 };
+
+    const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
+
+    expect(result.targets).toEqual([0, 1, 2]);
+    expect(result.modifiedStats[CharacterStat.DAMAGE_AMPLIFICATION]).toBeDefined();
+  });
+
+  it('maps activeCharacter target modifier to attacking character slot', () => {
+    const modifier = createMockModifier('mod-1', 'char1', 'activeCharacter', [
+      {
+        stat: CharacterStat.DAMAGE_BONUS,
+        value: 0.25,
+        tags: [Tag.RESONANCE_SKILL],
+      },
+    ]);
+    const attack = createMockAttack('atk-1', 'char2');
+    const characterIdToSlotNumberMap = { char1: 0, char2: 1, char3: 2 };
+
+    const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
+
+    // Should target the attacking character (char2, slot 1), not the modifier source
+    expect(result.targets).toEqual([1]);
+  });
+
+  it('maps enemy target modifier to enemy', () => {
+    const modifier = createMockModifier('mod-1', 'char1', 'enemy', [
+      {
+        stat: CharacterStat.DAMAGE_BONUS, // This would typically be an EnemyStat in real usage
+        value: 0.1,
+        tags: [Tag.ALL],
+      },
+    ]);
+    const attack = createMockAttack('atk-1', 'char1');
+    const characterIdToSlotNumberMap = { char1: 0, char2: 1, char3: 2 };
+
+    const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
+
+    expect(result.targets).toEqual(['enemy']);
+  });
+
+  it('handles multiple stats with different resolveWith mappings', () => {
+    const modifier = createMockModifier('mod-1', 'char2', 'self', [
+      {
+        stat: CharacterStat.DAMAGE_BONUS,
+        value: {
+          resolveWith: 'self',
+          parameterConfigs: {
+            energyRegen: {
+              scale: 0.15,
+            },
+          },
+        },
+        tags: [Tag.ELECTRO],
+      },
+      {
+        stat: CharacterStat.CRITICAL_RATE,
+        value: 0.05,
+        tags: [Tag.ALL],
+      },
+    ]);
+    const attack = createMockAttack('atk-1', 'char2');
+    const characterIdToSlotNumberMap = { char1: 0, char2: 1, char3: 2 };
+
+    const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
+
+    expect(result.targets).toEqual([1]);
+
+    const damageBonus = result.modifiedStats[CharacterStat.DAMAGE_BONUS]![0];
+    if (typeof damageBonus.value === 'object') {
+      expect(damageBonus.value.resolveWith).toBe(1);
+    }
+
+    const critRate = result.modifiedStats[CharacterStat.CRITICAL_RATE]![0];
+    expect(critRate.value).toBe(0.05);
+  });
+
+  it('preserves all parameterConfigs fields during mapping', () => {
+    const modifier = createMockModifier('mod-1', 'char1', 'self', [
+      {
+        stat: CharacterStat.DAMAGE_BONUS,
+        value: {
+          resolveWith: 'self',
+          parameterConfigs: {
+            energyRegen: {
+              scale: 1,
+              minimum: 0.5,
+              maximum: 2,
+            },
+          },
+          offset: 0.1,
+        },
+        tags: [Tag.ELECTRO],
+      },
+    ]);
+    const attack = createMockAttack('atk-1', 'char1');
+    const characterIdToSlotNumberMap = { char1: 0, char2: 1, char3: 2 };
+
+    const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
+
+    const damageBonus = result.modifiedStats[CharacterStat.DAMAGE_BONUS]![0];
+    if (typeof damageBonus.value === 'object') {
+      expect(damageBonus.value.resolveWith).toBe(0);
+      expect(damageBonus.value.parameterConfigs.energyRegen?.scale).toBe(1);
+      expect(damageBonus.value.parameterConfigs.energyRegen?.minimum).toBe(0.5);
+      expect(damageBonus.value.parameterConfigs.energyRegen?.maximum).toBe(2);
+      expect(damageBonus.value.offset).toBe(0.1);
+    }
+  });
 });
 
 describe('calculateRotation', () => {

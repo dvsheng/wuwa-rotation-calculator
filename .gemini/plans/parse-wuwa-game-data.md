@@ -164,7 +164,7 @@ For effects with duration or conditions (from `Skill.Desc`):
    - Use `RotationRuntimeResolvableNumber`:
      ```typescript
      {
-       resolveWith: "CharacterName",
+       resolveWith: "self",
        parameterConfigs: {
          energyRegen: { scale: 0.5, minimum: 1.0, maximum: 2.6 }
        },

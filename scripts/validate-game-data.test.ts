@@ -76,7 +76,7 @@ const RotationRuntimeResolvableNumberSchema = z.object({
   ),
   offset: z.number().optional(),
   conditionals: z.array(RuntimeConditionalBonusSchema).optional(),
-  resolveWith: z.string(),
+  resolveWith: z.enum(['self']),
 });
 
 const ParameterizedNumberSchema = z.union([
@@ -283,7 +283,7 @@ const StoredRotationRuntimeResolvableNumberSchema = z.object({
     StoredLinearScalingParameterConfigSchema,
   ),
   offset: StoredNumberSchema.optional(),
-  resolveWith: z.string(),
+  resolveWith: z.enum(['self']),
 });
 
 // Parameterized number that may contain RefineScalableNumber

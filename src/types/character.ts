@@ -53,4 +53,4 @@ export interface Character {
 /**
  * A standard three-character team composition.
  */
-export type Team = [Character, Character, Character];
+export type Team = Array<Character>;

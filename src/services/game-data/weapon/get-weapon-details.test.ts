@@ -101,13 +101,13 @@ describe('resolveRefineScaling', () => {
             scale: { base: 0.5, increment: 0.1 },
           },
         },
-        resolveWith: 'Verina',
+        resolveWith: 'self',
       };
 
       const result = resolveRefineScaling(value, 4);
       // 0.5 + (4-1) * 0.1 = 0.5 + 0.3 = 0.8
       expect(result.parameterConfigs.energyRegen.scale).toBeCloseTo(0.8);
-      expect(result.resolveWith).toBe('Verina');
+      expect(result.resolveWith).toBe('self');
     });
   });
 

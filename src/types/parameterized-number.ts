@@ -51,7 +51,7 @@ export interface RotationRuntimeResolvableNumber extends LinearParameterizedNumb
   /**
    * The name of the character whose stats are used for resolution.
    */
-  resolveWith: string;
+  resolveWith: 0 | 1 | 2;
 }
 
 export type UserParameterizedNumber = LinearParameterizedNumber<'0' | '1' | '2'>;

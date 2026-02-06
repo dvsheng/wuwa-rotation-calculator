@@ -2,7 +2,7 @@ import { mapValues } from 'es-toolkit/object';
 
 import { calculateParameterizedNumberValue } from '@/services/rotation-calculator/calculate-parameterized-number';
 import { Tag } from '@/types';
-import type { Enemy, StatValue, TaggedStatValue, Team } from '@/types';
+import type { Enemy, StatValue, Team } from '@/types';
 
 import {
   getCalculateCharacterStatsForTag,
@@ -17,8 +17,7 @@ export const getStatValueResolver =
       return statValue;
     }
     const { resolveWith } = statValue;
-    const character = team.find((c) => c.id === resolveWith);
-    if (!character) return 0;
+    const character = team[resolveWith];
     const characterStats = getCalculateCharacterStatsForTag([Tag.ALL])(character.stats);
     const enemyStats = getCalculateEnemyStatsForTag([Tag.ALL])(enemy.stats);
     return calculateParameterizedNumberValue(statValue, {
@@ -30,26 +29,46 @@ export const getStatValueResolver =
 export const resolveStatValuesInRotation = (rotation: Rotation): Rotation => {
   const resolveStatValue = getStatValueResolver(rotation.team, rotation.enemy);
   return {
-    ...rotation,
+    duration: rotation.duration,
+    team: rotation.team.map((character) => {
+      return {
+        ...character,
+        stats: mapValues(character.stats, (statValues) => {
+          return statValues.map((statValue) => {
+            return {
+              ...statValue,
+              value: resolveStatValue(statValue.value),
+            };
+          });
+        }),
+      };
+    }) as Team,
+    enemy: {
+      ...rotation.enemy,
+      stats: mapValues(rotation.enemy.stats, (statValues) => {
+        return statValues.map((statValue) => {
+          return {
+            ...statValue,
+            value: resolveStatValue(statValue.value),
+          };
+        });
+      }),
+    },
     damageInstances: rotation.damageInstances.map((instance) => {
       return {
         ...instance,
         modifiers: instance.modifiers.map((modifier) => {
           return {
             ...modifier,
-            modifiedStats: mapValues(
-              modifier.modifiedStats as Record<string, Array<TaggedStatValue>>,
-              (stats) =>
-                stats.map((stat) => {
-                  if (typeof stat.value === 'number') {
-                    return stat;
-                  }
-                  return {
-                    ...stat,
-                    value: resolveStatValue(stat.value),
-                  };
-                }),
-            ),
+            modifiedStats: mapValues(modifier.modifiedStats, (stats) => {
+              if (!stats) return stats;
+              return stats.map((stat) => {
+                return {
+                  ...stat,
+                  value: resolveStatValue(stat.value),
+                };
+              });
+            }),
           };
         }),
       };

@@ -17,11 +17,10 @@ export const AttackCanvasItem = ({
   const updateAttackParameters = useRotationStore(
     (state) => state.updateAttackParameters,
   );
-  const displayName = `${attack.parentName}: ${attack.name}`;
 
   return (
     <CanvasItem
-      text={displayName}
+      text={attack.name}
       subtext={attack.characterName}
       hoverText={attack.description}
       parameters={attack.parameters}
@@ -33,6 +32,7 @@ export const AttackCanvasItem = ({
           vals.map((v) => v ?? 0),
         )
       }
+      centeredLayout
     />
   );
 };

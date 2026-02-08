@@ -1,8 +1,8 @@
-import type { CalculateDamageProperties } from '@/services/damage-calculator/types';
 import type { CharacterDamageInstance, Enemy, Team } from '@/types';
 
 import { applyModifiers } from './apply-modifiers';
 import { calculateAttackDamage } from './calculate-attack-damage';
+import type { CalculateDamageProperties } from './damage-calculator/types';
 import { resolveStatValuesInRotation } from './resolve-stat-value';
 import type { Rotation, RotationResult } from './types';
 

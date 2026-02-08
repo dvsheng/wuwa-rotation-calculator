@@ -2,13 +2,12 @@ import { clamp, sum } from 'es-toolkit/math';
 
 import type { CharacterDamageInstance, Enemy, Team } from '@/types';
 
-import { calculateDamage } from '../damage-calculator';
-import type { CalculateDamageProperties } from '../damage-calculator/types';
-
 import {
   getCalculateAbilityAttributeValueFunction,
   getCalculateStatValueFunction,
 } from './calculate-stat-total';
+import { calculateDamage } from './damage-calculator';
+import type { CalculateDamageProperties } from './damage-calculator/types';
 
 export const calculateAttackDamage = (
   instance: CharacterDamageInstance,
@@ -20,9 +19,9 @@ export const calculateAttackDamage = (
   const getStatValue = getCalculateStatValueFunction(instance.tags);
   const getScalingStatValue = getCalculateAbilityAttributeValueFunction(instance.tags);
   const { team, enemy } = context;
-  const character = team.find((c) => c.id === instance.originCharacterName);
+  const character = team.find((c) => c.id === instance.characterId);
   if (!character) {
-    throw new Error(`Character ${instance.originCharacterName} not found`);
+    throw new Error(`Character ${instance.characterId} not found`);
   }
   const calculateDamageEnemyProperties = {
     level: enemy.level,

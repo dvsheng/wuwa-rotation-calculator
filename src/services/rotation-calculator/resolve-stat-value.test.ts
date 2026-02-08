@@ -13,7 +13,7 @@ import type { Rotation } from './types';
  * Creates a minimal character for testing with specific stats.
  */
 const createTestCharacter = (
-  id: string,
+  id: number,
   stats: Partial<CharacterStats> = {},
 ): Character => ({
   id,
@@ -66,9 +66,9 @@ const createTestEnemy = (): Enemy => ({
 describe('getStatValueResolver', () => {
   it('resolves literal number values', () => {
     const team: Team = [
-      createTestCharacter('char1'),
-      createTestCharacter('char2'),
-      createTestCharacter('char3'),
+      createTestCharacter(12_345),
+      createTestCharacter(11_111),
+      createTestCharacter(99_999),
     ];
     const enemy = createTestEnemy();
 
@@ -80,11 +80,11 @@ describe('getStatValueResolver', () => {
 
   it('resolves RotationRuntimeResolvableNumber using character at index 0', () => {
     const team: Team = [
-      createTestCharacter('char1', {
+      createTestCharacter(12_345, {
         [CharacterStat.ENERGY_REGEN]: [{ tags: [Tag.ALL], value: 1.5 }],
       }),
-      createTestCharacter('char2'),
-      createTestCharacter('char3'),
+      createTestCharacter(11_111),
+      createTestCharacter(99_999),
     ];
     const enemy = createTestEnemy();
 
@@ -104,11 +104,11 @@ describe('getStatValueResolver', () => {
 
   it('resolves RotationRuntimeResolvableNumber using character at index 1', () => {
     const team: Team = [
-      createTestCharacter('char1'),
-      createTestCharacter('char2', {
+      createTestCharacter(12_345),
+      createTestCharacter(11_111, {
         [CharacterStat.ENERGY_REGEN]: [{ tags: [Tag.ALL], value: 1.2 }],
       }),
-      createTestCharacter('char3'),
+      createTestCharacter(99_999),
     ];
     const enemy = createTestEnemy();
 
@@ -128,9 +128,9 @@ describe('getStatValueResolver', () => {
 
   it('resolves RotationRuntimeResolvableNumber using character at index 2', () => {
     const team: Team = [
-      createTestCharacter('char1'),
-      createTestCharacter('char2'),
-      createTestCharacter('char3', {
+      createTestCharacter(12_345),
+      createTestCharacter(11_111),
+      createTestCharacter(99_999, {
         [CharacterStat.ENERGY_REGEN]: [{ tags: [Tag.ALL], value: 0.8 }],
       }),
     ];
@@ -152,11 +152,11 @@ describe('getStatValueResolver', () => {
 
   it('applies parameterConfig minimum threshold (stat below threshold)', () => {
     const team: Team = [
-      createTestCharacter('char1', {
+      createTestCharacter(12_345, {
         [CharacterStat.ENERGY_REGEN]: [{ tags: [Tag.ALL], value: 0.8 }],
       }),
-      createTestCharacter('char2'),
-      createTestCharacter('char3'),
+      createTestCharacter(11_111),
+      createTestCharacter(99_999),
     ];
     const enemy = createTestEnemy();
 
@@ -177,11 +177,11 @@ describe('getStatValueResolver', () => {
 
   it('applies parameterConfig maximum cap', () => {
     const team: Team = [
-      createTestCharacter('char1', {
+      createTestCharacter(12_345, {
         [CharacterStat.ENERGY_REGEN]: [{ tags: [Tag.ALL], value: 2.5 }],
       }),
-      createTestCharacter('char2'),
-      createTestCharacter('char3'),
+      createTestCharacter(11_111),
+      createTestCharacter(99_999),
     ];
     const enemy = createTestEnemy();
 
@@ -202,11 +202,11 @@ describe('getStatValueResolver', () => {
 
   it('applies offset to resolved value', () => {
     const team: Team = [
-      createTestCharacter('char1', {
+      createTestCharacter(12_345, {
         [CharacterStat.ENERGY_REGEN]: [{ tags: [Tag.ALL], value: 1 }],
       }),
-      createTestCharacter('char2'),
-      createTestCharacter('char3'),
+      createTestCharacter(11_111),
+      createTestCharacter(99_999),
     ];
     const enemy = createTestEnemy();
 
@@ -229,7 +229,7 @@ describe('getStatValueResolver', () => {
 describe('resolveStatValuesInRotation', () => {
   it('resolves all character stat values in rotation', () => {
     const team: Team = [
-      createTestCharacter('char1', {
+      createTestCharacter(12_345, {
         [CharacterStat.DAMAGE_BONUS]: [
           {
             tags: [Tag.ELECTRO],
@@ -245,8 +245,8 @@ describe('resolveStatValuesInRotation', () => {
         ],
         [CharacterStat.ENERGY_REGEN]: [{ tags: [Tag.ALL], value: 1.6 }],
       }),
-      createTestCharacter('char2'),
-      createTestCharacter('char3'),
+      createTestCharacter(11_111),
+      createTestCharacter(99_999),
     ];
     const enemy = createTestEnemy();
 
@@ -265,11 +265,11 @@ describe('resolveStatValuesInRotation', () => {
 
   it('resolves enemy stat values in rotation', () => {
     const team: Team = [
-      createTestCharacter('char1', {
+      createTestCharacter(12_345, {
         [CharacterStat.ENERGY_REGEN]: [{ tags: [Tag.ALL], value: 1.5 }],
       }),
-      createTestCharacter('char2'),
-      createTestCharacter('char3'),
+      createTestCharacter(11_111),
+      createTestCharacter(99_999),
     ];
     const enemy: Enemy = {
       level: 90 as Integer,
@@ -313,11 +313,11 @@ describe('resolveStatValuesInRotation', () => {
 
   it('resolves modifier stat values in rotation', () => {
     const team: Team = [
-      createTestCharacter('char1', {
+      createTestCharacter(12_345, {
         [CharacterStat.ENERGY_REGEN]: [{ tags: [Tag.ALL], value: 2 }],
       }),
-      createTestCharacter('char2'),
-      createTestCharacter('char3'),
+      createTestCharacter(11_111),
+      createTestCharacter(99_999),
     ];
     const enemy = createTestEnemy();
 
@@ -331,7 +331,7 @@ describe('resolveStatValuesInRotation', () => {
             scalingStat: AbilityAttribute.ATK,
             tags: [Tag.BASIC_ATTACK],
             motionValues: [1],
-            originCharacterName: 'char1',
+            characterId: 12_345,
           },
           modifiers: [
             {
@@ -369,13 +369,13 @@ describe('resolveStatValuesInRotation', () => {
 
   it('resolves multiple stat values with different resolveWith indices', () => {
     const team: Team = [
-      createTestCharacter('char1', {
+      createTestCharacter(12_345, {
         [CharacterStat.ENERGY_REGEN]: [{ tags: [Tag.ALL], value: 1 }],
       }),
-      createTestCharacter('char2', {
+      createTestCharacter(11_111, {
         [CharacterStat.ENERGY_REGEN]: [{ tags: [Tag.ALL], value: 1.5 }],
       }),
-      createTestCharacter('char3', {
+      createTestCharacter(99_999, {
         [CharacterStat.ENERGY_REGEN]: [{ tags: [Tag.ALL], value: 2 }],
       }),
     ];
@@ -391,7 +391,7 @@ describe('resolveStatValuesInRotation', () => {
             scalingStat: AbilityAttribute.ATK,
             tags: [Tag.BASIC_ATTACK],
             motionValues: [1],
-            originCharacterName: 'char1',
+            characterId: 12_345,
           },
           modifiers: [
             {
@@ -452,9 +452,9 @@ describe('resolveStatValuesInRotation', () => {
 
   it('preserves literal number values during resolution', () => {
     const team: Team = [
-      createTestCharacter('char1'),
-      createTestCharacter('char2'),
-      createTestCharacter('char3'),
+      createTestCharacter(12_345),
+      createTestCharacter(11_111),
+      createTestCharacter(99_999),
     ];
     const enemy = createTestEnemy();
 
@@ -468,7 +468,7 @@ describe('resolveStatValuesInRotation', () => {
             scalingStat: AbilityAttribute.ATK,
             tags: [Tag.BASIC_ATTACK],
             motionValues: [1],
-            originCharacterName: 'char1',
+            characterId: 12_345,
           },
           modifiers: [
             {
@@ -499,9 +499,9 @@ describe('resolveStatValuesInRotation', () => {
 
   it('handles empty rotation correctly', () => {
     const team: Team = [
-      createTestCharacter('char1'),
-      createTestCharacter('char2'),
-      createTestCharacter('char3'),
+      createTestCharacter(12_345),
+      createTestCharacter(11_111),
+      createTestCharacter(99_999),
     ];
     const enemy = createTestEnemy();
 

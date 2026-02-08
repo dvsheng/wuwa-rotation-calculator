@@ -2,6 +2,7 @@ import { useQueries } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
+import { EntityType } from '@/db/schema';
 import { getClientEntityByHakushinId } from '@/services/game-data/get-entity-details.function';
 import type { ClientAttack, ClientModifier } from '@/services/game-data/types';
 import { useTeamStore } from '@/store/useTeamStore';
@@ -60,7 +61,7 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
           getClientEntityByHakushinId({
             data: {
               id: character.id,
-              entityType: 'character',
+              entityType: EntityType.CHARACTER,
               activatedSequence: character.sequence,
             },
           }),
@@ -73,7 +74,7 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
           getClientEntityByHakushinId({
             data: {
               id: character.weapon.id,
-              entityType: 'weapon',
+              entityType: EntityType.WEAPON,
               refineLevel: character.weapon.refine,
             },
           }),
@@ -86,7 +87,7 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
           getClientEntityByHakushinId({
             data: {
               id: character.primarySlotEcho.id,
-              entityType: 'echo',
+              entityType: EntityType.ECHO,
             },
           }),
         enabled: !!character.primarySlotEcho.id,
@@ -98,7 +99,7 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
           getClientEntityByHakushinId({
             data: {
               id: set.id,
-              entityType: 'echo_set',
+              entityType: EntityType.ECHO_SET,
               activatedSetBonus: Number.parseInt(set.requirement),
             },
           }),

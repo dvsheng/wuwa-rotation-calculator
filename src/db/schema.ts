@@ -2,6 +2,14 @@ import { relations } from 'drizzle-orm';
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 import type {
+  AttackAlternativeDefinitions,
+  ModifierAlternativeDefinitions,
+  StoreModifierStat,
+  StoreNumber,
+  StoreParameterizedNumber,
+  StoreRotationRuntimeResolvableNumber,
+} from '@/schemas/admin/store-types';
+import type {
   AttackOriginType,
   OriginType,
   Sequence,
@@ -9,78 +17,16 @@ import type {
 import { Target } from '@/services/game-data/types';
 import type { AbilityAttribute, Attribute, CharacterStat, EnemyStat } from '@/types';
 
-// ============================================================================
-// Type Definitions (formerly in game-data types)
-// ============================================================================
-
-/**
- * A number that scales linearly with weapon refinement level.
- * Resolves to: base + (refineLevel - 1) * increment
- */
-export interface RefineScalableNumber {
-  base: number;
-  increment: number;
-}
-
-/**
- * A number in stored weapon data that may scale with refine level.
- */
-export type StoreNumber = number | RefineScalableNumber;
-
-/**
- * LinearScalingParameterConfig with refine-scalable numbers.
- */
-export interface StoreLinearScalingParameterConfig {
-  scale: StoreNumber;
-  minimum?: StoreNumber;
-  maximum?: StoreNumber;
-}
-
-/**
- * UserParameterizedNumber with refine-scalable numbers.
- */
-export interface StoreParameterizedNumber {
-  minimum?: StoreNumber;
-  maximum?: StoreNumber;
-  parameterConfigs: Partial<Record<string, StoreLinearScalingParameterConfig>>;
-  offset?: StoreNumber;
-}
-
-/**
- * RotationRuntimeResolvableNumber with refine-scalable numbers.
- */
-export interface StoreRotationRuntimeResolvableNumber extends StoreParameterizedNumber {
-  resolveWith: 'self';
-}
-
-export interface StoreModifierStat {
-  stat: CharacterStat | EnemyStat;
-  tags: Array<string>;
-  value: StoreNumber | StoreParameterizedNumber | StoreRotationRuntimeResolvableNumber;
-}
-
-/**
- * Alternative definition types for capabilities at different sequence levels.
- * These represent the fields that can be overridden for a capability at a specific sequence.
- */
-
-/**
- * Fields that can be overridden in an attack alternative definition.
- */
-interface StoreAttackAlternativeDefinition {
-  description?: string;
-  motionValues: Array<StoreNumber | StoreParameterizedNumber>;
-  tags?: Array<string>;
-}
-
-/**
- * Fields that can be overridden in a modifier alternative definition.
- */
-interface StoreModifierAlternativeDefinition {
-  description?: string;
-  target?: Target;
-  modifiedStats: Array<StoreModifierStat>;
-}
+// Re-export store types for backward compatibility
+export type {
+  AttackAlternativeDefinitions,
+  ModifierAlternativeDefinitions,
+  RefineScalableNumber,
+  StoreModifierStat,
+  StoreNumber,
+  StoreParameterizedNumber,
+  StoreRotationRuntimeResolvableNumber,
+} from '@/schemas/admin/store-types';
 
 // ============================================================================
 // Database Schema Enums
@@ -173,7 +119,7 @@ const baseCapabilityFields = {
 export const attacks = sqliteTable('attacks', {
   ...baseCapabilityFields,
   scalingStat: text('scaling_stat').notNull().$type<AbilityAttribute>(),
-  attribute: text('attribute').$type<Attribute>(), // Elemental attribute
+  attribute: text('attribute').notNull().$type<Attribute>(), // Elemental attribute
   motionValues: text('motion_values', { mode: 'json' })
     .notNull()
     .$type<Array<StoreNumber | StoreParameterizedNumber>>(), // Array of numbers or parameterized numbers
@@ -181,7 +127,7 @@ export const attacks = sqliteTable('attacks', {
   // Alternative definitions for different sequences
   alternativeDefinitions: text('alternative_definitions', {
     mode: 'json',
-  }).$type<Partial<Record<Sequence, StoreAttackAlternativeDefinition>>>(),
+  }).$type<AttackAlternativeDefinitions>(),
   originType: text('origin_type').$type<AttackOriginType>(),
 });
 
@@ -201,7 +147,7 @@ export const modifiers = sqliteTable('modifiers', {
   // Alternative definitions for different sequences
   alternativeDefinitions: text('alternative_definitions', {
     mode: 'json',
-  }).$type<Partial<Record<Sequence, StoreModifierAlternativeDefinition>>>(),
+  }).$type<ModifierAlternativeDefinitions>(),
   originType: text('origin_type').$type<OriginType>(),
 });
 
@@ -222,6 +168,7 @@ export const permanentStats = sqliteTable('permanent_stats', {
 // Type Exports
 // ============================================================================
 
+// Database return types (inferred from Drizzle schema)
 export type Entity = typeof entities.$inferSelect;
 export type NewEntity = typeof entities.$inferInsert;
 

@@ -176,7 +176,7 @@ export const getEntityByHakushinIdHandler = async (
     .map((attack) => addCapabilityDefaultValues(attack, entity, 'Buff'))
     .map((modifier) => resolveStoreNumberType(modifier, refineLevel))
     .map((modifier) => replaceNullsWithUndefined(modifier))
-    .filter((modifier) => isCapabilityActive(modifier, sequence))
+    .filter((modifier) => isCapabilityActive(modifier, sequence, activatedSetBonus))
     .map((modifier) => resolveCapabilitySequence(modifier, sequence));
 
   // Filter and resolve permanent stats
@@ -184,7 +184,7 @@ export const getEntityByHakushinIdHandler = async (
     .map((attack) => addCapabilityDefaultValues(attack, entity, 'Permanent Stat'))
     .map((stat) => resolveStoreNumberType(stat, refineLevel))
     .map((stat) => replaceNullsWithUndefined(stat))
-    .filter((stat) => isCapabilityActive(stat, sequence));
+    .filter((stat) => isCapabilityActive(stat, sequence, activatedSetBonus));
 
   return {
     id: entity.id,

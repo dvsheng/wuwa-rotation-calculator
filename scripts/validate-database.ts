@@ -178,6 +178,98 @@ function validateCharacterCapabilityTags(
   return issues;
 }
 
+/**
+ * Validates that capabilities only have fields appropriate for their entity type
+ */
+function validateCapabilityFieldConstraints(
+  capability: {
+    echoSetBonusRequirement?: number | null;
+    unlockedAt?: string | null;
+    alternativeDefinitions?: unknown;
+    parentName?: string | null;
+    originType?: string | null;
+    iconPath?: string | null;
+  },
+  entityType: string,
+): Array<string> {
+  const issues: Array<string> = [];
+
+  // echoSetBonusRequirement should only be populated for ECHO_SET entities
+  // and MUST be populated for all ECHO_SET entities
+  if (entityType === EntityType.ECHO_SET) {
+    if (
+      capability.echoSetBonusRequirement === null ||
+      capability.echoSetBonusRequirement === undefined
+    ) {
+      issues.push('echoSetBonusRequirement must be populated for ECHO_SET entities');
+    }
+  } else if (
+    capability.echoSetBonusRequirement !== null &&
+    capability.echoSetBonusRequirement !== undefined
+  ) {
+    issues.push(
+      `echoSetBonusRequirement should only be populated for ECHO_SET entities (entity is ${entityType})`,
+    );
+  }
+
+  // unlockedAt should only be populated for CHARACTER entities
+  if (
+    capability.unlockedAt !== null &&
+    capability.unlockedAt !== undefined &&
+    entityType !== EntityType.CHARACTER
+  ) {
+    issues.push(
+      `unlockedAt should only be populated for CHARACTER entities (entity is ${entityType})`,
+    );
+  }
+
+  // alternativeDefinitions should only be populated for CHARACTER entities
+  if (
+    capability.alternativeDefinitions !== null &&
+    capability.alternativeDefinitions !== undefined &&
+    entityType !== EntityType.CHARACTER
+  ) {
+    issues.push(
+      `alternativeDefinitions should only be populated for CHARACTER entities (entity is ${entityType})`,
+    );
+  }
+
+  // parentName should only be populated for CHARACTER entities
+  if (
+    capability.parentName !== null &&
+    capability.parentName !== undefined &&
+    entityType !== EntityType.CHARACTER
+  ) {
+    issues.push(
+      `parentName should only be populated for CHARACTER entities (entity is ${entityType})`,
+    );
+  }
+
+  // originType should only be populated for CHARACTER entities
+  if (
+    capability.originType !== null &&
+    capability.originType !== undefined &&
+    entityType !== EntityType.CHARACTER
+  ) {
+    issues.push(
+      `originType should only be populated for CHARACTER entities (entity is ${entityType})`,
+    );
+  }
+
+  // iconPath should only be populated for CHARACTER entities
+  if (
+    capability.iconPath !== null &&
+    capability.iconPath !== undefined &&
+    entityType !== EntityType.CHARACTER
+  ) {
+    issues.push(
+      `iconPath should only be populated for CHARACTER entities (entity is ${entityType})`,
+    );
+  }
+
+  return issues;
+}
+
 const validateRecords = <T>(
   tableName: string,
   schema: z.ZodSchema<T>,
@@ -260,6 +352,29 @@ const validateRecords = <T>(
             attackNames,
           );
           issues.push(...tagIssues);
+        }
+
+        // Validate capability field constraints based on entity type
+        if (
+          'echoSetBonusRequirement' in record ||
+          'unlockedAt' in record ||
+          'alternativeDefinitions' in record ||
+          'parentName' in record ||
+          'originType' in record ||
+          'iconPath' in record
+        ) {
+          const fieldConstraintIssues = validateCapabilityFieldConstraints(
+            record as {
+              echoSetBonusRequirement?: number | null;
+              unlockedAt?: string | null;
+              alternativeDefinitions?: unknown;
+              parentName?: string | null;
+              originType?: string | null;
+              iconPath?: string | null;
+            },
+            entity.type,
+          );
+          issues.push(...fieldConstraintIssues);
         }
       } else {
         issues.push(`Referenced entity ${record.entityId} does not exist`);

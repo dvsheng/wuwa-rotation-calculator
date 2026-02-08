@@ -6,6 +6,7 @@ import {
 } from '@/hooks/useSelfBuffAlignment';
 import type { DetailedModifierInstance } from '@/hooks/useTeamModifierInstances';
 import { Target } from '@/services/game-data/types';
+import { useRotationStore } from '@/store/useRotationStore';
 
 import { CanvasItem } from '../../common/CanvasItem';
 
@@ -20,18 +21,18 @@ const SELF_MISALIGNED_CLASSES = 'border-blue-400 bg-transparent text-black';
 interface BuffTimelineCanvasItemProperties extends React.HTMLAttributes<HTMLDivElement> {
   buff: DetailedModifierInstance;
   onRemove: (instanceId: string) => void;
-  onSaveParameters: (instanceId: string, parameterValues: Array<number>) => void;
 }
 
 export const BuffTimelineCanvasItem = React.forwardRef<
   HTMLDivElement,
   BuffTimelineCanvasItemProperties
->(({ buff, onRemove, onSaveParameters, ...properties }, reference) => {
+>(({ buff, onRemove, ...properties }, reference) => {
+  const updateBuffParameters = useRotationStore((state) => state.updateBuffParameters);
   const alignment = useSelfBuffAlignment(buff);
 
   const parameters = buff.parameters?.map((p) => ({
     ...p,
-    value: p.value ?? p.minimum,
+    value: p.value,
   }));
 
   // Generate styling and segments based on target and alignment
@@ -74,12 +75,7 @@ export const BuffTimelineCanvasItem = React.forwardRef<
       size="xs"
       itemClassName={itemClassName}
       onRemove={() => onRemove(buff.instanceId)}
-      onSaveParameters={(vals) =>
-        onSaveParameters(
-          buff.instanceId,
-          vals.map((v) => v ?? 0),
-        )
-      }
+      onSaveParameters={(vals) => updateBuffParameters(buff.instanceId, vals)}
       {...properties}
     >
       {/* Render alignment segments as rounded overlays */}

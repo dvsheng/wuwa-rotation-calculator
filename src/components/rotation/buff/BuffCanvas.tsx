@@ -18,7 +18,6 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
   const { buffs } = useTeamModifierInstances();
   const removeBuff = useRotationStore((state) => state.removeBuff);
   const updateBuffLayout = useRotationStore((state) => state.updateBuffLayout);
-  const updateBuffParameters = useRotationStore((state) => state.updateBuffParameters);
 
   const onLayoutChange = (layout: Layout) => {
     for (const item of layout) {
@@ -69,11 +68,7 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
           <GridLayout {...fullLayoutProperties}>
             {buffs.map((buff) => (
               <div key={buff.instanceId} className="group relative">
-                <BuffTimelineCanvasItem
-                  buff={buff}
-                  onRemove={removeBuff}
-                  onSaveParameters={updateBuffParameters}
-                />
+                <BuffTimelineCanvasItem buff={buff} onRemove={removeBuff} />
               </div>
             ))}
           </GridLayout>

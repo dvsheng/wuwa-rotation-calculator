@@ -2,7 +2,12 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
-import type { AttackInstance, Capability, ModifierInstance } from '@/schemas/rotation';
+import type {
+  AttackInstance,
+  Capability,
+  ModifierInstance,
+  ParameterInstance,
+} from '@/schemas/rotation';
 
 import { useTeamStore } from './useTeamStore';
 
@@ -14,7 +19,10 @@ export interface RotationState {
   addAttack: (attack: Capability, atIndex?: number) => void;
   removeAttack: (instanceId: string) => void;
   reorderAttacks: (oldIndex: number, newIndex: number) => void;
-  updateAttackParameters: (instanceId: string, values: Array<number>) => void;
+  updateAttackParameters: (
+    instanceId: string,
+    values: Array<ParameterInstance>,
+  ) => void;
   setAttacks: (attacks: Array<AttackInstance>) => void;
   clearAttacks: () => void;
 
@@ -28,7 +36,7 @@ export interface RotationState {
     instanceId: string,
     layout: Partial<Pick<ModifierInstance, 'x' | 'y' | 'w' | 'h'>>,
   ) => void;
-  updateBuffParameters: (instanceId: string, values: Array<number>) => void;
+  updateBuffParameters: (instanceId: string, values: Array<ParameterInstance>) => void;
   clearBuffs: () => void;
 
   clearAll: () => void;

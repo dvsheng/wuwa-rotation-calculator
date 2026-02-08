@@ -201,13 +201,11 @@ export interface BaseEntity<T = {}> {
 
 /**
  * Interfaces for client-facing entity details outputs.
- * TODO: move this to Frontend
  */
 export interface Parameter {
   id: string;
   minimum: number;
   maximum: number;
-  value?: number;
 }
 
 export interface ClientCapability extends BaseCapability {

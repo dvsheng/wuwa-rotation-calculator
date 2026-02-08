@@ -1,18 +1,12 @@
 import { compact } from 'es-toolkit/array';
 
-import type { AttackInstance } from '@/schemas/rotation';
 import { useRotationStore } from '@/store/useRotationStore';
 
 import { useTeamDetails } from './useTeamDetails';
 
-export type DetailedAttackInstance = AttackInstance &
-  ReturnType<typeof useTeamDetails>['attacks'][number];
-
-export interface UseTeamAttackInstancesResult {
-  attacks: Array<DetailedAttackInstance>;
-  isLoading: boolean;
-  isError: boolean;
-}
+export type DetailedAttackInstance = ReturnType<
+  typeof useTeamAttackInstances
+>['attacks'][number];
 
 /**
  * Hook that combines stored attack instances from the rotation store
@@ -20,19 +14,21 @@ export interface UseTeamAttackInstancesResult {
  *
  * Returns fully resolved AttackInstance objects for component consumption.
  */
-export const useTeamAttackInstances = (): UseTeamAttackInstancesResult => {
+export const useTeamAttackInstances = () => {
   const storedAttacks = useRotationStore((state) => state.attacks);
   const { attacks: gameDataAttacks, isLoading, isError } = useTeamDetails();
 
   const attackMap = new Map(gameDataAttacks.map((attack) => [attack.id, attack]));
-  const fullAttacks: Array<DetailedAttackInstance> = compact(
+  const fullAttacks = compact(
     storedAttacks.map((stored) => {
       const gameData = attackMap.get(stored.id);
       if (!gameData) return;
 
-      const parameters = gameData.parameters?.map((parameter, index) => ({
+      const parameters = gameData.parameters?.map((parameter) => ({
         ...parameter,
-        value: stored.parameterValues?.[index] ?? parameter.minimum,
+        value:
+          stored.parameterValues?.find((p) => p.id === parameter.id)?.value ??
+          parameter.minimum,
       }));
 
       return {

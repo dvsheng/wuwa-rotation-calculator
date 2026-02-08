@@ -12,6 +12,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Text } from '@/components/ui/typography';
 import { cn } from '@/lib/utils';
+import type { ParameterInstance } from '@/schemas/rotation';
 import type { Parameter } from '@/services/game-data/types';
 
 import { ParameterConfigurationDialog } from './ParameterConfigurationDialog';
@@ -21,9 +22,9 @@ export interface CanvasItemProperties extends React.HTMLAttributes<HTMLDivElemen
   text: string;
   subtext?: string;
   hoverText?: string;
-  parameters?: Array<Parameter>;
+  parameters?: Array<ParameterInstance & Parameter>;
   onRemove: () => void;
-  onSaveParameters: (values: Array<number | undefined>) => void;
+  onSaveParameters: (values: Array<ParameterInstance & Parameter>) => void;
   index?: number;
   variant?: 'outline' | 'muted';
   size?: 'default' | 'sm' | 'xs';

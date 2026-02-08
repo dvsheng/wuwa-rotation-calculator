@@ -1,12 +1,19 @@
 import { z } from 'zod';
 
+export const ParameterInstanceSchema = z.object({
+  id: z.string(),
+  value: z.number().optional(),
+});
+
+export type ParameterInstance = z.infer<typeof ParameterInstanceSchema>;
+
 export const CapabilitySchema = z.object({ id: z.number(), characterId: z.number() });
 
 export type Capability = z.infer<typeof CapabilitySchema>;
 
 const CapabilityInstanceSchema = CapabilitySchema.extend({
   instanceId: z.string(),
-  parameterValues: z.array(z.number()).optional(),
+  parameterValues: z.array(ParameterInstanceSchema).optional(),
 });
 
 /**

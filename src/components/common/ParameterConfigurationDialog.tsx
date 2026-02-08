@@ -11,15 +11,16 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import type { ParameterInstance } from '@/schemas/rotation';
 import type { Parameter } from '@/services/game-data/types';
 
 interface ParameterConfigurationDialogProperties {
   title: string;
   description?: string;
-  parameters?: Array<Parameter>;
+  parameters?: Array<Parameter & ParameterInstance>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSaveParameters: (values: Array<number | undefined>) => void;
+  onSaveParameters: (values: Array<Parameter & ParameterInstance>) => void;
 }
 
 export const ParameterConfigurationDialog = ({
@@ -35,13 +36,13 @@ export const ParameterConfigurationDialog = ({
   // is often handled via keys or effects. To fix the lint error and
   // ensure fresh values when opened, we'll use the 'open' state logic inside the render
   // or a key on the component.
-  const [values, setValues] = useState<Array<number | undefined>>(() =>
-    parameters.map((p) => p.value),
-  );
+  const [values, setValues] =
+    useState<Array<Parameter & ParameterInstance>>(parameters);
 
   const handleValueChange = (index: number, value: string) => {
-    const newValues: Array<number | undefined> = [...values];
-    newValues[index] = Number(value);
+    const numericValue = Number.parseInt(value);
+    const newValues = [...values];
+    newValues[index] = { ...newValues[index], value: numericValue };
     setValues(newValues);
   };
 
@@ -67,7 +68,7 @@ export const ParameterConfigurationDialog = ({
                 <Input
                   id={`parameter-${index}`}
                   type="number"
-                  value={values[index] ?? ''}
+                  value={values[index].value ?? ''}
                   onChange={(event) => handleValueChange(index, event.target.value)}
                   className="col-span-3"
                   placeholder={`Min: ${parameter.minimum}`}

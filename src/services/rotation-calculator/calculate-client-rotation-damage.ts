@@ -10,7 +10,11 @@ import type {
 } from '@/schemas/echo';
 import type { Enemy as ClientEnemy } from '@/schemas/enemy';
 import { CalculateRotationInputSchema } from '@/schemas/game-data-service';
-import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
+import type {
+  AttackInstance,
+  ModifierInstance,
+  ParameterInstance,
+} from '@/schemas/rotation';
 import type { Team as ClientTeam } from '@/schemas/team';
 import type {
   Attack,
@@ -218,14 +222,16 @@ const enrichWith = <TCapability extends BaseCapability>(store: Array<TCapability
   };
 };
 
-const resolveUserParameterizedNumber = <TNumber>(
-  number: TNumber | UserParameterizedNumber,
-  parameters: Array<TNumber>,
+const resolveUserParameterizedNumber = <T>(
+  number: T | UserParameterizedNumber,
+  parameters: Array<ParameterInstance>,
 ) => {
   if (isUserParameterizedNumber(number)) {
     return calculateParameterizedNumberValue(
       number,
-      Object.fromEntries(parameters.map((value, index) => [String(index), value])),
+      Object.fromEntries(
+        parameters.map((parameter) => [parameter.id, parameter.value]),
+      ),
     );
   }
   return number;

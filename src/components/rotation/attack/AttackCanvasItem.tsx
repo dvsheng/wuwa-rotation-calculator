@@ -26,11 +26,8 @@ export const AttackCanvasItem = ({
       parameters={attack.parameters}
       index={index}
       onRemove={() => onRemove(attack.instanceId)}
-      onSaveParameters={(vals) =>
-        updateAttackParameters(
-          attack.instanceId,
-          vals.map((v) => v ?? 0),
-        )
+      onSaveParameters={(parameters) =>
+        updateAttackParameters(attack.instanceId, parameters)
       }
       centeredLayout
     />

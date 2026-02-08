@@ -1,6 +1,6 @@
 import { GameImage } from '@/components/common/GameImage';
-import type { FilterConfig } from '@/components/common/SelectionDialog';
 import { SelectionDialog } from '@/components/common/SelectionDialog';
+import type { FilterConfig } from '@/components/common/SelectionDialog';
 import { Row } from '@/components/ui/layout';
 import {
   Select,
@@ -12,7 +12,7 @@ import {
 import { useCharacterList } from '@/hooks/useCharacterList';
 import { useWeaponList } from '@/hooks/useWeaponList';
 import { cn } from '@/lib/utils';
-import type { ListWeaponsResponseItem } from '@/services/game-data/weapon/list-weapons';
+import type { ListWeaponsResponseItem } from '@/services/game-data/list-weapons';
 import { useTeamStore } from '@/store/useTeamStore';
 import { WeaponType } from '@/types';
 

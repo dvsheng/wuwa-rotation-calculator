@@ -1,9 +1,12 @@
 import { relations } from 'drizzle-orm';
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
-import type { Sequence } from '@/services/game-data/character/types';
-import type { AttackOriginType, OriginType } from '@/services/game-data/common-types';
-import { Target } from '@/services/game-data/common-types';
+import type {
+  AttackOriginType,
+  OriginType,
+  Sequence,
+} from '@/services/game-data/types';
+import { Target } from '@/services/game-data/types';
 import type { AbilityAttribute, Attribute, CharacterStat, EnemyStat } from '@/types';
 
 // ============================================================================

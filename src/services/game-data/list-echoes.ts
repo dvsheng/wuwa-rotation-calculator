@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 
-import { fetchEchoes } from '../hakushin-api/client';
-import { createFsStore } from '../hakushin-api/fs-store';
+import { fetchEchoes } from './hakushin-api/client';
+import { createFsStore } from './hakushin-api/fs-store';
 
 export interface ListEchoesResponseItem {
   id: number;
@@ -47,9 +47,3 @@ export const listEchoes = createServerFn({
       };
     });
 });
-
-export const getEchoIdByName = async (name: string): Promise<string | undefined> => {
-  const echoes = await fetchEchoes();
-  const entry = Object.entries(echoes).find(([_id, echo]) => echo.en === name);
-  return entry ? entry[0] : undefined;
-};

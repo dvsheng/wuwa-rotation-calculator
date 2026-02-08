@@ -8,7 +8,38 @@ import type {
   UserParameterizedNumber,
 } from '@/types';
 
-import { Sequence } from './character/types';
+/**
+ * The Resonance Chain sequence at which a skill or bonus is unlocked.
+ */
+export const Sequence = {
+  S1: 's1',
+  S2: 's2',
+  S3: 's3',
+  S4: 's4',
+  S5: 's5',
+  S6: 's6',
+} as const;
+
+export type Sequence = (typeof Sequence)[keyof typeof Sequence];
+
+/**
+ * Valid weapon refinement levels (1 through 5).
+ */
+export const RefineLevel = ['1', '2', '3', '4', '5'] as const;
+
+export type RefineLevel = (typeof RefineLevel)[number];
+
+/**
+ * Valid set piece counts for triggering echo set effects.
+ */
+export const SetEffectRequirement = {
+  TWO: 2,
+  THREE: 3,
+  FIVE: 5,
+};
+
+export type SetEffectRequirement =
+  (typeof SetEffectRequirement)[keyof typeof SetEffectRequirement];
 
 /**
  * The source of a capability.
@@ -44,7 +75,6 @@ export const OriginType = {
 export type OriginType = (typeof OriginType)[keyof typeof OriginType];
 
 export type AttackOriginType = Exclude<OriginType, 'Inherent Skill' | 'Base Stats'>;
-
 /**
  * Base properties for any capability (Attack, Modifier, PermanentStat)
  */

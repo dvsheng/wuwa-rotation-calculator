@@ -1,10 +1,10 @@
 import { GameImage } from '@/components/common/GameImage';
-import type { FilterConfig } from '@/components/common/SelectionDialog';
 import { SelectionDialog } from '@/components/common/SelectionDialog';
+import type { FilterConfig } from '@/components/common/SelectionDialog';
 import { Badge } from '@/components/ui/badge';
 import { useCharacterList } from '@/hooks/useCharacterList';
 import { cn } from '@/lib/utils';
-import type { ListCharactersResponseItem } from '@/services/game-data/character/list-characters';
+import type { ListCharactersResponseItem } from '@/services/game-data/list-characters';
 import { resolveImagePath } from '@/services/image-service';
 import { Attribute } from '@/types';
 

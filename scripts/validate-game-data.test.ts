@@ -4,8 +4,7 @@ import path from 'node:path';
 import { describe, it } from 'vitest';
 import { z } from 'zod';
 
-import { Sequence } from '@/services/game-data/character/types';
-import { OriginType } from '@/services/game-data/common-types';
+import { OriginType, Sequence } from '@/services/game-data/types';
 import {
   AbilityAttribute,
   Attribute,

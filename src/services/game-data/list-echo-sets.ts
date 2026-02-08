@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start';
 
-import { createFsStore } from '../hakushin-api/fs-store';
+import { createFsStore } from './hakushin-api/fs-store';
 
 export interface EchoSetResponseItem {
   id: number;
@@ -31,13 +31,3 @@ export const listEchoSets = createServerFn({
     tiers: group.tiers,
   }));
 });
-
-export const getEchoSetIdByName = async (name: string): Promise<string | undefined> => {
-  const echoSets = await echoSetsStore.get('echo-set.json');
-  if (!echoSets) {
-    return undefined;
-  }
-
-  const entry = Object.entries(echoSets).find(([_id, group]) => group.en === name);
-  return entry ? entry[0] : undefined;
-};

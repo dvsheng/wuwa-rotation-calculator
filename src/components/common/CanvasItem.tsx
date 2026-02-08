@@ -12,7 +12,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Text } from '@/components/ui/typography';
 import { cn } from '@/lib/utils';
-import type { Parameter } from '@/services/game-data/common-types';
+import type { Parameter } from '@/services/game-data/types';
 
 import { ParameterConfigurationDialog } from './ParameterConfigurationDialog';
 

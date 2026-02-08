@@ -1,8 +1,7 @@
 import { z } from 'zod';
 
 import { EntityType } from '@/db/schema';
-import { SetEffectRequirement } from '@/services/game-data/echo-set/types';
-import { RefineLevel } from '@/services/game-data/weapon/types';
+import { RefineLevel, SetEffectRequirement } from '@/services/game-data/types';
 
 import { EnemySchema } from './enemy';
 import { AttackInstanceSchema, ModifierInstanceSchema } from './rotation';

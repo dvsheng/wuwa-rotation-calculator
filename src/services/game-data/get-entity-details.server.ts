@@ -3,18 +3,22 @@ import { eq } from 'drizzle-orm';
 import { database } from '@/db/client';
 import type { Entity, EntityType, StoreCapability } from '@/db/schema';
 import { entities } from '@/db/schema';
+import type { GetEntityDetailsInput } from '@/schemas/game-data-service';
 import {
   replaceNullsWithUndefined,
   resolveStoreNumberType,
-} from '@/db/type-converters';
-import type { GetEntityDetailsInput } from '@/schemas/game-data-service';
+} from '@/services/game-data/database-type-adapters';
 import type { Attribute } from '@/types';
 
-import type { Sequence } from './character/types';
 import { toClientAttack, toClientBuff } from './client-converters';
-import type { Attack, BaseEntity, GetClientEntityDetailsOutput } from './common-types';
-import { OriginType } from './common-types';
-import type { RefineLevel } from './weapon/types';
+import { OriginType } from './types';
+import type {
+  Attack,
+  BaseEntity,
+  GetClientEntityDetailsOutput,
+  RefineLevel,
+  Sequence,
+} from './types';
 
 /**
  * Convert sequence string to number (e.g., 's1' -> 1, 's2' -> 2).

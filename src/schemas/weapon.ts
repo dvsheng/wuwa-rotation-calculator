@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { RefineLevel } from '@/services/game-data/weapon/types';
+import { RefineLevel } from '@/services/game-data/types';
 
 export const WeaponSchema = z.object({
   id: z.number(),

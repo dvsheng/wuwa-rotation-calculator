@@ -17,7 +17,7 @@ import type {
   BaseCapability,
   Modifier as GameDataModifier,
   PermanentStatBase,
-} from '@/services/game-data/common-types';
+} from '@/services/game-data/types';
 import { calculateParameterizedNumberValue } from '@/services/rotation-calculator/calculate-parameterized-number';
 import { CharacterStat, Tag, isUserParameterizedNumber } from '@/types';
 import type {

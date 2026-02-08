@@ -9,7 +9,7 @@ import type {
   Attack,
   Modifier as GameDataModifier,
   GameDataRotationRuntimeResolvableNumber,
-} from '@/services/game-data/common-types';
+} from '@/services/game-data/types';
 import {
   calculateRotationHandler,
   toRotationModifier,

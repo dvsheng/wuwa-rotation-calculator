@@ -5,8 +5,8 @@ import { z } from 'zod';
 
 import { closeDatabase, database } from '@/db/client';
 import { attacks, entities, modifiers, permanentStats } from '@/db/schema';
-import type { Sequence } from '@/services/game-data/character/types';
-import { OriginType, Target } from '@/services/game-data/common-types';
+import type { Sequence } from '@/services/game-data/types';
+import { OriginType, Target } from '@/services/game-data/types';
 
 // ============================================================================
 // Validation Schemas

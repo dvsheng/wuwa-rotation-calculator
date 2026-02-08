@@ -12,7 +12,7 @@ import {
 import { initialEnemyData } from '@/schemas/enemy';
 import type { Enemy } from '@/schemas/enemy';
 import type { Team } from '@/schemas/team';
-import type { RefineLevel } from '@/services/game-data/weapon/types';
+import type { RefineLevel } from '@/services/game-data/types';
 
 export interface TeamState {
   team: Team;

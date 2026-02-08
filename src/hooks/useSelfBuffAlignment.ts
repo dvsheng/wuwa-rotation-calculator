@@ -1,4 +1,4 @@
-import { Target } from '@/services/game-data/common-types';
+import { Target } from '@/services/game-data/types';
 import { useRotationStore } from '@/store/useRotationStore';
 
 interface BuffPosition {

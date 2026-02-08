@@ -1,6 +1,6 @@
 import { Attribute, WeaponType } from '@/types';
 
-import { fetchCharacters } from '../hakushin-api/client';
+import { fetchCharacters } from './hakushin-api/client';
 
 export interface ListCharactersResponseItem {
   id: number;
@@ -46,12 +46,4 @@ export const listCharacters = async (
   }
 
   return list;
-};
-
-export const getCharacterIdByName = async (
-  name: string,
-): Promise<string | undefined> => {
-  const characters = await fetchCharacters();
-  const entry = Object.entries(characters).find(([_id, char]) => char.en === name);
-  return entry ? entry[0] : undefined;
 };

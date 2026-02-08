@@ -4,7 +4,7 @@ import { SelectionDialog } from '@/components/common/SelectionDialog';
 import { Row } from '@/components/ui/layout';
 import { useEchoList } from '@/hooks/useEchoList';
 import { cn } from '@/lib/utils';
-import type { ListEchoesResponseItem } from '@/services/game-data/echo/list-echoes';
+import type { ListEchoesResponseItem } from '@/services/game-data/list-echoes';
 import { useTeamStore } from '@/store/useTeamStore';
 
 import { AssetIcon } from '../common/AssetIcon';

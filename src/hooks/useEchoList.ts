@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { listEchoes } from '@/services/game-data/echo/list-echoes';
+import { listEchoes } from '@/services/game-data/list-echoes';
 
 export const useEchoList = () => {
   return useQuery({

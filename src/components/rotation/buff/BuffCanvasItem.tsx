@@ -5,7 +5,7 @@ import {
   useSelfBuffAlignment,
 } from '@/hooks/useSelfBuffAlignment';
 import type { DetailedModifierInstance } from '@/hooks/useTeamModifierInstances';
-import { Target } from '@/services/game-data/common-types';
+import { Target } from '@/services/game-data/types';
 
 import { CanvasItem } from '../../common/CanvasItem';
 

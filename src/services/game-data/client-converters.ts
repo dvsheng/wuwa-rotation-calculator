@@ -6,7 +6,7 @@ import type {
   ClientAttack,
   ClientModifier,
   Modifier,
-} from './common-types';
+} from './types';
 
 /**
  * Converts a game-data Attack into a client-facing enriched Attack structure.

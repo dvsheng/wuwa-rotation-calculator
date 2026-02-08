@@ -2,8 +2,8 @@ import { Palette } from '@/components/common/Palette';
 import { PaletteItem } from '@/components/common/PaletteItem';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
 import type { Capability } from '@/schemas/rotation';
-import type { OriginType } from '@/services/game-data/common-types';
-import { Target } from '@/services/game-data/common-types';
+import type { OriginType } from '@/services/game-data/types';
+import { Target } from '@/services/game-data/types';
 
 export interface BuffPaletteProperties {
   onClickBuff?: (buff: Capability) => void;

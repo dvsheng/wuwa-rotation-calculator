@@ -1,6 +1,6 @@
 import { WeaponType } from '@/types';
 
-import { fetchWeapons } from '../hakushin-api/client';
+import { fetchWeapons } from './hakushin-api/client';
 
 export interface ListWeaponsResponseItem {
   id: number;
@@ -33,10 +33,4 @@ export const listWeapons = async (
     return list.filter((weapon) => weapon.weaponType === weaponType);
   }
   return list;
-};
-
-export const getWeaponIdByName = async (name: string): Promise<string | undefined> => {
-  const weapons = await fetchWeapons();
-  const entry = Object.entries(weapons).find(([_id, weapon]) => weapon.en === name);
-  return entry ? entry[0] : undefined;
 };

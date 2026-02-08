@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { isRefineScalableNumber, resolveStoreNumberType } from './type-converters';
+import {
+  isRefineScalableNumber,
+  resolveStoreNumberType,
+} from './database-type-adapters';
 
 describe('isRefineScalableNumber', () => {
   it('returns true for valid RefineScalableNumber', () => {

@@ -2,8 +2,8 @@ import { useQueries } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
-import type { ClientAttack, ClientModifier } from '@/services/game-data/common-types';
 import { getClientEntityByHakushinId } from '@/services/game-data/get-entity-details.function';
+import type { ClientAttack, ClientModifier } from '@/services/game-data/types';
 import { useTeamStore } from '@/store/useTeamStore';
 
 interface ClientCharacterDetails {

@@ -18,32 +18,12 @@ import {
 import { AbilityAttribute, Attribute, CharacterStat, Tag } from '@/types';
 
 // Use vi.hoisted to define mocks used in vi.mock
-const {
-  mockGetCharacterDetails,
-  mockGetEchoDetails,
-  mockGetWeaponDetails,
-  mockGetEchoSetDetails,
-} = vi.hoisted(() => ({
-  mockGetCharacterDetails: vi.fn(),
-  mockGetEchoDetails: vi.fn(),
-  mockGetWeaponDetails: vi.fn(),
-  mockGetEchoSetDetails: vi.fn(),
+const { mockGetEntityByHakushinId } = vi.hoisted(() => ({
+  mockGetEntityByHakushinId: vi.fn(),
 }));
 
-vi.mock('@/services/game-data/character/get-character-details', () => ({
-  getCharacterDetails: mockGetCharacterDetails,
-}));
-
-vi.mock('@/services/game-data/echo/get-echo-details', () => ({
-  getEchoDetails: mockGetEchoDetails,
-}));
-
-vi.mock('@/services/game-data/weapon/get-weapon-details', () => ({
-  getWeaponDetails: mockGetWeaponDetails,
-}));
-
-vi.mock('@/services/game-data/echo-set/get-echo-set-details', () => ({
-  getEchoSetDetails: mockGetEchoSetDetails,
+vi.mock('@/services/game-data/get-entity-details.function', () => ({
+  getEntityByHakushinId: mockGetEntityByHakushinId,
 }));
 
 /**
@@ -379,7 +359,7 @@ describe('toRotationModifier', () => {
       },
     ]);
     const attack = createMockAttack(15_678, 32_132);
-    const characterIdToSlotNumberMap = { char1: 0, char2: 1, char3: 2 };
+    const characterIdToSlotNumberMap = { 32_132: 0, 1234: 1, 5678: 2 };
 
     const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
 
@@ -409,7 +389,7 @@ describe('toRotationModifier', () => {
       },
     ]);
     const attack = createMockAttack(15_678, 1234);
-    const characterIdToSlotNumberMap = { char1: 0, char2: 1, char3: 2 };
+    const characterIdToSlotNumberMap = { 32_132: 0, 1234: 1, 5678: 2 };
 
     const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
 
@@ -429,7 +409,7 @@ describe('toRotationModifier', () => {
       },
     ]);
     const attack = createMockAttack(15_678, 32_132);
-    const characterIdToSlotNumberMap = { char1: 0, char2: 1, char3: 2 };
+    const characterIdToSlotNumberMap = { 32_132: 0, 1234: 1, 5678: 2 };
 
     const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
 
@@ -446,7 +426,7 @@ describe('toRotationModifier', () => {
       },
     ]);
     const attack = createMockAttack(15_678, 1234);
-    const characterIdToSlotNumberMap = { char1: 0, char2: 1, char3: 2 };
+    const characterIdToSlotNumberMap = { 32_132: 0, 1234: 1, 5678: 2 };
 
     const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
 
@@ -463,7 +443,7 @@ describe('toRotationModifier', () => {
       },
     ]);
     const attack = createMockAttack(15_678, 32_132);
-    const characterIdToSlotNumberMap = { char1: 0, char2: 1, char3: 2 };
+    const characterIdToSlotNumberMap = { 32_132: 0, 1234: 1, 5678: 2 };
 
     const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
 
@@ -491,7 +471,7 @@ describe('toRotationModifier', () => {
       },
     ]);
     const attack = createMockAttack(15_678, 1234);
-    const characterIdToSlotNumberMap = { char1: 0, char2: 1, char3: 2 };
+    const characterIdToSlotNumberMap = { 32_132: 0, 1234: 1, 5678: 2 };
 
     const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
 
@@ -525,7 +505,7 @@ describe('toRotationModifier', () => {
       },
     ]);
     const attack = createMockAttack(15_678, 32_132);
-    const characterIdToSlotNumberMap = { char1: 0, char2: 1, char3: 2 };
+    const characterIdToSlotNumberMap = { 32_132: 0, 1234: 1, 5678: 2 };
 
     const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
 
@@ -542,15 +522,28 @@ describe('toRotationModifier', () => {
 
 describe('calculateRotation', () => {
   beforeEach(() => {
-    mockGetCharacterDetails.mockReset();
-    mockGetEchoDetails.mockReset();
-    mockGetWeaponDetails.mockReset();
-    mockGetEchoSetDetails.mockReset();
+    mockGetEntityByHakushinId.mockReset();
 
-    // Default mock implementations
-    mockGetEchoDetails.mockResolvedValue(createMockEchoData());
-    mockGetWeaponDetails.mockResolvedValue(createMockWeaponData());
-    mockGetEchoSetDetails.mockResolvedValue(createMockEchoSetData());
+    // Default mock implementation - returns appropriate data based on entity type
+    mockGetEntityByHakushinId.mockImplementation(({ data }) => {
+      switch (data.entityType) {
+        case 'echo': {
+          return Promise.resolve(createMockEchoData());
+        }
+        case 'weapon': {
+          return Promise.resolve(createMockWeaponData());
+        }
+        case 'echo_set': {
+          return Promise.resolve(createMockEchoSetData());
+        }
+        case 'character': {
+          return Promise.reject(new Error(`Character ${data.id} not mocked`));
+        }
+        default: {
+          return Promise.reject(new Error(`Unknown entity type: ${data.entityType}`));
+        }
+      }
+    });
   });
 
   describe('Augusta (1306) with Crown of Wills modifier', () => {
@@ -592,19 +585,37 @@ describe('calculateRotation', () => {
     const mockShorekeeper = createMockCharacterData(1505, 'Shorekeeper', Tag.SPECTRO);
 
     beforeEach(() => {
-      mockGetCharacterDetails.mockImplementation(({ data }) => {
-        switch (data.id) {
-          case AUGUSTA_ID: {
-            return Promise.resolve(mockAugusta);
+      mockGetEntityByHakushinId.mockImplementation(({ data }) => {
+        // Handle character requests
+        if (data.entityType === 'character') {
+          switch (data.id) {
+            case AUGUSTA_ID: {
+              return Promise.resolve(mockAugusta);
+            }
+            case 1304: {
+              return Promise.resolve(mockJinhsi);
+            }
+            case 1505: {
+              return Promise.resolve(mockShorekeeper);
+            }
+            default: {
+              return Promise.reject(new Error(`Unknown character ID: ${data.id}`));
+            }
           }
-          case '1304': {
-            return Promise.resolve(mockJinhsi);
+        }
+        // Handle other entity types with defaults
+        switch (data.entityType) {
+          case 'echo': {
+            return Promise.resolve(createMockEchoData());
           }
-          case '1505': {
-            return Promise.resolve(mockShorekeeper);
+          case 'weapon': {
+            return Promise.resolve(createMockWeaponData());
+          }
+          case 'echo_set': {
+            return Promise.resolve(createMockEchoSetData());
           }
           default: {
-            return Promise.reject(new Error(`Unknown character ID: ${data.id}`));
+            return Promise.reject(new Error(`Unknown entity type: ${data.entityType}`));
           }
         }
       });
@@ -652,6 +663,50 @@ describe('calculateRotation', () => {
       // Damage should be the same since modifier doesn't cover the attack
       expect(resultWithMispositionedModifier.totalDamage).toBe(
         resultWithoutModifier.totalDamage,
+      );
+    });
+  });
+
+  describe('error handling', () => {
+    it('throws an error when an invalid character entity ID is provided', async () => {
+      const INVALID_CHARACTER_ID = 99_999;
+
+      // Set up mock to throw error for invalid ID
+      mockGetEntityByHakushinId.mockImplementation(({ data }) => {
+        if (data.entityType === 'character' && data.id === INVALID_CHARACTER_ID) {
+          return Promise.reject(new Error(`Entity not found for ID ${data.id}`));
+        }
+        // Return defaults for other entity types
+        switch (data.entityType) {
+          case 'echo': {
+            return Promise.resolve(createMockEchoData());
+          }
+          case 'weapon': {
+            return Promise.resolve(createMockWeaponData());
+          }
+          case 'echo_set': {
+            return Promise.resolve(createMockEchoSetData());
+          }
+          default: {
+            return Promise.reject(new Error(`Unknown entity type: ${data.entityType}`));
+          }
+        }
+      });
+
+      const team: Team = [
+        createTestCharacter(INVALID_CHARACTER_ID),
+        createTestCharacter(1304),
+        createTestCharacter(1505),
+      ];
+      const enemy = createTestEnemy();
+      const attack: AttackInstance = {
+        instanceId: 'attack-1',
+        id: 1,
+        characterId: INVALID_CHARACTER_ID,
+      };
+
+      await expect(calculateRotationHandler(team, enemy, [attack], [])).rejects.toThrow(
+        `Entity not found for ID ${INVALID_CHARACTER_ID}`,
       );
     });
   });

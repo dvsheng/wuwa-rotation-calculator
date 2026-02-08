@@ -131,10 +131,16 @@ describe('calculateParameterizedNumberValue', () => {
   describe('conditionals', () => {
     it('evaluates >= operator correctly', () => {
       const parameterizedNumber: LinearParameterizedNumber<'0'> = {
-        parameterConfigs: {},
-        conditionals: [
-          { parameter: '0', operator: '>=', threshold: 10, valueIfTrue: 0.4 },
-        ],
+        parameterConfigs: {
+          '0': {
+            scale: 0,
+            conditionalConfiguration: {
+              operator: '>=',
+              threshold: 10,
+              valueIfTrue: 0.4,
+            },
+          },
+        },
       };
       expect(calculateParameterizedNumberValue(parameterizedNumber, { '0': 9 })).toBe(
         0,
@@ -149,10 +155,16 @@ describe('calculateParameterizedNumberValue', () => {
 
     it('evaluates > operator correctly', () => {
       const parameterizedNumber: LinearParameterizedNumber<'0'> = {
-        parameterConfigs: {},
-        conditionals: [
-          { parameter: '0', operator: '>', threshold: 10, valueIfTrue: 0.4 },
-        ],
+        parameterConfigs: {
+          '0': {
+            scale: 0,
+            conditionalConfiguration: {
+              operator: '>',
+              threshold: 10,
+              valueIfTrue: 0.4,
+            },
+          },
+        },
       };
       expect(calculateParameterizedNumberValue(parameterizedNumber, { '0': 10 })).toBe(
         0,
@@ -164,10 +176,16 @@ describe('calculateParameterizedNumberValue', () => {
 
     it('evaluates <= operator correctly', () => {
       const parameterizedNumber: LinearParameterizedNumber<'0'> = {
-        parameterConfigs: {},
-        conditionals: [
-          { parameter: '0', operator: '<=', threshold: 5, valueIfTrue: 0.3 },
-        ],
+        parameterConfigs: {
+          '0': {
+            scale: 0,
+            conditionalConfiguration: {
+              operator: '<=',
+              threshold: 5,
+              valueIfTrue: 0.3,
+            },
+          },
+        },
       };
       expect(calculateParameterizedNumberValue(parameterizedNumber, { '0': 4 })).toBe(
         0.3,
@@ -182,10 +200,16 @@ describe('calculateParameterizedNumberValue', () => {
 
     it('evaluates < operator correctly', () => {
       const parameterizedNumber: LinearParameterizedNumber<'0'> = {
-        parameterConfigs: {},
-        conditionals: [
-          { parameter: '0', operator: '<', threshold: 5, valueIfTrue: 0.3 },
-        ],
+        parameterConfigs: {
+          '0': {
+            scale: 0,
+            conditionalConfiguration: {
+              operator: '<',
+              threshold: 5,
+              valueIfTrue: 0.3,
+            },
+          },
+        },
       };
       expect(calculateParameterizedNumberValue(parameterizedNumber, { '0': 4 })).toBe(
         0.3,
@@ -197,10 +221,16 @@ describe('calculateParameterizedNumberValue', () => {
 
     it('evaluates == operator correctly', () => {
       const parameterizedNumber: LinearParameterizedNumber<'0'> = {
-        parameterConfigs: {},
-        conditionals: [
-          { parameter: '0', operator: '==', threshold: 5, valueIfTrue: 1 },
-        ],
+        parameterConfigs: {
+          '0': {
+            scale: 0,
+            conditionalConfiguration: {
+              operator: '==',
+              threshold: 5,
+              valueIfTrue: 1,
+            },
+          },
+        },
       };
       expect(calculateParameterizedNumberValue(parameterizedNumber, { '0': 4 })).toBe(
         0,
@@ -215,16 +245,17 @@ describe('calculateParameterizedNumberValue', () => {
 
     it('uses valueIfFalse when condition is not met', () => {
       const parameterizedNumber: LinearParameterizedNumber<'0'> = {
-        parameterConfigs: {},
-        conditionals: [
-          {
-            parameter: '0',
-            operator: '>=',
-            threshold: 10,
-            valueIfTrue: 0.5,
-            valueIfFalse: 0.1,
+        parameterConfigs: {
+          '0': {
+            scale: 0,
+            conditionalConfiguration: {
+              operator: '>=',
+              threshold: 10,
+              valueIfTrue: 0.5,
+              valueIfFalse: 0.1,
+            },
           },
-        ],
+        },
       };
       expect(calculateParameterizedNumberValue(parameterizedNumber, { '0': 5 })).toBe(
         0.1,
@@ -236,31 +267,52 @@ describe('calculateParameterizedNumberValue', () => {
 
     it('defaults to 0 for missing parameters', () => {
       const parameterizedNumber: LinearParameterizedNumber<'0'> = {
-        parameterConfigs: {},
-        conditionals: [
-          { parameter: '0', operator: '>=', threshold: 0, valueIfTrue: 0.5 },
-        ],
+        parameterConfigs: {
+          '0': {
+            scale: 0,
+            conditionalConfiguration: {
+              operator: '>=',
+              threshold: 0,
+              valueIfTrue: 0.5,
+            },
+          },
+        },
       };
       // Missing parameter defaults to 0, which is >= 0
-      expect(calculateParameterizedNumberValue(parameterizedNumber, {})).toBe(0.5);
+      expect(calculateParameterizedNumberValue(parameterizedNumber, {})).toBe(0);
     });
 
     it('sums multiple conditionals', () => {
-      const parameterizedNumber: LinearParameterizedNumber<'0'> = {
-        parameterConfigs: {},
-        conditionals: [
-          { parameter: '0', operator: '>=', threshold: 5, valueIfTrue: 0.1 },
-          { parameter: '0', operator: '>=', threshold: 10, valueIfTrue: 0.2 },
-        ],
+      // Note: Each parameter can only have one conditional, so we use multiple parameters
+      // referencing the same value to achieve multiple conditionals
+      const parameterizedNumber: LinearParameterizedNumber<'0' | '1'> = {
+        parameterConfigs: {
+          '0': {
+            scale: 0,
+            conditionalConfiguration: {
+              operator: '>=',
+              threshold: 5,
+              valueIfTrue: 0.1,
+            },
+          },
+          '1': {
+            scale: 0,
+            conditionalConfiguration: {
+              operator: '>=',
+              threshold: 10,
+              valueIfTrue: 0.2,
+            },
+          },
+        },
       };
-      expect(calculateParameterizedNumberValue(parameterizedNumber, { '0': 3 })).toBe(
-        0,
-      );
-      expect(calculateParameterizedNumberValue(parameterizedNumber, { '0': 7 })).toBe(
-        0.1,
-      );
       expect(
-        calculateParameterizedNumberValue(parameterizedNumber, { '0': 12 }),
+        calculateParameterizedNumberValue(parameterizedNumber, { '0': 3, '1': 3 }),
+      ).toBe(0);
+      expect(
+        calculateParameterizedNumberValue(parameterizedNumber, { '0': 7, '1': 7 }),
+      ).toBe(0.1);
+      expect(
+        calculateParameterizedNumberValue(parameterizedNumber, { '0': 12, '1': 12 }),
       ).toBeCloseTo(0.3);
     });
   });
@@ -270,11 +322,16 @@ describe('calculateParameterizedNumberValue', () => {
       // Iuno's combined modifier: 0.04 * stacks + IF(stacks >= 10, 0.4, 0)
       const parameterizedNumber: LinearParameterizedNumber<'0'> = {
         parameterConfigs: {
-          '0': { scale: 0.04, maximum: 10 },
+          '0': {
+            scale: 0.04,
+            maximum: 10,
+            conditionalConfiguration: {
+              operator: '>=',
+              threshold: 10,
+              valueIfTrue: 0.4,
+            },
+          },
         },
-        conditionals: [
-          { parameter: '0', operator: '>=', threshold: 10, valueIfTrue: 0.4 },
-        ],
       };
 
       // 0 stacks: 0

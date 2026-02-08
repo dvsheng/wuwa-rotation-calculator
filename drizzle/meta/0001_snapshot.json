@@ -126,12 +126,8 @@
           "name": "attacks_entity_id_entities_id_fk",
           "tableFrom": "attacks",
           "tableTo": "entities",
-          "columnsFrom": [
-            "entity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entity_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -217,9 +213,7 @@
       "indexes": {
         "entities_hakushin_id_unique": {
           "name": "entities_hakushin_id_unique",
-          "columns": [
-            "hakushin_id"
-          ],
+          "columns": ["hakushin_id"],
           "isUnique": true
         }
       },
@@ -336,12 +330,8 @@
           "name": "modifiers_entity_id_entities_id_fk",
           "tableFrom": "modifiers",
           "tableTo": "entities",
-          "columnsFrom": [
-            "entity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entity_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -458,12 +448,8 @@
           "name": "permanent_stats_entity_id_entities_id_fk",
           "tableFrom": "permanent_stats",
           "tableTo": "entities",
-          "columnsFrom": [
-            "entity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entity_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

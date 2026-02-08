@@ -50,9 +50,15 @@ export type AttackOriginType = Exclude<OriginType, 'Inherent Skill' | 'Base Stat
  */
 export interface BaseCapability {
   /** Unique identifier for the capability */
-  id: string;
+  id: number;
+  /** Name of the capability */
+  name: string;
+  /** Where this capability originates from in an entity */
+  originType: OriginType;
+  /** The name of the parent skill or node (e.g., "Ground State Calibration"). */
+  parentName?: string;
   /** Description of the capability */
-  description: string;
+  description?: string;
 }
 
 export interface GameDataRotationRuntimeResolvableNumber extends LinearParameterizedNumber<
@@ -153,17 +159,19 @@ export interface Capabilities<T = {}> {
 /**
  * Base properties for game entities like Characters, Weapons, or Echoes.
  */
-export interface BaseEntity {
+export interface BaseEntity<T = {}> {
+  /** Internal ID for the entity */
+  id: number;
   /** Original game ID from Hakushin */
-  id: string;
-  /** Unique UUID for internal tracking and identification */
-  uuid: string;
+  hakushinId?: number;
   /** Name of the entity */
   name: string;
+  capabilities: Capabilities<T>;
 }
 
 /**
  * Interfaces for client-facing entity details outputs.
+ * TODO: move this to Frontend
  */
 export interface Parameter {
   minimum: number;
@@ -171,11 +179,9 @@ export interface Parameter {
   value?: number;
 }
 
-export interface ClientCapability {
-  id: string;
+export interface ClientCapability extends BaseCapability {
   name: string;
   parentName: string;
-  description?: string;
   parameters?: Array<Parameter>;
 }
 
@@ -192,6 +198,8 @@ export interface ClientModifier extends ClientCapability {
  * Base output format for client-facing entity details.
  */
 export interface GetClientEntityDetailsOutput {
+  id: number;
+  name: string;
   /** Active attacks for the entity */
   attacks: Array<ClientAttack>;
   /** Active modifiers for the entity */

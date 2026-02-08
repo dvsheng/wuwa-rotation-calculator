@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const EchoSetSchema = z.object({
-  id: z.string(),
+  id: z.number(),
   requirement: z.enum(['2', '3', '5']),
 });
 

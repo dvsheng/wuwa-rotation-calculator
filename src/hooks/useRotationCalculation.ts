@@ -13,7 +13,14 @@ export const useRotationCalculation = () => {
   return useQuery({
     queryKey: ['rotation-calculation', team, enemy, attacks, buffs],
     queryFn: async () => {
-      const result = await calculateRotation(team, enemy, attacks, buffs);
+      const result = await calculateRotation({
+        data: {
+          team: team,
+          enemy,
+          attacks,
+          buffs,
+        },
+      });
       return result;
     },
     placeholderData: keepPreviousData,

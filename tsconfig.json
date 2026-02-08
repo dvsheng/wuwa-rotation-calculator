@@ -6,7 +6,7 @@
     "prettier.config.js",
     "vite.config.js"
   ],
-
+  "exclude": ["/scripts/seed-database.ts"],
   "compilerOptions": {
     "target": "esnext",
     "jsx": "react-jsx",

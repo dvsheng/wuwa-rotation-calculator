@@ -59,7 +59,7 @@ export const BuffPalette = ({
   return (
     <Palette
       groups={groups}
-      getItemKey={(buff) => buff.id}
+      getItemKey={(buff) => String(buff.id)}
       getItemLegendLabel={(buff) => TARGET_LABELS[buff.target]}
       emptyMessage="No buffs available"
       className={className}

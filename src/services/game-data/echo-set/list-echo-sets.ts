@@ -3,7 +3,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { createFsStore } from '../hakushin-api/fs-store';
 
 export interface EchoSetResponseItem {
-  id: string;
+  id: number;
   name: string;
   tiers: Array<number>;
 }
@@ -26,7 +26,7 @@ export const listEchoSets = createServerFn({
   }
 
   return Object.entries(echoSets).map(([id, group]) => ({
-    id,
+    id: Number.parseInt(id),
     name: group.en,
     tiers: group.tiers,
   }));

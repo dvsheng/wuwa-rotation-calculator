@@ -4,7 +4,7 @@ import { useRotationStore } from '@/store/useRotationStore';
 interface BuffPosition {
   x: number;
   w: number;
-  characterId: string;
+  characterId: number;
   target: string;
 }
 

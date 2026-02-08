@@ -2,16 +2,12 @@ import { useQueries } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
-import { getClientCharacterDetails } from '@/services/game-data/character/get-character-details';
-import type { GetClientCharacterDetailsOutput } from '@/services/game-data/character/types';
 import type { ClientAttack, ClientModifier } from '@/services/game-data/common-types';
-import { getClientEchoDetails } from '@/services/game-data/echo/get-echo-details';
-import { getClientEchoSetDetails } from '@/services/game-data/echo-set/get-echo-set-details';
-import { getClientWeaponDetails } from '@/services/game-data/weapon/get-weapon-details';
+import { getClientEntityByHakushinId } from '@/services/game-data/get-entity-details.function';
 import { useTeamStore } from '@/store/useTeamStore';
 
 interface ClientCharacterDetails {
-  characterId: string;
+  characterId: number;
   characterName: string;
 }
 
@@ -61,8 +57,12 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
       {
         queryKey: ['team-details', 'character', character.id, character.sequence],
         queryFn: () =>
-          getClientCharacterDetails({
-            data: { id: character.id, sequence: character.sequence },
+          getClientEntityByHakushinId({
+            data: {
+              id: character.id,
+              entityType: 'character',
+              activatedSequence: character.sequence,
+            },
           }),
         enabled: !!character.id,
         staleTime: Infinity,
@@ -70,10 +70,11 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
       {
         queryKey: ['team-details', 'weapon', character.id, character.weapon.id],
         queryFn: () =>
-          getClientWeaponDetails({
+          getClientEntityByHakushinId({
             data: {
               id: character.weapon.id,
-              refineLevel: String(character.weapon.refine) as any,
+              entityType: 'weapon',
+              refineLevel: character.weapon.refine,
             },
           }),
         enabled: !!character.weapon.id,
@@ -81,30 +82,37 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
       },
       {
         queryKey: ['team-details', 'echo', character.id, character.primarySlotEcho.id],
-        queryFn: () => getClientEchoDetails({ data: character.primarySlotEcho.id }),
+        queryFn: () =>
+          getClientEntityByHakushinId({
+            data: {
+              id: character.primarySlotEcho.id,
+              entityType: 'echo',
+            },
+          }),
         enabled: !!character.primarySlotEcho.id,
         staleTime: Infinity,
       },
       ...character.echoSets.map((set) => ({
         queryKey: ['team-details', 'echo-set', character.id, set.id, set.requirement],
         queryFn: () =>
-          getClientEchoSetDetails({
-            data: { id: set.id, requirement: set.requirement as any },
+          getClientEntityByHakushinId({
+            data: {
+              id: set.id,
+              entityType: 'echo_set',
+              activatedSetBonus: Number.parseInt(set.requirement),
+            },
           }),
         enabled: !!set.id,
         staleTime: Infinity,
       })),
     ]),
     combine: (results) => {
-      const characterNameMap = new Map<string, string>();
+      const characterNameMap = new Map<number, string>();
       for (const [index, characterResult] of results.entries()) {
         const meta = queryMetadata[index];
         if (meta.queryType !== 'character') continue;
         if (!characterResult.data) continue;
-        characterNameMap.set(
-          meta.characterId,
-          (characterResult.data as unknown as GetClientCharacterDetailsOutput).name,
-        );
+        characterNameMap.set(meta.characterId, characterResult.data.name);
       }
 
       const attacks = results.flatMap((queryResult, index) => {

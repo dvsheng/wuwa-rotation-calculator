@@ -1,3 +1,4 @@
+import { createServerFn } from '@tanstack/react-start';
 import { keyBy, mapAsync } from 'es-toolkit/array';
 import { cloneDeep, mergeWith } from 'es-toolkit/object';
 
@@ -8,18 +9,15 @@ import type {
   EchoSubstatOptionType,
 } from '@/schemas/echo';
 import type { Enemy as ClientEnemy } from '@/schemas/enemy';
+import { CalculateRotationInputSchema } from '@/schemas/game-data-service';
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import type { Team as ClientTeam } from '@/schemas/team';
-import { getCharacterDetails } from '@/services/game-data/character/get-character-details';
 import type {
   Attack,
   BaseCapability,
   Modifier as GameDataModifier,
   PermanentStatBase,
 } from '@/services/game-data/common-types';
-import { getEchoDetails } from '@/services/game-data/echo/get-echo-details';
-import { getEchoSetDetails } from '@/services/game-data/echo-set/get-echo-set-details';
-import { getWeaponDetails } from '@/services/game-data/weapon/get-weapon-details';
 import { calculateParameterizedNumberValue } from '@/services/rotation-calculator/calculate-parameterized-number';
 import { CharacterStat, Tag, isUserParameterizedNumber } from '@/types';
 import type {
@@ -34,6 +32,8 @@ import type {
   TaggedStatValue,
   UserParameterizedNumber,
 } from '@/types';
+
+import { getEntityByHakushinId } from '../game-data/get-entity-details.function';
 
 import { calculateRotationDamage } from './calculate-rotation-damage';
 import type { RotationResult } from './types';
@@ -210,7 +210,7 @@ const ECHO_PRIMARY_STAT_BY_COST_BY_STAT: Record<
 
 const enrichWith = <TCapability extends BaseCapability>(store: Array<TCapability>) => {
   const map = keyBy(store, (s) => s.id);
-  return <T extends { id: string }>(base: T) => {
+  return <T extends { id: number }>(base: T) => {
     return {
       ...base,
       ...map[base.id],
@@ -340,7 +340,7 @@ const toRotationDamageInstance = (
     scalingStat: instance.scalingStat,
     tags: instance.tags,
     motionValues: instance.motionValues as Array<number>,
-    originCharacterName: instance.characterId,
+    characterId: instance.characterId,
   };
 };
 
@@ -354,7 +354,7 @@ const shouldModifierApplyToAttack = (
 /**
  * Bridge service to connect frontend store data to the rotation calculator.
  */
-export const calculateRotation = async (
+export const calculateRotationHandler = async (
   clientTeam: ClientTeam,
   clientEnemy: ClientEnemy,
   attacks: Array<AttackInstance>,
@@ -363,16 +363,36 @@ export const calculateRotation = async (
   // 1. Fetch all necessary game data in parallel
   const entityDetails = await Promise.all([
     mapAsync(clientTeam, (c) =>
-      getCharacterDetails({ data: { id: c.id, sequence: c.sequence } }),
+      getEntityByHakushinId({ data: { id: c.id, entityType: 'echo' } }),
     ),
-    mapAsync(clientTeam, (c) => getEchoDetails({ data: c.primarySlotEcho.id })),
     mapAsync(clientTeam, (c) =>
-      getWeaponDetails({ data: { id: c.weapon.id, refineLevel: c.weapon.refine } }),
+      getEntityByHakushinId({
+        data: {
+          id: c.id,
+          entityType: 'character',
+          activatedSequence: c.sequence,
+        },
+      }),
+    ),
+    mapAsync(clientTeam, (c) =>
+      getEntityByHakushinId({
+        data: {
+          id: c.weapon.id,
+          entityType: 'weapon',
+          refineLevel: c.weapon.refine,
+        },
+      }),
     ),
     mapAsync(
       clientTeam.flatMap((c) => c.echoSets),
       (set) =>
-        getEchoSetDetails({ data: { id: set.id, requirement: set.requirement } }),
+        getEntityByHakushinId({
+          data: {
+            id: set.id,
+            entityType: 'echo_set',
+            activatedSetBonus: Number.parseInt(set.requirement),
+          },
+        }),
     ),
   ]);
   const modifierDetails = entityDetails.flatMap((entity) =>
@@ -483,3 +503,11 @@ export const calculateRotation = async (
     damageInstances,
   });
 };
+
+export const calculateRotation = createServerFn({
+  method: 'GET',
+})
+  .inputValidator(CalculateRotationInputSchema)
+  .handler(async ({ data }) => {
+    return calculateRotationHandler(data.team, data.enemy, data.attacks, data.buffs);
+  });

@@ -6,18 +6,12 @@ import type {
   ClientAttack,
   ClientModifier,
   Modifier,
-  OriginType,
 } from './common-types';
 
 /**
  * Converts a game-data Attack into a client-facing enriched Attack structure.
  */
-export const toClientAttack = (
-  attack: Attack,
-  parentName: string,
-  name: string,
-  originType: AttackOriginType,
-): ClientAttack => {
+export const toClientAttack = (attack: Attack): ClientAttack => {
   const parameters = attack.motionValues
     .filter((v) => isUserParameterizedNumber(v))
     .map((v) => ({
@@ -27,9 +21,9 @@ export const toClientAttack = (
 
   return {
     id: attack.id,
-    name,
-    parentName,
-    originType,
+    name: attack.name,
+    parentName: attack.parentName ?? '',
+    originType: attack.originType as AttackOriginType,
     description: attack.description,
     parameters: parameters.length > 0 ? parameters : undefined,
   };
@@ -38,12 +32,7 @@ export const toClientAttack = (
 /**
  * Converts a game-data Modifier into a client-facing enriched Buff structure.
  */
-export const toClientBuff = (
-  modifier: Modifier,
-  parentName: string,
-  name: string,
-  originType: OriginType,
-): ClientModifier => {
+export const toClientBuff = (modifier: Modifier): ClientModifier => {
   const parameters = modifier.modifiedStats
     .map((s) => s.value)
     .filter((v) => isUserParameterizedNumber(v))
@@ -54,10 +43,10 @@ export const toClientBuff = (
 
   return {
     id: modifier.id,
-    name,
+    name: modifier.name,
     target: modifier.target,
-    parentName,
-    originType,
+    parentName: modifier.parentName ?? '',
+    originType: modifier.originType,
     description: modifier.description,
     parameters: parameters.length > 0 ? parameters : undefined,
   };

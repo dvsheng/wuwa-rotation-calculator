@@ -56,7 +56,7 @@ export const AttackPalette = ({
   return (
     <Palette
       groups={groups}
-      getItemKey={(attack) => attack.id}
+      getItemKey={(attack) => String(attack.id)}
       getItemLegendLabel={(attack) => attack.originType}
       emptyMessage="No attacks available"
       className={className}

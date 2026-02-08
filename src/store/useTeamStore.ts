@@ -18,13 +18,13 @@ export interface TeamState {
   team: Team;
   enemy: Enemy;
   updateCharacter: (index: number, updater: (draft: Character) => void) => void;
-  setCharacter: (index: number, id: string) => void;
+  setCharacter: (index: number, id: number) => void;
   setSequence: (index: number, sequence: number) => void;
-  setWeapon: (index: number, id: string) => void;
+  setWeapon: (index: number, id: number) => void;
   setRefine: (index: number, refine: string) => void;
-  setEchoSet: (index: number, setIndex: number, id: string) => void;
+  setEchoSet: (index: number, setIndex: number, id: number) => void;
   setEchoSetRequirement: (index: number, setIndex: number, requirement: string) => void;
-  setPrimaryEcho: (index: number, id: string) => void;
+  setPrimaryEcho: (index: number, id: number) => void;
   updateEchoPiece: (
     characterIndex: number,
     echoIndex: number,
@@ -69,40 +69,40 @@ const createDefaultEchoStats = (cost: EchoCost): EchoPiece => {
 };
 
 const CHARACTER_DEFAULTS: Record<
-  string,
+  number,
   | {
-      weaponId: string;
-      echoSetId: string;
-      primaryEchoId: string;
+      weaponId: number;
+      echoSetId: number;
+      primaryEchoId: number;
     }
   | undefined
 > = {
-  '1304': {
+  1304: {
     // Jinhsi
-    weaponId: '21010026',
-    echoSetId: '5',
-    primaryEchoId: '6000059',
+    weaponId: 21_010_025,
+    echoSetId: 5,
+    primaryEchoId: 6_000_059,
   },
-  '1209': {
+  1209: {
     // Mornye
-    weaponId: '21010045',
-    echoSetId: '2',
-    primaryEchoId: '390080007',
+    weaponId: 21_010_045,
+    echoSetId: 2,
+    primaryEchoId: 390_080_007,
   },
-  '1505': {
+  1505: {
     // Shorekeeper
-    weaponId: '21050036',
-    echoSetId: '7',
-    primaryEchoId: '390080005',
+    weaponId: 21_050_036,
+    echoSetId: 7,
+    primaryEchoId: 390_080_005,
   },
 };
 
 const createDefaultCharacter = (
-  id: string,
+  id: number,
   defaults = CHARACTER_DEFAULTS[id] ?? {
-    weaponId: '',
-    echoSetId: '',
-    primaryEchoId: '',
+    weaponId: 21_010_025,
+    echoSetId: 5,
+    primaryEchoId: 6_000_059,
   },
 ): Character => ({
   id,
@@ -120,9 +120,9 @@ const createDefaultCharacter = (
 });
 
 const initialTeam: Team = [
-  createDefaultCharacter('1304'),
-  createDefaultCharacter('1209'),
-  createDefaultCharacter('1505'),
+  createDefaultCharacter(1304),
+  createDefaultCharacter(1209),
+  createDefaultCharacter(1505),
 ];
 
 const initialEnemy: Enemy = initialEnemyData;

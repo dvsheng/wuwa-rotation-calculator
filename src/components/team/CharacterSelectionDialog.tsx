@@ -11,9 +11,9 @@ import { Attribute } from '@/types';
 import { ATTRIBUTE_COLORS } from './constants';
 
 interface CharacterSelectionDialogProperties {
-  value?: string;
-  onValueChange: (id: string) => void;
-  excludeIds?: Array<string>;
+  value?: number;
+  onValueChange: (id: number) => void;
+  excludeIds?: Array<number>;
 }
 
 const ATTRIBUTES = Object.values(Attribute);

@@ -29,13 +29,15 @@ export interface FilterConfig<T> {
   defaultValue?: string | number;
 }
 
-export interface SelectionDialogProperties<T extends { id: string; name: string }> {
+export interface SelectionDialogProperties<
+  T extends { id: string | number; name: string },
+> {
   // Data
   items: Array<T>;
 
-  // Selection - work with string IDs
-  value?: string;
-  onValueChange: (value: string) => void;
+  // Selection
+  value?: number;
+  onValueChange: (value: number) => void;
 
   // Display
   title: string;
@@ -45,7 +47,7 @@ export interface SelectionDialogProperties<T extends { id: string; name: string 
 
   // Filtering
   filters?: Array<FilterConfig<T>>;
-  excludeIds?: Array<string>;
+  excludeIds?: Array<number>;
 
   // Rendering
   renderItem: (item: T, isSelected: boolean) => ReactNode;
@@ -58,7 +60,7 @@ export interface SelectionDialogProperties<T extends { id: string; name: string 
   gridCols?: { default: number; md?: number };
 }
 
-export const SelectionDialog = <T extends { id: string; name: string }>({
+export const SelectionDialog = <T extends { id: number; name: string }>({
   items,
   value,
   onValueChange,

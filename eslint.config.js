@@ -16,6 +16,7 @@ export default [
       '.tanstack/**',
       'src/routeTree.gen.ts',
       'src/lib/utils.ts',
+      'scripts/seed-database.ts',
     ],
   },
 

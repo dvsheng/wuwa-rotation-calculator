@@ -4,10 +4,10 @@ import { fetchEchoes } from '../hakushin-api/client';
 import { createFsStore } from '../hakushin-api/fs-store';
 
 export interface ListEchoesResponseItem {
-  id: string;
+  id: number;
   name: string;
   cost: number;
-  sets: Array<string>;
+  sets: Array<number>;
 }
 
 export type ListEchoesResponse = Array<ListEchoesResponseItem>;
@@ -40,10 +40,10 @@ export const listEchoes = createServerFn({
       else if (echo.intensity === 2 || echo.intensity === 3) cost = 4;
 
       return {
-        id: id,
+        id: Number.parseInt(id),
         name: echo.en,
         cost,
-        sets: echo.group.map(String),
+        sets: echo.group,
       };
     });
 });

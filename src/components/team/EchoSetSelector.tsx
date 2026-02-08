@@ -44,7 +44,7 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
     }
   };
 
-  const handleUpdateSet = (setIndex: number, id: string) => {
+  const handleUpdateSet = (setIndex: number, id: number) => {
     const selectedSetConfig = echoSetList.find((set) => set.id === id);
     const availableTiers = selectedSetConfig?.tiers || [2, 5];
     setEchoSet(index, setIndex, id);

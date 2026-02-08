@@ -42,8 +42,8 @@ export type CharacterStats<T = RotationRuntimeResolvableNumber | number> = Recor
  * Represents a character in the simulation context.
  */
 export interface Character {
-  /** Display name. */
-  id: string;
+  /** Unique identifier for the character, corresponding to its position in the team array. */
+  id: number;
   /** Progression level. */
   level: Integer;
   /** Current calculated stats. */

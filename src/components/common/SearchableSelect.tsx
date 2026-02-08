@@ -9,7 +9,7 @@ import {
 import { cn } from '@/lib/utils';
 
 interface Item {
-  id: string;
+  id: number;
   name: string;
 }
 

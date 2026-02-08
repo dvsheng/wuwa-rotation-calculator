@@ -1,13 +1,11 @@
 import { z } from 'zod';
 
-export const CapabilitySchema = z.object({ id: z.string(), characterId: z.string() });
+export const CapabilitySchema = z.object({ id: z.number(), characterId: z.number() });
 
 export type Capability = z.infer<typeof CapabilitySchema>;
 
-const CapabilityInstanceSchema = z.object({
+const CapabilityInstanceSchema = CapabilitySchema.extend({
   instanceId: z.string(),
-  id: z.string(),
-  characterId: z.string(),
   parameterValues: z.array(z.number()).optional(),
 });
 

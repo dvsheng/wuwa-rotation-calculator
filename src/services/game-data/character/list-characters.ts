@@ -3,7 +3,7 @@ import { Attribute, WeaponType } from '@/types';
 import { fetchCharacters } from '../hakushin-api/client';
 
 export interface ListCharactersResponseItem {
-  id: string;
+  id: number;
   name: string;
   weaponType: WeaponType;
   rarity: number;
@@ -34,7 +34,7 @@ export const listCharacters = async (
 ): Promise<ListCharactersResponse> => {
   const characters = await fetchCharacters();
   const list = Object.entries(characters).map(([id, char]) => ({
-    id,
+    id: Number.parseInt(id),
     name: char.en,
     weaponType: WEAPON_TYPE_MAP[char.weapon],
     rarity: char.rank,

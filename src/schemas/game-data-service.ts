@@ -1,56 +1,42 @@
 import { z } from 'zod';
 
+import { EntityType } from '@/db/schema';
 import { SetEffectRequirement } from '@/services/game-data/echo-set/types';
 import { RefineLevel } from '@/services/game-data/weapon/types';
 
-/**
- * Base schema for fetching an entity by its ID.
- */
-export const GetEntityDetailsInputSchema = z.object({
-  /** The ID of the entity to fetch */
-  id: z.string(),
+import { EnemySchema } from './enemy';
+import { AttackInstanceSchema, ModifierInstanceSchema } from './rotation';
+import { TeamSchema } from './team';
+
+export const GetEntityDetailsInputSchema = z.discriminatedUnion('entityType', [
+  z.object({
+    id: z.number(),
+    entityType: z.literal(EntityType.CHARACTER),
+    activatedSequence: z.number().optional(),
+  }),
+  z.object({
+    id: z.number(),
+    entityType: z.literal(EntityType.WEAPON),
+    refineLevel: z.enum(RefineLevel),
+  }),
+  z.object({
+    id: z.number(),
+    entityType: z.literal(EntityType.ECHO_SET),
+    activatedSetBonus: z.enum(SetEffectRequirement),
+  }),
+  z.object({
+    id: z.number(),
+    entityType: z.enum([EntityType.ECHO]),
+  }),
+]);
+
+export type GetEntityDetailsInput = z.infer<typeof GetEntityDetailsInputSchema>;
+
+export const CalculateRotationInputSchema = z.object({
+  team: TeamSchema,
+  enemy: EnemySchema,
+  attacks: z.array(AttackInstanceSchema),
+  buffs: z.array(ModifierInstanceSchema),
 });
 
-/**
- * Base input for services that fetch client-facing entity details.
- */
-export type GetClientEntityDetailsInput = z.infer<typeof GetEntityDetailsInputSchema>;
-
-/**
- * Zod schema for weapon details service input.
- */
-export const GetWeaponDetailsInputSchema = GetEntityDetailsInputSchema.extend({
-  /** The refinement level of the weapon (1-5) */
-  refineLevel: z.enum(RefineLevel),
-});
-
-/**
- * Input for fetching weapon details.
- */
-export type GetWeaponDetailsInput = z.infer<typeof GetWeaponDetailsInputSchema>;
-
-/**
- * Zod schema for character details service input.
- */
-export const GetCharacterDetailsInputSchema = GetEntityDetailsInputSchema.extend({
-  /** The resonance chain sequence (0-6) of the character */
-  sequence: z.number().min(0).max(6).default(0),
-});
-
-/**
- * Input to the character details service (whether internal or client-facing)
- */
-export type GetCharacterDetailsInput = z.infer<typeof GetCharacterDetailsInputSchema>;
-
-/**
- * Zod schema for echo set details service input.
- */
-export const GetEchoSetDetailsInputSchema = GetEntityDetailsInputSchema.extend({
-  /** The number of pieces equipped from this set */
-  requirement: z.enum(SetEffectRequirement),
-});
-
-/**
- * Input for fetching echo set details.
- */
-export type GetEchoSetDetailsInput = z.infer<typeof GetEchoSetDetailsInputSchema>;
+export type CalculateRotationInput = z.infer<typeof CalculateRotationInputSchema>;

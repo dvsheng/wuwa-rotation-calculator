@@ -11,7 +11,7 @@ import type {
   GameDataRotationRuntimeResolvableNumber,
 } from '@/services/game-data/common-types';
 import {
-  calculateRotation,
+  calculateRotationHandler,
   toRotationModifier,
   toRotationPermanentStat,
 } from '@/services/rotation-calculator/calculate-client-rotation-damage';
@@ -50,14 +50,14 @@ vi.mock('@/services/game-data/echo-set/get-echo-set-details', () => ({
  * Creates a minimal character configuration for testing.
  */
 const createTestCharacter = (
-  id: string,
+  id: number,
   overrides: Partial<Character> = {},
 ): Character => ({
   id,
   sequence: 0,
-  weapon: { id: '21020016', refine: '1' }, // Commando of Conviction (3★ sword)
-  echoSets: [{ id: '1', requirement: '5' }], // Lingering Tunes
-  primarySlotEcho: { id: '6000038' }, // Crownless
+  weapon: { id: 21_020_016, refine: '1' }, // Commando of Conviction (3★ sword)
+  echoSets: [{ id: 1, requirement: '5' }], // Lingering Tunes
+  primarySlotEcho: { id: 6_000_038 }, // Crownless
   echoStats: [
     {
       cost: 4,
@@ -135,18 +135,18 @@ const createTestEnemy = (): Enemy => ({
  * Creates mock character data returned by getCharacterDetails
  */
 const createMockCharacterData = (
-  id: string,
+  id: number,
   name: string,
   attribute: string,
   attacks: Array<{
-    id: string;
+    id: number;
     name: string;
     tags: Array<string>;
     motionValues: Array<number>;
     scalingStat?: string;
   }> = [],
   modifiers: Array<{
-    id: string;
+    id: number;
     name: string;
     target: string;
     modifiedStats: Array<{ stat: string; value: number; tags: Array<string> }>;
@@ -206,8 +206,8 @@ const createMockEchoSetData = () => ({
  * Helper to create mock modifiers for testing toRotationModifier
  */
 const createMockModifier = (
-  id: string,
-  characterId: string,
+  id: number,
+  characterId: number,
   target: 'self' | 'team' | 'activeCharacter' | 'enemy',
   modifiedStats: Array<{
     stat: CharacterStat;
@@ -225,14 +225,16 @@ const createMockModifier = (
   description: 'Test modifier description',
   target,
   modifiedStats,
+  name: `Modifier ${id}`,
+  originType: 'Echo',
 });
 
 /**
  * Helper to create mock attacks for testing toRotationModifier
  */
 const createMockAttack = (
-  id: string,
-  characterId: string,
+  id: number,
+  characterId: number,
 ): AttackInstance & Attack => ({
   instanceId: `attack-${id}`,
   id,
@@ -242,6 +244,8 @@ const createMockAttack = (
   attribute: Attribute.PHYSICAL,
   tags: [Tag.BASIC_ATTACK],
   motionValues: [1],
+  name: `Attack ${id}`,
+  originType: 'Echo',
 });
 
 describe('toRotationPermanentStat', () => {
@@ -360,7 +364,7 @@ describe('toRotationPermanentStat', () => {
 
 describe('toRotationModifier', () => {
   it('maps self target modifier with resolveWith "self" to character slot 0', () => {
-    const modifier = createMockModifier('mod-1', 'char1', 'self', [
+    const modifier = createMockModifier(45_667, 32_132, 'self', [
       {
         stat: CharacterStat.DAMAGE_BONUS,
         value: {
@@ -374,7 +378,7 @@ describe('toRotationModifier', () => {
         tags: [Tag.ELECTRO],
       },
     ]);
-    const attack = createMockAttack('atk-1', 'char1');
+    const attack = createMockAttack(15_678, 32_132);
     const characterIdToSlotNumberMap = { char1: 0, char2: 1, char3: 2 };
 
     const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
@@ -390,7 +394,7 @@ describe('toRotationModifier', () => {
   });
 
   it('maps self target modifier with resolveWith "self" to character slot 1', () => {
-    const modifier = createMockModifier('mod-1', 'char2', 'self', [
+    const modifier = createMockModifier(45_667, 1234, 'self', [
       {
         stat: CharacterStat.DAMAGE_BONUS,
         value: {
@@ -404,7 +408,7 @@ describe('toRotationModifier', () => {
         tags: [Tag.GLACIO],
       },
     ]);
-    const attack = createMockAttack('atk-1', 'char2');
+    const attack = createMockAttack(15_678, 1234);
     const characterIdToSlotNumberMap = { char1: 0, char2: 1, char3: 2 };
 
     const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
@@ -417,14 +421,14 @@ describe('toRotationModifier', () => {
   });
 
   it('maps team target modifier to all character slots', () => {
-    const modifier = createMockModifier('mod-1', 'char1', 'team', [
+    const modifier = createMockModifier(45_667, 32_132, 'team', [
       {
         stat: CharacterStat.DAMAGE_AMPLIFICATION,
         value: 0.15,
         tags: [Tag.ALL],
       },
     ]);
-    const attack = createMockAttack('atk-1', 'char1');
+    const attack = createMockAttack(15_678, 32_132);
     const characterIdToSlotNumberMap = { char1: 0, char2: 1, char3: 2 };
 
     const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
@@ -434,14 +438,14 @@ describe('toRotationModifier', () => {
   });
 
   it('maps activeCharacter target modifier to attacking character slot', () => {
-    const modifier = createMockModifier('mod-1', 'char1', 'activeCharacter', [
+    const modifier = createMockModifier(45_667, 32_132, 'activeCharacter', [
       {
         stat: CharacterStat.DAMAGE_BONUS,
         value: 0.25,
         tags: [Tag.RESONANCE_SKILL],
       },
     ]);
-    const attack = createMockAttack('atk-1', 'char2');
+    const attack = createMockAttack(15_678, 1234);
     const characterIdToSlotNumberMap = { char1: 0, char2: 1, char3: 2 };
 
     const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
@@ -451,14 +455,14 @@ describe('toRotationModifier', () => {
   });
 
   it('maps enemy target modifier to enemy', () => {
-    const modifier = createMockModifier('mod-1', 'char1', 'enemy', [
+    const modifier = createMockModifier(45_667, 32_132, 'enemy', [
       {
         stat: CharacterStat.DAMAGE_BONUS, // This would typically be an EnemyStat in real usage
         value: 0.1,
         tags: [Tag.ALL],
       },
     ]);
-    const attack = createMockAttack('atk-1', 'char1');
+    const attack = createMockAttack(15_678, 32_132);
     const characterIdToSlotNumberMap = { char1: 0, char2: 1, char3: 2 };
 
     const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
@@ -467,7 +471,7 @@ describe('toRotationModifier', () => {
   });
 
   it('handles multiple stats with different resolveWith mappings', () => {
-    const modifier = createMockModifier('mod-1', 'char2', 'self', [
+    const modifier = createMockModifier(45_667, 1234, 'self', [
       {
         stat: CharacterStat.DAMAGE_BONUS,
         value: {
@@ -486,7 +490,7 @@ describe('toRotationModifier', () => {
         tags: [Tag.ALL],
       },
     ]);
-    const attack = createMockAttack('atk-1', 'char2');
+    const attack = createMockAttack(15_678, 1234);
     const characterIdToSlotNumberMap = { char1: 0, char2: 1, char3: 2 };
 
     const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
@@ -503,7 +507,7 @@ describe('toRotationModifier', () => {
   });
 
   it('preserves all parameterConfigs fields during mapping', () => {
-    const modifier = createMockModifier('mod-1', 'char1', 'self', [
+    const modifier = createMockModifier(45_667, 32_132, 'self', [
       {
         stat: CharacterStat.DAMAGE_BONUS,
         value: {
@@ -520,7 +524,7 @@ describe('toRotationModifier', () => {
         tags: [Tag.ELECTRO],
       },
     ]);
-    const attack = createMockAttack('atk-1', 'char1');
+    const attack = createMockAttack(15_678, 32_132);
     const characterIdToSlotNumberMap = { char1: 0, char2: 1, char3: 2 };
 
     const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
@@ -550,9 +554,9 @@ describe('calculateRotation', () => {
   });
 
   describe('Augusta (1306) with Crown of Wills modifier', () => {
-    const AUGUSTA_ID = '1306';
-    const AUGUSTA_BASIC_ATTACK_1_ID = '1306-atk-1'; // Basic Attack Stage 1
-    const AUGUSTA_CROWN_OF_WILLS_ID = '1306-mod-crown'; // Crown of Wills (Electro DMG Bonus)
+    const AUGUSTA_ID = 1306;
+    const AUGUSTA_BASIC_ATTACK_1_ID = 1_234_565; // Basic Attack Stage 1
+    const AUGUSTA_CROWN_OF_WILLS_ID = 9_602_988; // Crown of Wills (Electro DMG Bonus)
 
     // Mock Augusta with her Basic Attack and Crown of Wills modifier
     const mockAugusta = createMockCharacterData(
@@ -584,8 +588,8 @@ describe('calculateRotation', () => {
     );
 
     // Mock filler characters (minimal data)
-    const mockJinhsi = createMockCharacterData('1304', 'Jinhsi', Tag.SPECTRO);
-    const mockShorekeeper = createMockCharacterData('1505', 'Shorekeeper', Tag.SPECTRO);
+    const mockJinhsi = createMockCharacterData(1304, 'Jinhsi', Tag.SPECTRO);
+    const mockShorekeeper = createMockCharacterData(1505, 'Shorekeeper', Tag.SPECTRO);
 
     beforeEach(() => {
       mockGetCharacterDetails.mockImplementation(({ data }) => {
@@ -609,8 +613,8 @@ describe('calculateRotation', () => {
     it('modifier does not apply when attack is outside modifier range', async () => {
       const team: Team = [
         createTestCharacter(AUGUSTA_ID),
-        createTestCharacter('1304'),
-        createTestCharacter('1505'),
+        createTestCharacter(1304),
+        createTestCharacter(1505),
       ];
 
       const enemy = createTestEnemy();
@@ -632,8 +636,13 @@ describe('calculateRotation', () => {
         h: 1,
       };
 
-      const resultWithoutModifier = await calculateRotation(team, enemy, [attack], []);
-      const resultWithMispositionedModifier = await calculateRotation(
+      const resultWithoutModifier = await calculateRotationHandler(
+        team,
+        enemy,
+        [attack],
+        [],
+      );
+      const resultWithMispositionedModifier = await calculateRotationHandler(
         team,
         enemy,
         [attack],

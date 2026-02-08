@@ -4,7 +4,6 @@ import { immer } from 'zustand/middleware/immer';
 
 import type {
   AttackInstance,
-  Capability,
   ModifierInstance,
   ParameterInstance,
 } from '@/schemas/rotation';
@@ -16,7 +15,7 @@ export interface RotationState {
   buffs: Array<ModifierInstance>;
 
   // Actions for attacks
-  addAttack: (attack: Capability, atIndex?: number) => void;
+  addAttack: (attack: Omit<AttackInstance, 'instanceId'>, atIndex?: number) => void;
   removeAttack: (instanceId: string) => void;
   reorderAttacks: (oldIndex: number, newIndex: number) => void;
   updateAttackParameters: (
@@ -28,7 +27,7 @@ export interface RotationState {
 
   // Actions for buffs
   addBuff: (
-    buff: Capability,
+    buff: Omit<ModifierInstance, 'instanceId' | 'x' | 'y' | 'w' | 'h'>,
     position: Pick<ModifierInstance, 'x' | 'y' | 'w' | 'h'>,
   ) => void;
   removeBuff: (instanceId: string) => void;
@@ -50,7 +49,7 @@ export const useRotationStore = create<RotationState>()(
 
       addAttack: (attack, atIndex) =>
         set((state) => {
-          const newAttack: AttackInstance = {
+          const newAttack = {
             ...attack,
             instanceId: crypto.randomUUID(),
           };
@@ -92,7 +91,7 @@ export const useRotationStore = create<RotationState>()(
 
       addBuff: (buff, position) =>
         set((state) => {
-          const newBuff: ModifierInstance = {
+          const newBuff = {
             ...buff,
             ...position,
             instanceId: crypto.randomUUID(),

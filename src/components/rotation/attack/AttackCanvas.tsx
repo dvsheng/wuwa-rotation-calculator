@@ -1,7 +1,7 @@
 import { compact } from 'es-toolkit/array';
 import { cloneDeep, merge } from 'es-toolkit/object';
 import type { Layout, LayoutItem } from 'react-grid-layout';
-import GridLayout, { horizontalCompactor } from 'react-grid-layout';
+import GridLayout, { verticalCompactor } from 'react-grid-layout';
 
 import { Text } from '@/components/ui/typography';
 import { useCanvasLayout } from '@/hooks/useCanvasLayout';
@@ -47,8 +47,8 @@ export const AttackCanvas = ({ onDropAttack }: AttackCanvasProperties) => {
       w: 1,
       h: 1,
     })),
-    gridConfig: { maxRows: 1 },
-    compactor: horizontalCompactor,
+    gridConfig: { maxRows: 1, rowHeight: gridLayoutProperties.gridConfig?.rowHeight },
+    compactor: verticalCompactor,
     resizeConfig: { enabled: false },
     onDrop: onDropAttack,
     onLayoutChange: handleLayoutChange,
@@ -65,13 +65,20 @@ export const AttackCanvas = ({ onDropAttack }: AttackCanvasProperties) => {
         <Text className="text-sm font-semibold tracking-wider uppercase">
           Attack Sequence
         </Text>
-        <Text variant="tiny" className="text-muted-foreground font-medium">
+        <Text
+          variant="tiny"
+          className="text-muted-foreground bg-card sticky right-4 font-medium"
+        >
           {attacks.length} {attacks.length === 1 ? 'Attack' : 'Attacks'}
         </Text>
       </div>
 
       <div className="canvas-content">
-        <div className="canvas-drop-zone" ref={containerRef}>
+        <div
+          className="canvas-drop-zone"
+          ref={containerRef}
+          style={{ minWidth: fullLayoutProperties.width }}
+        >
           {attacks.length === 0 && (
             <div className="canvas-empty-state">
               <Text className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">

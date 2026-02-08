@@ -25,9 +25,7 @@ export const useTeamModifierInstances = () => {
       if (!gameData) return;
       const parameters = gameData.parameters?.map((parameter) => ({
         ...parameter,
-        value:
-          stored.parameterValues?.find((p) => p.id === parameter.id)?.value ??
-          parameter.minimum,
+        value: stored.parameterValues?.find((p) => p.id === parameter.id)?.value,
       }));
       return {
         instanceId: stored.instanceId,

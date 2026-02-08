@@ -7,13 +7,16 @@ export const ParameterInstanceSchema = z.object({
 
 export type ParameterInstance = z.infer<typeof ParameterInstanceSchema>;
 
-export const CapabilitySchema = z.object({ id: z.number(), characterId: z.number() });
+export const CapabilitySchema = z.object({
+  id: z.number(),
+  characterId: z.number(),
+  parameterValues: z.array(ParameterInstanceSchema).optional(),
+});
 
 export type Capability = z.infer<typeof CapabilitySchema>;
 
 const CapabilityInstanceSchema = CapabilitySchema.extend({
   instanceId: z.string(),
-  parameterValues: z.array(ParameterInstanceSchema).optional(),
 });
 
 /**

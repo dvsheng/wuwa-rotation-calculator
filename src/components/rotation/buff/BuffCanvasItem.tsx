@@ -1,14 +1,18 @@
+import { AlertTriangle, Trash2 } from 'lucide-react';
 import React, { useMemo } from 'react';
 
+import { CanvasItem } from '@/components/common/CanvasItem';
+import { Button } from '@/components/ui/button';
+import { Text } from '@/components/ui/typography';
+import { useCapabilityIcon, useEntityIcon } from '@/hooks/useIcons';
 import {
   getAlignmentSegments,
   useSelfBuffAlignment,
 } from '@/hooks/useSelfBuffAlignment';
 import type { DetailedModifierInstance } from '@/hooks/useTeamModifierInstances';
+import { cn } from '@/lib/utils';
 import { Target } from '@/services/game-data/types';
 import { useRotationStore } from '@/store/useRotationStore';
-
-import { CanvasItem } from '../../common/CanvasItem';
 
 import { TARGET_COLORS } from './BuffPalette';
 
@@ -29,6 +33,9 @@ export const BuffTimelineCanvasItem = React.forwardRef<
 >(({ buff, onRemove, ...properties }, reference) => {
   const updateBuffParameters = useRotationStore((state) => state.updateBuffParameters);
   const alignment = useSelfBuffAlignment(buff);
+
+  const { data: iconUrl } = useCapabilityIcon(buff.id, 'modifier');
+  const { data: characterIconUrl } = useEntityIcon(buff.characterId);
 
   const parameters = buff.parameters?.map((p) => ({
     ...p,
@@ -68,27 +75,83 @@ export const BuffTimelineCanvasItem = React.forwardRef<
 
   return (
     <CanvasItem
-      ref={reference}
-      text={`${buff.characterName} - ${buff.name}`}
-      hoverText={buff.description}
+      title={buff.name}
+      subtitle={buff.characterName}
+      description={buff.description}
       parameters={parameters}
-      size="xs"
-      itemClassName={itemClassName}
-      onRemove={() => onRemove(buff.instanceId)}
       onSaveParameters={(vals) => updateBuffParameters(buff.instanceId, vals)}
-      {...properties}
     >
-      {/* Render alignment segments as rounded overlays */}
-      {segments.map((segment, index) => (
+      {({ shouldShowWarning }) => (
         <div
-          key={index}
-          className="pointer-events-none absolute inset-y-0 rounded-md bg-blue-200"
-          style={{
-            left: `${segment.start}%`,
-            width: `${segment.width}%`,
-          }}
-        />
-      ))}
+          ref={reference}
+          className={cn(
+            'relative flex h-full flex-row items-center gap-2 overflow-hidden rounded-lg border px-2 py-1 transition-colors',
+            itemClassName,
+          )}
+          {...properties}
+        >
+          {/* Background overlay segments (e.g., alignment indicators) */}
+          {segments.map((segment, index) => (
+            <div
+              key={index}
+              className="pointer-events-none absolute inset-y-0 rounded-md bg-blue-200"
+              style={{
+                left: `${segment.start}%`,
+                width: `${segment.width}%`,
+              }}
+            />
+          ))}
+
+          {/* Character icon */}
+          {characterIconUrl && (
+            <div className="border-border flex aspect-square h-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border bg-zinc-800">
+              <img
+                src={characterIconUrl}
+                alt={buff.characterName}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          )}
+
+          {/* Capability icon */}
+          {iconUrl && (
+            <div className="border-border flex aspect-square h-8 flex-shrink-0 items-center justify-center rounded-md border bg-zinc-700">
+              <img
+                src={iconUrl}
+                alt={buff.name}
+                className="h-full w-full object-contain p-0.5"
+              />
+            </div>
+          )}
+
+          {/* Buff name */}
+          <Text className="line-clamp-2 min-w-0 flex-1 text-left text-xs leading-tight font-medium">
+            {buff.name}
+          </Text>
+
+          {/* Warning indicator */}
+          {shouldShowWarning && (
+            <AlertTriangle
+              data-testid="alert-triangle"
+              className="h-5 w-5 flex-shrink-0 text-amber-500"
+            />
+          )}
+
+          {/* Delete button at right */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-6 w-6 flex-shrink-0"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.stopPropagation();
+              onRemove(buff.instanceId);
+            }}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      )}
     </CanvasItem>
   );
 });

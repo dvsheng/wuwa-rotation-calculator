@@ -26,7 +26,7 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
   };
 
   const additionalLayoutProperties = {
-    gridConfig: { rowHeight: 28, margin: [4, 4] as const },
+    gridConfig: { rowHeight: 50, margin: [4, 4] as const },
     resizeConfig: { enabled: true, handles: ['e', 'w'] },
     layout: buffs.map((buff) => ({
       i: buff.instanceId,
@@ -35,7 +35,7 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
       w: buff.w,
       h: buff.h,
     })),
-    style: { minHeight: 200 },
+    style: { minHeight: 400 },
     onLayoutChange,
     onDrop: onDropBuff,
   };
@@ -50,13 +50,20 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
         <Text className="text-sm font-semibold tracking-wider uppercase">
           Buff Timeline
         </Text>
-        <Text variant="tiny" className="text-muted-foreground font-medium">
+        <Text
+          variant="tiny"
+          className="text-muted-foreground bg-card sticky right-4 font-medium"
+        >
           {buffs.length} {buffs.length === 1 ? 'Buff' : 'Buffs'}
         </Text>
       </div>
 
       <div className="canvas-content">
-        <div className="canvas-drop-zone" ref={containerRef}>
+        <div
+          className="canvas-drop-zone"
+          ref={containerRef}
+          style={{ minWidth: fullLayoutProperties.width }}
+        >
           {buffs.length === 0 && (
             <div className="canvas-empty-state">
               <Text className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">

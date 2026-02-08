@@ -68,7 +68,7 @@ export const ParameterConfigurationDialog = ({
                 <Input
                   id={`parameter-${index}`}
                   type="number"
-                  value={values[index].value ?? ''}
+                  value={values[index].value}
                   onChange={(event) => handleValueChange(index, event.target.value)}
                   className="col-span-3"
                   placeholder={`Min: ${parameter.minimum}`}

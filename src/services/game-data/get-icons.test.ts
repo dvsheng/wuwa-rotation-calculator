@@ -37,7 +37,7 @@ const createAttack = (overrides: Partial<Attack> = {}): Attack => ({
   createdAt: new Date(),
   updatedAt: new Date(),
   scalingStat: AbilityAttribute.ATK,
-  attribute: null,
+  attribute: Attribute.PHYSICAL,
   motionValues: [1],
   tags: [],
   alternativeDefinitions: null,

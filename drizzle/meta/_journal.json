@@ -15,6 +15,13 @@
       "when": 1770581849371,
       "tag": "0001_add-ui-path-column",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1770591594277,
+      "tag": "0002_require-attribute-on-attacks",
+      "breakpoints": true
     }
   ]
 }

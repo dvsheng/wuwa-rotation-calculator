@@ -1,13 +1,14 @@
 import { eq } from 'drizzle-orm';
 
 import { database } from '@/db/client';
-import type { Entity, EntityType, StoreCapability } from '@/db/schema';
-import { entities } from '@/db/schema';
+import type { Entity, StoreCapability } from '@/db/schema';
+import { EntityType, entities } from '@/db/schema';
 import type { GetEntityDetailsInput } from '@/schemas/game-data-service';
 import {
   replaceNullsWithUndefined,
   resolveStoreNumberType,
 } from '@/services/game-data/database-type-adapters';
+import { Tag } from '@/types';
 import type { Attribute } from '@/types';
 
 import { toClientAttack, toClientBuff } from './client-type-adapters';
@@ -98,9 +99,9 @@ const addAttributeToAttack = <T>(attack: T, attribute: Attribute) => ({
   attribute,
 });
 
-const appendTagsToAttack = (attack: Attack) => ({
+const appendTagsToAttack = (attack: Attack, tags: Array<string> = []) => ({
   ...attack,
-  tags: [attack.name, attack.attribute, ...attack.tags],
+  tags: [...attack.tags, ...tags],
 });
 
 const entityTypeToOriginTypeMap: Record<EntityType, OriginType> = {
@@ -145,11 +146,14 @@ export const getEntityByHakushinIdHandler = async (
   }
 
   const attribute = entity.attribute!;
-  const sequence = options.entityType === 'character' ? options.activatedSequence : 0;
+  const sequence =
+    options.entityType === EntityType.CHARACTER ? options.activatedSequence : 0;
   const refineLevel =
-    options.entityType === 'weapon' ? refineLevelToNumber(options.refineLevel) : 0;
+    options.entityType === EntityType.WEAPON
+      ? refineLevelToNumber(options.refineLevel)
+      : 0;
   const activatedSetBonus =
-    options.entityType === 'echo_set' ? options.activatedSetBonus : 0;
+    options.entityType === EntityType.ECHO_SET ? options.activatedSetBonus : 0;
 
   // Filter and resolve attacks, adding attribute
   const attacks = entity.attacks
@@ -159,7 +163,13 @@ export const getEntityByHakushinIdHandler = async (
     .filter((attack) => isCapabilityActive(attack, sequence, activatedSetBonus))
     .map((attack) => resolveCapabilitySequence(attack, sequence))
     .map((attack) => addAttributeToAttack(attack, attribute))
-    .map((attack) => appendTagsToAttack(attack));
+    .map((attack) =>
+      appendTagsToAttack(attack, [
+        attack.name,
+        attack.attribute,
+        ...(entity.type === EntityType.ECHO ? [Tag.ECHO] : []),
+      ]),
+    );
 
   // Filter and resolve modifiers
   const modifiers = entity.modifiers

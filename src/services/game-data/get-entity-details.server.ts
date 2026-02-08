@@ -163,7 +163,7 @@ export const getEntityByHakushinIdHandler = async (
 
   // Filter and resolve modifiers
   const modifiers = entity.modifiers
-    .map((attack) => addCapabilityDefaultValues(attack, entity, 'Capability'))
+    .map((attack) => addCapabilityDefaultValues(attack, entity, 'Buff'))
     .map((modifier) => resolveStoreNumberType(modifier, refineLevel))
     .map((modifier) => replaceNullsWithUndefined(modifier))
     .filter((modifier) => isCapabilityActive(modifier, sequence))

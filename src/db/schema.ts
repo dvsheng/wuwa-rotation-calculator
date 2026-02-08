@@ -113,6 +113,7 @@ export const entities = sqliteTable('entities', {
   hakushinId: integer('hakushin_id').unique(), // Original game ID from Hakushin (null for echo sets)
   name: text('name').notNull(),
   type: text('type').notNull().$type<EntityType>(),
+  iconPath: text('icon_path'),
 
   // Character-specific fields
   attribute: text('attribute').$type<Attribute>(),
@@ -150,6 +151,7 @@ const baseCapabilityFields = {
   name: text('name'),
   parentName: text('parent_name'),
   description: text('description'),
+  iconPath: text('icon_path'),
 
   // Character-specific: sequence unlock level (s1-s6)
   unlockedAt: text('unlocked_at').$type<Sequence>(),

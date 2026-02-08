@@ -39,3 +39,23 @@ export const CalculateRotationInputSchema = z.object({
 });
 
 export type CalculateRotationInput = z.infer<typeof CalculateRotationInputSchema>;
+
+// Icon Service Types
+export const IconRequestType = {
+  ATTACK: 'attack',
+  MODIFIER: 'modifier',
+  ENTITY: 'entity',
+} as const;
+
+export type IconRequestType = (typeof IconRequestType)[keyof typeof IconRequestType];
+
+export const IconRequestSchema = z.object({
+  id: z.number(), // For entities, this is the hakushinId (game ID), not the database ID
+  type: z.enum(IconRequestType),
+});
+
+export type IconRequest = z.infer<typeof IconRequestSchema>;
+
+export const GetIconsInputSchema = z.array(IconRequestSchema);
+
+export type GetIconsInput = z.infer<typeof GetIconsInputSchema>;

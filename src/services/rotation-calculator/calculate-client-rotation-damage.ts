@@ -505,7 +505,7 @@ export const calculateRotationHandler = async (
 };
 
 export const calculateRotation = createServerFn({
-  method: 'GET',
+  method: 'POST',
 })
   .inputValidator(CalculateRotationInputSchema)
   .handler(async ({ data }) => {

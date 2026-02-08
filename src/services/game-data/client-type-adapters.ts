@@ -1,3 +1,5 @@
+import { uniqBy } from 'es-toolkit/array';
+
 import { isUserParameterizedNumber } from '@/types';
 
 import type {
@@ -12,12 +14,17 @@ import type {
  * Converts a game-data Attack into a client-facing enriched Attack structure.
  */
 export const toClientAttack = (attack: Attack): ClientAttack => {
-  const parameters = attack.motionValues
-    .filter((v) => isUserParameterizedNumber(v))
-    .map((v) => ({
-      minimum: v.minimum ?? 0,
-      maximum: v.maximum ?? 100,
-    }));
+  const parameters = uniqBy(
+    attack.motionValues
+      .filter((v) => isUserParameterizedNumber(v))
+      .flatMap((v) => Object.entries(v.parameterConfigs))
+      .map(([id, config]) => ({
+        minimum: config.minimum ?? 0,
+        maximum: config.maximum ?? 100,
+        id,
+      })),
+    (p) => p.id,
+  );
 
   return {
     id: attack.id,
@@ -33,13 +40,20 @@ export const toClientAttack = (attack: Attack): ClientAttack => {
  * Converts a game-data Modifier into a client-facing enriched Buff structure.
  */
 export const toClientBuff = (modifier: Modifier): ClientModifier => {
-  const parameters = modifier.modifiedStats
-    .map((s) => s.value)
-    .filter((v) => isUserParameterizedNumber(v))
-    .map((v) => ({
-      minimum: v.minimum ?? 0,
-      maximum: v.maximum ?? 100,
-    }));
+  const parameters = uniqBy(
+    Object.values(
+      modifier.modifiedStats
+        .map((s) => s.value)
+        .filter((v) => isUserParameterizedNumber(v)),
+    )
+      .flatMap((v) => Object.entries(v.parameterConfigs))
+      .map(([id, config]) => ({
+        minimum: config.minimum ?? 0,
+        maximum: config.maximum ?? 100,
+        id,
+      })),
+    (p) => p.id,
+  );
 
   return {
     id: modifier.id,

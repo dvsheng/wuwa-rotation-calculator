@@ -10,7 +10,7 @@ import {
 } from '@/services/game-data/database-type-adapters';
 import type { Attribute } from '@/types';
 
-import { toClientAttack, toClientBuff } from './client-converters';
+import { toClientAttack, toClientBuff } from './client-type-adapters';
 import { OriginType } from './types';
 import type {
   Attack,

@@ -1,20 +1,21 @@
 import { clamp } from 'es-toolkit/math';
 
-import type {
-  ConditionalBonus,
-  LinearParameterizedNumber,
-  LinearScalingParameterConfig,
-} from '@/types';
+import type { LinearParameterizedNumber, LinearScalingParameterConfig } from '@/types';
 
 /**
  * Evaluates a single conditional bonus.
  */
-const evaluateConditional = <T extends string>(
-  conditional: ConditionalBonus<T>,
-  parameters: Partial<Record<T, number>>,
+const evaluateConditional = (
+  parameter: LinearScalingParameterConfig,
+  parameterValue: number,
 ): number => {
-  const parameterValue = parameters[conditional.parameter] ?? 0;
-  const { operator, threshold, valueIfTrue, valueIfFalse = 0 } = conditional;
+  if (!parameter.conditionalConfiguration) return 0;
+  const {
+    operator,
+    threshold,
+    valueIfTrue,
+    valueIfFalse = 0,
+  } = parameter.conditionalConfiguration;
 
   let conditionMet = false;
   switch (operator) {
@@ -52,7 +53,6 @@ export const calculateParameterizedNumberValue = <T extends string>(
     offset = 0,
     minimum = 0,
     maximum = Infinity,
-    conditionals = [],
   } = parameterizedNumber;
 
   // Calculate linear scaling contributions
@@ -62,19 +62,16 @@ export const calculateParameterizedNumberValue = <T extends string>(
     if (!parameters[key]) return sum;
     const parameterMinimum = parameterConfig.minimum ?? 0;
     const parameterMaximum = parameterConfig.maximum ?? Infinity;
-    const statValue = Math.max(
+    const parameterValue = Math.max(
       clamp(parameters[key], parameterMaximum) - parameterMinimum,
       0,
     );
-    const parameterContribution = parameterConfig.scale * statValue;
-    return sum + parameterContribution;
+    const parameterContribution = parameterConfig.scale * parameterValue;
+    const conditionalContribution = parameterConfig.conditionalConfiguration
+      ? evaluateConditional(parameterConfig, parameters[key])
+      : 0;
+    return sum + parameterContribution + conditionalContribution;
   }, offset);
 
-  // Calculate conditional contributions
-  const conditionalTotal = conditionals.reduce(
-    (sum, conditional) => sum + evaluateConditional(conditional, parameters),
-    0,
-  );
-
-  return clamp(linearTotal + conditionalTotal, minimum, maximum);
+  return clamp(linearTotal, minimum, maximum);
 };

@@ -204,6 +204,7 @@ export interface BaseEntity<T = {}> {
  * TODO: move this to Frontend
  */
 export interface Parameter {
+  id: string;
   minimum: number;
   maximum: number;
   value?: number;

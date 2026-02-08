@@ -1,5 +1,5 @@
 import { createServerFn } from '@tanstack/react-start';
-import { keyBy, mapAsync } from 'es-toolkit/array';
+import { mapAsync } from 'es-toolkit/array';
 import { cloneDeep, mergeWith } from 'es-toolkit/object';
 
 import { EchoMainStatOption } from '@/schemas/echo';
@@ -213,11 +213,15 @@ const ECHO_PRIMARY_STAT_BY_COST_BY_STAT: Record<
 };
 
 const enrichWith = <TCapability extends BaseCapability>(store: Array<TCapability>) => {
-  const map = keyBy(store, (s) => s.id);
+  const map = new Map(store.map((s) => [s.id, s]));
   return <T extends { id: number }>(base: T) => {
+    const details = map.get(base.id);
+    if (!details) {
+      throw new Error(`Capability details not found for entity with ID ${base.id}`);
+    }
     return {
       ...base,
-      ...map[base.id],
+      ...details,
     };
   };
 };
@@ -250,6 +254,7 @@ const resolveUserParameterizedAttack = (attack: AttackInstance & Attack) => {
 const resolveModifierUserParameters = (
   modifier: ModifierInstance & GameDataModifier,
 ) => {
+  console.log('Resolving modifier user parametersa', modifier);
   const parameterValues = modifier.parameterValues ?? [];
   const modifiedStats = modifier.modifiedStats.map((stat) => ({
     ...stat,
@@ -369,7 +374,7 @@ export const calculateRotationHandler = async (
   // 1. Fetch all necessary game data in parallel
   const entityDetails = await Promise.all([
     mapAsync(clientTeam, (c) =>
-      getEntityByHakushinId({ data: { id: c.id, entityType: 'echo' } }),
+      getEntityByHakushinId({ data: { id: c.primarySlotEcho.id, entityType: 'echo' } }),
     ),
     mapAsync(clientTeam, (c) =>
       getEntityByHakushinId({
@@ -515,5 +520,10 @@ export const calculateRotation = createServerFn({
 })
   .inputValidator(CalculateRotationInputSchema)
   .handler(async ({ data }) => {
-    return calculateRotationHandler(data.team, data.enemy, data.attacks, data.buffs);
+    try {
+      return calculateRotationHandler(data.team, data.enemy, data.attacks, data.buffs);
+    } catch (error) {
+      console.error(error);
+      throw new Error('Failed to calculate rotation damage');
+    }
   });

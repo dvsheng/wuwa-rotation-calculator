@@ -3,18 +3,12 @@ import type { CharacterDamageInstance, Enemy, Team } from '@/types';
 import { applyModifiers } from './apply-modifiers';
 import { calculateAttackDamage } from './calculate-attack-damage';
 import type { CalculateDamageProperties } from './damage-calculator/types';
-import { resolveStatValuesInRotation } from './resolve-stat-value';
 import type { Rotation, RotationResult } from './types';
 
 export const calculateRotationDamage = (rotation: Rotation): RotationResult => {
-  const resolvedRotation = resolveStatValuesInRotation(rotation);
-  return resolvedRotation.damageInstances.reduce(
+  return rotation.damageInstances.reduce(
     (reducer, { instance, modifiers }) => {
-      const [team, enemy] = applyModifiers(
-        resolvedRotation.team,
-        resolvedRotation.enemy,
-        modifiers,
-      );
+      const [team, enemy] = applyModifiers(rotation.team, rotation.enemy, modifiers);
       const instanceDamage = calculateAttackDamage(instance, {
         team,
         enemy,
@@ -43,6 +37,6 @@ export const calculateRotationDamage = (rotation: Rotation): RotationResult => {
         instance: CharacterDamageInstance;
         resolvedStats: CalculateDamageProperties;
       }>(),
-    } as RotationResult,
+    },
   );
 };

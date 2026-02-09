@@ -8,6 +8,7 @@ import {
 } from './calculate-stat-total';
 import { calculateDamage } from './damage-calculator';
 import type { CalculateDamageProperties } from './damage-calculator/types';
+import { createRuntimeStatResolver } from './resolve-stat-value';
 
 export const calculateAttackDamage = (
   instance: CharacterDamageInstance,
@@ -16,31 +17,40 @@ export const calculateAttackDamage = (
     enemy: Enemy;
   },
 ) => {
+  // TODO: remove duplicative tag filtering logic in createRuntimeStatResolver and
+  // getCalculateStatValueFunction
   const getStatValue = getCalculateStatValueFunction(instance.tags);
   const getScalingStatValue = getCalculateAbilityAttributeValueFunction(instance.tags);
   const { team, enemy } = context;
+  const resolveStats = createRuntimeStatResolver(team, enemy, instance.tags);
+  // TODO: Switch instance.characterId to use positional index
   const character = team.find((c) => c.id === instance.characterId);
   if (!character) {
     throw new Error(`Character ${instance.characterId} not found`);
   }
+  const resolvedCharacter = resolveStats(character);
+  const resolvedEnemy = resolveStats(enemy);
   const calculateDamageEnemyProperties = {
     level: enemy.level,
-    baseResistance: getStatValue(enemy.stats.baseResistance),
-    resistanceReduction: getStatValue(enemy.stats.resistanceReduction),
-    defenseReduction: getStatValue(enemy.stats.defenseReduction),
+    baseResistance: getStatValue(resolvedEnemy.stats.baseResistance),
+    resistanceReduction: getStatValue(resolvedEnemy.stats.resistanceReduction),
+    defenseReduction: getStatValue(resolvedEnemy.stats.defenseReduction),
   };
   const calculateDamageCharacterProperties = {
     level: character.level,
-    abilityAttributeValue: getScalingStatValue(character.stats, instance.scalingStat),
-    flatDamage: getStatValue(character.stats.flatDamage),
-    damageBonus: getStatValue(character.stats.damageBonus),
-    damageMultiplierBonus: getStatValue(character.stats.damageMultiplierBonus),
-    damageAmplify: getStatValue(character.stats.damageAmplification),
-    defenseIgnore: getStatValue(character.stats.defenseIgnore),
-    resistancePenetration: getStatValue(character.stats.resistancePenetration),
-    criticalRate: clamp(getStatValue(character.stats.criticalRate), 1),
-    criticalDamage: getStatValue(character.stats.criticalDamage),
-    damageBonusFinal: getStatValue(character.stats.finalDamageBonus),
+    abilityAttributeValue: getScalingStatValue(
+      resolvedCharacter.stats,
+      instance.scalingStat,
+    ),
+    flatDamage: getStatValue(resolvedCharacter.stats.flatDamage),
+    damageBonus: getStatValue(resolvedCharacter.stats.damageBonus),
+    damageMultiplierBonus: getStatValue(resolvedCharacter.stats.damageMultiplierBonus),
+    damageAmplify: getStatValue(resolvedCharacter.stats.damageAmplification),
+    defenseIgnore: getStatValue(resolvedCharacter.stats.defenseIgnore),
+    resistancePenetration: getStatValue(resolvedCharacter.stats.resistancePenetration),
+    criticalRate: clamp(getStatValue(resolvedCharacter.stats.criticalRate), 1),
+    criticalDamage: getStatValue(resolvedCharacter.stats.criticalDamage),
+    damageBonusFinal: getStatValue(resolvedCharacter.stats.finalDamageBonus),
   };
   const totalMotionValue = sum(instance.motionValues);
   const calculateDamageProperties: CalculateDamageProperties = {

@@ -137,7 +137,6 @@ const resolveUserParameterizedAttack = (attack: AttackInstance & Attack) => {
 const resolveModifierUserParameters = (
   modifier: ModifierInstance & GameDataModifier,
 ) => {
-  console.log('Resolving modifier user parametersa', modifier);
   const parameterValues = modifier.parameterValues ?? [];
   const modifiedStats = modifier.modifiedStats.map((stat) => ({
     ...stat,

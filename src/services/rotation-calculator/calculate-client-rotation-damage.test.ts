@@ -15,7 +15,9 @@ import {
   toRotationModifier,
   toRotationPermanentStat,
 } from '@/services/rotation-calculator/calculate-client-rotation-damage';
+import type { ResolveUserParameterizedType } from '@/services/rotation-calculator/resolve-user-parameterized-values';
 import { AbilityAttribute, Attribute, CharacterStat, Tag } from '@/types';
+import type { CharacterSlotNumber } from '@/types';
 
 // Use vi.hoisted to define mocks used in vi.mock
 const { mockGetEntityByHakushinId } = vi.hoisted(() => ({
@@ -194,7 +196,7 @@ const createMockModifier = (
     value: number | GameDataRotationRuntimeResolvableNumber;
     tags: Array<string>;
   }>,
-): ModifierInstance & GameDataModifier => ({
+): ModifierInstance & ResolveUserParameterizedType<GameDataModifier> => ({
   instanceId: `modifier-${id}`,
   id,
   characterId,
@@ -215,7 +217,7 @@ const createMockModifier = (
 const createMockAttack = (
   id: number,
   characterId: number,
-): AttackInstance & Attack => ({
+): AttackInstance & ResolveUserParameterizedType<Attack> => ({
   instanceId: `attack-${id}`,
   id,
   characterId,
@@ -359,7 +361,11 @@ describe('toRotationModifier', () => {
       },
     ]);
     const attack = createMockAttack(15_678, 32_132);
-    const characterIdToSlotNumberMap = { 32_132: 0, 1234: 1, 5678: 2 };
+    const characterIdToSlotNumberMap = {
+      32_132: 0,
+      1234: 1,
+      5678: 2,
+    } as Record<number, CharacterSlotNumber>;
 
     const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
 
@@ -389,7 +395,11 @@ describe('toRotationModifier', () => {
       },
     ]);
     const attack = createMockAttack(15_678, 1234);
-    const characterIdToSlotNumberMap = { 32_132: 0, 1234: 1, 5678: 2 };
+    const characterIdToSlotNumberMap = {
+      32_132: 0,
+      1234: 1,
+      5678: 2,
+    } as Record<number, CharacterSlotNumber>;
 
     const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
 
@@ -409,7 +419,11 @@ describe('toRotationModifier', () => {
       },
     ]);
     const attack = createMockAttack(15_678, 32_132);
-    const characterIdToSlotNumberMap = { 32_132: 0, 1234: 1, 5678: 2 };
+    const characterIdToSlotNumberMap = {
+      32_132: 0,
+      1234: 1,
+      5678: 2,
+    } as Record<number, CharacterSlotNumber>;
 
     const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
 
@@ -426,7 +440,11 @@ describe('toRotationModifier', () => {
       },
     ]);
     const attack = createMockAttack(15_678, 1234);
-    const characterIdToSlotNumberMap = { 32_132: 0, 1234: 1, 5678: 2 };
+    const characterIdToSlotNumberMap = {
+      32_132: 0,
+      1234: 1,
+      5678: 2,
+    } as Record<number, CharacterSlotNumber>;
 
     const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
 
@@ -443,7 +461,11 @@ describe('toRotationModifier', () => {
       },
     ]);
     const attack = createMockAttack(15_678, 32_132);
-    const characterIdToSlotNumberMap = { 32_132: 0, 1234: 1, 5678: 2 };
+    const characterIdToSlotNumberMap = {
+      32_132: 0,
+      1234: 1,
+      5678: 2,
+    } as Record<number, CharacterSlotNumber>;
 
     const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
 
@@ -471,7 +493,11 @@ describe('toRotationModifier', () => {
       },
     ]);
     const attack = createMockAttack(15_678, 1234);
-    const characterIdToSlotNumberMap = { 32_132: 0, 1234: 1, 5678: 2 };
+    const characterIdToSlotNumberMap = {
+      32_132: 0,
+      1234: 1,
+      5678: 2,
+    } as Record<number, CharacterSlotNumber>;
 
     const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
 
@@ -505,7 +531,11 @@ describe('toRotationModifier', () => {
       },
     ]);
     const attack = createMockAttack(15_678, 32_132);
-    const characterIdToSlotNumberMap = { 32_132: 0, 1234: 1, 5678: 2 };
+    const characterIdToSlotNumberMap = {
+      32_132: 0,
+      1234: 1,
+      5678: 2,
+    } as Record<number, CharacterSlotNumber>;
 
     const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
 

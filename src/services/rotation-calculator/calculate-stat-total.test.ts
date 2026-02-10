@@ -1,59 +1,124 @@
 import { describe, expect, it } from 'vitest';
 
-import { Tag } from '@/types';
+import { AbilityAttribute, CharacterStat } from '@/types';
+import type { CharacterStats } from '@/types';
 
-import { getCalculateStatValueFunction } from './calculate-stat-total';
+import { calculateAbilityAttributeValue, sumStatValues } from './calculate-stat-total';
 
-describe('getCalculateStatValueFn', () => {
-  const mockTags = ['Basic Attack', 'Glacio'];
+const createMockStats = (
+  attackFlat: number,
+  attackScalingBonus: number,
+  attackFlatBonus: number,
+  defenseFlat: number,
+  defenseScalingBonus: number,
+  defenseFlatBonus: number,
+  hpFlat: number,
+  hpScalingBonus: number,
+  hpFlatBonus: number,
+): CharacterStats<number> => ({
+  [CharacterStat.ATTACK_FLAT]: [{ tags: [], value: attackFlat }],
+  [CharacterStat.ATTACK_SCALING_BONUS]: [{ tags: [], value: attackScalingBonus }],
+  [CharacterStat.ATTACK_FLAT_BONUS]: [{ tags: [], value: attackFlatBonus }],
+  [CharacterStat.DEFENSE_FLAT]: [{ tags: [], value: defenseFlat }],
+  [CharacterStat.DEFENSE_SCALING_BONUS]: [{ tags: [], value: defenseScalingBonus }],
+  [CharacterStat.DEFENSE_FLAT_BONUS]: [{ tags: [], value: defenseFlatBonus }],
+  [CharacterStat.HP_FLAT]: [{ tags: [], value: hpFlat }],
+  [CharacterStat.HP_SCALING_BONUS]: [{ tags: [], value: hpScalingBonus }],
+  [CharacterStat.HP_FLAT_BONUS]: [{ tags: [], value: hpFlatBonus }],
+  [CharacterStat.DAMAGE_BONUS]: [],
+  [CharacterStat.CRITICAL_RATE]: [],
+  [CharacterStat.CRITICAL_DAMAGE]: [],
+  [CharacterStat.DEFENSE_IGNORE]: [],
+  [CharacterStat.RESISTANCE_PENETRATION]: [],
+  [CharacterStat.DAMAGE_AMPLIFICATION]: [],
+  [CharacterStat.DAMAGE_MULTIPLIER_BONUS]: [],
+  [CharacterStat.FINAL_DAMAGE_BONUS]: [],
+  [CharacterStat.FLAT_DAMAGE]: [],
+  [CharacterStat.OFF_TUNE_BUILDUP_RATE]: [],
+  [CharacterStat.TUNE_BREAK_BOOST]: [],
+  [CharacterStat.ENERGY_REGEN]: [],
+  [CharacterStat.HEALING_BONUS]: [],
+});
 
-  it('includes stats with Tag.ALL', () => {
-    const statValues = [{ tags: [Tag.ALL], value: 10 }];
-    const calcFunction = getCalculateStatValueFunction(mockTags);
-    expect(calcFunction(statValues)).toBe(10);
+describe('sumStatValues', () => {
+  it('sums stat values correctly', () => {
+    const statValues = [{ value: 5 }, { value: 7 }, { value: 3 }];
+    expect(sumStatValues(statValues)).toBe(15);
   });
 
-  it('includes stats with matching tags (intersection)', () => {
-    const statValues = [
-      { tags: ['Basic Attack'], value: 5 },
-      { tags: ['Glacio'], value: 7 },
-      { tags: ['Heavy Attack'], value: 100 }, // Should be excluded
-    ];
-    const calcFunction = getCalculateStatValueFunction(mockTags);
-    expect(calcFunction(statValues)).toBe(12);
+  it('returns 0 for empty array', () => {
+    expect(sumStatValues([])).toBe(0);
   });
 
-  it('includes stats when multiple tags match', () => {
-    const statValues = [{ tags: ['Basic Attack', 'Glacio'], value: 15 }];
-    const calcFunction = getCalculateStatValueFunction(mockTags);
-    expect(calcFunction(statValues)).toBe(15);
+  it('handles single value', () => {
+    expect(sumStatValues([{ value: 42 }])).toBe(42);
+  });
+});
+
+describe('calculateAbilityAttributeValue', () => {
+  describe('ATK calculation', () => {
+    it('calculates ATK with flat only', () => {
+      const stats = createMockStats(100, 0, 0, 0, 0, 0, 0, 0, 0);
+      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.ATK)).toBe(100);
+    });
+
+    it('calculates ATK with scaling bonus', () => {
+      const stats = createMockStats(100, 0.5, 0, 0, 0, 0, 0, 0, 0);
+      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.ATK)).toBe(150);
+    });
+
+    it('calculates ATK with flat bonus', () => {
+      const stats = createMockStats(100, 0, 50, 0, 0, 0, 0, 0, 0);
+      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.ATK)).toBe(150);
+    });
+
+    it('calculates ATK with all components', () => {
+      const stats = createMockStats(100, 0.5, 50, 0, 0, 0, 0, 0, 0);
+      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.ATK)).toBe(200);
+    });
   });
 
-  it('handles overlapping but non-identical tags correctly', () => {
-    // This tests the change from isSubset to intersection
-    // If we have tags ['Basic Attack', 'Resonance Skill'] on the stat
-    // and the attack has ['Basic Attack', 'Glacio']
-    // intersection should be ['Basic Attack'], which is > 0, so it applies.
-    const statValues = [{ tags: ['Basic Attack', 'Resonance Skill'], value: 20 }];
-    const calcFunction = getCalculateStatValueFunction(mockTags);
-    expect(calcFunction(statValues)).toBe(20);
+  describe('DEF calculation', () => {
+    it('calculates DEF with flat only', () => {
+      const stats = createMockStats(0, 0, 0, 100, 0, 0, 0, 0, 0);
+      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.DEF)).toBe(100);
+    });
+
+    it('calculates DEF with scaling bonus', () => {
+      const stats = createMockStats(0, 0, 0, 100, 0.5, 0, 0, 0, 0);
+      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.DEF)).toBe(150);
+    });
+
+    it('calculates DEF with flat bonus', () => {
+      const stats = createMockStats(0, 0, 0, 100, 0, 50, 0, 0, 0);
+      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.DEF)).toBe(150);
+    });
+
+    it('calculates DEF with all components', () => {
+      const stats = createMockStats(0, 0, 0, 100, 0.5, 50, 0, 0, 0);
+      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.DEF)).toBe(200);
+    });
   });
 
-  it('returns 0 for no matches', () => {
-    const statValues = [{ tags: ['Resonance Liberation'], value: 50 }];
-    const calcFunction = getCalculateStatValueFunction(mockTags);
-    expect(calcFunction(statValues)).toBe(0);
-  });
+  describe('HP calculation', () => {
+    it('calculates HP with flat only', () => {
+      const stats = createMockStats(0, 0, 0, 0, 0, 0, 100, 0, 0);
+      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.HP)).toBe(100);
+    });
 
-  it('returns 0 for undefined statValues', () => {
-    const calcFunction = getCalculateStatValueFunction(mockTags);
-    // eslint-disable-next-line unicorn/no-useless-undefined
-    expect(calcFunction(undefined)).toBe(0);
-  });
+    it('calculates HP with scaling bonus', () => {
+      const stats = createMockStats(0, 0, 0, 0, 0, 0, 100, 0.5, 0);
+      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.HP)).toBe(150);
+    });
 
-  it('handles non-numeric values gracefully', () => {
-    const statValues = [{ tags: ['Basic Attack'], value: 'invalid' as any }];
-    const calcFunction = getCalculateStatValueFunction(mockTags);
-    expect(calcFunction(statValues)).toBe(0);
+    it('calculates HP with flat bonus', () => {
+      const stats = createMockStats(0, 0, 0, 0, 0, 0, 100, 0, 50);
+      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.HP)).toBe(150);
+    });
+
+    it('calculates HP with all components', () => {
+      const stats = createMockStats(0, 0, 0, 0, 0, 0, 100, 0.5, 50);
+      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.HP)).toBe(200);
+    });
   });
 });

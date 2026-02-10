@@ -1,9 +1,7 @@
-import { intersection } from 'es-toolkit/array';
 import { sumBy } from 'es-toolkit/math';
 import { mapValues } from 'es-toolkit/object';
 
 import { calculateParameterizedNumberValue } from '@/services/rotation-calculator/calculate-parameterized-number';
-import { Tag } from '@/types';
 import type { Enemy, RotationRuntimeResolvableNumber, Team } from '@/types';
 
 /**
@@ -84,19 +82,11 @@ export const isRotationRuntimeResolvableNumber = (
  * const resolved = resolver(modifier);
  * // All nested runtime-resolvable values are resolved
  */
-export function createRuntimeStatResolver(
-  team: Team,
-  enemy: Enemy,
-  tags: Array<string>,
-) {
+export function createRuntimeStatResolver(team: Team, enemy: Enemy) {
   const teamStats = team.map((character) =>
     mapValues(character.stats, (statValues) => {
       return sumBy(statValues, (statValue) =>
-        typeof statValue.value === 'number' &&
-        (intersection(tags, statValue.tags).length > 0 ||
-          statValue.tags.includes(Tag.ALL))
-          ? statValue.value
-          : 0,
+        typeof statValue.value === 'number' ? statValue.value : 0,
       );
     }),
   );

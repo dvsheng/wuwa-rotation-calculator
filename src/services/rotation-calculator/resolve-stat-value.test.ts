@@ -68,7 +68,7 @@ describe('createRuntimeStatResolver', () => {
     ];
     const enemy = createTestEnemy();
 
-    const resolver = createRuntimeStatResolver(team, enemy, [Tag.ALL]);
+    const resolver = createRuntimeStatResolver(team, enemy);
     const result = resolver(100);
 
     expect(result).toBe(100);
@@ -84,7 +84,7 @@ describe('createRuntimeStatResolver', () => {
     ];
     const enemy = createTestEnemy();
 
-    const resolver = createRuntimeStatResolver(team, enemy, [Tag.ALL]);
+    const resolver = createRuntimeStatResolver(team, enemy);
     const result = resolver({
       resolveWith: 0,
       parameterConfigs: {
@@ -108,7 +108,7 @@ describe('createRuntimeStatResolver', () => {
     ];
     const enemy = createTestEnemy();
 
-    const resolver = createRuntimeStatResolver(team, enemy, [Tag.ALL]);
+    const resolver = createRuntimeStatResolver(team, enemy);
     const result = resolver({
       resolveWith: 1,
       parameterConfigs: {
@@ -132,7 +132,7 @@ describe('createRuntimeStatResolver', () => {
     ];
     const enemy = createTestEnemy();
 
-    const resolver = createRuntimeStatResolver(team, enemy, [Tag.ALL]);
+    const resolver = createRuntimeStatResolver(team, enemy);
     const result = resolver({
       resolveWith: 2,
       parameterConfigs: {
@@ -156,7 +156,7 @@ describe('createRuntimeStatResolver', () => {
     ];
     const enemy = createTestEnemy();
 
-    const resolver = createRuntimeStatResolver(team, enemy, [Tag.ALL]);
+    const resolver = createRuntimeStatResolver(team, enemy);
     const result = resolver({
       resolveWith: 0,
       parameterConfigs: {
@@ -181,7 +181,7 @@ describe('createRuntimeStatResolver', () => {
     ];
     const enemy = createTestEnemy();
 
-    const resolver = createRuntimeStatResolver(team, enemy, [Tag.ALL]);
+    const resolver = createRuntimeStatResolver(team, enemy);
     const result = resolver({
       resolveWith: 0,
       parameterConfigs: {
@@ -206,7 +206,7 @@ describe('createRuntimeStatResolver', () => {
     ];
     const enemy = createTestEnemy();
 
-    const resolver = createRuntimeStatResolver(team, enemy, [Tag.ALL]);
+    const resolver = createRuntimeStatResolver(team, enemy);
     const result = resolver({
       resolveWith: 0,
       parameterConfigs: {

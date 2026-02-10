@@ -1,7 +1,7 @@
 import { sumBy } from 'es-toolkit/math';
 import { mapValues } from 'es-toolkit/object';
 
-import { calculateParameterizedNumberValue } from '@/services/rotation-calculator/calculate-parameterized-number';
+import { calculateParameterizedNumberValue } from '@/services/rotation-calculator/core/calculate-parameterized-number';
 import type { Enemy, RotationRuntimeResolvableNumber, Team } from '@/types';
 
 /**

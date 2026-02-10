@@ -1,8 +1,9 @@
 import type { CharacterDamageInstance, Enemy, Team } from '@/types';
 
+import type { CalculateDamageProperties } from '../damage-calculator/types';
+
 import { applyModifiers } from './apply-modifiers';
 import { calculateAttackDamage } from './calculate-attack-damage';
-import type { CalculateDamageProperties } from './damage-calculator/types';
 import {
   filterCharacterStatsByTags,
   filterEnemyStatsByTags,

@@ -1,5 +1,4 @@
 import { createServerFn } from '@tanstack/react-start';
-import { mapAsync } from 'es-toolkit/array';
 import { cloneDeep, mergeWith } from 'es-toolkit/object';
 
 import type { EchoMainStatOptionType, EchoSubstatOptionType } from '@/schemas/echo';
@@ -10,7 +9,6 @@ import type { Team as ClientTeam } from '@/schemas/team';
 import { getEchoStats } from '@/services/game-data/get-echo-stats';
 import type {
   Attack,
-  BaseCapability,
   Modifier as GameDataModifier,
   PermanentStatBase,
 } from '@/services/game-data/types';
@@ -26,12 +24,14 @@ import type {
   TaggedStatValue,
 } from '@/types';
 
-import { getEntityByHakushinId } from '../game-data/get-entity-details.function';
-
-import { calculateRotationDamage } from './calculate-rotation-damage';
-import type { ResolveUserParameterizedType } from './resolve-user-parameterized-values';
-import { resolveUserParameterizedValues } from './resolve-user-parameterized-values';
-import type { RotationResult } from './types';
+import {
+  GameDataNotFoundError,
+  createGameDataEnricher,
+} from './client-input-adapter/enrich-rotation-data';
+import type { ResolveUserParameterizedType } from './client-input-adapter/resolve-user-parameterized-values';
+import { resolveUserParameterizedValues } from './client-input-adapter/resolve-user-parameterized-values';
+import { calculateRotationDamage } from './core/calculate-rotation-damage';
+import type { RotationResult } from './core/types';
 
 /**
  * Maps client-side echo stat types to server-side CharacterStat enums.
@@ -88,20 +88,6 @@ const CHARACTER_BASE_STATS: CharacterStats = {
   [CharacterStat.TUNE_BREAK_BOOST]: [],
   [CharacterStat.ENERGY_REGEN]: [{ tags: [Tag.ALL], value: 1 }],
   [CharacterStat.HEALING_BONUS]: [],
-};
-
-const enrichWith = <TCapability extends BaseCapability>(store: Array<TCapability>) => {
-  const map = new Map(store.map((s) => [s.id, s]));
-  return <T extends { id: number }>(base: T) => {
-    const details = map.get(base.id);
-    if (!details) {
-      throw new Error(`Capability details not found for entity with ID ${base.id}`);
-    }
-    return {
-      ...base,
-      ...details,
-    };
-  };
 };
 
 export const toRotationModifier = (
@@ -195,56 +181,13 @@ export const calculateRotationHandler = async (
   attacks: Array<AttackInstance>,
   buffs: Array<ModifierInstance>,
 ): Promise<RotationResult> => {
-  // 1. Fetch all necessary game data in parallel
-  const entityDetails = await Promise.all([
-    mapAsync(clientTeam, (c) =>
-      getEntityByHakushinId({ data: { id: c.primarySlotEcho.id, entityType: 'echo' } }),
-    ),
-    mapAsync(clientTeam, (c) =>
-      getEntityByHakushinId({
-        data: {
-          id: c.id,
-          entityType: 'character',
-          activatedSequence: c.sequence,
-        },
-      }),
-    ),
-    mapAsync(clientTeam, (c) =>
-      getEntityByHakushinId({
-        data: {
-          id: c.weapon.id,
-          entityType: 'weapon',
-          refineLevel: c.weapon.refine,
-        },
-      }),
-    ),
-    mapAsync(
-      clientTeam.flatMap((c) => c.echoSets),
-      (set) =>
-        getEntityByHakushinId({
-          data: {
-            id: set.id,
-            entityType: 'echo_set',
-            activatedSetBonus: Number.parseInt(set.requirement),
-          },
-        }),
-    ),
-  ]);
-  const modifierDetails = entityDetails.flatMap((entity) =>
-    entity.flatMap((detail) => detail.capabilities.modifiers),
-  );
-  const attackDetails = entityDetails.flatMap((entity) =>
-    entity.flatMap((detail) => detail.capabilities.attacks),
-  );
-  const enrichAttackWithDetails = enrichWith(attackDetails);
-  const enrichModifierWithDetails = enrichWith(modifierDetails);
+  // 1. Create game data enricher with all necessary game data
+  const enricher = await createGameDataEnricher(clientTeam);
 
   // 2. Map Client Team to Server Team
   const serverTeam = clientTeam.map((clientChar, charIndex) => {
     // 2a. Gather Permanent Stats (Flat Array)
-    const permanentStats = entityDetails.flatMap(
-      (entity) => entity[charIndex].capabilities.permanentStats,
-    );
+    const permanentStats = enricher.getPermanentStatsForCharacter(charIndex);
 
     // 2b. Gather Echo Stats (Flat Array)
     const echoStats: Array<PermanentStatBase> = clientChar.echoStats.flatMap((echo) => {
@@ -313,14 +256,15 @@ export const calculateRotationHandler = async (
   const characterIdToSlotNumberMap = Object.fromEntries(
     clientTeam.map((c, index) => [c.id, index]),
   ) as Record<number, CharacterSlotNumber>;
+
   const damageInstances = attacks
-    .map((attack) => enrichAttackWithDetails(attack))
+    .map((attack) => enricher.enrichAttack(attack))
     .map((attack) => resolveUserParameterizedValues(attack))
     .map((attack, index) => ({
       ...attack,
       modifiers: buffs
         .filter((modifier) => shouldModifierApplyToAttack(index, modifier))
-        .map((modifier) => enrichModifierWithDetails(modifier))
+        .map((modifier) => enricher.enrichModifier(modifier))
         .map((modifier) => resolveUserParameterizedValues(modifier))
         .map((modifier) =>
           toRotationModifier(modifier, attack, characterIdToSlotNumberMap),
@@ -348,6 +292,11 @@ export const calculateRotation = createServerFn({
       return calculateRotationHandler(data.team, data.enemy, data.attacks, data.buffs);
     } catch (error) {
       console.error(error);
+
+      if (error instanceof GameDataNotFoundError) {
+        throw new Error(`Unable to calculate rotation: ${error.message}`);
+      }
+
       throw new Error('Failed to calculate rotation damage');
     }
   });

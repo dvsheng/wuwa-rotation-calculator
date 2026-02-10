@@ -1,5 +1,5 @@
 import type { ParameterInstance } from '@/schemas/rotation';
-import { calculateParameterizedNumberValue } from '@/services/rotation-calculator/calculate-parameterized-number';
+import { calculateParameterizedNumberValue } from '@/services/rotation-calculator/core/calculate-parameterized-number';
 import type { UserParameterizedNumber } from '@/types';
 import { isUserParameterizedNumber } from '@/types';
 

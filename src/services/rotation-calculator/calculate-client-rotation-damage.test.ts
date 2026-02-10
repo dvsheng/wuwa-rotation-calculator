@@ -15,7 +15,7 @@ import {
   toRotationModifier,
   toRotationPermanentStat,
 } from '@/services/rotation-calculator/calculate-client-rotation-damage';
-import type { ResolveUserParameterizedType } from '@/services/rotation-calculator/resolve-user-parameterized-values';
+import type { ResolveUserParameterizedType } from '@/services/rotation-calculator/client-input-adapter/resolve-user-parameterized-values';
 import { AbilityAttribute, Attribute, CharacterStat, Tag } from '@/types';
 import type { CharacterSlotNumber } from '@/types';
 
@@ -736,7 +736,7 @@ describe('calculateRotation', () => {
       };
 
       await expect(calculateRotationHandler(team, enemy, [attack], [])).rejects.toThrow(
-        `Entity not found for ID ${INVALID_CHARACTER_ID}`,
+        'Failed to fetch game data for team',
       );
     });
   });

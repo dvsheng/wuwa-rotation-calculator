@@ -2,9 +2,10 @@ import { clamp, sum } from 'es-toolkit/math';
 
 import type { CharacterDamageInstance, Enemy, Team } from '@/types';
 
+import { calculateDamage } from '../damage-calculator';
+import type { CalculateDamageProperties } from '../damage-calculator/types';
+
 import { calculateAbilityAttributeValue, sumStatValues } from './calculate-stat-total';
-import { calculateDamage } from './damage-calculator';
-import type { CalculateDamageProperties } from './damage-calculator/types';
 import { createRuntimeStatResolver } from './resolve-runtime-stat-values';
 
 export const calculateAttackDamage = (

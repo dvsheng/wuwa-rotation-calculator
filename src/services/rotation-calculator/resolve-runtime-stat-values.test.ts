@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { CharacterStat, Tag } from '@/types';
 import type { Character, CharacterStats, Enemy, Integer, Team } from '@/types';
 
-import { createRuntimeStatResolver } from './resolve-stat-value';
+import { createRuntimeStatResolver } from './resolve-runtime-stat-values';
 
 /**
  * Creates a minimal character for testing with specific stats.

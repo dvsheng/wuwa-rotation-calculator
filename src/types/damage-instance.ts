@@ -43,8 +43,8 @@ export type DamageType = (typeof DamageType)[keyof typeof DamageType];
  * A single damage-dealing instance, including its motion values and classification tags.
  */
 export interface CharacterDamageInstance {
-  // Id of the character performing the attack in the team array
-  characterId: number;
+  /** Index of the character performing the attack in the team array (0-2). */
+  characterIndex: number;
   /** The primary stat this damage scales with. */
   scalingStat: AbilityAttribute;
   /**

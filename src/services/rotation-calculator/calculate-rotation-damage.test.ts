@@ -142,7 +142,7 @@ describe('calculateRotationDamage', () => {
         damageInstances: [
           {
             instance: {
-              characterId: 1,
+              characterIndex: 0,
               scalingStat: AbilityAttribute.ATK,
               motionValues: [1],
               tags: [Tag.BASIC_ATTACK, Tag.ELECTRO],

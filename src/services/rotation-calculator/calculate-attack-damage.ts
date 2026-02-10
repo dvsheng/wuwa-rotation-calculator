@@ -5,7 +5,7 @@ import type { CharacterDamageInstance, Enemy, Team } from '@/types';
 import { calculateAbilityAttributeValue, sumStatValues } from './calculate-stat-total';
 import { calculateDamage } from './damage-calculator';
 import type { CalculateDamageProperties } from './damage-calculator/types';
-import { createRuntimeStatResolver } from './resolve-stat-value';
+import { createRuntimeStatResolver } from './resolve-runtime-stat-values';
 
 export const calculateAttackDamage = (
   instance: CharacterDamageInstance,
@@ -16,11 +16,7 @@ export const calculateAttackDamage = (
 ) => {
   const { team, enemy } = context;
   const resolveStats = createRuntimeStatResolver(team, enemy);
-  // TODO: Switch instance.characterId to use positional index
-  const character = team.find((c) => c.id === instance.characterId);
-  if (!character) {
-    throw new Error(`Character ${instance.characterId} not found`);
-  }
+  const character = team[instance.characterIndex];
   const resolvedCharacter = resolveStats(character);
   const resolvedEnemy = resolveStats(enemy);
   const calculateDamageEnemyProperties = {

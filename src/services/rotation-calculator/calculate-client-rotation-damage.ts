@@ -228,12 +228,13 @@ export const toRotationPermanentStat = (
 
 const toRotationDamageInstance = (
   instance: AttackInstance & Attack & { modifiers: Array<RotationModifier> },
+  characterIdToSlotNumberMap: Record<string, number>,
 ): CharacterDamageInstance => {
   return {
     scalingStat: instance.scalingStat,
     tags: instance.tags,
     motionValues: instance.motionValues as Array<number>,
-    characterId: instance.characterId,
+    characterIndex: characterIdToSlotNumberMap[instance.characterId],
   };
 };
 
@@ -385,7 +386,7 @@ export const calculateRotationHandler = async (
         ),
     }))
     .map((instance) => ({
-      instance: toRotationDamageInstance(instance),
+      instance: toRotationDamageInstance(instance, characterIdToSlotNumberMap),
       modifiers: instance.modifiers,
     }));
 

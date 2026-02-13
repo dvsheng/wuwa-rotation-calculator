@@ -1,5 +1,4 @@
 import { AlertTriangle, Trash2 } from 'lucide-react';
-import React, { useMemo } from 'react';
 
 import { CanvasItem } from '@/components/common/CanvasItem';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import {
   getAlignmentSegments,
   useSelfBuffAlignment,
 } from '@/hooks/useSelfBuffAlignment';
+import type { AlignmentSegment } from '@/hooks/useSelfBuffAlignment';
 import type { DetailedModifierInstance } from '@/hooks/useTeamModifierInstances';
 import { cn } from '@/lib/utils';
 import { Target } from '@/services/game-data/types';
@@ -22,16 +22,17 @@ const SELF_BASE_CLASSES = 'border-blue-400 text-black bg-transparent';
 /** Classes for fully misaligned self buffs (outline only) */
 const SELF_MISALIGNED_CLASSES = 'border-blue-400 bg-transparent text-black';
 
-interface BuffTimelineCanvasItemProperties extends React.HTMLAttributes<HTMLDivElement> {
+interface BuffTimelineCanvasItemProperties {
   buff: DetailedModifierInstance;
   onRemove: (instanceId: string) => void;
   isInteracting: boolean;
 }
 
-export const BuffTimelineCanvasItem = React.forwardRef<
-  HTMLDivElement,
-  BuffTimelineCanvasItemProperties
->(({ buff, onRemove, isInteracting, ...properties }, reference) => {
+export const BuffTimelineCanvasItem = ({
+  buff,
+  onRemove,
+  isInteracting,
+}: BuffTimelineCanvasItemProperties) => {
   const updateBuffParameters = useRotationStore((state) => state.updateBuffParameters);
   const alignment = useSelfBuffAlignment(buff);
 
@@ -44,7 +45,10 @@ export const BuffTimelineCanvasItem = React.forwardRef<
   }));
 
   // Generate styling and segments based on target and alignment
-  const { itemClassName, segments } = useMemo(() => {
+  const getItemClassNameAndSegments = (): {
+    itemClassName: string;
+    segments: Array<AlignmentSegment>;
+  } => {
     // Non-self buffs use standard colors
     if (buff.target !== Target.SELF) {
       return { itemClassName: TARGET_COLORS[buff.target], segments: [] };
@@ -72,7 +76,9 @@ export const BuffTimelineCanvasItem = React.forwardRef<
         return { itemClassName: TARGET_COLORS[buff.target], segments: [] };
       }
     }
-  }, [buff.target, alignment.status, alignment.columnAlignments]);
+  };
+
+  const { itemClassName, segments } = getItemClassNameAndSegments();
 
   return (
     <CanvasItem
@@ -85,18 +91,16 @@ export const BuffTimelineCanvasItem = React.forwardRef<
     >
       {({ shouldShowWarning }) => (
         <div
-          ref={reference}
           className={cn(
             'relative flex h-full flex-row items-center gap-2 overflow-hidden rounded-lg border px-2 py-1 transition-colors',
             itemClassName,
           )}
-          {...properties}
         >
           {/* Background overlay segments (e.g., alignment indicators) */}
           {segments.map((segment, index) => (
             <div
               key={index}
-              className="pointer-events-none absolute inset-y-0 rounded-md bg-blue-200"
+              className="pointer-events-none absolute inset-y-0 z-0 rounded-md bg-blue-100"
               style={{
                 left: `${segment.start}%`,
                 width: `${segment.width}%`,
@@ -106,7 +110,7 @@ export const BuffTimelineCanvasItem = React.forwardRef<
 
           {/* Character icon */}
           {characterIconUrl && (
-            <div className="border-border flex aspect-square h-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border bg-zinc-800">
+            <div className="border-border relative z-10 flex aspect-square h-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border bg-zinc-800">
               <img
                 src={characterIconUrl}
                 alt={buff.characterName}
@@ -117,7 +121,7 @@ export const BuffTimelineCanvasItem = React.forwardRef<
 
           {/* Capability icon */}
           {iconUrl && (
-            <div className="border-border flex aspect-square h-8 flex-shrink-0 items-center justify-center rounded-md border bg-zinc-700">
+            <div className="border-border relative z-10 flex aspect-square h-8 flex-shrink-0 items-center justify-center rounded-md border bg-zinc-700">
               <img
                 src={iconUrl}
                 alt={buff.name}
@@ -127,7 +131,7 @@ export const BuffTimelineCanvasItem = React.forwardRef<
           )}
 
           {/* Buff name */}
-          <Text className="line-clamp-2 min-w-0 flex-1 text-left text-xs leading-tight font-medium">
+          <Text className="relative z-10 line-clamp-2 min-w-0 flex-1 text-left text-xs leading-tight font-medium">
             {buff.name}
           </Text>
 
@@ -135,7 +139,7 @@ export const BuffTimelineCanvasItem = React.forwardRef<
           {shouldShowWarning && (
             <AlertTriangle
               data-testid="alert-triangle"
-              className="h-5 w-5 flex-shrink-0 text-amber-500"
+              className="relative z-10 h-5 w-5 flex-shrink-0 text-amber-500"
             />
           )}
 
@@ -143,7 +147,7 @@ export const BuffTimelineCanvasItem = React.forwardRef<
           <Button
             variant="ghost"
             size="icon"
-            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-6 w-6 flex-shrink-0"
+            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive relative z-10 h-6 w-6 flex-shrink-0"
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => {
               event.stopPropagation();
@@ -156,6 +160,4 @@ export const BuffTimelineCanvasItem = React.forwardRef<
       )}
     </CanvasItem>
   );
-});
-
-BuffTimelineCanvasItem.displayName = 'BuffTimelineCanvasItem';
+};

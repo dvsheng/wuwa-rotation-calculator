@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { calculateDamage } from './calculate-damage';
-import type { CalculateDamageProperties } from './types';
+import type { CalculateDamageProperties } from './calculate-damage.types';
 
 describe('calculateDamage', () => {
   const baseProperties: CalculateDamageProperties = {

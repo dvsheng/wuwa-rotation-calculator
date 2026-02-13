@@ -1,6 +1,6 @@
+import type { CalculateDamageProperties } from './calculate-damage.types';
 import { calculateDefenseMultiplier } from './defense';
 import { calculateResistanceMultiplier } from './resistance';
-import type { CalculateDamageProperties } from './types';
 
 export const calculateDamage = (properties: CalculateDamageProperties) => {
   const baseDamage =

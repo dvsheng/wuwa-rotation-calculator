@@ -1,6 +1,6 @@
 import type { CharacterDamageInstance, Enemy, Modifier, Team } from '@/types';
 
-import type { CalculateDamageProperties } from '../damage-calculator/types';
+import type { CalculateDamageProperties } from '../damage-calculator/calculate-damage.types';
 
 export interface Rotation {
   team: Team;

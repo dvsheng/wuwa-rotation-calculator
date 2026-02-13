@@ -1,4 +1,3 @@
-import { cloneDeep, merge } from 'es-toolkit/object';
 import type { Layout, LayoutItem } from 'react-grid-layout';
 import GridLayout from 'react-grid-layout';
 
@@ -14,11 +13,6 @@ interface BuffCanvasProperties {
 }
 
 export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
-  const {
-    layout: gridLayoutProperties,
-    containerRef,
-    isInteracting,
-  } = useCanvasLayout();
   const { buffs } = useTeamModifierInstances();
   const removeBuff = useRotationStore((state) => state.removeBuff);
   const updateBuffLayout = useRotationStore((state) => state.updateBuffLayout);
@@ -29,7 +23,7 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
     }
   };
 
-  const additionalLayoutProperties = {
+  const { layout: fullLayoutProperties, isInteracting } = useCanvasLayout({
     gridConfig: { rowHeight: 50, margin: [4, 4] as const },
     resizeConfig: { enabled: true, handles: ['e', 'w'] },
     layout: buffs.map((buff) => ({
@@ -42,11 +36,11 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
     style: { minHeight: 400 },
     onLayoutChange,
     onDrop: onDropBuff,
+  });
+
+  const handleRemoveBuff = (instanceId: string) => {
+    removeBuff(instanceId);
   };
-  const fullLayoutProperties = merge(
-    cloneDeep(gridLayoutProperties),
-    additionalLayoutProperties,
-  );
 
   return (
     <div className="canvas-section">
@@ -65,7 +59,6 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
       <div className="canvas-content">
         <div
           className="canvas-drop-zone"
-          ref={containerRef}
           style={{ minWidth: fullLayoutProperties.width }}
         >
           {buffs.length === 0 && (
@@ -81,7 +74,7 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
               <div key={buff.instanceId} className="group relative">
                 <BuffTimelineCanvasItem
                   buff={buff}
-                  onRemove={removeBuff}
+                  onRemove={handleRemoveBuff}
                   isInteracting={isInteracting}
                 />
               </div>

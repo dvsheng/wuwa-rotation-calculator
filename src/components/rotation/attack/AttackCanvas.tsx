@@ -1,5 +1,4 @@
 import { compact } from 'es-toolkit/array';
-import { cloneDeep, merge } from 'es-toolkit/object';
 import type { Layout, LayoutItem } from 'react-grid-layout';
 import GridLayout, { verticalCompactor } from 'react-grid-layout';
 
@@ -15,11 +14,6 @@ export interface AttackCanvasProperties {
 }
 
 export const AttackCanvas = ({ onDropAttack }: AttackCanvasProperties) => {
-  const {
-    layout: gridLayoutProperties,
-    containerRef,
-    isInteracting,
-  } = useCanvasLayout();
   const { attacks } = useTeamAttackInstances();
   const storedAttacks = useRotationStore((state) => state.attacks);
   const removeAttack = useRotationStore((state) => state.removeAttack);
@@ -43,7 +37,7 @@ export const AttackCanvas = ({ onDropAttack }: AttackCanvasProperties) => {
     }
   };
 
-  const additionalLayoutProperties = {
+  const { layout: fullLayoutProperties, isInteracting } = useCanvasLayout({
     layout: attacks.map((attack, index) => ({
       i: attack.instanceId,
       x: index,
@@ -51,17 +45,16 @@ export const AttackCanvas = ({ onDropAttack }: AttackCanvasProperties) => {
       w: 1,
       h: 1,
     })),
-    gridConfig: { maxRows: 1, rowHeight: gridLayoutProperties.gridConfig?.rowHeight },
+    gridConfig: { maxRows: 1 },
     compactor: verticalCompactor,
     resizeConfig: { enabled: false },
     onDrop: onDropAttack,
     onLayoutChange: handleLayoutChange,
-  };
+  });
 
-  const fullLayoutProperties = merge(
-    cloneDeep(gridLayoutProperties),
-    additionalLayoutProperties,
-  );
+  const handleRemoveAttack = (instanceId: string) => {
+    removeAttack(instanceId);
+  };
 
   return (
     <div className="canvas-section">
@@ -80,7 +73,6 @@ export const AttackCanvas = ({ onDropAttack }: AttackCanvasProperties) => {
       <div className="canvas-content">
         <div
           className="canvas-drop-zone"
-          ref={containerRef}
           style={{ minWidth: fullLayoutProperties.width }}
         >
           {attacks.length === 0 && (
@@ -97,7 +89,7 @@ export const AttackCanvas = ({ onDropAttack }: AttackCanvasProperties) => {
                 <AttackCanvasItem
                   attack={attack}
                   index={index}
-                  onRemove={removeAttack}
+                  onRemove={handleRemoveAttack}
                   isInteracting={isInteracting}
                 />
               </div>

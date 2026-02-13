@@ -265,3 +265,32 @@ code {
 .react-grid-item > .react-resizable-handle-e:hover {
   background-color: rgba(0, 0, 0, 0.25);
 }
+
+/* West (left) resize handle */
+.react-grid-item > .react-resizable-handle-w {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 5px;
+  height: 100% !important;
+  cursor: col-resize;
+
+  /* Matches the dark grey cap */
+  background-color: rgba(0, 0, 0, 0.15);
+
+  /* Match rounding on the left side */
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+/* Remove the default L-shaped icon */
+.react-grid-item > .react-resizable-handle-w::after {
+  content: none;
+}
+
+/* Hover effect */
+.react-grid-item > .react-resizable-handle-w:hover {
+  background-color: rgba(0, 0, 0, 0.25);
+}

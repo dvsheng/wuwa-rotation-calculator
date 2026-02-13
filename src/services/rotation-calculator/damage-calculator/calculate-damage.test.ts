@@ -1,14 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Integer } from '@/types';
-
 import { calculateDamage } from './calculate-damage';
 import type { CalculateDamageProperties } from './types';
 
 describe('calculateDamage', () => {
   const baseProperties: CalculateDamageProperties = {
     character: {
-      level: 90 as Integer,
+      level: 90,
       abilityAttributeValue: 1000,
       flatDamage: 0,
       damageBonus: 0,
@@ -21,7 +19,7 @@ describe('calculateDamage', () => {
       resistancePenetration: 0,
     },
     enemy: {
-      level: 90 as Integer,
+      level: 90,
       baseResistance: 0.1,
       resistanceReduction: 0,
       defenseReduction: 0,

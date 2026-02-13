@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { CharacterStat, Tag } from '@/types';
-import type { Character, CharacterStats, Enemy, Integer, Team } from '@/types';
+import type { Character, CharacterStats, Enemy, Team } from '@/types';
 
 import { createRuntimeStatResolver } from './resolve-runtime-stat-values';
 
@@ -13,7 +13,7 @@ const createTestCharacter = (
   stats: Partial<CharacterStats> = {},
 ): Character => ({
   id,
-  level: 90 as Integer,
+  level: 90,
   stats: {
     [CharacterStat.ATTACK_FLAT]: [{ tags: [Tag.ALL], value: 1000 }],
     [CharacterStat.ATTACK_SCALING_BONUS]: [{ tags: [Tag.ALL], value: 0.5 }],
@@ -45,7 +45,7 @@ const createTestCharacter = (
  * Creates a minimal enemy for testing.
  */
 const createTestEnemy = (): Enemy => ({
-  level: 90 as Integer,
+  level: 90,
   stats: {
     baseResistance: [{ tags: [Tag.GLACIO], value: 0.1 }],
     defenseReduction: [],

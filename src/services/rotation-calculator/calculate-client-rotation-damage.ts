@@ -18,7 +18,6 @@ import type {
   CharacterSlotNumber,
   CharacterStats,
   EnemyStat,
-  Integer,
   Modifier as RotationModifier,
   RotationRuntimeResolvableNumber,
   TaggedStatValue,
@@ -226,14 +225,14 @@ export const calculateRotationHandler = async (
 
     return {
       id: clientChar.id,
-      level: 90 as Integer,
+      level: 90,
       stats: finalStats,
     };
   });
 
   // 3. Map Client Enemy to Server Enemy
   const serverEnemy = {
-    level: clientEnemy.level as Integer,
+    level: clientEnemy.level,
     stats: {
       baseResistance: Object.entries(clientEnemy.resistances).map(
         ([attribute, value]) => ({

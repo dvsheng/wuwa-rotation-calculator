@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { CharacterStat, Tag } from '@/types';
-import type { Character, CharacterStats, Enemy, Integer } from '@/types';
+import type { Character, CharacterStats, Enemy } from '@/types';
 
 import {
   filterCharacterStatsByTags,
@@ -182,7 +182,7 @@ describe('filterCharacterStatsByTags', () => {
   it('filters character stats while preserving other properties', () => {
     const character: Character = {
       id: 12_345,
-      level: 90 as Integer,
+      level: 90,
       stats: {
         [CharacterStat.DAMAGE_BONUS]: [
           { tags: [Tag.ELECTRO], value: 0.2 },
@@ -233,7 +233,7 @@ describe('filterCharacterStatsByTags', () => {
 describe('filterEnemyStatsByTags', () => {
   it('filters enemy stats while preserving other properties', () => {
     const enemy: Enemy = {
-      level: 90 as Integer,
+      level: 90,
       stats: {
         baseResistance: [
           { tags: [Tag.ELECTRO], value: 0.1 },

@@ -1,5 +1,4 @@
 export * from './attribute';
-export * from './common';
 export * from './weapon';
 export * from './character';
 export * from './damage-instance';

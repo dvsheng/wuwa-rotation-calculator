@@ -1,4 +1,3 @@
-import type { Integer } from './common';
 import type { RotationRuntimeResolvableNumber } from './parameterized-number';
 import type { TaggedStatValue } from './tag';
 
@@ -45,7 +44,7 @@ export interface Character {
   /** Unique identifier for the character, corresponding to its position in the team array. */
   id: number;
   /** Progression level. */
-  level: Integer;
+  level: number;
   /** Current calculated stats. */
   stats: CharacterStats;
 }

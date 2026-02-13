@@ -1,11 +1,9 @@
-import type { Integer } from '@/types';
-
 interface SkillProperties {
   motionValue: number;
 }
 
 interface CharacterStats {
-  level: Integer;
+  level: number;
   abilityAttributeValue: number;
   flatDamage: number;
   damageBonus: number;
@@ -19,7 +17,7 @@ interface CharacterStats {
 }
 
 interface EnemyStats {
-  level: Integer;
+  level: number;
   baseResistance: number;
   resistanceReduction: number;
   defenseReduction: number;

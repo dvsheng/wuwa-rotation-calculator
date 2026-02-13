@@ -1,4 +1,3 @@
-import type { Integer } from './common';
 import { NegativeStatus } from './negative-status';
 import type { RotationRuntimeResolvableNumber } from './parameterized-number';
 import type { TaggedStatValue } from './tag';
@@ -25,7 +24,7 @@ export type EnemyStats<T = RotationRuntimeResolvableNumber | number> = Record<
  */
 export interface Enemy {
   /** Progression level of the enemy. */
-  level: Integer;
+  level: number;
   /** Current defensive stats. */
   stats: EnemyStats;
 }

@@ -1,5 +1,3 @@
-import type { Integer } from '@/types';
-
 const PLAYER_CONSTANT = 800;
 const ENEMY_CONSTANT = 792;
 const LEVEL_MULTIPLER = 8;
@@ -9,8 +7,8 @@ const LEVEL_MULTIPLER = 8;
  * @see https://wutheringwaves.fandom.com/wiki/Damage#DEF_Multiplier
  */
 export const calculateDefenseMultiplier = (properties: {
-  characterLevel: Integer;
-  enemyLevel: Integer;
+  characterLevel: number;
+  enemyLevel: number;
   defenseReduction: number;
   defenseIgnore: number;
 }) => {
@@ -24,10 +22,10 @@ export const calculateDefenseMultiplier = (properties: {
   );
 };
 
-const calculateEnemyDefense = (enemyLevel: Integer, defenseReduction: number) => {
+const calculateEnemyDefense = (enemyLevel: number, defenseReduction: number) => {
   return (LEVEL_MULTIPLER * enemyLevel + ENEMY_CONSTANT) * (1 - defenseReduction);
 };
 
-const calculatePlayerDefense = (characterLevel: Integer) => {
+const calculatePlayerDefense = (characterLevel: number) => {
   return LEVEL_MULTIPLER * characterLevel + PLAYER_CONSTANT;
 };

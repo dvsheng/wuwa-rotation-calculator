@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { AbilityAttribute, Attribute, CharacterStat, Tag } from '@/types';
-import type { Character, Enemy, Integer, Modifier, Team } from '@/types';
+import type { Character, Enemy, Modifier, Team } from '@/types';
 
 import { calculateRotationDamage } from './calculate-rotation-damage';
 import type { Rotation } from './types';
@@ -14,7 +14,7 @@ const createTestCharacter = (
   overrides: Partial<Character> = {},
 ): Character => ({
   id,
-  level: 90 as Integer,
+  level: 90,
   stats: {
     [CharacterStat.ATTACK_FLAT]: [{ tags: [Tag.ALL], value: 1000 }],
     [CharacterStat.ATTACK_SCALING_BONUS]: [],
@@ -43,7 +43,7 @@ const createTestCharacter = (
 });
 
 const createTestEnemy = (): Enemy => ({
-  level: 90 as Integer,
+  level: 90,
   stats: {
     baseResistance: [
       { value: 0.1, tags: [Attribute.GLACIO] },

@@ -25,12 +25,13 @@ const SELF_MISALIGNED_CLASSES = 'border-blue-400 bg-transparent text-black';
 interface BuffTimelineCanvasItemProperties extends React.HTMLAttributes<HTMLDivElement> {
   buff: DetailedModifierInstance;
   onRemove: (instanceId: string) => void;
+  isInteracting: boolean;
 }
 
 export const BuffTimelineCanvasItem = React.forwardRef<
   HTMLDivElement,
   BuffTimelineCanvasItemProperties
->(({ buff, onRemove, ...properties }, reference) => {
+>(({ buff, onRemove, isInteracting, ...properties }, reference) => {
   const updateBuffParameters = useRotationStore((state) => state.updateBuffParameters);
   const alignment = useSelfBuffAlignment(buff);
 
@@ -80,6 +81,7 @@ export const BuffTimelineCanvasItem = React.forwardRef<
       description={buff.description}
       parameters={parameters}
       onSaveParameters={(vals) => updateBuffParameters(buff.instanceId, vals)}
+      isInteracting={isInteracting}
     >
       {({ shouldShowWarning }) => (
         <div

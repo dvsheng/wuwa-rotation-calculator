@@ -14,7 +14,11 @@ interface BuffCanvasProperties {
 }
 
 export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
-  const { layout: gridLayoutProperties, containerRef } = useCanvasLayout();
+  const {
+    layout: gridLayoutProperties,
+    containerRef,
+    isInteracting,
+  } = useCanvasLayout();
   const { buffs } = useTeamModifierInstances();
   const removeBuff = useRotationStore((state) => state.removeBuff);
   const updateBuffLayout = useRotationStore((state) => state.updateBuffLayout);
@@ -75,7 +79,11 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
           <GridLayout {...fullLayoutProperties}>
             {buffs.map((buff) => (
               <div key={buff.instanceId} className="group relative">
-                <BuffTimelineCanvasItem buff={buff} onRemove={removeBuff} />
+                <BuffTimelineCanvasItem
+                  buff={buff}
+                  onRemove={removeBuff}
+                  isInteracting={isInteracting}
+                />
               </div>
             ))}
           </GridLayout>

@@ -19,6 +19,7 @@ export interface CanvasItemProperties {
   parameters?: Array<ParameterInstance & Parameter>;
   /** Called when parameters are saved */
   onSaveParameters?: (values: Array<ParameterInstance & Parameter>) => void;
+  isInteracting: boolean;
   /** Children render function or elements */
   children:
     | React.ReactNode
@@ -42,6 +43,7 @@ export const CanvasItem = ({
   description,
   parameters,
   onSaveParameters,
+  isInteracting,
   children,
 }: CanvasItemProperties) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -51,7 +53,7 @@ export const CanvasItem = ({
     (parameters?.some((p) => Number.isNaN(p.value) || isNil(p.value)) ?? false);
 
   const handleClick = () => {
-    if (hasParameters && onSaveParameters) {
+    if (hasParameters && onSaveParameters && !isInteracting) {
       setIsDialogOpen(true);
     }
   };

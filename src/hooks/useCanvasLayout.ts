@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react';
 import type { GridLayoutProps } from 'react-grid-layout';
 import { useContainerWidth } from 'react-grid-layout';
 
@@ -6,6 +7,10 @@ import { useRotationStore } from '@/store/useRotationStore';
 export const useCanvasLayout = () => {
   const rotationAttackCount = useRotationStore((state) => state.attacks.length);
   const { width: containerWidth, containerRef } = useContainerWidth();
+  const [isInteracting, setIsInteracting] = useState(false);
+  const interactionTimeoutReference = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   const columnCount = Math.max(rotationAttackCount + 1, 5);
 
@@ -29,10 +34,39 @@ export const useCanvasLayout = () => {
     },
     dropConfig: { enabled: true },
     dragConfig: { enabled: true },
+    onDragStart: () => {
+      if (interactionTimeoutReference.current !== null) {
+        clearTimeout(interactionTimeoutReference.current);
+      }
+      setIsInteracting(true);
+    },
+    onDragStop: () => {
+      if (interactionTimeoutReference.current !== null) {
+        clearTimeout(interactionTimeoutReference.current);
+      }
+      interactionTimeoutReference.current = globalThis.setTimeout(() => {
+        setIsInteracting(false);
+      }, 100);
+    },
+    onResizeStart: () => {
+      if (interactionTimeoutReference.current !== null) {
+        clearTimeout(interactionTimeoutReference.current);
+      }
+      setIsInteracting(true);
+    },
+    onResizeStop: () => {
+      if (interactionTimeoutReference.current !== null) {
+        clearTimeout(interactionTimeoutReference.current);
+      }
+      interactionTimeoutReference.current = globalThis.setTimeout(() => {
+        setIsInteracting(false);
+      }, 100);
+    },
   };
 
   return {
     layout,
     containerRef,
+    isInteracting,
   };
 };

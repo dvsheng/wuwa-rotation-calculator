@@ -15,7 +15,11 @@ export interface AttackCanvasProperties {
 }
 
 export const AttackCanvas = ({ onDropAttack }: AttackCanvasProperties) => {
-  const { layout: gridLayoutProperties, containerRef } = useCanvasLayout();
+  const {
+    layout: gridLayoutProperties,
+    containerRef,
+    isInteracting,
+  } = useCanvasLayout();
   const { attacks } = useTeamAttackInstances();
   const storedAttacks = useRotationStore((state) => state.attacks);
   const removeAttack = useRotationStore((state) => state.removeAttack);
@@ -94,6 +98,7 @@ export const AttackCanvas = ({ onDropAttack }: AttackCanvasProperties) => {
                   attack={attack}
                   index={index}
                   onRemove={removeAttack}
+                  isInteracting={isInteracting}
                 />
               </div>
             ))}

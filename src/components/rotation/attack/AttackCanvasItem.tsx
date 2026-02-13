@@ -11,12 +11,14 @@ interface AttackCanvasItemProperties {
   attack: DetailedAttackInstance;
   index: number;
   onRemove: (instanceId: string) => void;
+  isInteracting: boolean;
 }
 
 export const AttackCanvasItem = ({
   attack,
   index,
   onRemove,
+  isInteracting,
 }: AttackCanvasItemProperties) => {
   const updateAttackParameters = useRotationStore(
     (state) => state.updateAttackParameters,
@@ -34,6 +36,7 @@ export const AttackCanvasItem = ({
       onSaveParameters={(parameters) =>
         updateAttackParameters(attack.instanceId, parameters)
       }
+      isInteracting={isInteracting}
     >
       {({ shouldShowWarning }) => (
         <div className="bg-card hover:bg-accent/50 relative flex h-full flex-col items-center overflow-hidden rounded-lg border px-4 pt-6 pb-3 transition-colors">

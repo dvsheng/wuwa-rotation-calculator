@@ -14,6 +14,8 @@ import type { Enemy } from '@/schemas/enemy';
 import type { Team } from '@/schemas/team';
 import type { RefineLevel } from '@/services/game-data/types';
 
+import { useRotationStore } from './useRotationStore';
+
 export interface TeamState {
   team: Team;
   enemy: Enemy;
@@ -138,7 +140,13 @@ export const useTeamStore = create<TeamState>()(
         }),
       setCharacter: (index, id) =>
         set((state) => {
+          const previousId = state.team[index].id;
           state.team[index].id = id;
+
+          // Clear attacks and buffs for the old character when character changes
+          if (previousId !== id) {
+            useRotationStore.getState().clearAllForCharacter(previousId);
+          }
         }),
       setSequence: (index, sequence) =>
         set((state) => {

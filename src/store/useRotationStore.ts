@@ -8,8 +8,6 @@ import type {
   ParameterInstance,
 } from '@/schemas/rotation';
 
-import { useTeamStore } from './useTeamStore';
-
 export interface RotationState {
   attacks: Array<AttackInstance>;
   buffs: Array<ModifierInstance>;
@@ -24,6 +22,7 @@ export interface RotationState {
   ) => void;
   setAttacks: (attacks: Array<AttackInstance>) => void;
   clearAttacks: () => void;
+  clearAttacksForCharacter: (characterId: number) => void;
 
   // Actions for buffs
   addBuff: (
@@ -37,8 +36,10 @@ export interface RotationState {
   ) => void;
   updateBuffParameters: (instanceId: string, values: Array<ParameterInstance>) => void;
   clearBuffs: () => void;
+  clearBuffsForCharacter: (characterId: number) => void;
 
   clearAll: () => void;
+  clearAllForCharacter: (characterId: number) => void;
 }
 
 export const useRotationStore = create<RotationState>()(
@@ -89,6 +90,11 @@ export const useRotationStore = create<RotationState>()(
           state.attacks = [];
         }),
 
+      clearAttacksForCharacter: (characterId) =>
+        set((state) => {
+          state.attacks = state.attacks.filter((a) => a.characterId !== characterId);
+        }),
+
       addBuff: (buff, position) =>
         set((state) => {
           const newBuff = {
@@ -125,10 +131,21 @@ export const useRotationStore = create<RotationState>()(
           state.buffs = [];
         }),
 
+      clearBuffsForCharacter: (characterId) =>
+        set((state) => {
+          state.buffs = state.buffs.filter((b) => b.characterId !== characterId);
+        }),
+
       clearAll: () =>
         set((state) => {
           state.attacks = [];
           state.buffs = [];
+        }),
+
+      clearAllForCharacter: (characterId) =>
+        set((state) => {
+          state.attacks = state.attacks.filter((a) => a.characterId !== characterId);
+          state.buffs = state.buffs.filter((b) => b.characterId !== characterId);
         }),
     })),
     {
@@ -137,17 +154,3 @@ export const useRotationStore = create<RotationState>()(
     },
   ),
 );
-
-// Subscribe to TeamStore changes to clear rotation when characters change
-let previousCharacterIds = useTeamStore
-  .getState()
-  .team.map((c) => c.id)
-  .join(',');
-
-useTeamStore.subscribe((state) => {
-  const currentCharacterIds = state.team.map((c) => c.id).join(',');
-  if (currentCharacterIds !== previousCharacterIds) {
-    previousCharacterIds = currentCharacterIds;
-    useRotationStore.getState().clearAll();
-  }
-});

@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useEchoSetList } from '@/hooks/useEchoSetList';
-import { useTeamStore } from '@/store/useTeamStore';
+import { useStore } from '@/store';
 
 import { AssetIcon } from '../common/AssetIcon';
 
@@ -20,11 +20,11 @@ interface EchoSetSelectorProperties {
 }
 
 export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
-  const selectedEchoSets = useTeamStore((state) => state.team[index].echoSets);
+  const selectedEchoSets = useStore((state) => state.team[index].echoSets);
   const { data: echoSetList = [] } = useEchoSetList();
-  const setEchoSet = useTeamStore((state) => state.setEchoSet);
-  const setEchoSetRequirement = useTeamStore((state) => state.setEchoSetRequirement);
-  const updateCharacter = useTeamStore((state) => state.updateCharacter);
+  const setEchoSet = useStore((state) => state.setEchoSet);
+  const setEchoSetRequirement = useStore((state) => state.setEchoSetRequirement);
+  const updateCharacter = useStore((state) => state.updateCharacter);
 
   const handleAddSet = () => {
     if (selectedEchoSets.length < 2) {

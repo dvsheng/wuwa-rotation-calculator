@@ -10,21 +10,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useTeamStore } from '@/store/useTeamStore';
+import { useStore } from '@/store';
 
 interface CharacterSelectorProperties {
   index: number;
 }
 
 export const CharacterSelector = ({ index }: CharacterSelectorProperties) => {
-  const character = useTeamStore((state) => state.team[index]);
-  const otherSelectedCharacterIds = useTeamStore(
+  const character = useStore((state) => state.team[index]);
+  const otherSelectedCharacterIds = useStore(
     useShallow((s) =>
       s.team.flatMap((c, index_) => (index_ !== index && c.id ? [c.id] : [])),
     ),
   );
-  const setCharacter = useTeamStore((state) => state.setCharacter);
-  const setSequence = useTeamStore((state) => state.setSequence);
+  const setCharacter = useStore((state) => state.setCharacter);
+  const setSequence = useStore((state) => state.setSequence);
 
   return (
     <Row className="selector-row flex-1 overflow-hidden">

@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/select';
 import { LabelText } from '@/components/ui/typography';
 import { EchoCost, VALID_MAIN_STATS } from '@/schemas/echo';
-import { useTeamStore } from '@/store/useTeamStore';
+import { useStore } from '@/store';
 
 import { STAT_LABELS } from './constants';
 import { EchoSubstatEditor } from './EchoSubstatEditor';
@@ -22,8 +22,8 @@ export const EchoPieceEditor = ({
   characterIndex,
   echoIndex,
 }: EchoPieceEditorProperties) => {
-  const echo = useTeamStore((state) => state.team[characterIndex].echoStats[echoIndex]);
-  const updateEchoPiece = useTeamStore((state) => state.updateEchoPiece);
+  const echo = useStore((state) => state.team[characterIndex].echoStats[echoIndex]);
+  const updateEchoPiece = useStore((state) => state.updateEchoPiece);
 
   const mainStatOptions = VALID_MAIN_STATS[echo.cost];
 

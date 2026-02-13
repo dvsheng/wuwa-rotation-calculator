@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { EntityType } from '@/db/schema';
 import { getClientEntityByHakushinId } from '@/services/game-data/get-entity-details.function';
 import type { ClientAttack, ClientModifier } from '@/services/game-data/types';
-import { useTeamStore } from '@/store/useTeamStore';
+import { useStore } from '@/store';
 
 interface ClientCharacterDetails {
   characterId: number;
@@ -24,7 +24,7 @@ export interface UseTeamDetailsResult {
 }
 
 export const useTeamDetails = (): UseTeamDetailsResult => {
-  const team = useTeamStore((state) => state.team);
+  const team = useStore((state) => state.team);
   const queryMetadata = team.flatMap((character) => {
     const items = [
       {

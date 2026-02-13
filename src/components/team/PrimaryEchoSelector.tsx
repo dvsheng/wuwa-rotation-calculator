@@ -5,7 +5,7 @@ import { Row } from '@/components/ui/layout';
 import { useEchoList } from '@/hooks/useEchoList';
 import { cn } from '@/lib/utils';
 import type { ListEchoesResponseItem } from '@/services/game-data/list-echoes';
-import { useTeamStore } from '@/store/useTeamStore';
+import { useStore } from '@/store';
 
 import { AssetIcon } from '../common/AssetIcon';
 
@@ -14,9 +14,9 @@ interface PrimaryEchoSelectorProperties {
 }
 
 export const PrimaryEchoSelector = ({ index }: PrimaryEchoSelectorProperties) => {
-  const echo = useTeamStore((state) => state.team[index].primarySlotEcho);
-  const selectedEchoSets = useTeamStore((state) => state.team[index].echoSets);
-  const setEcho = useTeamStore((state) => state.setPrimaryEcho);
+  const echo = useStore((state) => state.team[index].primarySlotEcho);
+  const selectedEchoSets = useStore((state) => state.team[index].echoSets);
+  const setEcho = useStore((state) => state.setPrimaryEcho);
   const { data: echoList = [] } = useEchoList();
 
   // Filter echoes by selected echo set IDs

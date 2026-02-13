@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Row, Section } from '@/components/ui/layout';
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
 import type { Capability } from '@/schemas/rotation';
-import { useRotationStore } from '@/store/useRotationStore';
+import { useStore } from '@/store';
 
 import { AttackCanvas } from './attack/AttackCanvas';
 import { AttackPalette } from './attack/AttackPalette';
@@ -11,9 +11,9 @@ import { BuffCanvas } from './buff/BuffCanvas';
 import { BuffPalette } from './buff/BuffPalette';
 
 export const RotationBuilder = () => {
-  const clearAll = useRotationStore((state) => state.clearAll);
-  const addAttack = useRotationStore((state) => state.addAttack);
-  const addBuff = useRotationStore((state) => state.addBuff);
+  const clearAll = useStore((state) => state.clearAll);
+  const addAttack = useStore((state) => state.addAttack);
+  const addBuff = useStore((state) => state.addBuff);
 
   // Attack drag and drop
   const {

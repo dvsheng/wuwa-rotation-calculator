@@ -13,7 +13,7 @@ import { useCharacterList } from '@/hooks/useCharacterList';
 import { useWeaponList } from '@/hooks/useWeaponList';
 import { cn } from '@/lib/utils';
 import type { ListWeaponsResponseItem } from '@/services/game-data/list-weapons';
-import { useTeamStore } from '@/store/useTeamStore';
+import { useStore } from '@/store';
 import { WeaponType } from '@/types';
 
 import { AssetIcon } from '../common/AssetIcon';
@@ -23,10 +23,10 @@ interface WeaponSelectorProperties {
 }
 
 export const WeaponSelector = ({ index }: WeaponSelectorProperties) => {
-  const characterId = useTeamStore((state) => state.team[index].id);
-  const weapon = useTeamStore((state) => state.team[index].weapon);
-  const setWeapon = useTeamStore((state) => state.setWeapon);
-  const setRefine = useTeamStore((state) => state.setRefine);
+  const characterId = useStore((state) => state.team[index].id);
+  const weapon = useStore((state) => state.team[index].weapon);
+  const setWeapon = useStore((state) => state.setWeapon);
+  const setRefine = useStore((state) => state.setRefine);
   const { data: characterList = [] } = useCharacterList();
   const { data: weaponList = [] } = useWeaponList();
 

@@ -1,6 +1,6 @@
 import { compact } from 'es-toolkit/array';
 
-import { useRotationStore } from '@/store/useRotationStore';
+import { useStore } from '@/store';
 
 import { useTeamDetails } from './useTeamDetails';
 
@@ -15,7 +15,7 @@ export type DetailedAttackInstance = ReturnType<
  * Returns fully resolved AttackInstance objects for component consumption.
  */
 export const useTeamAttackInstances = () => {
-  const storedAttacks = useRotationStore((state) => state.attacks);
+  const storedAttacks = useStore((state) => state.attacks);
   const { attacks: gameDataAttacks, isLoading, isError } = useTeamDetails();
 
   const attackMap = new Map(gameDataAttacks.map((attack) => [attack.id, attack]));

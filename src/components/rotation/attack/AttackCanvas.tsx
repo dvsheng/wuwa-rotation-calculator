@@ -5,7 +5,7 @@ import GridLayout, { verticalCompactor } from 'react-grid-layout';
 import { Text } from '@/components/ui/typography';
 import { useCanvasLayout } from '@/hooks/useCanvasLayout';
 import { useTeamAttackInstances } from '@/hooks/useTeamAttackInstances';
-import { useRotationStore } from '@/store/useRotationStore';
+import { useStore } from '@/store';
 
 import { AttackCanvasItem } from './AttackCanvasItem';
 
@@ -15,9 +15,9 @@ export interface AttackCanvasProperties {
 
 export const AttackCanvas = ({ onDropAttack }: AttackCanvasProperties) => {
   const { attacks } = useTeamAttackInstances();
-  const storedAttacks = useRotationStore((state) => state.attacks);
-  const removeAttack = useRotationStore((state) => state.removeAttack);
-  const setAttacks = useRotationStore((state) => state.setAttacks);
+  const storedAttacks = useStore((state) => state.attacks);
+  const removeAttack = useStore((state) => state.removeAttack);
+  const setAttacks = useStore((state) => state.setAttacks);
 
   const handleLayoutChange = (layout: Layout) => {
     if (layout.length !== storedAttacks.length) return;

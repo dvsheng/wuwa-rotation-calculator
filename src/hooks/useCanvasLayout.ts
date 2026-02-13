@@ -2,12 +2,12 @@ import { merge } from 'es-toolkit/object';
 import { useRef, useState } from 'react';
 import type { GridLayoutProps } from 'react-grid-layout';
 
-import { useRotationStore } from '@/store/useRotationStore';
+import { useStore } from '@/store';
 
 export const useCanvasLayout = (
   partialProperties?: Partial<Omit<GridLayoutProps, 'children'>>,
 ) => {
-  const rotationAttackCount = useRotationStore((state) => state.attacks.length);
+  const rotationAttackCount = useStore((state) => state.attacks.length);
   const [isInteracting, setIsInteracting] = useState(false);
   const interactionTimeoutReference = useRef<ReturnType<typeof setTimeout> | null>(
     null,

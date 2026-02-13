@@ -1,6 +1,6 @@
 import { compact } from 'es-toolkit/array';
 
-import { useRotationStore } from '@/store/useRotationStore';
+import { useStore } from '@/store';
 
 import { useTeamDetails } from './useTeamDetails';
 
@@ -15,7 +15,7 @@ export type DetailedModifierInstance = ReturnType<
  * Returns fully resolved ModifierInstance objects for component consumption.
  */
 export const useTeamModifierInstances = () => {
-  const storedBuffs = useRotationStore((state) => state.buffs);
+  const storedBuffs = useStore((state) => state.buffs);
   const { buffs: gameDataBuffs, isLoading, isError } = useTeamDetails();
 
   const buffMap = new Map(gameDataBuffs.map((buff) => [buff.id, buff]));

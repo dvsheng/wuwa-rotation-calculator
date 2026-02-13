@@ -14,7 +14,7 @@ import type { useRotationCalculation } from '@/hooks/useRotationCalculation';
 import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
 import { useTeamAttackInstances } from '@/hooks/useTeamAttackInstances';
 import type { RotationResult } from '@/services/rotation-calculator/core/types';
-import { useRotationStore } from '@/store/useRotationStore';
+import { useStore } from '@/store';
 
 interface RotationResultDisplayProperties {
   result: NonNullable<ReturnType<typeof useRotationCalculation>['data']>;
@@ -37,7 +37,7 @@ export const RotationResultDisplay = ({
   result,
   isStale,
 }: RotationResultDisplayProperties) => {
-  const storedAttacks = useRotationStore((state) => state.attacks);
+  const storedAttacks = useStore((state) => state.attacks);
   const { attacks: resolvedAttacks } = useTeamAttackInstances();
 
   const data: Array<DamageRow> = useMemo(() => {

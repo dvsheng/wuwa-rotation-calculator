@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Row } from '@/components/ui/layout';
 import { useRotationCalculation } from '@/hooks/useRotationCalculation';
-import { useRotationStore } from '@/store/useRotationStore';
+import { useStore } from '@/store';
 
 import { RotationResultDisplay } from './RotationResultDisplay';
 
@@ -20,9 +20,7 @@ export const RotationSummary = () => {
     isFetching,
     isPlaceholderData,
   } = useRotationCalculation();
-  const isCalculateButtonVisible = useRotationStore(
-    (state) => state.attacks.length > 0,
-  );
+  const isCalculateButtonVisible = useStore((state) => state.attacks.length > 0);
 
   const handleClick = async () => {
     try {

@@ -1,14 +1,13 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
 import { calculateRotation } from '@/services/rotation-calculator/calculate-client-rotation-damage';
-import { useRotationStore } from '@/store/useRotationStore';
-import { useTeamStore } from '@/store/useTeamStore';
+import { useStore } from '@/store';
 
 export const useRotationCalculation = () => {
-  const team = useTeamStore((state) => state.team);
-  const enemy = useTeamStore((state) => state.enemy);
-  const attacks = useRotationStore((state) => state.attacks);
-  const buffs = useRotationStore((state) => state.buffs);
+  const team = useStore((state) => state.team);
+  const enemy = useStore((state) => state.enemy);
+  const attacks = useStore((state) => state.attacks);
+  const buffs = useStore((state) => state.buffs);
 
   return useQuery({
     queryKey: ['rotation-calculation', team, enemy, attacks, buffs],

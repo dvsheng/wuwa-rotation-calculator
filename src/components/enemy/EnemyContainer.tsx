@@ -8,12 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Section } from '@/components/ui/layout';
 import { Heading } from '@/components/ui/typography';
 import { EnemySchema } from '@/schemas/enemy';
-import { useTeamStore } from '@/store/useTeamStore';
+import { useStore } from '@/store';
 import { Attribute } from '@/types';
 
 export const EnemyContainer = () => {
-  const enemy = useTeamStore((state) => state.enemy);
-  const updateEnemy = useTeamStore((state) => state.updateEnemy);
+  const enemy = useStore((state) => state.enemy);
+  const updateEnemy = useStore((state) => state.updateEnemy);
 
   const form = useForm({
     defaultValues: enemy,

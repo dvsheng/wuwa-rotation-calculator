@@ -101,7 +101,9 @@ export const Palette = ({
                 variant="ghost"
                 className="flex w-full items-center justify-between px-4 py-2 hover:bg-transparent"
               >
-                <Text className="text-sm font-semibold">{headerText}</Text>
+                <Text className="text-sm font-semibold tracking-wider uppercase">
+                  {headerText}
+                </Text>
                 {isOpen ? (
                   <ChevronUp className="h-4 w-4" />
                 ) : (
@@ -121,7 +123,9 @@ export const Palette = ({
       <div className={cn('bg-background border-border border', className)}>
         {headerText && (
           <div className="border-border border-b px-4 py-2">
-            <Text className="text-sm font-semibold">{headerText}</Text>
+            <Text className="text-sm font-semibold tracking-wider uppercase">
+              {headerText}
+            </Text>
           </div>
         )}
         {content}
@@ -156,7 +160,7 @@ export const PaletteGroup = ({ name, children, className }: PaletteGroupProperti
 
   return (
     <div className={cn('flex items-start gap-3 px-3 py-2', className)}>
-      <Text className="text-primary w-24 shrink-0 pt-0.5 text-[10px] font-bold tracking-wider uppercase">
+      <Text className="text-primary w-24 shrink-0 pt-0.5 text-xs font-bold tracking-wider uppercase">
         {name}
       </Text>
       <div className="border-border h-auto self-stretch border-l" />
@@ -205,7 +209,7 @@ export const PaletteItem = ({
           onDragStart={onDragStart}
           onClick={onClick}
           className={cn(
-            'inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium transition-all hover:brightness-95',
+            'inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium transition-all hover:brightness-95',
             isDraggable && 'cursor-grab active:cursor-grabbing',
             onClick && 'cursor-pointer',
             className,
@@ -216,14 +220,14 @@ export const PaletteItem = ({
             <Button
               variant="ghost"
               size="icon"
-              className="hover:bg-primary hover:text-primary-foreground -mr-1 ml-1 h-4 w-4 cursor-pointer transition-colors"
+              className="hover:bg-primary hover:text-primary-foreground -mr-1 ml-1 h-5 w-5 cursor-pointer transition-colors"
               onPointerDown={(event) => event.stopPropagation()}
               onClick={(event) => {
                 event.stopPropagation();
                 onAdd();
               }}
             >
-              <Plus className="h-2.5 w-2.5" />
+              <Plus className="h-3 w-3" />
             </Button>
           )}
         </div>
@@ -266,21 +270,21 @@ export const PaletteLegend = ({ items, className }: PaletteLegendProperties) => 
   if (items.length === 0) return;
 
   return (
-    <div className={cn('flex flex-col gap-1.5 px-3 pb-3', className)}>
+    <div className={cn('flex flex-col gap-2 px-3 pb-3', className)}>
       <div className="flex items-center justify-between">
-        <Text className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
+        <Text className="text-muted-foreground text-sm font-medium tracking-tight uppercase">
           Filter by:
         </Text>
         {activeFilters.size > 0 && (
           <button
             onClick={clearFilters}
-            className="text-muted-foreground hover:text-foreground text-[10px] font-medium underline underline-offset-2 transition-colors"
+            className="text-muted-foreground hover:text-foreground text-sm font-medium underline underline-offset-2 transition-colors"
           >
             Clear Filters
           </button>
         )}
       </div>
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-2">
         {items.map((item) => {
           const isActive = activeFilters.has(item.label);
           return (
@@ -288,7 +292,7 @@ export const PaletteLegend = ({ items, className }: PaletteLegendProperties) => 
               key={item.label}
               onClick={() => toggleFilter(item.label)}
               className={cn(
-                'ring-primary/20 inline-flex cursor-pointer items-center rounded-md border px-2 py-0.5 text-[10px] font-bold transition-all hover:ring-2 hover:ring-offset-1 hover:brightness-95',
+                'ring-primary/20 inline-flex cursor-pointer items-center rounded-md border px-3 py-1 text-sm font-medium transition-all hover:ring-2 hover:ring-offset-1 hover:brightness-95',
                 item.className,
                 activeFilters.size > 0 && !isActive ? 'opacity-30' : 'opacity-100',
                 isActive && 'ring-primary ring-2 ring-offset-1 brightness-95',

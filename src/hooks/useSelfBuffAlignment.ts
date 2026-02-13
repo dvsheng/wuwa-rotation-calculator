@@ -1,5 +1,5 @@
 import { Target } from '@/services/game-data/types';
-import { useRotationStore } from '@/store/useRotationStore';
+import { useStore } from '@/store';
 
 interface BuffPosition {
   x: number;
@@ -26,7 +26,7 @@ export interface SelfBuffAlignmentResult {
  * Returns detailed alignment info that can be used to render partial fills.
  */
 export const useSelfBuffAlignment = (buff: BuffPosition): SelfBuffAlignmentResult => {
-  const attacks = useRotationStore((state) => state.attacks);
+  const attacks = useStore((state) => state.attacks);
 
   // Non-self buffs don't need alignment checking
   if (buff.target !== Target.SELF) {

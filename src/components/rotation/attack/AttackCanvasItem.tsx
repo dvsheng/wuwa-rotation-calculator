@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/typography';
 import { useCapabilityIcon, useEntityIcon } from '@/hooks/useIcons';
 import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
-import { useRotationStore } from '@/store/useRotationStore';
+import { useStore } from '@/store';
 
 interface AttackCanvasItemProperties {
   attack: DetailedAttackInstance;
@@ -20,9 +20,7 @@ export const AttackCanvasItem = ({
   onRemove,
   isInteracting,
 }: AttackCanvasItemProperties) => {
-  const updateAttackParameters = useRotationStore(
-    (state) => state.updateAttackParameters,
-  );
+  const updateAttackParameters = useStore((state) => state.updateAttackParameters);
 
   const { data: iconUrl } = useCapabilityIcon(attack.id, 'attack');
   const { data: characterIconUrl } = useEntityIcon(attack.characterId);

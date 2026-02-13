@@ -1,6 +1,4 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
+import type { StateCreator } from 'zustand';
 
 import type { Character } from '@/schemas/character';
 import type { EchoCost, EchoPiece, EchoSubstatOptionType } from '@/schemas/echo';
@@ -14,9 +12,9 @@ import type { Enemy } from '@/schemas/enemy';
 import type { Team } from '@/schemas/team';
 import type { RefineLevel } from '@/services/game-data/types';
 
-import { useRotationStore } from './useRotationStore';
+import type { RotationSlice } from './rotationSlice';
 
-export interface TeamState {
+export interface TeamSlice {
   team: Team;
   enemy: Enemy;
   updateCharacter: (index: number, updater: (draft: Character) => void) => void;
@@ -129,64 +127,62 @@ const initialTeam: Team = [
 
 const initialEnemy: Enemy = initialEnemyData;
 
-export const useTeamStore = create<TeamState>()(
-  persist(
-    immer((set) => ({
-      team: initialTeam,
-      enemy: initialEnemy,
-      updateCharacter: (index, updater) =>
-        set((state) => {
-          updater(state.team[index]);
-        }),
-      setCharacter: (index, id) =>
-        set((state) => {
-          const previousId = state.team[index].id;
-          state.team[index].id = id;
+export const createTeamSlice: StateCreator<
+  TeamSlice & RotationSlice,
+  [['zustand/immer', never], ['zustand/persist', unknown]],
+  [],
+  TeamSlice
+> = (set) => ({
+  team: initialTeam,
+  enemy: initialEnemy,
+  updateCharacter: (index, updater) =>
+    set((state) => {
+      updater(state.team[index]);
+    }),
+  setCharacter: (index, id) =>
+    set((state) => {
+      const previousId = state.team[index].id;
+      state.team[index].id = id;
 
-          // Clear attacks and buffs for the old character when character changes
-          if (previousId !== id) {
-            useRotationStore.getState().clearAllForCharacter(previousId);
-          }
-        }),
-      setSequence: (index, sequence) =>
-        set((state) => {
-          state.team[index].sequence = sequence;
-        }),
-      setWeapon: (index, id) =>
-        set((state) => {
-          state.team[index].weapon = { ...state.team[index].weapon, id };
-        }),
-      setRefine: (index, refine) =>
-        set((state) => {
-          state.team[index].weapon.refine = refine as RefineLevel;
-        }),
-      setEchoSet: (index, setIndex, id) =>
-        set((state) => {
-          state.team[index].echoSets[setIndex] = {
-            ...state.team[index].echoSets[setIndex],
-            id,
-          };
-        }),
-      setEchoSetRequirement: (index, setIndex, requirement) =>
-        set((state) => {
-          state.team[index].echoSets[setIndex].requirement = requirement as any;
-        }),
-      setPrimaryEcho: (index, id) =>
-        set((state) => {
-          state.team[index].primarySlotEcho = { id };
-        }),
-      updateEchoPiece: (characterIndex, echoIndex, updater) =>
-        set((state) => {
-          updater(state.team[characterIndex].echoStats[echoIndex]);
-        }),
-      updateEnemy: (updater) =>
-        set((state) => {
-          updater(state.enemy);
-        }),
-    })),
-    {
-      name: 'wuwa-rotation-team',
-      partialize: (state) => ({ team: state.team, enemy: state.enemy }),
-    },
-  ),
-);
+      // Clear attacks and buffs for the old character when character changes
+      if (previousId !== id) {
+        state.attacks = state.attacks.filter((a) => a.characterId !== previousId);
+        state.buffs = state.buffs.filter((b) => b.characterId !== previousId);
+      }
+    }),
+  setSequence: (index, sequence) =>
+    set((state) => {
+      state.team[index].sequence = sequence;
+    }),
+  setWeapon: (index, id) =>
+    set((state) => {
+      state.team[index].weapon = { ...state.team[index].weapon, id };
+    }),
+  setRefine: (index, refine) =>
+    set((state) => {
+      state.team[index].weapon.refine = refine as RefineLevel;
+    }),
+  setEchoSet: (index, setIndex, id) =>
+    set((state) => {
+      state.team[index].echoSets[setIndex] = {
+        ...state.team[index].echoSets[setIndex],
+        id,
+      };
+    }),
+  setEchoSetRequirement: (index, setIndex, requirement) =>
+    set((state) => {
+      state.team[index].echoSets[setIndex].requirement = requirement as '2' | '3' | '5';
+    }),
+  setPrimaryEcho: (index, id) =>
+    set((state) => {
+      state.team[index].primarySlotEcho = { id };
+    }),
+  updateEchoPiece: (characterIndex, echoIndex, updater) =>
+    set((state) => {
+      updater(state.team[characterIndex].echoStats[echoIndex]);
+    }),
+  updateEnemy: (updater) =>
+    set((state) => {
+      updater(state.enemy);
+    }),
+});

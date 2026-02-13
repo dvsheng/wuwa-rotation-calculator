@@ -1,4 +1,11 @@
+import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
+import { afterEach, vi } from 'vitest';
+
+// Cleanup after each test
+afterEach(() => {
+  cleanup();
+});
 
 // Mock localStorage for Zustand persist middleware
 class LocalStorageMock {
@@ -36,3 +43,7 @@ class LocalStorageMock {
 }
 
 globalThis.localStorage = new LocalStorageMock() as Storage;
+
+// Mock Zustand to reset stores between tests
+// This follows the pattern from: https://zustand.docs.pmnd.rs/guides/testing#vitest
+vi.mock('zustand');

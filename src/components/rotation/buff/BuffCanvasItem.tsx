@@ -12,7 +12,7 @@ import type { AlignmentSegment } from '@/hooks/useSelfBuffAlignment';
 import type { DetailedModifierInstance } from '@/hooks/useTeamModifierInstances';
 import { cn } from '@/lib/utils';
 import { Target } from '@/services/game-data/types';
-import { useRotationStore } from '@/store/useRotationStore';
+import { useStore } from '@/store';
 
 import { TARGET_COLORS } from './BuffPalette';
 
@@ -33,7 +33,7 @@ export const BuffTimelineCanvasItem = ({
   onRemove,
   isInteracting,
 }: BuffTimelineCanvasItemProperties) => {
-  const updateBuffParameters = useRotationStore((state) => state.updateBuffParameters);
+  const updateBuffParameters = useStore((state) => state.updateBuffParameters);
   const alignment = useSelfBuffAlignment(buff);
 
   const { data: iconUrl } = useCapabilityIcon(buff.id, 'modifier');

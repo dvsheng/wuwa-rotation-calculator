@@ -1,17 +1,11 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 
-import { useRotationStore } from './useRotationStore';
+import { useStore } from './index';
 
-describe('useRotationStore', () => {
-  beforeEach(() => {
-    // Reset store before each test
-    useRotationStore.setState({
-      attacks: [],
-      buffs: [],
-    });
-  });
+describe('useStore - rotation slice', () => {
+  // Store is automatically reset after each test via vitest.setup.ts
 
   describe('clearAttacksForCharacter', () => {
     it('should clear only attacks for the specified character', () => {
@@ -42,11 +36,11 @@ describe('useRotationStore', () => {
         },
       ];
 
-      useRotationStore.setState({ attacks });
+      useStore.setState({ attacks });
 
-      useRotationStore.getState().clearAttacksForCharacter(1304);
+      useStore.getState().clearAttacksForCharacter(1304);
 
-      const remainingAttacks = useRotationStore.getState().attacks;
+      const remainingAttacks = useStore.getState().attacks;
       expect(remainingAttacks).toHaveLength(2);
       expect(remainingAttacks.every((a) => a.characterId !== 1304)).toBe(true);
       expect(remainingAttacks.map((a) => a.instanceId)).toEqual([
@@ -71,11 +65,11 @@ describe('useRotationStore', () => {
         },
       ];
 
-      useRotationStore.setState({ attacks });
+      useStore.setState({ attacks });
 
-      useRotationStore.getState().clearAttacksForCharacter(9999);
+      useStore.getState().clearAttacksForCharacter(9999);
 
-      expect(useRotationStore.getState().attacks).toHaveLength(2);
+      expect(useStore.getState().attacks).toHaveLength(2);
     });
   });
 
@@ -124,11 +118,11 @@ describe('useRotationStore', () => {
         },
       ];
 
-      useRotationStore.setState({ buffs });
+      useStore.setState({ buffs });
 
-      useRotationStore.getState().clearBuffsForCharacter(1304);
+      useStore.getState().clearBuffsForCharacter(1304);
 
-      const remainingBuffs = useRotationStore.getState().buffs;
+      const remainingBuffs = useStore.getState().buffs;
       expect(remainingBuffs).toHaveLength(2);
       expect(remainingBuffs.every((b) => b.characterId !== 1304)).toBe(true);
       expect(remainingBuffs.map((b) => b.instanceId)).toEqual(['buff-2', 'buff-4']);
@@ -158,11 +152,11 @@ describe('useRotationStore', () => {
         },
       ];
 
-      useRotationStore.setState({ buffs });
+      useStore.setState({ buffs });
 
-      useRotationStore.getState().clearBuffsForCharacter(9999);
+      useStore.getState().clearBuffsForCharacter(9999);
 
-      expect(useRotationStore.getState().buffs).toHaveLength(2);
+      expect(useStore.getState().buffs).toHaveLength(2);
     });
   });
 
@@ -206,11 +200,11 @@ describe('useRotationStore', () => {
         },
       ];
 
-      useRotationStore.setState({ attacks, buffs });
+      useStore.setState({ attacks, buffs });
 
-      useRotationStore.getState().clearAllForCharacter(1304);
+      useStore.getState().clearAllForCharacter(1304);
 
-      const state = useRotationStore.getState();
+      const state = useStore.getState();
       expect(state.attacks).toHaveLength(1);
       expect(state.attacks[0].characterId).toBe(1209);
       expect(state.buffs).toHaveLength(1);
@@ -246,11 +240,11 @@ describe('useRotationStore', () => {
         },
       ];
 
-      useRotationStore.setState({ attacks, buffs });
+      useStore.setState({ attacks, buffs });
 
-      useRotationStore.getState().clearAllForCharacter(1304);
+      useStore.getState().clearAllForCharacter(1304);
 
-      const state = useRotationStore.getState();
+      const state = useStore.getState();
       expect(state.attacks).toHaveLength(1);
       expect(state.attacks[0].characterId).toBe(1209);
       expect(state.buffs).toHaveLength(1);
@@ -289,11 +283,11 @@ describe('useRotationStore', () => {
         },
       ];
 
-      useRotationStore.setState({ attacks, buffs });
+      useStore.setState({ attacks, buffs });
 
-      useRotationStore.getState().clearAllForCharacter(1304);
+      useStore.getState().clearAllForCharacter(1304);
 
-      const state = useRotationStore.getState();
+      const state = useStore.getState();
       expect(state.attacks).toHaveLength(1);
       expect(state.buffs).toHaveLength(1);
       expect(state.buffs[0].characterId).toBe(1209);

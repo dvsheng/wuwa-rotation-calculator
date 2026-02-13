@@ -1,5 +1,9 @@
-import { Palette } from '@/components/common/Palette';
-import { PaletteItem } from '@/components/common/PaletteItem';
+import {
+  Palette,
+  PaletteGroup,
+  PaletteItem,
+  PaletteLegend,
+} from '@/components/common/Palette';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
 import type { Capability } from '@/schemas/rotation';
 import type { AttackOriginType } from '@/services/game-data/types';
@@ -32,22 +36,6 @@ export const AttackPalette = ({
   const { attacks } = useTeamDetails();
   const byCharacter = Object.groupBy(attacks, (a) => a.characterName);
 
-  const groups = Object.entries(byCharacter).map(([charName, charAttacks]) => {
-    const bySkill = Object.groupBy(charAttacks ?? [], (a) => a.originType);
-    // Get ordered skills first, then any remaining skills not in the order
-    const orderedSkills = SKILL_ORDER.filter((skill) => bySkill[skill]?.length);
-    const remainingSkills = (Object.keys(bySkill) as Array<AttackOriginType>).filter(
-      (skill) => !SKILL_ORDER.includes(skill),
-    );
-    return {
-      name: charName,
-      subgroups: [...orderedSkills, ...remainingSkills].map((skillName) => ({
-        name: skillName,
-        items: bySkill[skillName] ?? [],
-      })),
-    };
-  });
-
   const legend = SKILL_ORDER.map((skill) => ({
     label: skill,
     className: SKILL_COLORS[skill],
@@ -55,27 +43,45 @@ export const AttackPalette = ({
 
   return (
     <Palette
-      groups={groups}
-      getItemKey={(attack) => String(attack.id)}
-      getItemLegendLabel={(attack) => attack.originType}
       emptyMessage="No attacks available"
       className={className}
       isCollapsible={true}
       headerText="Attack Palette"
-      legend={legend}
-      renderItem={(attack) => (
-        <PaletteItem
-          text={attack.name}
-          hoverText={attack.description}
-          onDragStart={
-            onDragAttack ? (event) => onDragAttack(attack, event) : undefined
-          }
-          onAdd={onAddAttack ? () => onAddAttack(attack) : undefined}
-          onClick={onClickAttack ? () => onClickAttack(attack) : undefined}
-          className={SKILL_COLORS[attack.originType]}
-        />
-      )}
-    />
+    >
+      <PaletteLegend items={legend} />
+
+      {Object.entries(byCharacter).map(([charName, charAttacks]) => {
+        const bySkill = Object.groupBy(charAttacks ?? [], (a) => a.originType);
+        // Get ordered skills first, then any remaining skills not in the order
+        const orderedSkills = SKILL_ORDER.filter((skill) => bySkill[skill]?.length);
+        const remainingSkills = (
+          Object.keys(bySkill) as Array<AttackOriginType>
+        ).filter((skill) => !SKILL_ORDER.includes(skill));
+
+        const allAttacks = [...orderedSkills, ...remainingSkills].flatMap(
+          (skillName) => bySkill[skillName] ?? [],
+        );
+
+        return (
+          <PaletteGroup key={charName} name={charName}>
+            {allAttacks.map((attack) => (
+              <PaletteItem
+                key={attack.id}
+                text={attack.name}
+                hoverText={attack.description}
+                legendLabel={attack.originType}
+                onDragStart={
+                  onDragAttack ? (event) => onDragAttack(attack, event) : undefined
+                }
+                onAdd={onAddAttack ? () => onAddAttack(attack) : undefined}
+                onClick={onClickAttack ? () => onClickAttack(attack) : undefined}
+                className={SKILL_COLORS[attack.originType]}
+              />
+            ))}
+          </PaletteGroup>
+        );
+      })}
+    </Palette>
   );
 };
 

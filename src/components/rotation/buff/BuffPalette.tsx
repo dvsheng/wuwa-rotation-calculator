@@ -1,5 +1,9 @@
-import { Palette } from '@/components/common/Palette';
-import { PaletteItem } from '@/components/common/PaletteItem';
+import {
+  Palette,
+  PaletteGroup,
+  PaletteItem,
+  PaletteLegend,
+} from '@/components/common/Palette';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
 import type { Capability } from '@/schemas/rotation';
 import type { OriginType } from '@/services/game-data/types';
@@ -33,24 +37,6 @@ export const BuffPalette = ({
   const { buffs } = useTeamDetails();
   const byCharacter = Object.groupBy(buffs, (b) => b.characterName);
 
-  const groups = Object.entries(byCharacter).map(([charName, charBuffs]) => {
-    const bySkill = Object.groupBy(charBuffs ?? [], (b) => b.originType);
-
-    // Get ordered skills first, then any remaining skills not in the order
-    const orderedSkills = SKILL_ORDER.filter((skill) => bySkill[skill]?.length);
-    const remainingSkills = (Object.keys(bySkill) as Array<OriginType>).filter(
-      (skill) => !SKILL_ORDER.includes(skill),
-    );
-
-    return {
-      name: charName,
-      subgroups: [...orderedSkills, ...remainingSkills].map((skillName) => ({
-        name: skillName,
-        items: bySkill[skillName] ?? [],
-      })),
-    };
-  });
-
   const legend = Object.entries(TARGET_LABELS).map(([target, label]) => ({
     label,
     className: TARGET_COLORS[target as Target],
@@ -58,24 +44,45 @@ export const BuffPalette = ({
 
   return (
     <Palette
-      groups={groups}
-      getItemKey={(buff) => String(buff.id)}
-      getItemLegendLabel={(buff) => TARGET_LABELS[buff.target]}
       emptyMessage="No buffs available"
       className={className}
       isCollapsible={true}
       headerText="Buff Palette"
-      legend={legend}
-      renderItem={(buff) => (
-        <PaletteItem
-          text={buff.name}
-          hoverText={buff.description}
-          onDragStart={onDragBuff ? (event) => onDragBuff(buff, event) : undefined}
-          onClick={onClickBuff ? () => onClickBuff(buff) : undefined}
-          className={TARGET_COLORS[buff.target]}
-        />
-      )}
-    />
+    >
+      <PaletteLegend items={legend} />
+
+      {Object.entries(byCharacter).map(([charName, charBuffs]) => {
+        const bySkill = Object.groupBy(charBuffs ?? [], (b) => b.originType);
+
+        // Get ordered skills first, then any remaining skills not in the order
+        const orderedSkills = SKILL_ORDER.filter((skill) => bySkill[skill]?.length);
+        const remainingSkills = (Object.keys(bySkill) as Array<OriginType>).filter(
+          (skill) => !SKILL_ORDER.includes(skill),
+        );
+
+        const allBuffs = [...orderedSkills, ...remainingSkills].flatMap(
+          (skillName) => bySkill[skillName] ?? [],
+        );
+
+        return (
+          <PaletteGroup key={charName} name={charName}>
+            {allBuffs.map((buff) => (
+              <PaletteItem
+                key={buff.id}
+                text={buff.name}
+                hoverText={buff.description}
+                legendLabel={TARGET_LABELS[buff.target]}
+                onDragStart={
+                  onDragBuff ? (event) => onDragBuff(buff, event) : undefined
+                }
+                onClick={onClickBuff ? () => onClickBuff(buff) : undefined}
+                className={TARGET_COLORS[buff.target]}
+              />
+            ))}
+          </PaletteGroup>
+        );
+      })}
+    </Palette>
   );
 };
 

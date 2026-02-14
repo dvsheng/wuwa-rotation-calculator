@@ -1,4 +1,4 @@
-import { mapAsync } from 'es-toolkit/array';
+import { mapAsync, zip } from 'es-toolkit/array';
 
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import type { Team as ClientTeam } from '@/schemas/team';
@@ -6,6 +6,7 @@ import { getEntityByHakushinId } from '@/services/game-data/get-entity-details.f
 import type {
   Attack,
   BaseCapability,
+  BaseEntity,
   Modifier as GameDataModifier,
 } from '@/services/game-data/types';
 
@@ -31,7 +32,7 @@ export class GameDataNotFoundError extends Error {
  * @returns Object with methods to enrich attacks, modifiers, and get permanent stats
  */
 export const createGameDataEnricher = async (clientTeam: ClientTeam) => {
-  const { entityDetails, modifierDetails, attackDetails } =
+  const { entityDetailsByCharacterIndex, modifierDetails, attackDetails } =
     await fetchRotationGameData(clientTeam);
 
   const attackEnricher = createEnricher(attackDetails, 'attack');
@@ -59,7 +60,9 @@ export const createGameDataEnricher = async (clientTeam: ClientTeam) => {
      * Includes stats from the character, weapon, echo, and echo sets.
      */
     getPermanentStatsForCharacter: (characterIndex: number) => {
-      return entityDetails[characterIndex].capabilities.permanentStats;
+      return entityDetailsByCharacterIndex[characterIndex].flatMap(
+        (entity) => entity.capabilities.permanentStats,
+      );
     },
   };
 };
@@ -96,26 +99,31 @@ const fetchRotationGameData = async (clientTeam: ClientTeam) => {
             },
           }),
         ),
-        mapAsync(
-          clientTeam.flatMap((c) => c.echoSets),
-          (set) =>
-            getEntityByHakushinId({
-              data: {
-                id: set.id,
-                entityType: 'echo_set',
-                activatedSetBonus: Number.parseInt(set.requirement),
-              },
-            }),
+        mapAsync(clientTeam, (c) =>
+          Promise.all(
+            c.echoSets.map((set) =>
+              getEntityByHakushinId({
+                data: {
+                  id: set.id,
+                  entityType: 'echo_set',
+                  activatedSetBonus: Number.parseInt(set.requirement),
+                },
+              }),
+            ),
+          ),
         ),
       ]);
 
-    const allEntityDetails = [
-      ...echoDetails,
-      ...characterDetails,
-      ...weaponDetails,
-      ...echoSetDetails,
-    ];
+    const entityDetailsByCharacterIndex: Array<Array<BaseEntity>> = zip(
+      characterDetails,
+      weaponDetails,
+      echoDetails,
+      echoSetDetails,
+    ).map(([character, weapon, echo, echoSets]) => {
+      return [character, weapon, echo, ...echoSets];
+    });
 
+    const allEntityDetails = entityDetailsByCharacterIndex.flat();
     const modifierDetails = allEntityDetails.flatMap(
       (entity) => entity.capabilities.modifiers,
     );
@@ -124,7 +132,7 @@ const fetchRotationGameData = async (clientTeam: ClientTeam) => {
     );
 
     return {
-      entityDetails: allEntityDetails,
+      entityDetailsByCharacterIndex,
       modifierDetails,
       attackDetails,
     };

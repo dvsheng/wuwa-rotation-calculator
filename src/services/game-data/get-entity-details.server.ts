@@ -142,6 +142,7 @@ export const getEntityByHakushinIdHandler = async (
     },
   });
   if (!entity) {
+    console.error(`Entity not found for ID ${options.id}`);
     throw new Error(`Entity not found for ID ${options.id}`);
   }
 

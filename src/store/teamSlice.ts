@@ -79,7 +79,7 @@ const CHARACTER_DEFAULTS: Record<
 > = {
   1304: {
     // Jinhsi
-    weaponId: 21_010_025,
+    weaponId: 21_010_026,
     echoSetId: 5,
     primaryEchoId: 6_000_059,
   },
@@ -95,14 +95,14 @@ const CHARACTER_DEFAULTS: Record<
     echoSetId: 7,
     primaryEchoId: 390_080_005,
   },
-};
+} as const;
 
 const createDefaultCharacter = (
-  id: number,
-  defaults = CHARACTER_DEFAULTS[id] ?? {
-    weaponId: 21_010_025,
-    echoSetId: 5,
-    primaryEchoId: 6_000_059,
+  id: number = 1304,
+  defaults = CHARACTER_DEFAULTS[id] as {
+    weaponId: number;
+    echoSetId: number;
+    primaryEchoId: number;
   },
 ): Character => ({
   id,

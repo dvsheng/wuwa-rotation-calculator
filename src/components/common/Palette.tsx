@@ -46,7 +46,7 @@ export interface PaletteProperties {
   emptyMessage?: string;
 }
 
-export const Palette = ({
+const PaletteRoot = ({
   children,
   className,
   isCollapsible = false,
@@ -308,3 +308,5 @@ export const PaletteLegend = ({ items, className }: PaletteLegendProperties) => 
 };
 
 PaletteLegend.displayName = 'PaletteLegend';
+
+export { PaletteRoot as Palette };

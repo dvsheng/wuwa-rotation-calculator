@@ -4,22 +4,18 @@ import { database } from '@/db/client';
 import { attacks, entities, modifiers } from '@/db/schema';
 import type { GetIconsRequest, IconRequestType } from '@/schemas/game-data-service';
 
-const HAKUSHIN_BASE_URL = 'https://api.hakush.in/ww';
+const ENCORE_MOE_IMAGE_ASSETS_URL = 'https://api-v2.encore.moe/resource/Data';
 
 /**
- * Strips the /Game/Aki/ prefix from icon paths, replaces the extension with .webp,
- * and returns the full Hakushin API URL.
+ * Converts an icon path to a full encore.moe API URL with .png extension.
  */
 const processIconPath = (iconPath?: string | null): string | undefined => {
   if (!iconPath) return undefined;
 
-  // Strip /Game/Aki/ prefix
-  let processed = iconPath.replace(/^\/Game\/Aki\//i, '/');
+  // Remove file extension and add .png
+  const pathWithPng = iconPath.replace(/\.[^.]*$/, '.png');
 
-  // Remove everything after and including the last dot, then add .webp
-  processed = processed.replace(/\.[^.]*$/, '.webp');
-
-  return `${HAKUSHIN_BASE_URL}${processed}`;
+  return new URL(pathWithPng, ENCORE_MOE_IMAGE_ASSETS_URL).href;
 };
 
 /**

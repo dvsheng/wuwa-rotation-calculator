@@ -14,7 +14,7 @@ interface GameImageProperties extends Omit<
 
 /**
  * A standard image component for game assets.
- * For entity icons, uses the icon service to fetch from Hakushin API.
+ * For entity icons, uses the icon service to fetch from a game data API.
  * For other image types, uses local assets.
  */
 export const GameImage = ({

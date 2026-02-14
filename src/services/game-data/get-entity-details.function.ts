@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start';
 
-import { GetEntityDetailsInputSchema } from '@/schemas/game-data-service';
+import { GetEntityDetailsRequestSchema } from '@/schemas/game-data-service';
 
 import {
   getClientEntityByHakushinIdHandler,
@@ -10,7 +10,7 @@ import {
 export const getEntityByHakushinId = createServerFn({
   method: 'GET',
 })
-  .inputValidator(GetEntityDetailsInputSchema)
+  .inputValidator(GetEntityDetailsRequestSchema)
   .handler(async ({ data }) => {
     return getEntityByHakushinIdHandler(data);
   });
@@ -18,7 +18,7 @@ export const getEntityByHakushinId = createServerFn({
 export const getClientEntityByHakushinId = createServerFn({
   method: 'GET',
 })
-  .inputValidator(GetEntityDetailsInputSchema)
+  .inputValidator(GetEntityDetailsRequestSchema)
   .handler(async ({ data }) => {
     return getClientEntityByHakushinIdHandler(data);
   });

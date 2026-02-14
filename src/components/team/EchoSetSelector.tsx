@@ -10,7 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useEchoSetList } from '@/hooks/useEchoSetList';
+import { EntityType } from '@/db/schema';
+import { useEntityList } from '@/hooks/useEntityList';
 import { useStore } from '@/store';
 
 import { AssetIcon } from '../common/AssetIcon';
@@ -21,7 +22,7 @@ interface EchoSetSelectorProperties {
 
 export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
   const selectedEchoSets = useStore((state) => state.team[index].echoSets);
-  const { data: echoSetList = [] } = useEchoSetList();
+  const { data: echoSetList = [] } = useEntityList({ entityType: EntityType.ECHO_SET });
   const setEchoSet = useStore((state) => state.setEchoSet);
   const setEchoSetRequirement = useStore((state) => state.setEchoSetRequirement);
   const updateCharacter = useStore((state) => state.updateCharacter);

@@ -2,9 +2,10 @@ import { GameImage } from '@/components/common/GameImage';
 import { SelectionDialog } from '@/components/common/SelectionDialog';
 import type { FilterConfig } from '@/components/common/SelectionDialog';
 import { Badge } from '@/components/ui/badge';
-import { useCharacterList } from '@/hooks/useCharacterList';
+import { EntityType } from '@/db/schema';
+import { useEntityList } from '@/hooks/useEntityList';
 import { cn } from '@/lib/utils';
-import type { ListCharactersResponseItem } from '@/services/game-data/list-characters';
+import type { ListCharactersResponseItem } from '@/services/game-data/list-entities.server';
 import { resolveImagePath } from '@/services/image-service';
 import { Attribute } from '@/types';
 
@@ -24,7 +25,9 @@ export const CharacterSelectionDialog = ({
   onValueChange,
   excludeIds = [],
 }: CharacterSelectionDialogProperties) => {
-  const { data: characterList = [] } = useCharacterList();
+  const { data: characterList = [] } = useEntityList({
+    entityType: EntityType.CHARACTER,
+  });
 
   const attributeFilter: FilterConfig<ListCharactersResponseItem> = {
     label: 'Attribute',

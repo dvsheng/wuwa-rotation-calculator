@@ -15,7 +15,13 @@ import type {
   Sequence,
 } from '@/services/game-data/types';
 import { Target } from '@/services/game-data/types';
-import type { AbilityAttribute, Attribute, CharacterStat, EnemyStat } from '@/types';
+import type {
+  AbilityAttribute,
+  Attribute,
+  CharacterStat,
+  EnemyStat,
+  WeaponType,
+} from '@/types';
 
 // Re-export store types for backward compatibility
 export type {
@@ -60,12 +66,16 @@ export const entities = sqliteTable('entities', {
   name: text('name').notNull(),
   type: text('type').notNull().$type<EntityType>(),
   iconPath: text('icon_path'),
+  rank: integer('rank'), // Rarity rank (e.g., 4, 5)
+  weaponType: text('weapon_type').$type<WeaponType>(), // Weapon type for characters and weapons
+  description: text('description'), // Entity description
 
   // Character-specific fields
   attribute: text('attribute').$type<Attribute>(),
 
   // Echo-specific fields
   echoSetIds: text('echo_set_ids', { mode: 'json' }).$type<Array<number>>(),
+  cost: integer('cost'), // Echo cost (1, 3, or 4)
 
   // Echo Set-specific fields
   setBonusThresholds: text('set_bonus_thresholds', { mode: 'json' }).$type<

@@ -2,7 +2,7 @@ import { inArray } from 'drizzle-orm';
 
 import { database } from '@/db/client';
 import { attacks, entities, modifiers } from '@/db/schema';
-import type { GetIconsInput, IconRequestType } from '@/schemas/game-data-service';
+import type { GetIconsRequest, IconRequestType } from '@/schemas/game-data-service';
 
 const HAKUSHIN_BASE_URL = 'https://api.hakush.in/ww';
 
@@ -33,7 +33,7 @@ const getIconKey = (type: IconRequestType, id: number): string => `${type}:${id}
  * For capabilities without icons, falls back to the parent entity's icon.
  * Returns an array with iconUrl appended to each request.
  */
-export const getIconsHandler = async (requests: GetIconsInput) => {
+export const getIconsHandler = async (requests: GetIconsRequest) => {
   // Group requests by type
   const attackIds = requests.filter((r) => r.type === 'attack').map((r) => r.id);
   const modifierIds = requests.filter((r) => r.type === 'modifier').map((r) => r.id);

@@ -2,9 +2,10 @@ import { GameImage } from '@/components/common/GameImage';
 import type { FilterConfig } from '@/components/common/SelectionDialog';
 import { SelectionDialog } from '@/components/common/SelectionDialog';
 import { Row } from '@/components/ui/layout';
-import { useEchoList } from '@/hooks/useEchoList';
+import { EntityType } from '@/db/schema';
+import { useEntityList } from '@/hooks/useEntityList';
 import { cn } from '@/lib/utils';
-import type { ListEchoesResponseItem } from '@/services/game-data/list-echoes';
+import type { ListEchoesResponseItem } from '@/services/game-data/list-entities.server';
 import { useStore } from '@/store';
 
 import { AssetIcon } from '../common/AssetIcon';
@@ -17,7 +18,7 @@ export const PrimaryEchoSelector = ({ index }: PrimaryEchoSelectorProperties) =>
   const echo = useStore((state) => state.team[index].primarySlotEcho);
   const selectedEchoSets = useStore((state) => state.team[index].echoSets);
   const setEcho = useStore((state) => state.setPrimaryEcho);
-  const { data: echoList = [] } = useEchoList();
+  const { data: echoList = [] } = useEntityList({ entityType: EntityType.ECHO });
 
   // Filter echoes by selected echo set IDs
   const selectedSetIds = new Set(selectedEchoSets.map((set) => set.id));

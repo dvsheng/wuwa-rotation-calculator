@@ -9,10 +9,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useCharacterList } from '@/hooks/useCharacterList';
-import { useWeaponList } from '@/hooks/useWeaponList';
+import { EntityType } from '@/db/schema';
+import { useEntityList } from '@/hooks/useEntityList';
 import { cn } from '@/lib/utils';
-import type { ListWeaponsResponseItem } from '@/services/game-data/list-weapons';
+import type { ListWeaponsResponseItem } from '@/services/game-data/list-entities.server';
 import { useStore } from '@/store';
 import { WeaponType } from '@/types';
 
@@ -27,8 +27,10 @@ export const WeaponSelector = ({ index }: WeaponSelectorProperties) => {
   const weapon = useStore((state) => state.team[index].weapon);
   const setWeapon = useStore((state) => state.setWeapon);
   const setRefine = useStore((state) => state.setRefine);
-  const { data: characterList = [] } = useCharacterList();
-  const { data: weaponList = [] } = useWeaponList();
+  const { data: characterList = [] } = useEntityList({
+    entityType: EntityType.CHARACTER,
+  });
+  const { data: weaponList = [] } = useEntityList({ entityType: EntityType.WEAPON });
 
   const selectedCharacterData = characterList.find((c) => c.id === characterId);
   const weaponTypeFilter: FilterConfig<ListWeaponsResponseItem> = {

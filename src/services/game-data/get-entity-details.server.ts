@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { database } from '@/db/client';
 import type { Entity, StoreCapability } from '@/db/schema';
 import { EntityType, entities } from '@/db/schema';
-import type { GetEntityDetailsInput } from '@/schemas/game-data-service';
+import type { GetEntityDetailsRequest } from '@/schemas/game-data-service';
 import {
   replaceNullsWithUndefined,
   resolveStoreNumberType,
@@ -16,7 +16,7 @@ import { OriginType } from './types';
 import type {
   Attack,
   BaseEntity,
-  GetClientEntityDetailsOutput,
+  GetClientEntityDetailsResponse,
   RefineLevel,
   Sequence,
 } from './types';
@@ -130,7 +130,7 @@ const addCapabilityDefaultValues = <T extends StoreCapability>(
  * Resolves alternativeDefinitions based on the requested sequence.
  */
 export const getEntityByHakushinIdHandler = async (
-  options: GetEntityDetailsInput,
+  options: GetEntityDetailsRequest,
 ): Promise<BaseEntity> => {
   // Query entity with all capabilities
   const entity = await database.query.entities.findFirst({
@@ -200,8 +200,8 @@ export const getEntityByHakushinIdHandler = async (
 };
 
 export const getClientEntityByHakushinIdHandler = async (
-  options: GetEntityDetailsInput,
-): Promise<GetClientEntityDetailsOutput> => {
+  options: GetEntityDetailsRequest,
+): Promise<GetClientEntityDetailsResponse> => {
   const entity = await getEntityByHakushinIdHandler(options);
   return {
     id: entity.id,

@@ -226,7 +226,7 @@ export interface ClientModifier extends ClientCapability {
 /**
  * Base output format for client-facing entity details.
  */
-export interface GetClientEntityDetailsOutput {
+export interface GetClientEntityDetailsResponse {
   id: number;
   name: string;
   /** Active attacks for the entity */

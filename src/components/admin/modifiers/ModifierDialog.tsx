@@ -29,7 +29,7 @@ import {
   getModifierById,
   updateModifier,
 } from '@/services/admin/modifiers.function';
-import { OriginType, Sequence, Target } from '@/services/game-data/types';
+import { OriginType, Sequence, Target } from '@/services/game-data';
 
 interface ModifierDialogProperties {
   isOpen: boolean;

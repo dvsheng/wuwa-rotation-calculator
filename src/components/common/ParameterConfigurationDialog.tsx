@@ -12,7 +12,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { ParameterInstance } from '@/schemas/rotation';
-import type { Parameter } from '@/services/game-data/types';
+import type { Parameter } from '@/services/game-data';
 
 interface ParameterConfigurationDialogProperties {
   title: string;

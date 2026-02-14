@@ -11,7 +11,7 @@ import {
 import type { AlignmentSegment } from '@/hooks/useSelfBuffAlignment';
 import type { DetailedModifierInstance } from '@/hooks/useTeamModifierInstances';
 import { cn } from '@/lib/utils';
-import { Target } from '@/services/game-data/types';
+import { Target } from '@/services/game-data';
 import { useStore } from '@/store';
 
 import { TARGET_COLORS } from './BuffPalette';

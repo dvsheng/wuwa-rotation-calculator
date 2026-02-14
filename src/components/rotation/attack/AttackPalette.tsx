@@ -6,7 +6,7 @@ import {
 } from '@/components/common/Palette';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
 import type { Capability } from '@/schemas/rotation';
-import type { AttackOriginType } from '@/services/game-data/types';
+import type { AttackOriginType } from '@/services/game-data';
 
 export interface AttackPaletteProperties {
   onAddAttack?: (attack: Capability) => void;

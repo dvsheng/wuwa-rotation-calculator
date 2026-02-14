@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { EntityType } from '@/db/schema';
 import { useEntityList } from '@/hooks/useEntityList';
 import { cn } from '@/lib/utils';
-import type { ListCharactersResponseItem } from '@/services/game-data/list-entities.server';
+import type { ListCharactersResponseItem } from '@/services/game-data';
 import { resolveImagePath } from '@/services/image-service';
 import { Attribute } from '@/types';
 

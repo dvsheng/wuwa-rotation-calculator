@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Text } from '@/components/ui/typography';
 import type { ParameterInstance } from '@/schemas/rotation';
-import type { Parameter } from '@/services/game-data/types';
+import type { Parameter } from '@/services/game-data';
 
 import { ParameterConfigurationDialog } from './ParameterConfigurationDialog';
 

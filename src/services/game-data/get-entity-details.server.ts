@@ -4,22 +4,17 @@ import { database } from '@/db/client';
 import type { Entity, StoreCapability } from '@/db/schema';
 import { EntityType, entities } from '@/db/schema';
 import type { GetEntityDetailsRequest } from '@/schemas/game-data-service';
-import {
-  replaceNullsWithUndefined,
-  resolveStoreNumberType,
-} from '@/services/game-data/database-type-adapters';
 import { Tag } from '@/types';
 import type { Attribute } from '@/types';
 
 import { toClientAttack, toClientBuff } from './client-type-adapters';
+import {
+  replaceNullsWithUndefined,
+  resolveStoreNumberType,
+} from './database-type-adapters';
+import type { GetClientEntityDetailsResponse } from './get-entity-details.types';
 import { OriginType } from './types';
-import type {
-  Attack,
-  BaseEntity,
-  GetClientEntityDetailsResponse,
-  RefineLevel,
-  Sequence,
-} from './types';
+import type { Attack, BaseEntity, RefineLevel, Sequence } from './types';
 
 /**
  * Convert sequence string to number (e.g., 's1' -> 1, 's2' -> 2).

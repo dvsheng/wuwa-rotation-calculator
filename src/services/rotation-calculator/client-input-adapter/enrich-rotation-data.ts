@@ -2,13 +2,13 @@ import { mapAsync, zip } from 'es-toolkit/array';
 
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import type { Team as ClientTeam } from '@/schemas/team';
-import { getEntityByHakushinId } from '@/services/game-data/get-entity-details.function';
 import type {
   Attack,
   BaseCapability,
   BaseEntity,
   Modifier as GameDataModifier,
-} from '@/services/game-data/types';
+} from '@/services/game-data';
+import { getEntityByHakushinId } from '@/services/game-data';
 
 /**
  * Error thrown when game data is not found.

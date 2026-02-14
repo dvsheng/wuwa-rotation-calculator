@@ -4,12 +4,12 @@ import type { EchoMainStatOptionType, EchoSubstatOptionType } from '@/schemas/ec
 import type { Enemy as ClientEnemy } from '@/schemas/enemy';
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import type { Team as ClientTeam } from '@/schemas/team';
-import { getEchoStats } from '@/services/game-data/get-echo-stats';
 import type {
   Attack,
   Modifier as GameDataModifier,
   PermanentStatBase,
-} from '@/services/game-data/types';
+} from '@/services/game-data';
+import { getEchoStats } from '@/services/game-data';
 import { CharacterStat, Tag } from '@/types';
 import type {
   CharacterDamageInstance,

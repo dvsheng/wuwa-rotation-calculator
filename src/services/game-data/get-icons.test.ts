@@ -69,8 +69,12 @@ const createEntity = (overrides: Partial<Entity> = {}): Entity => ({
   name: 'Test Entity',
   type: 'character',
   iconPath: null,
+  rank: null,
+  weaponType: null,
+  description: null,
   attribute: Attribute.GLACIO,
   echoSetIds: null,
+  cost: null,
   setBonusThresholds: null,
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -100,7 +104,7 @@ describe('getIconsHandler', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].iconUrl).toBe(
-        'https://api.hakush.in/ww/UI/UIResources/Common/Atlas/SkillIcon/T_Attack1.webp',
+        'https://api-v2.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Atlas/SkillIcon/T_Attack1.png',
       );
       // Should not query entities for fallback since attack has its own icon
       expect(database.query.entities.findMany).toHaveBeenCalledTimes(0);
@@ -131,7 +135,7 @@ describe('getIconsHandler', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].iconUrl).toBe(
-        'https://api.hakush.in/ww/UI/UIResources/Common/Image/IconRoleHead256/T_Character.webp',
+        'https://api-v2.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconRoleHead256/T_Character.png',
       );
       // Should query entities for fallback
       expect(database.query.entities.findMany).toHaveBeenCalledTimes(1);
@@ -171,11 +175,11 @@ describe('getIconsHandler', () => {
       expect(result).toHaveLength(2);
       // Attack 1 uses its own icon
       expect(result[0].iconUrl).toBe(
-        'https://api.hakush.in/ww/UI/UIResources/Common/Atlas/SkillIcon/T_Attack1.webp',
+        'https://api-v2.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Atlas/SkillIcon/T_Attack1.png',
       );
       // Attack 2 falls back to entity icon
       expect(result[1].iconUrl).toBe(
-        'https://api.hakush.in/ww/UI/UIResources/Common/Image/IconRoleHead256/T_Character2.webp',
+        'https://api-v2.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconRoleHead256/T_Character2.png',
       );
     });
 
@@ -227,7 +231,7 @@ describe('getIconsHandler', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].iconUrl).toBe(
-        'https://api.hakush.in/ww/UI/UIResources/Common/Image/IconWeapon/T_Weapon.webp',
+        'https://api-v2.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconWeapon/T_Weapon.png',
       );
     });
   });
@@ -249,7 +253,7 @@ describe('getIconsHandler', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].iconUrl).toBe(
-        'https://api.hakush.in/ww/UI/UIResources/Common/Image/IconRoleHead256/T_IconRoleHead256_7_UI.webp',
+        'https://api-v2.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconRoleHead256/T_IconRoleHead256_7_UI.png',
       );
     });
   });

@@ -2,13 +2,8 @@ import { uniqBy } from 'es-toolkit/array';
 
 import { isUserParameterizedNumber } from '@/types';
 
-import type {
-  Attack,
-  AttackOriginType,
-  ClientAttack,
-  ClientModifier,
-  Modifier,
-} from './types';
+import type { ClientAttack, ClientModifier } from './get-entity-details.types';
+import type { Attack, AttackOriginType, Modifier } from './types';
 
 /**
  * Converts a game-data Attack into a client-facing enriched Attack structure.

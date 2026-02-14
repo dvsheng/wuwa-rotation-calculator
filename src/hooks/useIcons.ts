@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import type { IconRequest } from '@/schemas/game-data-service';
-import { getIcons } from '@/services/game-data/get-icons.function';
+import { getIcons } from '@/services/game-data';
 
 /**
  * Hook to fetch icon URLs for multiple items by their IDs and types.

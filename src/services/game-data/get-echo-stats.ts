@@ -1,7 +1,8 @@
 import { EchoMainStatOption } from '@/schemas/echo';
 import type { EchoCost, EchoMainStatOptionType } from '@/schemas/echo';
-import type { PermanentStatBase } from '@/services/game-data/types';
 import { CharacterStat, Tag } from '@/types';
+
+import type { PermanentStatBase } from './types';
 
 const ECHO_SECONDARY_STAT_BY_COST: Record<EchoCost, PermanentStatBase> = {
   1: { stat: CharacterStat.HP_FLAT_BONUS, value: 2280, tags: [Tag.ALL] },

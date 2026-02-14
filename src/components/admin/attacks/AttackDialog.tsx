@@ -28,7 +28,7 @@ import {
   updateAttack,
 } from '@/services/admin/attacks.function';
 import { getEntityById } from '@/services/admin/entities.function';
-import { OriginType, Sequence } from '@/services/game-data/types';
+import { OriginType, Sequence } from '@/services/game-data';
 import { AbilityAttribute, Attribute } from '@/types';
 
 interface AttackDialogProperties {

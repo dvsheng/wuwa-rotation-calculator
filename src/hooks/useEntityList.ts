@@ -2,13 +2,13 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 
 import type { EntityType } from '@/db/schema';
 import type { ListEntitiesRequest } from '@/schemas/game-data-service';
-import { listEntities } from '@/services/game-data/list-entities.function';
+import { listEntities } from '@/services/game-data';
 import type {
   EchoSetResponseItem,
   ListCharactersResponseItem,
   ListEchoesResponseItem,
   ListWeaponsResponseItem,
-} from '@/services/game-data/list-entities.server';
+} from '@/services/game-data';
 
 type InferredListEntityResponse<T extends ListEntitiesRequest> =
   T['entityType'] extends typeof EntityType.CHARACTER

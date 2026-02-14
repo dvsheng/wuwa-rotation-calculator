@@ -1,4 +1,4 @@
-import { Target } from '@/services/game-data/types';
+import { Target } from '@/services/game-data';
 import { useStore } from '@/store';
 
 interface BuffPosition {

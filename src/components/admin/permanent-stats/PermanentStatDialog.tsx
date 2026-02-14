@@ -31,7 +31,7 @@ import {
   getPermanentStatById,
   updatePermanentStat,
 } from '@/services/admin/permanent-stats.function';
-import { OriginType, Sequence } from '@/services/game-data/types';
+import { OriginType, Sequence } from '@/services/game-data';
 import { CharacterStat, EnemyStat } from '@/types';
 
 interface PermanentStatDialogProperties {

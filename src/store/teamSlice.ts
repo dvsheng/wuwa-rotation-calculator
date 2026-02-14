@@ -10,7 +10,7 @@ import {
 import { initialEnemyData } from '@/schemas/enemy';
 import type { Enemy } from '@/schemas/enemy';
 import type { Team } from '@/schemas/team';
-import type { RefineLevel } from '@/services/game-data/types';
+import type { RefineLevel } from '@/services/game-data';
 
 import type { RotationSlice } from './rotationSlice';
 

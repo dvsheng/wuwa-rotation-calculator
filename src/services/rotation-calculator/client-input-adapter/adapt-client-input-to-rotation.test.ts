@@ -5,7 +5,7 @@ import type {
   Attack,
   Modifier as GameDataModifier,
   GameDataRotationRuntimeResolvableNumber,
-} from '@/services/game-data/types';
+} from '@/services/game-data';
 import { AbilityAttribute, Attribute, CharacterStat, Tag } from '@/types';
 import type { CharacterSlotNumber } from '@/types';
 

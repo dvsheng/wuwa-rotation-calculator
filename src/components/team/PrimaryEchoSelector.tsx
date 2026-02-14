@@ -5,7 +5,7 @@ import { Row } from '@/components/ui/layout';
 import { EntityType } from '@/db/schema';
 import { useEntityList } from '@/hooks/useEntityList';
 import { cn } from '@/lib/utils';
-import type { ListEchoesResponseItem } from '@/services/game-data/list-entities.server';
+import type { ListEchoesResponseItem } from '@/services/game-data';
 import { useStore } from '@/store';
 
 import { AssetIcon } from '../common/AssetIcon';

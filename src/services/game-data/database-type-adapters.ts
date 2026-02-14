@@ -1,4 +1,3 @@
-import type { GameDataRotationRuntimeResolvableNumber } from '@/services/game-data/types';
 import type { UserParameterizedNumber } from '@/types/parameterized-number';
 
 import type {
@@ -6,6 +5,8 @@ import type {
   StoreParameterizedNumber,
   StoreRotationRuntimeResolvableNumber,
 } from '../../db/schema';
+
+import type { GameDataRotationRuntimeResolvableNumber } from './types';
 
 /**
  * Converts Store number types to runtime number types.

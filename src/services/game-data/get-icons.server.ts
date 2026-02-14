@@ -4,7 +4,9 @@ import { database } from '@/db/client';
 import { attacks, entities, modifiers } from '@/db/schema';
 import type { GetIconsRequest, IconRequestType } from '@/schemas/game-data-service';
 
-const ENCORE_MOE_IMAGE_ASSETS_URL = 'https://api-v2.encore.moe/resource/Data';
+import type { GetIconsResponse } from './get-icons.types';
+
+const ENCORE_MOE_IMAGE_ASSETS_URL = 'https://api-v2.encore.moe/resource/Data/';
 
 /**
  * Converts an icon path to a full encore.moe API URL with .png extension.
@@ -15,7 +17,10 @@ const processIconPath = (iconPath?: string | null): string | undefined => {
   // Remove file extension and add .png
   const pathWithPng = iconPath.replace(/\.[^.]*$/, '.png');
 
-  return new URL(pathWithPng, ENCORE_MOE_IMAGE_ASSETS_URL).href;
+  // Remove leading slash to ensure proper URL concatenation
+  const relativePath = pathWithPng.startsWith('/') ? pathWithPng.slice(1) : pathWithPng;
+
+  return new URL(relativePath, ENCORE_MOE_IMAGE_ASSETS_URL).href;
 };
 
 /**
@@ -29,7 +34,9 @@ const getIconKey = (type: IconRequestType, id: number): string => `${type}:${id}
  * For capabilities without icons, falls back to the parent entity's icon.
  * Returns an array with iconUrl appended to each request.
  */
-export const getIconsHandler = async (requests: GetIconsRequest) => {
+export const getIconsHandler = async (
+  requests: GetIconsRequest,
+): Promise<GetIconsResponse> => {
   // Group requests by type
   const attackIds = requests.filter((r) => r.type === 'attack').map((r) => r.id);
   const modifierIds = requests.filter((r) => r.type === 'modifier').map((r) => r.id);

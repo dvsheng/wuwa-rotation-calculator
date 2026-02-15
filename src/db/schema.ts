@@ -176,6 +176,23 @@ export const permanentStats = sqliteTable('permanent_stats', {
 });
 
 /**
+ * Permanent stats table - stores permanent stat bonuses
+ */
+export const permanentStatsV2 = sqliteTable('permanent_stats_v2', {
+  ...baseTableFields,
+  gameId: integer('game_id'), // Original game ID from game data source
+  skillId: integer('skill_id').references(() => skills.id, { onDelete: 'cascade' }),
+  // Metadata
+  name: text('name'),
+  description: text('description'),
+  stat: text('stat').notNull().$type<CharacterStat | EnemyStat>(),
+  value: text('value', { mode: 'json' })
+    .notNull()
+    .$type<StoreNumber | StoreRotationRuntimeResolvableNumber>(),
+  tags: text('tags', { mode: 'json' }).notNull().$type<Array<string>>(),
+});
+
+/**
  * Skills table - stores character and weapon skills
  */
 export const skills = sqliteTable('skills', {

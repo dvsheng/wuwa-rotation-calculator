@@ -16,7 +16,12 @@
     "db:migrate": "drizzle-kit migrate",
     "db:validate": "tsx scripts/validate-database.ts",
     "index:encore": "tsx scripts/index-encore-moe-data.ts",
-    "db:seed": "tsx scripts/migrate-entities-to-database.ts"
+    "db:seed": "tsx scripts/migrate-entities-to-database.ts",
+    "transform:characters": "tsx scripts/transform-character-jsons.ts",
+    "transform:characters-ai": "tsx scripts/transform-character-jsons-for-ai.ts",
+    "transform:weapons": "tsx scripts/transform-weapon-jsons.ts",
+    "transform:echoes": "tsx scripts/transform-echo-jsons.ts",
+    "pipeline:run": "npm run index:encore && npm run transform:characters && npm run transform:weapons && npm run transform:echoes && npm run transform:characters-ai && npm run db:seed"
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",

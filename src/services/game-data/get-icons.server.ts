@@ -11,11 +11,11 @@ const ENCORE_MOE_IMAGE_ASSETS_URL = 'https://api-v2.encore.moe/resource/Data/';
 /**
  * Converts an icon path to a full encore.moe API URL with .png extension.
  */
-const processIconPath = (iconPath?: string | null): string | undefined => {
-  if (!iconPath) return undefined;
+const processIconPath = (iconUrl?: string | null): string | undefined => {
+  if (!iconUrl) return undefined;
 
   // Remove file extension and add .png
-  const pathWithPng = iconPath.replace(/\.[^.]*$/, '.png');
+  const pathWithPng = iconUrl.replace(/\.[^.]*$/, '.png');
 
   // Remove leading slash to ensure proper URL concatenation
   const relativePath = pathWithPng.startsWith('/') ? pathWithPng.slice(1) : pathWithPng;
@@ -43,24 +43,24 @@ export const getIconsHandler = async (
   const entityIds = requests.filter((r) => r.type === 'entity').map((r) => r.id);
 
   // Query all tables in parallel, fetching entityId for capabilities
-  // Note: For entities, the ID is the hakushinId (game ID), not the database ID
+  // Note: For entities, the ID is the gameId (game ID), not the database ID
   const [attackResults, modifierResults, entityResults] = await Promise.all([
     attackIds.length > 0
       ? database.query.attacks.findMany({
           where: inArray(attacks.id, attackIds),
-          columns: { id: true, iconPath: true, entityId: true },
+          columns: { id: true, iconUrl: true, entityId: true },
         })
       : [],
     modifierIds.length > 0
       ? database.query.modifiers.findMany({
           where: inArray(modifiers.id, modifierIds),
-          columns: { id: true, iconPath: true, entityId: true },
+          columns: { id: true, iconUrl: true, entityId: true },
         })
       : [],
     entityIds.length > 0
       ? database.query.entities.findMany({
-          where: inArray(entities.hakushinId, entityIds),
-          columns: { hakushinId: true, iconPath: true },
+          where: inArray(entities.gameId, entityIds),
+          columns: { gameId: true, iconUrl: true },
         })
       : [],
   ]);
@@ -70,14 +70,14 @@ export const getIconsHandler = async (
   const capabilityToEntityMap = new Map<string, number>();
 
   for (const attack of attackResults) {
-    if (!attack.iconPath) {
+    if (!attack.iconUrl) {
       fallbackEntityIds.add(attack.entityId);
       capabilityToEntityMap.set(getIconKey('attack', attack.id), attack.entityId);
     }
   }
 
   for (const modifier of modifierResults) {
-    if (!modifier.iconPath) {
+    if (!modifier.iconUrl) {
       fallbackEntityIds.add(modifier.entityId);
       capabilityToEntityMap.set(getIconKey('modifier', modifier.id), modifier.entityId);
     }
@@ -88,45 +88,42 @@ export const getIconsHandler = async (
     fallbackEntityIds.size > 0
       ? await database.query.entities.findMany({
           where: inArray(entities.id, [...fallbackEntityIds]),
-          columns: { id: true, iconPath: true },
+          columns: { id: true, iconUrl: true },
         })
       : [];
 
   // Create entity icon map by database ID for fallback lookups
   const entityIconByIdMap = new Map<number, string | undefined>();
   for (const entity of fallbackEntities) {
-    entityIconByIdMap.set(entity.id, processIconPath(entity.iconPath));
+    entityIconByIdMap.set(entity.id, processIconPath(entity.iconUrl));
   }
 
   // Create a map using composite keys (type:id) to handle non-unique IDs across tables
-  const iconPathMap = new Map<string, string | undefined>();
+  const iconUrlMap = new Map<string, string | undefined>();
 
   for (const item of attackResults) {
     const key = getIconKey('attack', item.id);
-    const icon = processIconPath(item.iconPath);
+    const icon = processIconPath(item.iconUrl);
     // Use capability icon, or fall back to entity icon
-    iconPathMap.set(key, icon ?? entityIconByIdMap.get(item.entityId));
+    iconUrlMap.set(key, icon ?? entityIconByIdMap.get(item.entityId));
   }
 
   for (const item of modifierResults) {
     const key = getIconKey('modifier', item.id);
-    const icon = processIconPath(item.iconPath);
+    const icon = processIconPath(item.iconUrl);
     // Use capability icon, or fall back to entity icon
-    iconPathMap.set(key, icon ?? entityIconByIdMap.get(item.entityId));
+    iconUrlMap.set(key, icon ?? entityIconByIdMap.get(item.entityId));
   }
 
   for (const item of entityResults) {
-    if (item.hakushinId) {
-      iconPathMap.set(
-        getIconKey('entity', item.hakushinId),
-        processIconPath(item.iconPath),
-      );
+    if (item.gameId) {
+      iconUrlMap.set(getIconKey('entity', item.gameId), processIconPath(item.iconUrl));
     }
   }
 
   // Map requests to responses with iconUrl appended
   return requests.map((request) => ({
     ...request,
-    iconUrl: iconPathMap.get(getIconKey(request.type, request.id)),
+    iconUrl: iconUrlMap.get(getIconKey(request.type, request.id)),
   }));
 };

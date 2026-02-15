@@ -63,7 +63,7 @@ const PermanentStatForm = ({
       name: null,
       parentName: null,
       description: null,
-      iconPath: null,
+      iconUrl: null,
       unlockedAt: null,
       echoSetBonusRequirement: null,
       stat: CharacterStat.ATTACK_FLAT,
@@ -166,7 +166,7 @@ const PermanentStatForm = ({
       {/* Icon Path - Only for CHARACTER entities */}
       {entity?.type === EntityType.CHARACTER && (
         <form.Field
-          name="iconPath"
+          name="iconUrl"
           children={(field) => (
             <div className="space-y-2">
               <Label htmlFor={field.name}>Icon Path</Label>

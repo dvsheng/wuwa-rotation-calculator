@@ -70,7 +70,7 @@ export const IconRequestType = {
 export type IconRequestType = (typeof IconRequestType)[keyof typeof IconRequestType];
 
 export const IconRequestSchema = z.object({
-  id: z.number(), // For entities, this is the hakushinId (game ID), not the database ID
+  id: z.number(), // For entities, this is the gameId (game ID), not the database ID
   type: z.enum(IconRequestType),
 });
 

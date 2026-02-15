@@ -14,7 +14,9 @@
     "check": "eslint --fix && tsc && prettier --write . && npm run test ",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:validate": "tsx scripts/validate-database.ts"
+    "db:validate": "tsx scripts/validate-database.ts",
+    "index:encore": "tsx scripts/index-encore-moe-data.ts",
+    "db:seed": "tsx scripts/migrate-entities-to-database.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",

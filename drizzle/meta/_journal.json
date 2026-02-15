@@ -29,6 +29,27 @@
       "when": 1771098686754,
       "tag": "0003_add-rank-weapon-type-cost-to-entities",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1771172817843,
+      "tag": "0004_rename-hakushinId-to-gameId",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1771174339942,
+      "tag": "0005_rename-icon-path-to-icon-url",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1771180845170,
+      "tag": "0006_add-entity-skills-view",
+      "breakpoints": true
     }
   ]
 }

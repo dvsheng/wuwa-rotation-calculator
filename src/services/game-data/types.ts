@@ -193,7 +193,7 @@ export interface BaseEntity<T = {}> {
   /** Internal ID for the entity */
   id: number;
   /** Original game ID from Hakushin */
-  hakushinId?: number;
+  gameId?: number;
   /** Name of the entity */
   name: string;
   capabilities: Capabilities<T>;

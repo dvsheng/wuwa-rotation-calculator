@@ -21,7 +21,7 @@ export const BaseCapabilitySchema = z.object({
   name: z.string().nullable(),
   parentName: z.string().nullable(),
   description: z.string().nullable(),
-  iconPath: z.string().nullable(),
+  iconUrl: z.string().nullable(),
 
   // Character-specific: sequence unlock level (s1-s6)
   unlockedAt: SequenceSchema.nullable(),

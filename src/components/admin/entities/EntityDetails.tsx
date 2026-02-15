@@ -84,7 +84,7 @@ export const EntityDetails = ({ entityId }: EntityDetailsProperties) => {
           </div>
           <div>
             <div className="text-muted-foreground text-sm">Hakushin ID</div>
-            <div>{entity.hakushinId ?? '—'}</div>
+            <div>{entity.gameId ?? '—'}</div>
           </div>
           <div>
             <div className="text-muted-foreground text-sm">Type</div>
@@ -96,10 +96,10 @@ export const EntityDetails = ({ entityId }: EntityDetailsProperties) => {
               <div className="capitalize">{entity.attribute}</div>
             </div>
           )}
-          {entity.iconPath && (
+          {entity.iconUrl && (
             <div className="col-span-2">
               <div className="text-muted-foreground text-sm">Icon Path</div>
-              <div className="font-mono text-sm">{entity.iconPath}</div>
+              <div className="font-mono text-sm">{entity.iconUrl}</div>
             </div>
           )}
         </CardContent>
@@ -199,7 +199,7 @@ export const EntityDetails = ({ entityId }: EntityDetailsProperties) => {
                               Icon Path
                             </div>
                             <div className="font-mono text-sm">
-                              {attack.iconPath ?? '—'}
+                              {attack.iconUrl ?? '—'}
                             </div>
                           </div>
                           <div>
@@ -406,7 +406,7 @@ export const EntityDetails = ({ entityId }: EntityDetailsProperties) => {
                               Icon Path
                             </div>
                             <div className="font-mono text-sm">
-                              {modifier.iconPath ?? '—'}
+                              {modifier.iconUrl ?? '—'}
                             </div>
                           </div>
                           <div>
@@ -596,7 +596,7 @@ export const EntityDetails = ({ entityId }: EntityDetailsProperties) => {
                               Icon Path
                             </div>
                             <div className="font-mono text-sm">
-                              {stat.iconPath ?? '—'}
+                              {stat.iconUrl ?? '—'}
                             </div>
                           </div>
                           <div>

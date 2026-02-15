@@ -9,10 +9,10 @@ export const entityColumns: Array<ColumnDef<Entity>> = [
     size: 60,
   },
   {
-    accessorKey: 'hakushinId',
+    accessorKey: 'gameId',
     header: 'Hakushin ID',
     size: 100,
-    cell: ({ row }) => row.original.hakushinId ?? '—',
+    cell: ({ row }) => row.original.gameId ?? '—',
   },
   {
     accessorKey: 'name',

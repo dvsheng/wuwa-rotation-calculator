@@ -188,7 +188,7 @@ function validateCapabilityFieldConstraints(
     alternativeDefinitions?: unknown;
     parentName?: string | null;
     originType?: string | null;
-    iconPath?: string | null;
+    iconUrl?: string | null;
   },
   entityType: string,
 ): Array<string> {
@@ -256,14 +256,14 @@ function validateCapabilityFieldConstraints(
     );
   }
 
-  // iconPath should only be populated for CHARACTER entities
+  // iconUrl should only be populated for CHARACTER entities
   if (
-    capability.iconPath !== null &&
-    capability.iconPath !== undefined &&
+    capability.iconUrl !== null &&
+    capability.iconUrl !== undefined &&
     entityType !== EntityType.CHARACTER
   ) {
     issues.push(
-      `iconPath should only be populated for CHARACTER entities (entity is ${entityType})`,
+      `iconUrl should only be populated for CHARACTER entities (entity is ${entityType})`,
     );
   }
 
@@ -361,7 +361,7 @@ const validateRecords = <T>(
           'alternativeDefinitions' in record ||
           'parentName' in record ||
           'originType' in record ||
-          'iconPath' in record
+          'iconUrl' in record
         ) {
           const fieldConstraintIssues = validateCapabilityFieldConstraints(
             record as {
@@ -370,7 +370,7 @@ const validateRecords = <T>(
               alternativeDefinitions?: unknown;
               parentName?: string | null;
               originType?: string | null;
-              iconPath?: string | null;
+              iconUrl?: string | null;
             },
             entity.type,
           );

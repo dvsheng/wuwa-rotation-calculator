@@ -124,12 +124,12 @@ const addCapabilityDefaultValues = <T extends StoreCapability>(
  * Shared handler for fetching character details from database.
  * Resolves alternativeDefinitions based on the requested sequence.
  */
-export const getEntityByHakushinIdHandler = async (
+export const getEntityByGameIdHandler = async (
   options: GetEntityDetailsRequest,
 ): Promise<BaseEntity> => {
   // Query entity with all capabilities
   const entity = await database.query.entities.findFirst({
-    where: eq(entities.hakushinId, options.id),
+    where: eq(entities.gameId, options.id),
     with: {
       attacks: true,
       modifiers: true,
@@ -184,7 +184,7 @@ export const getEntityByHakushinIdHandler = async (
 
   return {
     id: entity.id,
-    hakushinId: entity.hakushinId ?? undefined,
+    gameId: entity.gameId ?? undefined,
     name: entity.name,
     capabilities: {
       attacks: attacks,
@@ -194,10 +194,10 @@ export const getEntityByHakushinIdHandler = async (
   };
 };
 
-export const getClientEntityByHakushinIdHandler = async (
+export const getClientEntityByGameIdHandler = async (
   options: GetEntityDetailsRequest,
 ): Promise<GetClientEntityDetailsResponse> => {
-  const entity = await getEntityByHakushinIdHandler(options);
+  const entity = await getEntityByGameIdHandler(options);
   return {
     id: entity.id,
     name: entity.name,

@@ -10,10 +10,10 @@ import { AttributeSchema, EntityTypeSchema } from './database-enums';
 
 const EntityBaseSchema = z.object({
   id: z.number().int().positive(),
-  hakushinId: z.number().int().nullable(),
+  gameId: z.number().int().nullable(),
   name: z.string().min(1, 'Name is required'),
   type: EntityTypeSchema,
-  iconPath: z.string().nullable(),
+  iconUrl: z.string().nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });

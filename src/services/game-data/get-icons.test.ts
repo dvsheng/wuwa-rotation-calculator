@@ -31,7 +31,7 @@ const createAttack = (overrides: Partial<Attack> = {}): Attack => ({
   name: 'Test Attack',
   parentName: null,
   description: 'Test attack description',
-  iconPath: null,
+  iconUrl: null,
   unlockedAt: null,
   echoSetBonusRequirement: null,
   createdAt: new Date(),
@@ -51,7 +51,7 @@ const createModifier = (overrides: Partial<Modifier> = {}): Modifier => ({
   name: 'Test Modifier',
   parentName: null,
   description: 'Test modifier description',
-  iconPath: null,
+  iconUrl: null,
   unlockedAt: null,
   echoSetBonusRequirement: null,
   createdAt: new Date(),
@@ -65,10 +65,10 @@ const createModifier = (overrides: Partial<Modifier> = {}): Modifier => ({
 
 const createEntity = (overrides: Partial<Entity> = {}): Entity => ({
   id: 100,
-  hakushinId: 1102,
+  gameId: 1102,
   name: 'Test Entity',
   type: 'character',
-  iconPath: null,
+  iconUrl: null,
   rank: null,
   weaponType: null,
   description: null,
@@ -92,7 +92,7 @@ describe('getIconsHandler', () => {
       vi.mocked(database.query.attacks.findMany).mockResolvedValue([
         createAttack({
           id: 1,
-          iconPath: '/Game/Aki/UI/UIResources/Common/Atlas/SkillIcon/T_Attack1.png',
+          iconUrl: '/Game/Aki/UI/UIResources/Common/Atlas/SkillIcon/T_Attack1.png',
           entityId: 100,
         }),
       ]);
@@ -115,7 +115,7 @@ describe('getIconsHandler', () => {
       vi.mocked(database.query.attacks.findMany).mockResolvedValue([
         createAttack({
           id: 1,
-          iconPath: null,
+          iconUrl: null,
           entityId: 100,
         }),
       ]);
@@ -126,7 +126,7 @@ describe('getIconsHandler', () => {
       vi.mocked(database.query.entities.findMany).mockResolvedValueOnce([
         createEntity({
           id: 100,
-          iconPath:
+          iconUrl:
             '/Game/Aki/UI/UIResources/Common/Image/IconRoleHead256/T_Character.png',
         }),
       ]);
@@ -146,12 +146,12 @@ describe('getIconsHandler', () => {
       vi.mocked(database.query.attacks.findMany).mockResolvedValue([
         createAttack({
           id: 1,
-          iconPath: '/Game/Aki/UI/UIResources/Common/Atlas/SkillIcon/T_Attack1.png',
+          iconUrl: '/Game/Aki/UI/UIResources/Common/Atlas/SkillIcon/T_Attack1.png',
           entityId: 100,
         }),
         createAttack({
           id: 2,
-          iconPath: null,
+          iconUrl: null,
           entityId: 101,
         }),
       ]);
@@ -162,7 +162,7 @@ describe('getIconsHandler', () => {
       vi.mocked(database.query.entities.findMany).mockResolvedValueOnce([
         createEntity({
           id: 101,
-          iconPath:
+          iconUrl:
             '/Game/Aki/UI/UIResources/Common/Image/IconRoleHead256/T_Character2.png',
         }),
       ]);
@@ -188,7 +188,7 @@ describe('getIconsHandler', () => {
       vi.mocked(database.query.attacks.findMany).mockResolvedValue([
         createAttack({
           id: 1,
-          iconPath: null,
+          iconUrl: null,
           entityId: 100,
         }),
       ]);
@@ -198,7 +198,7 @@ describe('getIconsHandler', () => {
       vi.mocked(database.query.entities.findMany).mockResolvedValueOnce([
         createEntity({
           id: 100,
-          iconPath: null,
+          iconUrl: null,
         }),
       ]);
 
@@ -215,7 +215,7 @@ describe('getIconsHandler', () => {
       vi.mocked(database.query.modifiers.findMany).mockResolvedValue([
         createModifier({
           id: 5,
-          iconPath: null,
+          iconUrl: null,
           entityId: 200,
         }),
       ]);
@@ -223,7 +223,7 @@ describe('getIconsHandler', () => {
       vi.mocked(database.query.entities.findMany).mockResolvedValueOnce([
         createEntity({
           id: 200,
-          iconPath: '/Game/Aki/UI/UIResources/Common/Image/IconWeapon/T_Weapon.png',
+          iconUrl: '/Game/Aki/UI/UIResources/Common/Image/IconWeapon/T_Weapon.png',
         }),
       ]);
 
@@ -237,14 +237,14 @@ describe('getIconsHandler', () => {
   });
 
   describe('entity icons', () => {
-    it('fetches entity icon by hakushinId', async () => {
+    it('fetches entity icon by gameId', async () => {
       vi.mocked(database.query.attacks.findMany).mockResolvedValue([]);
       vi.mocked(database.query.modifiers.findMany).mockResolvedValue([]);
 
       vi.mocked(database.query.entities.findMany).mockResolvedValue([
         createEntity({
-          hakushinId: 1102,
-          iconPath:
+          gameId: 1102,
+          iconUrl:
             '/Game/Aki/UI/UIResources/Common/Image/IconRoleHead256/T_IconRoleHead256_7_UI.png',
         }),
       ]);

@@ -14,7 +14,7 @@ export const listEntitiesHandler = async (
       const characters = await database.query.entities.findMany({
         where: eq(entities.type, EntityType.CHARACTER),
         columns: {
-          hakushinId: true,
+          gameId: true,
           name: true,
           weaponType: true,
           rank: true,
@@ -23,7 +23,7 @@ export const listEntitiesHandler = async (
       });
 
       const list = characters.map((char) => ({
-        id: char.hakushinId!,
+        id: char.gameId!,
         name: char.name,
         weaponType: char.weaponType!,
         rarity: char.rank!,
@@ -41,7 +41,7 @@ export const listEntitiesHandler = async (
       const weapons = await database.query.entities.findMany({
         where: eq(entities.type, EntityType.WEAPON),
         columns: {
-          hakushinId: true,
+          gameId: true,
           name: true,
           weaponType: true,
           rank: true,
@@ -49,7 +49,7 @@ export const listEntitiesHandler = async (
       });
 
       const list = weapons.map((weapon) => ({
-        id: weapon.hakushinId!,
+        id: weapon.gameId!,
         name: weapon.name,
         weaponType: weapon.weaponType!,
         rarity: weapon.rank!,
@@ -66,7 +66,7 @@ export const listEntitiesHandler = async (
       const echoes = await database.query.entities.findMany({
         where: eq(entities.type, EntityType.ECHO),
         columns: {
-          hakushinId: true,
+          gameId: true,
           name: true,
           cost: true,
           echoSetIds: true,
@@ -74,7 +74,7 @@ export const listEntitiesHandler = async (
       });
 
       return echoes.map((echo) => ({
-        id: echo.hakushinId!,
+        id: echo.gameId!,
         name: echo.name,
         cost: echo.cost!,
         sets: echo.echoSetIds!,
@@ -85,14 +85,14 @@ export const listEntitiesHandler = async (
       const echoSets = await database.query.entities.findMany({
         where: eq(entities.type, EntityType.ECHO_SET),
         columns: {
-          hakushinId: true,
+          gameId: true,
           name: true,
           setBonusThresholds: true,
         },
       });
 
       return echoSets.map((set) => ({
-        id: set.hakushinId!,
+        id: set.gameId!,
         name: set.name,
         tiers: set.setBonusThresholds!,
       }));

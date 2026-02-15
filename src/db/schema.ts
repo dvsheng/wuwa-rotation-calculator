@@ -1,5 +1,5 @@
-import { relations } from 'drizzle-orm';
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { relations, sql } from 'drizzle-orm';
+import { integer, sqliteTable, sqliteView, text } from 'drizzle-orm/sqlite-core';
 
 import type {
   AttackAlternativeDefinitions,
@@ -55,20 +55,37 @@ export type EntityType = (typeof EntityType)[keyof typeof EntityType];
 // ============================================================================
 
 /**
- * Main entities table storing characters, weapons, echoes, and echo sets
+ * Base fields shared across all tables
  */
-export const entities = sqliteTable('entities', {
+const baseTableFields = {
   // Primary key - autoincrement integer
   id: integer('id').primaryKey({ autoIncrement: true }),
 
+  // Timestamps
+  createdAt: integer('created_at', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' })
+    .notNull()
+    .$onUpdate(() => new Date()),
+} as const;
+
+/**
+ * Main entities table storing characters, weapons, echoes, and echo sets
+ */
+export const entities = sqliteTable('entities', {
+  ...baseTableFields,
+
   // Common fields
-  hakushinId: integer('hakushin_id').unique(), // Original game ID from Hakushin (null for echo sets)
+  gameId: integer('game_id').unique(), // Original game ID from game data source
   name: text('name').notNull(),
   type: text('type').notNull().$type<EntityType>(),
-  iconPath: text('icon_path'),
+  iconUrl: text('icon_url'),
+  description: text('description'), // Entity description
+
+  // Character and weapon specific fields
   rank: integer('rank'), // Rarity rank (e.g., 4, 5)
   weaponType: text('weapon_type').$type<WeaponType>(), // Weapon type for characters and weapons
-  description: text('description'), // Entity description
 
   // Character-specific fields
   attribute: text('attribute').$type<Attribute>(),
@@ -81,22 +98,13 @@ export const entities = sqliteTable('entities', {
   setBonusThresholds: text('set_bonus_thresholds', { mode: 'json' }).$type<
     Array<number>
   >(),
-
-  // Timestamps
-  createdAt: integer('created_at', { mode: 'timestamp' })
-    .notNull()
-    .$defaultFn(() => new Date()),
-  updatedAt: integer('updated_at', { mode: 'timestamp' })
-    .notNull()
-    .$defaultFn(() => new Date()),
 });
 
 /**
  * Base capability fields shared across all capability types
  */
 const baseCapabilityFields = {
-  // Primary key
-  id: integer('id').primaryKey({ autoIncrement: true }),
+  ...baseTableFields,
 
   // Foreign key to entity
   entityId: integer('entity_id')
@@ -107,20 +115,13 @@ const baseCapabilityFields = {
   name: text('name'),
   parentName: text('parent_name'),
   description: text('description'),
-  iconPath: text('icon_path'),
+  iconUrl: text('icon_url'),
 
   // Character-specific: sequence unlock level (s1-s6)
   unlockedAt: text('unlocked_at').$type<Sequence>(),
 
   // Echo Set-specific: piece requirement (2, 3, 5)
   echoSetBonusRequirement: integer('echo_set_bonus_requirement'),
-  // Timestamps
-  createdAt: integer('created_at', { mode: 'timestamp' })
-    .notNull()
-    .$defaultFn(() => new Date()),
-  updatedAt: integer('updated_at', { mode: 'timestamp' })
-    .notNull()
-    .$defaultFn(() => new Date()),
 } as const;
 
 /**
@@ -174,6 +175,85 @@ export const permanentStats = sqliteTable('permanent_stats', {
   originType: text('origin_type').$type<OriginType>(),
 });
 
+/**
+ * Skills table - stores character and weapon skills
+ */
+export const skills = sqliteTable('skills', {
+  ...baseTableFields,
+
+  // Game ID (original identifier from game data)
+  gameId: integer('game_id'),
+
+  // Foreign key to entity
+  entityId: integer('entity_id')
+    .notNull()
+    .references(() => entities.id, { onDelete: 'cascade' }),
+
+  // Skill information
+  name: text('name').notNull(),
+  description: text('description'),
+  iconUrl: text('icon_url'),
+  originType: text('origin_type').$type<OriginType>(),
+});
+
+// ============================================================================
+// Database Views
+// ============================================================================
+
+/**
+ * Denormalized view of entities with their skills
+ * Joins entities with skills for easier querying
+ */
+export const entitiesWithSkills = sqliteView('entities_with_skills', {
+  // Entity fields
+  entityId: integer('entity_id').notNull(),
+  entityGameId: integer('entity_game_id'),
+  entityName: text('entity_name').notNull(),
+  entityType: text('entity_type').notNull().$type<EntityType>(),
+  entityIconUrl: text('entity_icon_url'),
+  entityDescription: text('entity_description'),
+  rank: integer('rank'),
+  weaponType: text('weapon_type').$type<WeaponType>(),
+  attribute: text('attribute').$type<Attribute>(),
+  echoSetIds: text('echo_set_ids', { mode: 'json' }).$type<Array<number>>(),
+  cost: integer('cost'),
+  setBonusThresholds: text('set_bonus_thresholds', { mode: 'json' }).$type<
+    Array<number>
+  >(),
+
+  // Skill fields (nullable if entity has no skills)
+  skillId: integer('skill_id'),
+  skillGameId: integer('skill_game_id'),
+  skillName: text('skill_name'),
+  skillDescription: text('skill_description'),
+  skillIconUrl: text('skill_icon_url'),
+  skillOriginType: text('skill_origin_type').$type<OriginType>(),
+}).as(
+  sql`
+    SELECT
+      entities.id AS entity_id,
+      entities.game_id AS entity_game_id,
+      entities.name AS entity_name,
+      entities.type AS entity_type,
+      entities.icon_url AS entity_icon_url,
+      entities.description AS entity_description,
+      entities.rank,
+      entities.weapon_type,
+      entities.attribute,
+      entities.echo_set_ids,
+      entities.cost,
+      entities.set_bonus_thresholds,
+      skills.id AS skill_id,
+      skills.game_id AS skill_game_id,
+      skills.name AS skill_name,
+      skills.description AS skill_description,
+      skills.icon_url AS skill_icon_url,
+      skills.origin_type AS skill_origin_type
+    FROM entities
+    LEFT JOIN skills ON entities.id = skills.entity_id
+  `,
+);
+
 // ============================================================================
 // Type Exports
 // ============================================================================
@@ -191,6 +271,11 @@ export type NewModifier = typeof modifiers.$inferInsert;
 export type PermanentStat = typeof permanentStats.$inferSelect;
 export type NewPermanentStat = typeof permanentStats.$inferInsert;
 
+export type Skill = typeof skills.$inferSelect;
+export type NewSkill = typeof skills.$inferInsert;
+
+export type EntityWithSkills = typeof entitiesWithSkills.$inferSelect;
+
 export type StoreCapability = Attack | Modifier | PermanentStat;
 
 // ============================================================================
@@ -201,6 +286,7 @@ export const entitiesRelations = relations(entities, ({ many }) => ({
   attacks: many(attacks),
   modifiers: many(modifiers),
   permanentStats: many(permanentStats),
+  skills: many(skills),
 }));
 
 export const attacksRelations = relations(attacks, ({ one }) => ({
@@ -220,6 +306,13 @@ export const modifiersRelations = relations(modifiers, ({ one }) => ({
 export const permanentStatsRelations = relations(permanentStats, ({ one }) => ({
   entity: one(entities, {
     fields: [permanentStats.entityId],
+    references: [entities.id],
+  }),
+}));
+
+export const skillsRelations = relations(skills, ({ one }) => ({
+  entity: one(entities, {
+    fields: [skills.entityId],
     references: [entities.id],
   }),
 }));

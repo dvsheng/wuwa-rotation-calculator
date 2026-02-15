@@ -51,8 +51,8 @@ export const EntityDialog = ({
     defaultValues: entity ?? {
       name: '',
       type: EntityType.CHARACTER as typeof EntityType.CHARACTER,
-      hakushinId: null,
-      iconPath: null,
+      gameId: null,
+      iconUrl: null,
       attribute: Attribute.AERO as typeof Attribute.AERO,
       echoSetIds: null,
       setBonusThresholds: null,
@@ -153,7 +153,7 @@ export const EntityDialog = ({
 
           {/* Hakushin ID */}
           <form.Field
-            name="hakushinId"
+            name="gameId"
             children={(field) => (
               <div className="space-y-2">
                 <Label htmlFor={field.name}>Hakushin ID</Label>
@@ -174,7 +174,7 @@ export const EntityDialog = ({
 
           {/* Icon Path */}
           <form.Field
-            name="iconPath"
+            name="iconUrl"
             children={(field) => (
               <div className="space-y-2">
                 <Label htmlFor={field.name}>Icon Path</Label>

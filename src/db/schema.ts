@@ -176,20 +176,60 @@ export const permanentStats = sqliteTable('permanent_stats', {
 });
 
 /**
+ * Base capability fields shared across all capability types
+ */
+const baseCapabilityV2Fields = {
+  ...baseTableFields,
+  gameId: integer('game_id'), // Original game ID from game data source
+  skillId: integer('skill_id')
+    .references(() => skills.id, { onDelete: 'cascade' })
+    .notNull(),
+  name: text('name').notNull(),
+  description: text('description'),
+} as const;
+
+/**
  * Permanent stats table - stores permanent stat bonuses
  */
 export const permanentStatsV2 = sqliteTable('permanent_stats_v2', {
-  ...baseTableFields,
-  gameId: integer('game_id'), // Original game ID from game data source
-  skillId: integer('skill_id').references(() => skills.id, { onDelete: 'cascade' }),
-  // Metadata
-  name: text('name'),
-  description: text('description'),
+  ...baseCapabilityV2Fields,
   stat: text('stat').notNull().$type<CharacterStat | EnemyStat>(),
   value: text('value', { mode: 'json' })
     .notNull()
     .$type<StoreNumber | StoreRotationRuntimeResolvableNumber>(),
   tags: text('tags', { mode: 'json' }).notNull().$type<Array<string>>(),
+});
+
+/**
+ * Attacks table - stores offensive capabilities
+ */
+export const attacksV2 = sqliteTable('attacks_v2', {
+  ...baseCapabilityV2Fields,
+  scalingStat: text('scaling_stat').notNull().$type<AbilityAttribute>(),
+  attribute: text('attribute').notNull().$type<Attribute>(), // Elemental attribute
+  motionValues: text('motion_values', { mode: 'json' })
+    .notNull()
+    .$type<Array<StoreNumber | StoreParameterizedNumber>>(), // Array of numbers or parameterized numbers
+  tags: text('tags', { mode: 'json' }).notNull().$type<Array<string>>(),
+  // Alternative definitions for different sequences
+  alternativeDefinitions: text('alternative_definitions', {
+    mode: 'json',
+  }).$type<AttackAlternativeDefinitions>(),
+});
+
+/**
+ * Modifiers table - stores temporary/conditional stat modifiers
+ */
+export const modifiersV2 = sqliteTable('modifiers_v2', {
+  ...baseCapabilityV2Fields,
+  target: text('target').notNull().$type<Target>(),
+  modifiedStats: text('modified_stats', { mode: 'json' })
+    .notNull()
+    .$type<Array<StoreModifierStat>>(),
+  // Alternative definitions for different sequences
+  alternativeDefinitions: text('alternative_definitions', {
+    mode: 'json',
+  }).$type<ModifierAlternativeDefinitions>(),
 });
 
 /**

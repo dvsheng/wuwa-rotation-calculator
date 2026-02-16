@@ -2,6 +2,8 @@
  * Common helper functions for transformation scripts
  */
 
+import { Attribute } from '../src/types/attribute';
+import { CharacterStat } from '../src/types/character';
 import { WeaponType } from '../src/types/weapon';
 
 // ============================================================================
@@ -9,6 +11,51 @@ import { WeaponType } from '../src/types/weapon';
 // ============================================================================
 
 export const ENCORE_MOE_IMAGE_ASSETS_URL = 'https://api-v2.encore.moe/resource/Data/';
+
+// ============================================================================
+// Attribute Mapping
+// ============================================================================
+
+/**
+ * Map element names from encore.moe to Attribute enum values
+ */
+export const mapElementNameToAttribute = (
+  elementName: string,
+): Attribute | undefined => {
+  const mapping: Record<string, Attribute> = {
+    Glacio: Attribute.GLACIO,
+    Fusion: Attribute.FUSION,
+    Electro: Attribute.ELECTRO,
+    Aero: Attribute.AERO,
+    Spectro: Attribute.SPECTRO,
+    Havoc: Attribute.HAVOC,
+  };
+
+  return mapping[elementName];
+};
+
+// ============================================================================
+// Stat Mapping
+// ============================================================================
+
+/**
+ * Map stat names to CharacterStat enum values (uses scaling bonus stats for %)
+ */
+export const mapStatNameToCharacterStat = (
+  statName: string,
+): CharacterStat | undefined => {
+  const mapping: Record<string, CharacterStat> = {
+    HP: CharacterStat.HP_SCALING_BONUS,
+    ATK: CharacterStat.ATTACK_SCALING_BONUS,
+    DEF: CharacterStat.DEFENSE_SCALING_BONUS,
+    'Crit. Rate': CharacterStat.CRITICAL_RATE,
+    'Crit. DMG': CharacterStat.CRITICAL_DAMAGE,
+    'Energy Regen': CharacterStat.ENERGY_REGEN,
+    'Healing Bonus': CharacterStat.HEALING_BONUS,
+  };
+
+  return mapping[statName];
+};
 
 // ============================================================================
 // Weapon Type Mapping

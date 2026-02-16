@@ -12,9 +12,14 @@ import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { CharacterStat } from '../src/types/character';
+import { Tag } from '../src/types/tag';
+
 import {
   collapseArrayValues,
   convertValueToNumber,
+  mapElementNameToAttribute,
+  mapStatNameToCharacterStat,
   processIconPath,
   stripHtmlTags,
 } from './transform-helpers';
@@ -129,6 +134,9 @@ export interface TransformedEchoSetSkill {
   name: string;
   threshold: number;
   description?: string;
+  value?: number;
+  stat?: CharacterStat;
+  tags?: Array<string>;
 }
 
 export interface TransformedEchoSet {
@@ -151,6 +159,84 @@ const RARITY_TO_COST_MAP: Record<number, number> = {
 
 const mapRarityToCost = (rarity: number): number => {
   return RARITY_TO_COST_MAP[rarity] ?? 1;
+};
+
+// ============================================================================
+// Utility Functions
+// ============================================================================
+
+/**
+ * Parse Echo Set 2-piece description to extract stat, value, and tags
+ * Examples:
+ * - "Fusion DMG +10%" => { stat: "damageBonus", value: 0.1, tags: ["fusion"] }
+ * - "Energy Regen +10%" => { stat: "energyRegen", value: 0.1, tags: ["all"] }
+ * - "Healing Bonus + 10%." => { stat: "healingBonus", value: 0.1, tags: ["all"] }
+ */
+const parseEchoSetStat = (
+  description: string | undefined,
+): { stat: CharacterStat; value: number; tags: Array<string> } | undefined => {
+  if (!description) return undefined;
+
+  // Match pattern: "{Stat Name} +{value}%" (handling optional spaces and trailing period)
+  // Group 1: Stat Name
+  // Group 2: Value
+  const match = description.match(/^(.+?)\s*\+\s*(\d+(?:\.\d+)?)%?\.?$/);
+  if (!match) return undefined;
+
+  const statName = match[1].trim();
+  const value = convertValueToNumber(match[2] + '%'); // Use helper to handle percentage conversion
+
+  // Check if it's an elemental DMG Bonus (e.g., "Fusion DMG")
+  const elementalDmgMatch = statName.match(
+    /^(Glacio|Fusion|Electro|Aero|Spectro|Havoc)\s+DMG$/,
+  );
+
+  if (elementalDmgMatch) {
+    const elementName = elementalDmgMatch[1];
+    const element = mapElementNameToAttribute(elementName);
+    if (!element) return undefined;
+
+    return {
+      stat: CharacterStat.DAMAGE_BONUS,
+      value,
+      tags: [element],
+    };
+  }
+
+  // Check for specific damage types
+  if (statName === 'Resonance Skill DMG') {
+    return {
+      stat: CharacterStat.DAMAGE_BONUS,
+      value,
+      tags: [Tag.RESONANCE_SKILL],
+    };
+  }
+  if (statName === 'Basic Attack DMG') {
+    return {
+      stat: CharacterStat.DAMAGE_BONUS,
+      value,
+      tags: [Tag.BASIC_ATTACK],
+    };
+  }
+  if (statName === 'Heavy Attack DMG') {
+    return {
+      stat: CharacterStat.DAMAGE_BONUS,
+      value,
+      tags: [Tag.HEAVY_ATTACK],
+    };
+  }
+  if (statName === 'Resonance Liberation DMG') {
+    return {
+      stat: CharacterStat.DAMAGE_BONUS,
+      value,
+      tags: [Tag.RESONANCE_LIBERATION],
+    };
+  }
+
+  const stat = mapStatNameToCharacterStat(statName);
+  if (!stat) return undefined;
+
+  return { stat, value, tags: [Tag.ALL] };
 };
 
 // ============================================================================
@@ -248,6 +334,20 @@ const transformEchoSet = (
     setBonusThresholds: fetterGroup.Fetters.length === 2 ? [2, 5] : [3],
     skills: echoSetSkillsMap.get(fetterGroup.Id) ?? [],
   };
+
+  // Try to parse the 2-piece bonus (first skill) into passive stats
+  if (transformed.skills.length > 0) {
+    const twoPieceSkill = transformed.skills.find((s) => s.threshold === 2);
+    if (twoPieceSkill) {
+      const parsed = parseEchoSetStat(twoPieceSkill.description);
+      if (parsed) {
+        // Update the skill directly
+        twoPieceSkill.value = parsed.value;
+        twoPieceSkill.stat = parsed.stat;
+        twoPieceSkill.tags = parsed.tags;
+      }
+    }
+  }
 
   return transformed;
 };

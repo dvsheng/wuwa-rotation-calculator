@@ -20,8 +20,11 @@
     "transform:characters": "tsx scripts/transform-character-jsons.ts",
     "transform:characters-ai": "tsx scripts/transform-character-jsons-for-ai.ts",
     "transform:weapons": "tsx scripts/transform-weapon-jsons.ts",
+    "transform:weapons-ai": "tsx scripts/transform-weapon-jsons-for-ai.ts",
     "transform:echoes": "tsx scripts/transform-echo-jsons.ts",
-    "pipeline:run": "npm run index:encore && npm run transform:characters && npm run transform:weapons && npm run transform:echoes && npm run transform:characters-ai && npm run db:seed"
+    "transform:echoes-ai": "tsx scripts/transform-echo-jsons-for-ai.ts",
+    "transform:echo-sets-ai": "tsx scripts/transform-echo-set-jsons-for-ai.ts",
+    "pipeline:run": "npm run index:encore && npm run transform:characters && npm run transform:weapons && npm run transform:echoes && npm run transform:characters-ai && npm run transform:weapons-ai && npm run transform:echoes-ai && npm run transform:echo-sets-ai && npm run db:seed"
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",

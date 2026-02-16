@@ -14,12 +14,15 @@ import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { CharacterStat } from '../src/types/character';
+import { Tag } from '../src/types/tag';
 import type { WeaponType } from '../src/types/weapon';
 
 import {
   collapseArrayValues,
   collapseRepeatedValues,
   convertValueToNumber,
+  mapStatNameToCharacterStat,
   mapWeaponType,
   processIconPath,
   stripHtmlTags,
@@ -48,16 +51,19 @@ interface Property {
   [key: string]: unknown;
 }
 
-interface TransformedProperty {
+export interface TransformedProperty {
   name: string;
-  maxValue: number;
+  description: string;
+  value: number;
+  stat: CharacterStat;
+  tags: Array<string>;
 }
 
 interface DescParameter {
   ArrayString: Array<string>;
 }
 
-interface TransformedDescParameter {
+export interface TransformedDescParameter {
   values: Array<number>;
 }
 
@@ -121,16 +127,38 @@ const transformWeaponJSON = async (
       }));
     }
 
-    // Transform properties to only include name and maxValue
+    // Transform properties
     if (fullData.Properties !== undefined && Array.isArray(fullData.Properties)) {
-      transformed.properties = fullData.Properties.map((property) => {
+      transformed.properties = fullData.Properties.map((property, index) => {
         const lastGrowthValue = property.GrowthValues.at(-1);
+        const value = convertValueToNumber(lastGrowthValue?.Value ?? 0);
+
+        // The first property (index 0) is always Base ATK (Flat)
+        const stat =
+          index === 0 && property.Name === 'ATK'
+            ? CharacterStat.ATTACK_FLAT
+            : mapStatNameToCharacterStat(property.Name);
+
+        if (!stat) {
+          console.warn(
+            `Unknown property name: ${property.Name} for weapon ${fullData.ItemId}`,
+          );
+          return;
+        }
+
+        const weaponName = transformed.name;
+        const propertyName = property.Name;
+        const nameSuffix = index === 0 ? `Base ${propertyName}` : propertyName;
+        const descriptionPrefix = index === 0 ? `Base ${propertyName}` : propertyName;
 
         return {
-          name: property.Name,
-          maxValue: convertValueToNumber(lastGrowthValue!.Value),
+          name: `${weaponName} ${nameSuffix}`,
+          description: `${descriptionPrefix} for ${weaponName} at level 90.`,
+          value: value,
+          stat: stat,
+          tags: [Tag.ALL],
         };
-      });
+      }).filter((p): p is TransformedProperty => p !== undefined);
     }
 
     // Write to output directory

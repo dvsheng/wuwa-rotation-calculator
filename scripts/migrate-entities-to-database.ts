@@ -198,6 +198,7 @@ const upsertEchoSetSkills = async (echoSet: TransformedEchoSet): Promise<number>
     }
 
     const entityId = entityRecord[0].id;
+    let skillId: number;
 
     // Check if skill already exists (by name and entity ID since no game ID)
     const existing = await database
@@ -207,6 +208,7 @@ const upsertEchoSetSkills = async (echoSet: TransformedEchoSet): Promise<number>
       .limit(1);
 
     if (existing.length > 0) {
+      skillId = existing[0].id;
       // Update existing skill
       await database
         .update(skills)
@@ -215,17 +217,59 @@ const upsertEchoSetSkills = async (echoSet: TransformedEchoSet): Promise<number>
           description: skill.description,
           originType: OriginType.ECHO_SET,
         })
-        .where(eq(skills.id, existing[0].id));
+        .where(eq(skills.id, skillId));
       console.log(`  Updated echo set skill: ${skill.name}`);
     } else {
       // Insert new skill
-      await database.insert(skills).values({
-        entityId,
-        name: skill.name,
-        description: skill.description,
-        originType: OriginType.ECHO_SET,
-      });
+      const result = await database
+        .insert(skills)
+        .values({
+          entityId,
+          name: skill.name,
+          description: skill.description,
+          originType: OriginType.ECHO_SET,
+        })
+        .returning({ id: skills.id });
+      skillId = result[0].id;
       console.log(`  Inserted echo set skill: ${skill.name}`);
+    }
+
+    // Process passive stats if present (for 2-piece bonuses)
+    if (skill.value !== undefined && skill.stat !== undefined && skill.tags) {
+      const statName = `${skill.name} Stat`;
+      const existingStat = await database
+        .select()
+        .from(permanentStatsV2)
+        .where(
+          and(
+            eq(permanentStatsV2.skillId, skillId),
+            eq(permanentStatsV2.name, statName),
+          ),
+        )
+        .limit(1);
+
+      if (existingStat.length > 0) {
+        await database
+          .update(permanentStatsV2)
+          .set({
+            description: skill.description ?? '',
+            stat: skill.stat as any,
+            value: skill.value,
+            tags: skill.tags as any,
+          })
+          .where(eq(permanentStatsV2.id, existingStat[0].id));
+        console.log(`    Updated echo set stat: ${statName}`);
+      } else {
+        await database.insert(permanentStatsV2).values({
+          skillId,
+          name: statName,
+          description: skill.description ?? '',
+          stat: skill.stat as any,
+          value: skill.value,
+          tags: skill.tags as any,
+        });
+        console.log(`    Inserted echo set stat: ${statName}`);
+      }
     }
 
     skillsProcessed++;
@@ -342,6 +386,83 @@ const upsertWeaponSkill = async (weapon: TransformedWeaponData): Promise<number>
   }
 
   return 1;
+};
+
+const upsertWeaponProperties = async (
+  weapon: TransformedWeaponData,
+): Promise<number> => {
+  if (!weapon.properties) {
+    return 0;
+  }
+
+  // Find the entity ID for this weapon
+  const entityRecord = await database
+    .select({ id: entities.id })
+    .from(entities)
+    .where(eq(entities.gameId, weapon.id))
+    .limit(1);
+
+  if (entityRecord.length === 0) {
+    return 0;
+  }
+
+  const entityId = entityRecord[0].id;
+
+  // Find the weapon skill (it shares the name with the weapon)
+  const skillRecord = await database
+    .select({ id: skills.id })
+    .from(skills)
+    .where(and(eq(skills.entityId, entityId), eq(skills.name, weapon.name)))
+    .limit(1);
+
+  if (skillRecord.length === 0) {
+    console.error(`Skill not found for weapon: ${weapon.name}`);
+    return 0;
+  }
+
+  const skillId = skillRecord[0].id;
+  let statsProcessed = 0;
+
+  for (const property of weapon.properties) {
+    const { name, description, stat, value, tags } = property;
+
+    // Check if permanent stat already exists
+    const existing = await database
+      .select()
+      .from(permanentStatsV2)
+      .where(
+        and(eq(permanentStatsV2.skillId, skillId), eq(permanentStatsV2.name, name)),
+      )
+      .limit(1);
+
+    if (existing.length > 0) {
+      // Update existing
+      await database
+        .update(permanentStatsV2)
+        .set({
+          description,
+          stat: stat as any,
+          value,
+          tags: tags as any,
+        })
+        .where(eq(permanentStatsV2.id, existing[0].id));
+      console.log(`  Updated weapon property: ${name}`);
+    } else {
+      // Insert new
+      await database.insert(permanentStatsV2).values({
+        skillId,
+        name,
+        description,
+        stat: stat as any,
+        value,
+        tags: tags as any,
+      });
+      console.log(`  Inserted weapon property: ${name}`);
+    }
+    statsProcessed++;
+  }
+
+  return statsProcessed;
 };
 
 const loadCharacterJSON = async (
@@ -874,6 +995,7 @@ const main = async () => {
     let weaponProcessed = 0;
     let weaponErrors = 0;
     let weaponSkillsProcessed = 0;
+    let weaponPropertiesProcessed = 0;
 
     for (const file of weaponJsonFiles) {
       const filePath = path.join(WEAPON_DATA_DIR, file);
@@ -887,6 +1009,7 @@ const main = async () => {
       try {
         await upsertWeaponEntity(weapon);
         weaponSkillsProcessed += await upsertWeaponSkill(weapon);
+        weaponPropertiesProcessed += await upsertWeaponProperties(weapon);
         weaponProcessed++;
       } catch (error) {
         console.error(`Error processing ${weapon.name}:`, error, file);
@@ -899,6 +1022,7 @@ const main = async () => {
     console.log(`   - Processed: ${weaponProcessed}`);
     console.log(`   - Errors: ${weaponErrors}`);
     console.log(`   - Weapon Skills: ${weaponSkillsProcessed}`);
+    console.log(`   - Weapon Properties: ${weaponPropertiesProcessed}`);
 
     // ========================================================================
     // CHARACTERS
@@ -1016,7 +1140,7 @@ const main = async () => {
       `   - Skills: ${echoSkillsProcessed} echo, ${echoSetSkillsProcessed} echo set, ${weaponSkillsProcessed} weapon, ${characterSkillsProcessed} character, ${resonantChainSkillsProcessed} resonant chain, ${skillTreeNodesProcessed} skill tree`,
     );
     console.log(
-      `   - Permanent Stats: ${propertiesProcessed} properties, ${skillTreePermanentStatsProcessed} skill tree nodes`,
+      `   - Permanent Stats: ${propertiesProcessed} properties, ${skillTreePermanentStatsProcessed} skill tree nodes, ${weaponPropertiesProcessed} weapon properties`,
     );
   } catch (error) {
     console.error('\n❌ Error during migration:', error);

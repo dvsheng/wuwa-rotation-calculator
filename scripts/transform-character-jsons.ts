@@ -19,6 +19,8 @@ import type { WeaponType } from '../src/types/weapon';
 
 import {
   convertValueToNumber,
+  mapElementNameToAttribute,
+  mapStatNameToCharacterStat,
   mapWeaponType,
   processIconPath,
   stripHtmlTags,
@@ -208,39 +210,6 @@ const mapPropertyNameToStat = (propertyName: string): CharacterStat | undefined 
 };
 
 /**
- * Map SkillTree stat names to CharacterStat enum values (uses scaling bonus stats)
- */
-const mapSkillTreeStatNameToStat = (statName: string): CharacterStat | undefined => {
-  const mapping: Record<string, CharacterStat> = {
-    HP: CharacterStat.HP_SCALING_BONUS,
-    ATK: CharacterStat.ATTACK_SCALING_BONUS,
-    DEF: CharacterStat.DEFENSE_SCALING_BONUS,
-    'Crit. Rate': CharacterStat.CRITICAL_RATE,
-    'Crit. DMG': CharacterStat.CRITICAL_DAMAGE,
-    'Energy Regen': CharacterStat.ENERGY_REGEN,
-    'Healing Bonus': CharacterStat.HEALING_BONUS,
-  };
-
-  return mapping[statName];
-};
-
-/**
- * Map element names from encore.moe to Attribute enum values
- */
-const mapElementNameToAttribute = (elementName: string): Attribute | undefined => {
-  const mapping: Record<string, Attribute> = {
-    Glacio: Attribute.GLACIO,
-    Fusion: Attribute.FUSION,
-    Electro: Attribute.ELECTRO,
-    Aero: Attribute.AERO,
-    Spectro: Attribute.SPECTRO,
-    Havoc: Attribute.HAVOC,
-  };
-
-  return mapping[elementName];
-};
-
-/**
  * Parse SkillTree node description to extract stat, value, and tags
  * Examples:
  * - "HP increased by 1.80%." => { stat: "hpScalingBonus", value: 0.018, tags: ["all"] }
@@ -275,7 +244,7 @@ const parseSkillTreeNode = (
     };
   }
 
-  const stat = mapSkillTreeStatNameToStat(statName);
+  const stat = mapStatNameToCharacterStat(statName);
   if (!stat) return undefined;
 
   return { stat, value, tags: [Tag.ALL] };

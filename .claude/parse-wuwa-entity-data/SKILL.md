@@ -1,27 +1,27 @@
 # Skill: parse_wuwa_entity_data
 
-You are a specialized data transformation agent for Wuthering Waves. Your goal is to map raw JSON data from the Hakushin API into our project-specific TypeScript schemas. You must identify the entity type and apply the appropriate extraction logic defined below.
+You are a specialized data transformation agent for Wuthering Waves. Your goal is to map raw JSON data from the API into our project-specific TypeScript schemas. You must identify the entity type and apply the appropriate extraction logic defined below.
 
 ## 1. Universal Standards
 
 ### Reference Schemas
 
-- **All:** `scripts/validate-game-data.test.ts`. Use this one as the primary source of truth for your parsed schemas
-- **Character:** `src/services/game-data/character/types.ts`
-- **Echo / Set:** `src/services/game-data/echo/types.ts`, `src/services/game-data/echo-set/types.ts`
-- **Weapon:** `src/services/game-data/weapon/types.ts`
+- **All:** `/Users/david/Code/wuwa-rotation-builder/src/db/schema.ts, /Users/david/Code/wuwa-rotation-builder/src/schemas/admin/store-types.ts`. Use these two as the primary source of truth for what your output should look like
+
+You may query examples of the current data from SQLLite with:
+
+```sql
+"SELECT attacks.*, entities.game_id, entities.name  FROM attacks JOIN entities ON attacks.entity_id = entities.id WHERE entities.game_id = {{id}}"
+```
 
 ### Data Paths & Acquisition
 
-- **Pattern:** `https://api.hakush.in/ww/data/en/{type}/{id}.json`
-- **Command:** `curl -s [URL] > [Local Path]`
-
-| Entity Type   | Raw Path (`.local/data/...`) | Parsed Path (`.local/data/...`) |
-| :------------ | :--------------------------- | :------------------------------ |
-| **Character** | `character/raw/{id}.json`    | `character/parsed/{id}.json`    |
-| **Echo**      | `echo/raw/{id}.json`         | `echo/parsed/{id}.json`         |
-| **Echo Set**  | N/A (Derived from Echo)      | `echo-set/parsed/{id}.json`     |
-| **Weapon**    | `weapon/raw/{id}.json`       | `weapon/parsed/{id}.json`       |
+| Entity Type   | Raw Path (`.local/data/encore.moe/transformed...`) | Parsed Path (`.local/data/encore.moe/transformed...`) |
+| :------------ | :------------------------------------------------- | :---------------------------------------------------- |
+| **Character** | `character-ai/{id}.json`                           | `character-ai-out/{id}.json`                          |
+| **Echo**      | `echo-ai/{id}.json`                                | `character-ai-out/{id}.json`                          |
+| **Echo Set**  | `echo-set-ai/{id}.json`                            | `character-ai-out/{id}.json`                          |
+| **Weapon**    | `weapon-ai/{id}.json`                              | `character-ai-out/{id}.json`                          |
 
 ### General Stat Mapping
 
@@ -37,8 +37,6 @@ You are a specialized data transformation agent for Wuthering Waves. Your goal i
 ### A. Character Logic
 
 - **Attacks:**
-  - **Source:** Iterate `SkillTrees`. Filter for nodes dealing numerical damage.
-  - **Motion Values:** Use **Level 10** values (`RateLv[9]`). Divide by 10000.
   - **Tags:** Use primary category tags: `basicAttack`, `heavyAttack`, `resonanceSkill`, `resonanceLiberation`, `intro`, `outro`.
   - **Restriction:** NEVER tag an attack with its own name. The service handles skill-specific logic automatically.
   - **Damage Type Overrides:** If the description states damage is "considered as [Type] DMG", use `[Type]` for the primary tag (e.g., `basicAttack`) instead of the origin type (e.g., `resonanceSkill`), as these tags are mutually exclusive.
@@ -53,29 +51,18 @@ You are a specialized data transformation agent for Wuthering Waves. Your goal i
     - **Additive Splitting:** Only split an effect into multiple separate base entries if the base effect is _always_ active (e.g., a passive) and the sequence adds a _conditional_ bonus (e.g., a temporary buff) that doesn't replace the passive part.
   - **Stackable Buffs:** If a buff stacks (e.g., "up to 3 times"), use a `UserParameterizedNumber`. Use key `"0"` in `parameterConfigs` for the stack count, set `scale` to the per-stack value, and `maximum` to the max number of stacks.
   - **Exclusions:** Omit modifiers that only restore flat energy or affect mechanics not tracked in stats (like hit counts, dodge refreshes, character-specific mechanics, healing).
-- **Stats:** Extract **Level 90** base stats from `Stats["6"]["90"]`.
 
 ### B. Echo Logic
 
 - **Attacks:**
-  - **Motion Values:** Use **Max Level 5** values (`RateLv[4]`). Divide by 10000.
-  - **Consolidation:** Aggregate multiple `Skill.Damage` entries into a single `motionValues` array.
   - **Tags:** Always include `["echoSkill"]` + the Element tag.
-- **Echo Sets:**
-  - **Trigger:** When parsing an Echo, you MUST verify/generate the files for the `Group` IDs (the Echo Sets).
-- **Elements:**
-  - 1: `glacio`, 2: `fusion`, 3: `electro`, 4: `aero`, 5: `spectro`, 6: `havoc`.
 
 ### C. Weapon Logic (`parse_wuwa_weapon_data`)
 
 - **Refine-Scalable Format:**
-  - Weapons use a single `capabilities` object (not keyed by refine level).
   - Values that scale linearly with refinement use `RefineScalableNumber`: `{ base: number, increment: number }`.
   - The resolved value at runtime is: `base + (refineLevel - 1) * increment`.
   - Values that do NOT scale across refinement levels remain as plain numbers.
-- **Base Stats (permanentStats):**
-  - **Primary:** `Stats["6"]["90"][0]` -> `attackFlat` (plain number, does not scale with refine).
-  - **Secondary:** `Stats["6"]["90"][1]` -> Relevant `CharacterStat` key (plain number, does not scale with refine).
 - **Passives:**
   - **Differentiation:**
     - _Unconditional_ (e.g., "ATK +12%") -> `permanentStats` with `RefineScalableNumber` value.
@@ -84,8 +71,6 @@ You are a specialized data transformation agent for Wuthering Waves. Your goal i
     - `base` = `r1` (the Rank 1 value)
     - `increment` = `r2 - r1` (the per-rank increase, assuming linear scaling)
   - **Stackable Buffs:** For `UserParameterizedNumber` values, the `scale` field inside `parameterConfigs` should be a `RefineScalableNumber` if it scales with refinement.
-- **Types:**
-  - 1: `sword`, 2: `broadblade`, 3: `pistols`, 4: `gauntlets`, 5: `rectifier`.
 
 **Example RefineScalableNumber:**
 
@@ -121,8 +106,7 @@ The `scale` resolves to 0.04 at R1, 0.05 at R2, etc., while `minimum` and `maxim
 
 ## 3. Formatting & Validation
 
-1.  **Verbatim Text:** `description` fields must be exact copies from the source JSON. Description should be an empty string if the raw data lacks a description.
+1.  **Verbatim Text:** `description` fields must be populated with a subsequence of the skill description.
 2.  **Strict Typing:** Do not invent fields. If it's not in the Type definition, do not include it.
-3.  Validation: Run `npm run validate-data` to ensure the generated JSON matches the schema.
-4.  Error Flagging: If raw data uses non-standard scaling or ambiguous phrasing, flag it to the user.
-5.  **UUID Preservation:** When correcting an existing parsed file, NEVER regenerate the top-level `uuid` or the individual capability `id` fields. Always read the existing file first and map the existing UUIDs to the corresponding entities and capabilities in the new version. Only generate new UUIDs for entirely new capability items using the provided scripts.
+3.  Error Flagging: If raw data uses non-standard scaling or ambiguous phrasing, flag it to the user.
+4.  Your output for a single entity should be a JSON file with modifiers, attacks, and permanent stats as fields, each conforming to the schemas defined above

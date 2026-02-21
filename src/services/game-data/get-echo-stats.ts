@@ -101,12 +101,12 @@ const ECHO_PRIMARY_STAT_BY_COST_BY_STAT: Record<
     },
     [EchoMainStatOption.CRIT_DMG]: {
       stat: CharacterStat.CRITICAL_DAMAGE,
-      value: 0.22,
+      value: 0.44,
       tags: [Tag.ALL],
     },
     [EchoMainStatOption.CRIT_RATE]: {
       stat: CharacterStat.CRITICAL_RATE,
-      value: 0.44,
+      value: 0.22,
       tags: [Tag.ALL],
     },
     [EchoMainStatOption.HEALING_BONUS]: {

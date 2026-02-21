@@ -9,6 +9,29 @@ import type {
 } from '@/types';
 
 /**
+ * Entity types supported in the database
+ */
+export const EntityType = {
+  CHARACTER: 'character',
+  WEAPON: 'weapon',
+  ECHO: 'echo',
+  ECHO_SET: 'echo_set',
+} as const;
+
+export type EntityType = (typeof EntityType)[keyof typeof EntityType];
+
+/**
+ * Capability type enum
+ */
+export const CapabilityType = {
+  ATTACK: 'attack',
+  MODIFIER: 'modifier',
+  PERMANENT_STAT: 'permanent_stat',
+} as const;
+
+export type CapabilityType = (typeof CapabilityType)[keyof typeof CapabilityType];
+
+/**
  * The Resonance Chain sequence at which a skill or bonus is unlocked.
  */
 export const Sequence = {

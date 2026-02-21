@@ -1,11 +1,11 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 
-import type { EntityType } from '@/db/schema';
 import type { ListEntitiesRequest } from '@/schemas/game-data-service';
 import { listEntities } from '@/services/game-data';
 import type {
-  EchoSetResponseItem,
+  EntityType,
   ListCharactersResponseItem,
+  ListEchoSetsResponseItem,
   ListEchoesResponseItem,
   ListWeaponsResponseItem,
 } from '@/services/game-data';
@@ -18,7 +18,7 @@ type InferredListEntityResponse<T extends ListEntitiesRequest> =
       : T['entityType'] extends typeof EntityType.ECHO
         ? Array<ListEchoesResponseItem>
         : T['entityType'] extends typeof EntityType.ECHO_SET
-          ? Array<EchoSetResponseItem>
+          ? Array<ListEchoSetsResponseItem>
           : never;
 
 export const useEntityList = <T extends ListEntitiesRequest>(request: T) => {

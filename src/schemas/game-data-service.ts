@@ -1,7 +1,10 @@
 import { z } from 'zod';
 
-import { EntityType } from '@/db/schema';
-import { RefineLevel, SetEffectRequirement } from '@/services/game-data/types';
+import {
+  EntityType,
+  RefineLevel,
+  SetEffectRequirement,
+} from '@/services/game-data/types';
 import { WeaponType } from '@/types';
 
 import { EnemySchema } from './enemy';
@@ -62,15 +65,14 @@ export type CalculateRotationInput = z.infer<typeof CalculateRotationInputSchema
 
 // Icon Service Types
 export const IconRequestType = {
-  ATTACK: 'attack',
-  MODIFIER: 'modifier',
+  CAPABILITY: 'capability',
   ENTITY: 'entity',
 } as const;
 
 export type IconRequestType = (typeof IconRequestType)[keyof typeof IconRequestType];
 
 export const IconRequestSchema = z.object({
-  id: z.number(), // For entities, this is the gameId (game ID), not the database ID
+  id: z.number(),
   type: z.enum(IconRequestType),
 });
 

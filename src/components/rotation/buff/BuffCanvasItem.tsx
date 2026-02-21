@@ -36,7 +36,7 @@ export const BuffTimelineCanvasItem = ({
   const updateBuffParameters = useStore((state) => state.updateBuffParameters);
   const alignment = useSelfBuffAlignment(buff);
 
-  const { data: iconUrl } = useCapabilityIcon(buff.id, 'modifier');
+  const { data: iconUrl } = useCapabilityIcon(buff.id);
   const { data: characterIconUrl } = useEntityIcon(buff.characterId);
 
   const parameters = buff.parameters?.map((p) => ({

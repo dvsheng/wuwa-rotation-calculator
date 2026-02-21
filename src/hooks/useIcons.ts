@@ -25,11 +25,8 @@ export const useIcons = (requests: Array<IconRequest>) => {
 /**
  * Hook to fetch the icon URL for a single capability by its ID and type.
  */
-export const useCapabilityIcon = (
-  capabilityId: number,
-  capabilityType: 'attack' | 'modifier',
-) => {
-  const { data, ...rest } = useIcons([{ id: capabilityId, type: capabilityType }]);
+export const useCapabilityIcon = (capabilityId: number) => {
+  const { data, ...rest } = useIcons([{ id: capabilityId, type: 'capability' }]);
   return {
     ...rest,
     data: data?.[0]?.iconUrl,

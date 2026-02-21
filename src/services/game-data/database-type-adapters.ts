@@ -1,12 +1,13 @@
+import type { DatabaseFullCapability } from '@/db/schema';
+import type {
+  DatabaseRefineScalableNumber,
+  DatabaseRotationRuntimeResolvableNumber,
+  DatabaseUserParameterizedResolvableNumber,
+} from '@/schemas/database';
 import type { UserParameterizedNumber } from '@/types/parameterized-number';
 
-import type {
-  RefineScalableNumber,
-  StoreParameterizedNumber,
-  StoreRotationRuntimeResolvableNumber,
-} from '../../db/schema';
-
 import type { GameDataRotationRuntimeResolvableNumber } from './types';
+import { Sequence } from './types';
 
 /**
  * Converts Store number types to runtime number types.
@@ -35,18 +36,18 @@ import type { GameDataRotationRuntimeResolvableNumber } from './types';
  * // Output: { min: number; max: number }
  */
 export type ResolveStoreNumberType<T> =
-  T extends Array<infer U>
-    ? Array<ResolveStoreNumberType<U>>
-    : T extends StoreRotationRuntimeResolvableNumber
-      ? GameDataRotationRuntimeResolvableNumber
-      : T extends StoreParameterizedNumber
-        ? UserParameterizedNumber
-        : T extends RefineScalableNumber
+  T extends DatabaseRotationRuntimeResolvableNumber
+    ? GameDataRotationRuntimeResolvableNumber
+    : T extends DatabaseUserParameterizedResolvableNumber
+      ? UserParameterizedNumber
+      : T extends DatabaseRefineScalableNumber
+        ? number
+        : T extends number
           ? number
-          : T extends number
-            ? number
-            : T extends object
-              ? { [K in keyof T]: ResolveStoreNumberType<T[K]> }
+          : T extends object
+            ? { [K in keyof T]: ResolveStoreNumberType<T[K]> }
+            : T extends Array<infer U>
+              ? Array<ResolveStoreNumberType<U>>
               : T;
 
 /**
@@ -54,14 +55,14 @@ export type ResolveStoreNumberType<T> =
  */
 export const isRefineScalableNumber = (
   value: unknown,
-): value is RefineScalableNumber => {
+): value is DatabaseRefineScalableNumber => {
   return (
     typeof value === 'object' &&
     value !== null &&
     'base' in value &&
     'increment' in value &&
-    typeof (value as RefineScalableNumber).base === 'number' &&
-    typeof (value as RefineScalableNumber).increment === 'number'
+    typeof value.base === 'number' &&
+    typeof value.increment === 'number'
   );
 };
 
@@ -126,7 +127,7 @@ export function resolveStoreNumberType<T>(
   return value as ResolveStoreNumberType<T>;
 }
 
-type RecursivelyReplaceNullWithUndefined<T> = T extends null
+export type RecursivelyReplaceNullWithUndefined<T> = T extends null
   ? undefined
   : T extends Date
     ? T
@@ -150,4 +151,83 @@ export const replaceNullsWithUndefined = <T>(
     }
   }
   return object as any;
+};
+
+/**
+ * Convert sequence string to number (e.g., 's1' -> 1, 's2' -> 2).
+ */
+export const sequenceToNumber = (sequence?: string): number => {
+  if (!sequence) return 0;
+  if (Object.values(Sequence).includes(sequence as Sequence)) {
+    return Number.parseInt(sequence.slice(1), 10);
+  }
+  return 0;
+};
+
+/**
+ * Get the highest applicable sequence from alternativeDefinitions.
+ */
+const getApplicableSequence = (
+  alternativeDefinitions: Partial<Record<Sequence, unknown>> | undefined,
+  sequence: number = 0,
+): Sequence | undefined => {
+  if (!alternativeDefinitions) return undefined;
+
+  const applicableSequences = (Object.keys(alternativeDefinitions) as Array<Sequence>)
+    .filter((seq) => sequenceToNumber(seq) <= sequence)
+    .toSorted((a, b) => sequenceToNumber(b) - sequenceToNumber(a));
+
+  return applicableSequences[0];
+};
+
+/**
+ * Type helper to remove alternativeDefinitions from capabilityJson
+ */
+export type ResolveAlternativeDefinitions<T extends { capabilityJson: any }> =
+  T extends {
+    capabilityJson: infer J;
+  }
+    ? J extends { alternativeDefinitions?: any }
+      ? Omit<T, 'capabilityJson'> & {
+          capabilityJson: Omit<J, 'alternativeDefinitions'>;
+        }
+      : T
+    : T;
+
+/**
+ * Resolve a capability by merging the highest applicable alternativeDefinition.
+ * AlternativeDefinitions are now nested in capabilityJson.
+ * Returns the capability without alternativeDefinitions, with override fields merged in.
+ */
+export const resolveAlternativeDefinitions = <T extends DatabaseFullCapability>(
+  capability: T,
+  sequence: number = 0,
+): ResolveAlternativeDefinitions<T> => {
+  const json = capability.capabilityJson;
+
+  // Only attacks and modifiers have alternativeDefinitions
+  if (!('alternativeDefinitions' in json) || !json.alternativeDefinitions) {
+    return capability as ResolveAlternativeDefinitions<T>;
+  }
+
+  const applicableSeq = getApplicableSequence(json.alternativeDefinitions, sequence);
+
+  if (!applicableSeq) {
+    // No applicable sequence, just remove alternativeDefinitions
+    const { alternativeDefinitions, ...baseJson } = json;
+    return {
+      ...capability,
+      capabilityJson: baseJson,
+    } as ResolveAlternativeDefinitions<T>;
+  }
+
+  // Merge override into base and remove alternativeDefinitions
+  const override = json.alternativeDefinitions[applicableSeq];
+  const { alternativeDefinitions, ...baseJson } = json;
+
+  return {
+    ...capability,
+    capabilityDescription: override?.description ?? capability.capabilityDescription,
+    capabilityJson: { ...baseJson, ...override },
+  } as ResolveAlternativeDefinitions<T>;
 };

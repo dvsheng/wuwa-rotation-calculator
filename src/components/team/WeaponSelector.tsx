@@ -9,9 +9,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { EntityType } from '@/db/schema';
 import { useEntityList } from '@/hooks/useEntityList';
 import { cn } from '@/lib/utils';
+import { EntityType } from '@/services/game-data';
 import type { ListWeaponsResponseItem } from '@/services/game-data';
 import { useStore } from '@/store';
 import { WeaponType } from '@/types';

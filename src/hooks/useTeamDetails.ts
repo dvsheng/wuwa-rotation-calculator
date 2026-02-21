@@ -2,9 +2,8 @@ import { useQueries } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
-import { EntityType } from '@/db/schema';
 import type { ClientAttack, ClientModifier } from '@/services/game-data';
-import { getClientEntityByHakushinId } from '@/services/game-data';
+import { EntityType, getClientEntityById } from '@/services/game-data';
 import { useStore } from '@/store';
 
 interface ClientCharacterDetails {
@@ -58,7 +57,7 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
       {
         queryKey: ['team-details', 'character', character.id, character.sequence],
         queryFn: () =>
-          getClientEntityByHakushinId({
+          getClientEntityById({
             data: {
               id: character.id,
               entityType: EntityType.CHARACTER,
@@ -71,7 +70,7 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
       {
         queryKey: ['team-details', 'weapon', character.id, character.weapon.id],
         queryFn: () =>
-          getClientEntityByHakushinId({
+          getClientEntityById({
             data: {
               id: character.weapon.id,
               entityType: EntityType.WEAPON,
@@ -84,7 +83,7 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
       {
         queryKey: ['team-details', 'echo', character.id, character.primarySlotEcho.id],
         queryFn: () =>
-          getClientEntityByHakushinId({
+          getClientEntityById({
             data: {
               id: character.primarySlotEcho.id,
               entityType: EntityType.ECHO,
@@ -96,7 +95,7 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
       ...character.echoSets.map((set) => ({
         queryKey: ['team-details', 'echo-set', character.id, set.id, set.requirement],
         queryFn: () =>
-          getClientEntityByHakushinId({
+          getClientEntityById({
             data: {
               id: set.id,
               entityType: EntityType.ECHO_SET,

@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { Calculator, Settings } from 'lucide-react';
+import { Calculator } from 'lucide-react';
 
 import { Button } from './ui/button';
 
@@ -19,12 +19,6 @@ export const AppHeader = () => {
           <Button variant="ghost" size="sm">
             <Calculator size={16} className="mr-2" />
             Calculator
-          </Button>
-        </Link>
-        <Link to="/admin">
-          <Button variant="ghost" size="sm">
-            <Settings size={16} className="mr-2" />
-            Admin
           </Button>
         </Link>
       </div>

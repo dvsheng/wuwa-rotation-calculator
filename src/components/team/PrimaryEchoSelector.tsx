@@ -2,9 +2,9 @@ import { GameImage } from '@/components/common/GameImage';
 import type { FilterConfig } from '@/components/common/SelectionDialog';
 import { SelectionDialog } from '@/components/common/SelectionDialog';
 import { Row } from '@/components/ui/layout';
-import { EntityType } from '@/db/schema';
 import { useEntityList } from '@/hooks/useEntityList';
 import { cn } from '@/lib/utils';
+import { EntityType } from '@/services/game-data';
 import type { ListEchoesResponseItem } from '@/services/game-data';
 import { useStore } from '@/store';
 
@@ -19,9 +19,12 @@ export const PrimaryEchoSelector = ({ index }: PrimaryEchoSelectorProperties) =>
   const selectedEchoSets = useStore((state) => state.team[index].echoSets);
   const setEcho = useStore((state) => state.setPrimaryEcho);
   const { data: echoList = [] } = useEntityList({ entityType: EntityType.ECHO });
+  const { data: echoSetList = [] } = useEntityList({ entityType: EntityType.ECHO_SET });
 
   // Filter echoes by selected echo set IDs
-  const selectedSetIds = new Set(selectedEchoSets.map((set) => set.id));
+  const selectedSetIds = new Set(
+    selectedEchoSets.map((set) => echoSetList.find((s) => s.id === set.id)?.gameId),
+  );
   const primaryEchoOptions = echoList.filter((_echo) =>
     _echo.sets.some((set) => selectedSetIds.has(set)),
   );

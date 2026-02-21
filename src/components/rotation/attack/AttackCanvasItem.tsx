@@ -22,7 +22,7 @@ export const AttackCanvasItem = ({
 }: AttackCanvasItemProperties) => {
   const updateAttackParameters = useStore((state) => state.updateAttackParameters);
 
-  const { data: iconUrl } = useCapabilityIcon(attack.id, 'attack');
+  const { data: iconUrl } = useCapabilityIcon(attack.id);
   const { data: characterIconUrl } = useEntityIcon(attack.characterId);
 
   return (

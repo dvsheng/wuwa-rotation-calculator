@@ -1,8 +1,8 @@
-import { inArray } from 'drizzle-orm';
+import { inArray, sql } from 'drizzle-orm';
 
 import { database } from '@/db/client';
-import { attacks, entities, modifiers } from '@/db/schema';
-import type { GetIconsRequest, IconRequestType } from '@/schemas/game-data-service';
+import { entities, fullCapabilities } from '@/db/schema';
+import type { GetIconsRequest } from '@/schemas/game-data-service';
 
 import type { GetIconsResponse } from './get-icons.types';
 
@@ -24,11 +24,6 @@ const processIconPath = (iconUrl?: string | null): string | undefined => {
 };
 
 /**
- * Creates a composite key from type and id for unique identification across tables.
- */
-const getIconKey = (type: IconRequestType, id: number): string => `${type}:${id}`;
-
-/**
  * Get icon URLs for multiple items by their IDs and types.
  * Supports attacks, modifiers, and entities.
  * For capabilities without icons, falls back to the parent entity's icon.
@@ -38,92 +33,48 @@ export const getIconsHandler = async (
   requests: GetIconsRequest,
 ): Promise<GetIconsResponse> => {
   // Group requests by type
-  const attackIds = requests.filter((r) => r.type === 'attack').map((r) => r.id);
-  const modifierIds = requests.filter((r) => r.type === 'modifier').map((r) => r.id);
+  const capabilityIds = requests
+    .filter((r) => r.type === 'capability')
+    .map((r) => r.id);
   const entityIds = requests.filter((r) => r.type === 'entity').map((r) => r.id);
 
   // Query all tables in parallel, fetching entityId for capabilities
   // Note: For entities, the ID is the gameId (game ID), not the database ID
-  const [attackResults, modifierResults, entityResults] = await Promise.all([
-    attackIds.length > 0
-      ? database.query.attacks.findMany({
-          where: inArray(attacks.id, attackIds),
-          columns: { id: true, iconUrl: true, entityId: true },
-        })
-      : [],
-    modifierIds.length > 0
-      ? database.query.modifiers.findMany({
-          where: inArray(modifiers.id, modifierIds),
-          columns: { id: true, iconUrl: true, entityId: true },
-        })
+  const [capabilityResults, entityResults] = await Promise.all([
+    capabilityIds.length > 0
+      ? database
+          .select({
+            id: fullCapabilities.capabilityId,
+            iconUrl: sql<
+              string | null
+            >`coalesce(${fullCapabilities.skillIconUrl}, ${fullCapabilities.entityIconUrl})`.as(
+              'iconUrl',
+            ),
+          })
+          .from(fullCapabilities)
+          .where(inArray(fullCapabilities.capabilityId, capabilityIds))
       : [],
     entityIds.length > 0
-      ? database.query.entities.findMany({
-          where: inArray(entities.gameId, entityIds),
-          columns: { gameId: true, iconUrl: true },
-        })
+      ? database
+          .select({
+            id: entities.id,
+            iconUrl: entities.iconUrl,
+          })
+          .from(entities)
+          .where(inArray(entities.id, entityIds))
       : [],
   ]);
 
-  // Collect entity IDs for capabilities that don't have icons (for fallback)
-  const fallbackEntityIds = new Set<number>();
-  const capabilityToEntityMap = new Map<string, number>();
-
-  for (const attack of attackResults) {
-    if (!attack.iconUrl) {
-      fallbackEntityIds.add(attack.entityId);
-      capabilityToEntityMap.set(getIconKey('attack', attack.id), attack.entityId);
-    }
-  }
-
-  for (const modifier of modifierResults) {
-    if (!modifier.iconUrl) {
-      fallbackEntityIds.add(modifier.entityId);
-      capabilityToEntityMap.set(getIconKey('modifier', modifier.id), modifier.entityId);
-    }
-  }
-
-  // Fetch parent entities for capabilities without icons
-  const fallbackEntities =
-    fallbackEntityIds.size > 0
-      ? await database.query.entities.findMany({
-          where: inArray(entities.id, [...fallbackEntityIds]),
-          columns: { id: true, iconUrl: true },
-        })
-      : [];
-
-  // Create entity icon map by database ID for fallback lookups
-  const entityIconByIdMap = new Map<number, string | undefined>();
-  for (const entity of fallbackEntities) {
-    entityIconByIdMap.set(entity.id, processIconPath(entity.iconUrl));
-  }
-
-  // Create a map using composite keys (type:id) to handle non-unique IDs across tables
-  const iconUrlMap = new Map<string, string | undefined>();
-
-  for (const item of attackResults) {
-    const key = getIconKey('attack', item.id);
-    const icon = processIconPath(item.iconUrl);
-    // Use capability icon, or fall back to entity icon
-    iconUrlMap.set(key, icon ?? entityIconByIdMap.get(item.entityId));
-  }
-
-  for (const item of modifierResults) {
-    const key = getIconKey('modifier', item.id);
-    const icon = processIconPath(item.iconUrl);
-    // Use capability icon, or fall back to entity icon
-    iconUrlMap.set(key, icon ?? entityIconByIdMap.get(item.entityId));
-  }
-
-  for (const item of entityResults) {
-    if (item.gameId) {
-      iconUrlMap.set(getIconKey('entity', item.gameId), processIconPath(item.iconUrl));
-    }
-  }
-
   // Map requests to responses with iconUrl appended
-  return requests.map((request) => ({
-    ...request,
-    iconUrl: iconUrlMap.get(getIconKey(request.type, request.id)),
-  }));
+  return requests.map((request) => {
+    const result =
+      request.type === 'capability'
+        ? capabilityResults.find((r) => r.id === request.id)
+        : entityResults.find((r) => r.id === request.id);
+
+    return {
+      ...request,
+      iconUrl: processIconPath(result?.iconUrl),
+    };
+  });
 };

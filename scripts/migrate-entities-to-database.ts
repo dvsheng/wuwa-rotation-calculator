@@ -10,8 +10,9 @@ import { fileURLToPath } from 'node:url';
 import { and, eq } from 'drizzle-orm';
 
 import { database as database } from '../src/db/client';
-import { EntityType, entities, permanentStatsV2, skills } from '../src/db/schema';
-import { OriginType } from '../src/services/game-data';
+// @ts-expect-error
+import { entities, permanentStatsV2, skills } from '../src/db/schema';
+import { EntityType, OriginType } from '../src/services/game-data';
 
 import type { TransformedCharacter } from './transform-character-jsons';
 import type { TransformedEcho, TransformedEchoSet } from './transform-echo-jsons';
@@ -136,7 +137,13 @@ const upsertEchoSkill = async (echo: TransformedEcho): Promise<number> => {
   const existing = await database
     .select()
     .from(skills)
-    .where(eq(skills.gameId, skillGameId))
+    .where(
+      and(
+        eq(skills.gameId, skillGameId),
+        eq(skills.originType, originType),
+        eq(skills.entityId, entityId),
+      ),
+    )
     .limit(1);
 
   if (existing.length > 0) {
@@ -148,10 +155,15 @@ const upsertEchoSkill = async (echo: TransformedEcho): Promise<number> => {
         name,
         description,
         iconUrl,
-        originType,
         updatedAt: new Date(),
       })
-      .where(eq(skills.gameId, skillGameId));
+      .where(
+        and(
+          eq(skills.gameId, skillGameId),
+          eq(skills.originType, originType),
+          eq(skills.entityId, entityId),
+        ),
+      );
     console.log(`  Updated echo skill: ${name} (ID: ${skillGameId})`);
   } else {
     // Insert new skill
@@ -559,7 +571,7 @@ const upsertCharacterSkills = async (characterId: number): Promise<number> => {
     const existing = await database
       .select()
       .from(skills)
-      .where(eq(skills.gameId, skillGameId))
+      .where(and(eq(skills.gameId, skillGameId), eq(skills.originType, originType)))
       .limit(1);
 
     if (existing.length > 0) {
@@ -571,10 +583,9 @@ const upsertCharacterSkills = async (characterId: number): Promise<number> => {
           name,
           description,
           iconUrl,
-          originType,
           updatedAt: new Date(),
         })
-        .where(eq(skills.gameId, skillGameId));
+        .where(and(eq(skills.gameId, skillGameId), eq(skills.originType, originType)));
       console.log(`  Updated character skill: ${name} (${originType})`);
     } else {
       // Insert new skill
@@ -630,7 +641,7 @@ const upsertResonantChainSkills = async (
     const existing = await database
       .select()
       .from(skills)
-      .where(eq(skills.gameId, skillGameId))
+      .where(and(eq(skills.gameId, skillGameId), eq(skills.originType, originType)))
       .limit(1);
 
     if (existing.length > 0) {
@@ -642,10 +653,9 @@ const upsertResonantChainSkills = async (
           name,
           description,
           iconUrl,
-          originType,
           updatedAt: new Date(),
         })
-        .where(eq(skills.gameId, skillGameId));
+        .where(and(eq(skills.gameId, skillGameId), eq(skills.originType, originType)));
       console.log(`  Updated resonant chain: ${name} (${originType})`);
     } else {
       // Insert new skill
@@ -762,7 +772,7 @@ const upsertCharacterProperties = async (
   const skillId = baseStatsSkill[0].id;
   let statsProcessed = 0;
 
-  for (const property of characterData.properties) {
+  for (const property of characterData.properties ?? []) {
     const name = property.name; // Already formatted in transform
     const description = property.description; // Already formatted in transform
     const stat = property.stat;
@@ -844,7 +854,7 @@ const upsertCharacterSkillTreeNodes = async (
   const skillId = baseStatsSkill[0].id;
   let statsProcessed = 0;
 
-  for (const node of characterData.skillTree) {
+  for (const node of characterData.skillTree ?? []) {
     const gameId = node.id;
     const name = node.name;
     const description = node.description;

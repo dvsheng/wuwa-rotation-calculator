@@ -15,10 +15,7 @@ import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type {
-  TransformedDescParameter,
-  TransformedEcho,
-} from './transform-echo-jsons';
+import type { TransformedDescParameter, TransformedEcho } from './transform-echo-jsons';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

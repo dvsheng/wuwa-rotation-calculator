@@ -2,9 +2,9 @@ import { GameImage } from '@/components/common/GameImage';
 import { SelectionDialog } from '@/components/common/SelectionDialog';
 import type { FilterConfig } from '@/components/common/SelectionDialog';
 import { Badge } from '@/components/ui/badge';
-import { EntityType } from '@/db/schema';
 import { useEntityList } from '@/hooks/useEntityList';
 import { cn } from '@/lib/utils';
+import { EntityType } from '@/services/game-data';
 import type { ListCharactersResponseItem } from '@/services/game-data';
 import { resolveImagePath } from '@/services/image-service';
 import { Attribute } from '@/types';
@@ -28,7 +28,6 @@ export const CharacterSelectionDialog = ({
   const { data: characterList = [] } = useEntityList({
     entityType: EntityType.CHARACTER,
   });
-
   const attributeFilter: FilterConfig<ListCharactersResponseItem> = {
     label: 'Attribute',
     options: ATTRIBUTES.map((attribute) => ({

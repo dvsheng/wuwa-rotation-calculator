@@ -1,4 +1,4 @@
-import type { CharacterDamageInstance, Enemy, Team } from '@/types';
+import type { CharacterDamageInstance } from '@/types';
 
 import type { CalculateDamageProperties } from '../damage-calculator/calculate-damage.types';
 
@@ -48,8 +48,6 @@ export const calculateRotationDamage = (rotation: Rotation): RotationResult => {
       totalDamage: 0,
       damageInstances: new Array<number>(),
       damageDetails: new Array<{
-        team: Team;
-        enemy: Enemy;
         instance: CharacterDamageInstance;
         resolvedStats: CalculateDamageProperties;
       }>(),

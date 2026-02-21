@@ -22,8 +22,9 @@ export interface ListEchoesResponseItem {
   sets: Array<number>;
 }
 
-export interface EchoSetResponseItem {
+export interface ListEchoSetsResponseItem {
   id: number;
+  gameId: number;
   name: string;
   tiers: Array<number>;
 }
@@ -32,6 +33,6 @@ export type ListEntitiesResponse =
   | Array<ListCharactersResponseItem>
   | Array<ListWeaponsResponseItem>
   | Array<ListEchoesResponseItem>
-  | Array<EchoSetResponseItem>;
+  | Array<ListEchoSetsResponseItem>;
 
 export type { ListEntitiesRequest } from '@/schemas/game-data-service';

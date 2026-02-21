@@ -1,28 +1,26 @@
 import { eq } from 'drizzle-orm';
+import { compact } from 'es-toolkit/array';
 
 import { database } from '@/db/client';
-import type { Entity, StoreCapability } from '@/db/schema';
-import { EntityType, entities } from '@/db/schema';
+import type { DatabaseFullCapabilityByType } from '@/db/schema';
+import { fullCapabilities } from '@/db/schema';
 import type { GetEntityDetailsRequest } from '@/schemas/game-data-service';
-import { Tag } from '@/types';
-import type { Attribute } from '@/types';
 
 import { toClientAttack, toClientBuff } from './client-type-adapters';
+import type {
+  RecursivelyReplaceNullWithUndefined,
+  ResolveAlternativeDefinitions,
+  ResolveStoreNumberType,
+} from './database-type-adapters';
 import {
   replaceNullsWithUndefined,
+  resolveAlternativeDefinitions,
   resolveStoreNumberType,
+  sequenceToNumber,
 } from './database-type-adapters';
 import type { GetClientEntityDetailsResponse } from './get-entity-details.types';
-import { OriginType } from './types';
-import type { Attack, BaseEntity, RefineLevel, Sequence } from './types';
-
-/**
- * Convert sequence string to number (e.g., 's1' -> 1, 's2' -> 2).
- */
-const sequenceToNumber = (sequence?: Sequence): number => {
-  if (!sequence) return 0;
-  return Number.parseInt(sequence.slice(1), 10);
-};
+import { CapabilityType, EntityType } from './types';
+import type { Attack, BaseEntity, Modifier, PermanentStat, RefineLevel } from './types';
 
 const refineLevelToNumber = (refineLevel?: RefineLevel): number => {
   if (!refineLevel) return 0;
@@ -30,93 +28,95 @@ const refineLevelToNumber = (refineLevel?: RefineLevel): number => {
 };
 
 /**
- * Get the highest applicable sequence from alternativeDefinitions.
- */
-const getApplicableSequence = (
-  alternativeDefinitions: Partial<Record<Sequence, unknown>> | undefined,
-  sequence: number = 0,
-): Sequence | undefined => {
-  if (!alternativeDefinitions) return undefined;
-
-  const applicableSequences = (Object.keys(alternativeDefinitions) as Array<Sequence>)
-    .filter((seq) => sequenceToNumber(seq) <= sequence)
-    .toSorted((a, b) => sequenceToNumber(b) - sequenceToNumber(a));
-
-  return applicableSequences[0];
-};
-
-/**
- * Resolve a capability by merging the highest applicable alternativeDefinition.
- */
-const resolveCapabilitySequence = <
-  TChild,
-  T extends { alternativeDefinitions?: Partial<Record<Sequence, TChild>> },
->(
-  capability: T,
-  sequence: number = 0,
-): Omit<T, 'alternativeDefinitions'> => {
-  const applicableSeq = getApplicableSequence(
-    capability.alternativeDefinitions,
-    sequence,
-  );
-
-  const { alternativeDefinitions, ...base } = capability;
-
-  if (!applicableSeq || !alternativeDefinitions) {
-    return base;
-  }
-
-  const override = alternativeDefinitions[applicableSeq];
-  return { ...base, ...override };
-};
-
-/**
  * Check if a capability is active at the given sequence.
  */
 const isCapabilityActive = (
-  item: { unlockedAt?: Sequence; echoSetBonusRequirement?: number },
+  item: { skillOriginType?: string; skillName?: string },
   activatedSequence: number = 0,
   activatedSetBonus: number = 0,
 ): boolean => {
-  const unlockedAtSequence = sequenceToNumber(item.unlockedAt);
+  // Check sequence requirement
+  const unlockedAtSequence = sequenceToNumber(item.skillOriginType);
   if (activatedSequence < unlockedAtSequence) {
     return false;
   }
-  if (item.echoSetBonusRequirement !== undefined) {
-    const requiredSetBonus = item.echoSetBonusRequirement;
-    return activatedSetBonus >= requiredSetBonus;
+
+  // Check set bonus requirement (e.g., "Frosty Resolve - 2" requires activatedSetBonus >= 2)
+  const setBonusMatch = item.skillName?.match(/ - (\d+)$/);
+  if (setBonusMatch) {
+    const setBonusRequirement = Number.parseInt(setBonusMatch[1], 10);
+    return activatedSetBonus >= setBonusRequirement;
   }
+
+  // No set bonus requirement, capability is active
   return true;
 };
 
-const addAttributeToAttack = <T>(attack: T, attribute: Attribute) => ({
-  ...attack,
-  attribute,
-});
-
-const appendTagsToAttack = (attack: Attack, tags: Array<string> = []) => ({
-  ...attack,
-  tags: [...attack.tags, ...tags],
-});
-
-const entityTypeToOriginTypeMap: Record<EntityType, OriginType> = {
-  character: OriginType.BASE_STATS,
-  weapon: OriginType.WEAPON,
-  echo: OriginType.ECHO,
-  echo_set: OriginType.ECHO_SET,
+/**
+ * Convert fullCapabilities record to Attack format (flattening capabilityJson)
+ */
+const toAttack = (
+  attack: ResolveStoreNumberType<
+    RecursivelyReplaceNullWithUndefined<
+      ResolveAlternativeDefinitions<DatabaseFullCapabilityByType<'attack'>>
+    >
+  >,
+): Attack => {
+  const json = attack.capabilityJson;
+  return {
+    id: attack.capabilityId,
+    name: attack.capabilityName ?? attack.skillName,
+    description: attack.capabilityDescription ?? attack.skillDescription,
+    originType: attack.skillOriginType,
+    parentName: attack.skillName,
+    scalingStat: json.scalingStat,
+    attribute: json.attribute,
+    motionValues: json.motionValues,
+    tags: compact([...json.tags, attack.capabilityName, json.attribute]),
+  };
 };
 
-const addCapabilityDefaultValues = <T extends StoreCapability>(
-  capability: T,
-  entity: Entity,
-  capabilityType: string,
-) => {
+/**
+ * Convert fullCapabilities record to Modifier format (flattening capabilityJson)
+ */
+const toModifier = (
+  modifier: ResolveStoreNumberType<
+    RecursivelyReplaceNullWithUndefined<
+      ResolveAlternativeDefinitions<DatabaseFullCapabilityByType<'modifier'>>
+    >
+  >,
+): Modifier => {
+  const json = modifier.capabilityJson;
   return {
-    ...capability,
-    name: capability.name ?? `${entity.name} ${capabilityType}`,
-    parentName: capability.parentName ?? `${entity.type} ${capabilityType}`,
-    description: capability.description ?? '',
-    originType: capability.originType ?? entityTypeToOriginTypeMap[entity.type],
+    id: modifier.capabilityId,
+    name: modifier.capabilityName ?? modifier.skillName,
+    description: modifier.capabilityDescription ?? modifier.skillDescription,
+    originType: modifier.skillOriginType,
+    parentName: modifier.skillName,
+    target: json.target,
+    modifiedStats: json.modifiedStats,
+  };
+};
+
+/**
+ * Convert fullCapabilities record to PermanentStat format (flattening capabilityJson)
+ */
+const toPermanentStat = (
+  permanentStat: ResolveStoreNumberType<
+    RecursivelyReplaceNullWithUndefined<
+      ResolveAlternativeDefinitions<DatabaseFullCapabilityByType<'permanent_stat'>>
+    >
+  >,
+): PermanentStat => {
+  const json = permanentStat.capabilityJson;
+  return {
+    id: permanentStat.capabilityId,
+    name: permanentStat.capabilityName ?? permanentStat.skillName,
+    description: permanentStat.capabilityDescription ?? permanentStat.skillDescription,
+    originType: permanentStat.skillOriginType,
+    stat: json.stat,
+    value: json.value,
+    tags: json.tags,
   };
 };
 
@@ -124,24 +124,18 @@ const addCapabilityDefaultValues = <T extends StoreCapability>(
  * Shared handler for fetching character details from database.
  * Resolves alternativeDefinitions based on the requested sequence.
  */
-export const getEntityByGameIdHandler = async (
+export const getEntityByIdHandler = async (
   options: GetEntityDetailsRequest,
 ): Promise<BaseEntity> => {
   // Query entity with all capabilities
-  const entity = await database.query.entities.findFirst({
-    where: eq(entities.gameId, options.id),
-    with: {
-      attacks: true,
-      modifiers: true,
-      permanentStats: true,
-    },
-  });
-  if (!entity) {
+  const databaseCapabilities = await database
+    .select()
+    .from(fullCapabilities)
+    .where(eq(fullCapabilities.entityId, options.id));
+  if (databaseCapabilities.length === 0) {
     console.error(`Entity not found for ID ${options.id}`);
     throw new Error(`Entity not found for ID ${options.id}`);
   }
-
-  const attribute = entity.attribute!;
   const sequence =
     options.entityType === EntityType.CHARACTER ? options.activatedSequence : 0;
   const refineLevel =
@@ -151,41 +145,30 @@ export const getEntityByGameIdHandler = async (
   const activatedSetBonus =
     options.entityType === EntityType.ECHO_SET ? options.activatedSetBonus : 0;
 
-  // Filter and resolve attacks, adding attribute
-  const attacks = entity.attacks
-    .map((attack) => addCapabilityDefaultValues(attack, entity, 'Attack'))
-    .map((attack) => resolveStoreNumberType(attack, refineLevel))
-    .map((attack) => replaceNullsWithUndefined(attack))
-    .filter((attack) => isCapabilityActive(attack, sequence, activatedSetBonus))
-    .map((attack) => resolveCapabilitySequence(attack, sequence))
-    .map((attack) => addAttributeToAttack(attack, attribute))
-    .map((attack) =>
-      appendTagsToAttack(attack, [
-        attack.name,
-        attack.attribute,
-        ...(entity.type === EntityType.ECHO ? [Tag.ECHO] : []),
-      ]),
+  const firstCapability = databaseCapabilities[0];
+
+  // Filter and resolve attacks, adding attribute and tags
+  const capabilities = databaseCapabilities
+    .map((capability) => resolveAlternativeDefinitions(capability, sequence))
+    .map((capability) => replaceNullsWithUndefined(capability))
+    .map((capability) => resolveStoreNumberType(capability, refineLevel))
+    .filter((capability) =>
+      isCapabilityActive(capability, sequence, activatedSetBonus),
     );
 
-  // Filter and resolve modifiers
-  const modifiers = entity.modifiers
-    .map((attack) => addCapabilityDefaultValues(attack, entity, 'Buff'))
-    .map((modifier) => resolveStoreNumberType(modifier, refineLevel))
-    .map((modifier) => replaceNullsWithUndefined(modifier))
-    .filter((modifier) => isCapabilityActive(modifier, sequence, activatedSetBonus))
-    .map((modifier) => resolveCapabilitySequence(modifier, sequence));
-
-  // Filter and resolve permanent stats
-  const permanentStats = entity.permanentStats
-    .map((attack) => addCapabilityDefaultValues(attack, entity, 'Permanent Stat'))
-    .map((stat) => resolveStoreNumberType(stat, refineLevel))
-    .map((stat) => replaceNullsWithUndefined(stat))
-    .filter((stat) => isCapabilityActive(stat, sequence, activatedSetBonus));
-
+  const attacks = capabilities
+    .filter((capability) => capability.capabilityType === CapabilityType.ATTACK)
+    .map((capability) => toAttack(capability as Parameters<typeof toAttack>[0]));
+  const modifiers = capabilities
+    .filter((capability) => capability.capabilityType === CapabilityType.MODIFIER)
+    .map((modifier) => toModifier(modifier as Parameters<typeof toModifier>[0]));
+  const permanentStats = capabilities
+    .filter((capability) => capability.capabilityType === CapabilityType.PERMANENT_STAT)
+    .map((stat) => toPermanentStat(stat as Parameters<typeof toPermanentStat>[0]));
   return {
-    id: entity.id,
-    gameId: entity.gameId ?? undefined,
-    name: entity.name,
+    id: firstCapability.entityId,
+    gameId: firstCapability.entityId,
+    name: firstCapability.entityName,
     capabilities: {
       attacks: attacks,
       modifiers: modifiers,
@@ -194,10 +177,10 @@ export const getEntityByGameIdHandler = async (
   };
 };
 
-export const getClientEntityByGameIdHandler = async (
+export const getClientEntityByIdHandler = async (
   options: GetEntityDetailsRequest,
 ): Promise<GetClientEntityDetailsResponse> => {
-  const entity = await getEntityByGameIdHandler(options);
+  const entity = await getEntityByIdHandler(options);
   return {
     id: entity.id,
     name: entity.name,

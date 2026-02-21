@@ -2,53 +2,17 @@ import { relations, sql } from 'drizzle-orm';
 import { integer, sqliteTable, sqliteView, text } from 'drizzle-orm/sqlite-core';
 
 import type {
-  AttackAlternativeDefinitions,
-  ModifierAlternativeDefinitions,
-  StoreModifierStat,
-  StoreNumber,
-  StoreParameterizedNumber,
-  StoreRotationRuntimeResolvableNumber,
-} from '@/schemas/admin/store-types';
+  DatabaseAttackData,
+  DatabaseCapability as DatabaseCapabilityType,
+  DatabaseModifierData,
+  DatabasePermanentStatData,
+} from '@/schemas/database';
 import type {
-  AttackOriginType,
+  CapabilityType,
+  EntityType,
   OriginType,
-  Sequence,
 } from '@/services/game-data/types';
-import { Target } from '@/services/game-data/types';
-import type {
-  AbilityAttribute,
-  Attribute,
-  CharacterStat,
-  EnemyStat,
-  WeaponType,
-} from '@/types';
-
-// Re-export store types for backward compatibility
-export type {
-  AttackAlternativeDefinitions,
-  ModifierAlternativeDefinitions,
-  RefineScalableNumber,
-  StoreModifierStat,
-  StoreNumber,
-  StoreParameterizedNumber,
-  StoreRotationRuntimeResolvableNumber,
-} from '@/schemas/admin/store-types';
-
-// ============================================================================
-// Database Schema Enums
-// ============================================================================
-
-/**
- * Entity types supported in the database
- */
-export const EntityType = {
-  CHARACTER: 'character',
-  WEAPON: 'weapon',
-  ECHO: 'echo',
-  ECHO_SET: 'echo_set',
-} as const;
-
-export type EntityType = (typeof EntityType)[keyof typeof EntityType];
+import type { Attribute, WeaponType } from '@/types';
 
 // ============================================================================
 // Database Tables
@@ -60,7 +24,6 @@ export type EntityType = (typeof EntityType)[keyof typeof EntityType];
 const baseTableFields = {
   // Primary key - autoincrement integer
   id: integer('id').primaryKey({ autoIncrement: true }),
-
   // Timestamps
   createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
@@ -101,138 +64,6 @@ export const entities = sqliteTable('entities', {
 });
 
 /**
- * Base capability fields shared across all capability types
- */
-const baseCapabilityFields = {
-  ...baseTableFields,
-
-  // Foreign key to entity
-  entityId: integer('entity_id')
-    .notNull()
-    .references(() => entities.id, { onDelete: 'cascade' }),
-
-  // Metadata
-  name: text('name'),
-  parentName: text('parent_name'),
-  description: text('description'),
-  iconUrl: text('icon_url'),
-
-  // Character-specific: sequence unlock level (s1-s6)
-  unlockedAt: text('unlocked_at').$type<Sequence>(),
-
-  // Echo Set-specific: piece requirement (2, 3, 5)
-  echoSetBonusRequirement: integer('echo_set_bonus_requirement'),
-} as const;
-
-/**
- * Attacks table - stores offensive capabilities
- */
-export const attacks = sqliteTable('attacks', {
-  ...baseCapabilityFields,
-  scalingStat: text('scaling_stat').notNull().$type<AbilityAttribute>(),
-  attribute: text('attribute').notNull().$type<Attribute>(), // Elemental attribute
-  motionValues: text('motion_values', { mode: 'json' })
-    .notNull()
-    .$type<Array<StoreNumber | StoreParameterizedNumber>>(), // Array of numbers or parameterized numbers
-  tags: text('tags', { mode: 'json' }).notNull().$type<Array<string>>(),
-  // Alternative definitions for different sequences
-  alternativeDefinitions: text('alternative_definitions', {
-    mode: 'json',
-  }).$type<AttackAlternativeDefinitions>(),
-  originType: text('origin_type').$type<AttackOriginType>(),
-});
-
-/**
- * Modifiers table - stores temporary/conditional stat modifiers
- */
-export const modifiers = sqliteTable('modifiers', {
-  ...baseCapabilityFields,
-  target: text('target', {
-    enum: Object.values(Target) as [string, ...Array<string>],
-  })
-    .notNull()
-    .$type<Target>(),
-  modifiedStats: text('modified_stats', { mode: 'json' })
-    .notNull()
-    .$type<Array<StoreModifierStat>>(),
-  // Alternative definitions for different sequences
-  alternativeDefinitions: text('alternative_definitions', {
-    mode: 'json',
-  }).$type<ModifierAlternativeDefinitions>(),
-  originType: text('origin_type').$type<OriginType>(),
-});
-
-/**
- * Permanent stats table - stores permanent stat bonuses
- */
-export const permanentStats = sqliteTable('permanent_stats', {
-  ...baseCapabilityFields,
-  stat: text('stat').notNull().$type<CharacterStat | EnemyStat>(),
-  value: text('value', { mode: 'json' })
-    .notNull()
-    .$type<StoreNumber | StoreRotationRuntimeResolvableNumber>(),
-  tags: text('tags', { mode: 'json' }).notNull().$type<Array<string>>(),
-  originType: text('origin_type').$type<OriginType>(),
-});
-
-/**
- * Base capability fields shared across all capability types
- */
-const baseCapabilityV2Fields = {
-  ...baseTableFields,
-  gameId: integer('game_id'), // Original game ID from game data source
-  skillId: integer('skill_id')
-    .references(() => skills.id, { onDelete: 'cascade' })
-    .notNull(),
-  name: text('name').notNull(),
-  description: text('description'),
-} as const;
-
-/**
- * Permanent stats table - stores permanent stat bonuses
- */
-export const permanentStatsV2 = sqliteTable('permanent_stats_v2', {
-  ...baseCapabilityV2Fields,
-  stat: text('stat').notNull().$type<CharacterStat | EnemyStat>(),
-  value: text('value', { mode: 'json' })
-    .notNull()
-    .$type<StoreNumber | StoreRotationRuntimeResolvableNumber>(),
-  tags: text('tags', { mode: 'json' }).notNull().$type<Array<string>>(),
-});
-
-/**
- * Attacks table - stores offensive capabilities
- */
-export const attacksV2 = sqliteTable('attacks_v2', {
-  ...baseCapabilityV2Fields,
-  scalingStat: text('scaling_stat').notNull().$type<AbilityAttribute>(),
-  attribute: text('attribute').notNull().$type<Attribute>(), // Elemental attribute
-  motionValues: text('motion_values', { mode: 'json' })
-    .notNull()
-    .$type<Array<StoreNumber | StoreParameterizedNumber>>(), // Array of numbers or parameterized numbers
-  tags: text('tags', { mode: 'json' }).notNull().$type<Array<string>>(),
-  // Alternative definitions for different sequences
-  alternativeDefinitions: text('alternative_definitions', {
-    mode: 'json',
-  }).$type<AttackAlternativeDefinitions>(),
-});
-
-/**
- * Modifiers table - stores temporary/conditional stat modifiers
- */
-export const modifiersV2 = sqliteTable('modifiers_v2', {
-  ...baseCapabilityV2Fields,
-  target: text('target').notNull().$type<Target>(),
-  modifiedStats: text('modified_stats', { mode: 'json' })
-    .notNull()
-    .$type<Array<StoreModifierStat>>(),
-  // Alternative definitions for different sequences
-  alternativeDefinitions: text('alternative_definitions', {
-    mode: 'json',
-  }).$type<ModifierAlternativeDefinitions>(),
-});
-
-/**
  * Skills table - stores character and weapon skills
  */
 export const skills = sqliteTable('skills', {
@@ -250,21 +81,70 @@ export const skills = sqliteTable('skills', {
   name: text('name').notNull(),
   description: text('description'),
   iconUrl: text('icon_url'),
-  originType: text('origin_type').$type<OriginType>(),
+  originType: text('origin_type').notNull().$type<OriginType>(),
 });
+
+/**
+ * Unified capabilities table - combines attacks, modifiers, and permanent stats
+ */
+export const capabilities = sqliteTable('capabilities', {
+  ...baseTableFields,
+  skillId: integer('skill_id')
+    .references(() => skills.id, { onDelete: 'cascade' })
+    .notNull(),
+  name: text('name'),
+  description: text('description'),
+  capabilityType: text('capability_type').notNull().$type<CapabilityType>(),
+  capabilityJson: text('capability_json', { mode: 'json' })
+    .notNull()
+    .$type<DatabaseCapabilityType>(),
+});
+
+// ============================================================================
+// Relational Queries
+// ============================================================================
+
+export const skillsRelations = relations(skills, ({ one, many }) => ({
+  entity: one(entities, {
+    fields: [skills.entityId],
+    references: [entities.id],
+  }),
+  capabilities: many(capabilities),
+}));
+
+export const capabilitiesRelations = relations(capabilities, ({ one }) => ({
+  skill: one(skills, {
+    fields: [capabilities.skillId],
+    references: [skills.id],
+  }),
+}));
 
 // ============================================================================
 // Database Views
 // ============================================================================
 
 /**
- * Denormalized view of entities with their skills
- * Joins entities with skills for easier querying
+ * Denormalized view of capabilities with skill and entity data
  */
-export const entitiesWithSkills = sqliteView('entities_with_skills', {
+export const fullCapabilities = sqliteView('full_capabilities', {
+  // Capability fields
+  capabilityId: integer('capability_id').notNull(),
+  capabilityName: text('capability_name'),
+  capabilityDescription: text('capability_description'),
+  capabilityType: text('capability_type').notNull().$type<CapabilityType>(),
+  capabilityJson: text('capability_json', { mode: 'json' })
+    .notNull()
+    .$type<DatabaseCapabilityType>(),
+
+  // Skill fields (nullable if entity has no skills)
+  skillId: integer('skill_id').notNull(),
+  skillName: text('skill_name').notNull(),
+  skillDescription: text('skill_description'),
+  skillIconUrl: text('skill_icon_url'),
+  skillOriginType: text('skill_origin_type').notNull().$type<OriginType>(),
+
   // Entity fields
   entityId: integer('entity_id').notNull(),
-  entityGameId: integer('entity_game_id'),
   entityName: text('entity_name').notNull(),
   entityType: text('entity_type').notNull().$type<EntityType>(),
   entityIconUrl: text('entity_icon_url'),
@@ -277,19 +157,20 @@ export const entitiesWithSkills = sqliteView('entities_with_skills', {
   setBonusThresholds: text('set_bonus_thresholds', { mode: 'json' }).$type<
     Array<number>
   >(),
-
-  // Skill fields (nullable if entity has no skills)
-  skillId: integer('skill_id'),
-  skillGameId: integer('skill_game_id'),
-  skillName: text('skill_name'),
-  skillDescription: text('skill_description'),
-  skillIconUrl: text('skill_icon_url'),
-  skillOriginType: text('skill_origin_type').$type<OriginType>(),
 }).as(
   sql`
     SELECT
+      capabilities.id AS capability_id,
+      capabilities.name AS capability_name,
+      capabilities.description AS capability_description,
+      capabilities.capability_type AS capability_type,
+      capabilities.capability_json AS capability_json,
+      skills.id AS skill_id,
+      skills.name AS skill_name,
+      skills.description AS skill_description,
+      skills.icon_url AS skill_icon_url,
+      skills.origin_type AS skill_origin_type,
       entities.id AS entity_id,
-      entities.game_id AS entity_game_id,
       entities.name AS entity_name,
       entities.type AS entity_type,
       entities.icon_url AS entity_icon_url,
@@ -299,15 +180,10 @@ export const entitiesWithSkills = sqliteView('entities_with_skills', {
       entities.attribute,
       entities.echo_set_ids,
       entities.cost,
-      entities.set_bonus_thresholds,
-      skills.id AS skill_id,
-      skills.game_id AS skill_game_id,
-      skills.name AS skill_name,
-      skills.description AS skill_description,
-      skills.icon_url AS skill_icon_url,
-      skills.origin_type AS skill_origin_type
-    FROM entities
-    LEFT JOIN skills ON entities.id = skills.entity_id
+      entities.set_bonus_thresholds
+    FROM capabilities
+    JOIN skills ON capabilities.skill_id = skills.id
+    JOIN entities ON skills.entity_id = entities.id
   `,
 );
 
@@ -316,60 +192,25 @@ export const entitiesWithSkills = sqliteView('entities_with_skills', {
 // ============================================================================
 
 // Database return types (inferred from Drizzle schema)
-export type Entity = typeof entities.$inferSelect;
-export type NewEntity = typeof entities.$inferInsert;
+export type DatabaseEntity = typeof entities.$inferSelect;
+export type NewDatabaseEntity = typeof entities.$inferInsert;
 
-export type Attack = typeof attacks.$inferSelect;
-export type NewAttack = typeof attacks.$inferInsert;
+export type DatabaseSkill = typeof skills.$inferSelect;
+export type NewDatabaseSkill = typeof skills.$inferInsert;
 
-export type Modifier = typeof modifiers.$inferSelect;
-export type NewModifier = typeof modifiers.$inferInsert;
+export type DatabaseCapability = typeof capabilities.$inferSelect;
+export type NewDatabaseCapability = typeof capabilities.$inferInsert;
 
-export type PermanentStat = typeof permanentStats.$inferSelect;
-export type NewPermanentStat = typeof permanentStats.$inferInsert;
+export type DatabaseFullCapability = typeof fullCapabilities.$inferSelect;
 
-export type Skill = typeof skills.$inferSelect;
-export type NewSkill = typeof skills.$inferInsert;
-
-export type EntityWithSkills = typeof entitiesWithSkills.$inferSelect;
-
-export type StoreCapability = Attack | Modifier | PermanentStat;
-
-// ============================================================================
-// Relational Queries
-// ============================================================================
-
-export const entitiesRelations = relations(entities, ({ many }) => ({
-  attacks: many(attacks),
-  modifiers: many(modifiers),
-  permanentStats: many(permanentStats),
-  skills: many(skills),
-}));
-
-export const attacksRelations = relations(attacks, ({ one }) => ({
-  entity: one(entities, {
-    fields: [attacks.entityId],
-    references: [entities.id],
-  }),
-}));
-
-export const modifiersRelations = relations(modifiers, ({ one }) => ({
-  entity: one(entities, {
-    fields: [modifiers.entityId],
-    references: [entities.id],
-  }),
-}));
-
-export const permanentStatsRelations = relations(permanentStats, ({ one }) => ({
-  entity: one(entities, {
-    fields: [permanentStats.entityId],
-    references: [entities.id],
-  }),
-}));
-
-export const skillsRelations = relations(skills, ({ one }) => ({
-  entity: one(entities, {
-    fields: [skills.entityId],
-    references: [entities.id],
-  }),
-}));
+export type DatabaseFullCapabilityByType<T extends CapabilityType> = Omit<
+  DatabaseFullCapability,
+  'capabilityType' | 'capabilityJson'
+> & {
+  capabilityType: T;
+  capabilityJson: T extends 'attack'
+    ? DatabaseAttackData
+    : T extends 'modifier'
+      ? DatabaseModifierData
+      : DatabasePermanentStatData;
+};

@@ -1,10 +1,11 @@
 import { eq } from 'drizzle-orm';
 
 import { database } from '@/db/client';
-import { EntityType, entities } from '@/db/schema';
+import { entities } from '@/db/schema';
 import type { ListEntitiesRequest } from '@/schemas/game-data-service';
 
 import type { ListEntitiesResponse } from './list-entities.types';
+import { EntityType } from './types';
 
 export const listEntitiesHandler = async (
   input: ListEntitiesRequest,
@@ -14,7 +15,7 @@ export const listEntitiesHandler = async (
       const characters = await database.query.entities.findMany({
         where: eq(entities.type, EntityType.CHARACTER),
         columns: {
-          gameId: true,
+          id: true,
           name: true,
           weaponType: true,
           rank: true,
@@ -23,7 +24,7 @@ export const listEntitiesHandler = async (
       });
 
       const list = characters.map((char) => ({
-        id: char.gameId!,
+        id: char.id,
         name: char.name,
         weaponType: char.weaponType!,
         rarity: char.rank!,
@@ -41,7 +42,7 @@ export const listEntitiesHandler = async (
       const weapons = await database.query.entities.findMany({
         where: eq(entities.type, EntityType.WEAPON),
         columns: {
-          gameId: true,
+          id: true,
           name: true,
           weaponType: true,
           rank: true,
@@ -49,7 +50,7 @@ export const listEntitiesHandler = async (
       });
 
       const list = weapons.map((weapon) => ({
-        id: weapon.gameId!,
+        id: weapon.id,
         name: weapon.name,
         weaponType: weapon.weaponType!,
         rarity: weapon.rank!,
@@ -66,7 +67,7 @@ export const listEntitiesHandler = async (
       const echoes = await database.query.entities.findMany({
         where: eq(entities.type, EntityType.ECHO),
         columns: {
-          gameId: true,
+          id: true,
           name: true,
           cost: true,
           echoSetIds: true,
@@ -74,7 +75,7 @@ export const listEntitiesHandler = async (
       });
 
       return echoes.map((echo) => ({
-        id: echo.gameId!,
+        id: echo.id,
         name: echo.name,
         cost: echo.cost!,
         sets: echo.echoSetIds!,
@@ -85,6 +86,7 @@ export const listEntitiesHandler = async (
       const echoSets = await database.query.entities.findMany({
         where: eq(entities.type, EntityType.ECHO_SET),
         columns: {
+          id: true,
           gameId: true,
           name: true,
           setBonusThresholds: true,
@@ -92,7 +94,8 @@ export const listEntitiesHandler = async (
       });
 
       return echoSets.map((set) => ({
-        id: set.gameId!,
+        id: set.id,
+        gameId: set.gameId!,
         name: set.name,
         tiers: set.setBonusThresholds!,
       }));

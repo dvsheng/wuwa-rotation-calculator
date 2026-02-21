@@ -77,28 +77,28 @@ const CHARACTER_DEFAULTS: Record<
     }
   | undefined
 > = {
-  1304: {
+  468: {
     // Jinhsi
-    weaponId: 21_010_026,
-    echoSetId: 5,
-    primaryEchoId: 6_000_059,
+    weaponId: 504,
+    echoSetId: 791,
+    primaryEchoId: 667,
   },
-  1209: {
+  463: {
     // Mornye
-    weaponId: 21_010_045,
-    echoSetId: 2,
-    primaryEchoId: 390_080_007,
+    weaponId: 509,
+    echoSetId: 778,
+    primaryEchoId: 645,
   },
-  1505: {
+  484: {
     // Shorekeeper
-    weaponId: 21_050_036,
-    echoSetId: 7,
-    primaryEchoId: 390_080_005,
+    weaponId: 596,
+    echoSetId: 793,
+    primaryEchoId: 644,
   },
 } as const;
 
 const createDefaultCharacter = (
-  id: number = 1304,
+  id: number = 468,
   defaults = CHARACTER_DEFAULTS[id] as {
     weaponId: number;
     echoSetId: number;
@@ -120,9 +120,9 @@ const createDefaultCharacter = (
 });
 
 const initialTeam: Team = [
-  createDefaultCharacter(1304),
-  createDefaultCharacter(1209),
-  createDefaultCharacter(1505),
+  createDefaultCharacter(468),
+  createDefaultCharacter(463),
+  createDefaultCharacter(484),
 ];
 
 const initialEnemy: Enemy = initialEnemyData;

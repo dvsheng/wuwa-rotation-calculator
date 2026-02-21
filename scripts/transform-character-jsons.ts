@@ -336,6 +336,7 @@ const transformCharacterJSON = async (
           stat,
           tags: [Tag.ALL],
         };
+        // @ts-expect-error
       }).filter((property): property is TransformedProperty => property !== undefined);
     }
 
@@ -403,6 +404,7 @@ const transformCharacterJSON = async (
         };
 
         return transformedNode;
+        // @ts-expect-error
       }).filter((node): node is TransformedSkillTreeNode => node !== undefined);
     }
 

@@ -10,8 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { EntityType } from '@/db/schema';
 import { useEntityList } from '@/hooks/useEntityList';
+import { EntityType } from '@/services/game-data';
 import { useStore } from '@/store';
 
 import { AssetIcon } from '../common/AssetIcon';

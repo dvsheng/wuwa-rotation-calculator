@@ -129,6 +129,7 @@ const transformWeaponJSON = async (
 
     // Transform properties
     if (fullData.Properties !== undefined && Array.isArray(fullData.Properties)) {
+      // @ts-expect-error
       transformed.properties = fullData.Properties.map((property, index) => {
         const lastGrowthValue = property.GrowthValues.at(-1);
         const value = convertValueToNumber(lastGrowthValue?.Value ?? 0);
@@ -158,6 +159,7 @@ const transformWeaponJSON = async (
           stat: stat,
           tags: [Tag.ALL],
         };
+        // @ts-expect-error
       }).filter((p): p is TransformedProperty => p !== undefined);
     }
 

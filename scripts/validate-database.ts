@@ -1,23 +1,18 @@
 import { z } from 'zod';
 
 import { database } from '@/db/client';
-import type {
-  Attack,
-  Entity,
-  Modifier,
-  PermanentStat,
-  RefineScalableNumber,
-} from '@/db/schema';
-import { EntityType } from '@/db/schema';
-import { AttackSchema } from '@/schemas/admin/attacks';
-import { EntitySchema } from '@/schemas/admin/entities';
-import { ModifierSchema } from '@/schemas/admin/modifiers';
-import { PermanentStatSchema } from '@/schemas/admin/permanent-stats';
-import { Tag } from '@/types';
+import type { DatabaseCapability, DatabaseEntity, DatabaseSkill } from '@/db/schema';
+import {
+  DatabaseAttackDataSchema,
+  DatabaseModifierDataSchema,
+  DatabasePermanentStatSchema,
+} from '@/schemas/database';
+import { CapabilityType, EntityType } from '@/services/game-data';
+import { Attribute, Tag, WeaponType } from '@/types';
 
 /**
- * Validates database data against admin schemas.
- * This ensures the database contents match the expected structure and validation rules.
+ * Validates database data for the new unified schema.
+ * This ensures entities, skills, and capabilities are properly structured and linked.
  */
 
 interface ValidationResult {
@@ -29,136 +24,174 @@ interface ValidationResult {
 }
 
 // ============================================================================
+// Validation Schemas
+// ============================================================================
+
+const BaseEntitySchema = z.object({
+  id: z.number(),
+  gameId: z.number(),
+  name: z.string(),
+  iconUrl: z.string().nullable(),
+  description: z.string().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+const CharacterEntitySchema = BaseEntitySchema.extend({
+  type: z.literal(EntityType.CHARACTER),
+  rank: z.number().min(4).max(5),
+  weaponType: z.enum(WeaponType),
+  attribute: z.enum(Attribute),
+  echoSetIds: z.null(),
+  cost: z.null(),
+  setBonusThresholds: z.null(),
+}).strict();
+
+const WeaponEntitySchema = BaseEntitySchema.extend({
+  type: z.literal(EntityType.WEAPON),
+  rank: z.number().min(1).max(5),
+  weaponType: z.enum(WeaponType),
+  attribute: z.null(),
+  echoSetIds: z.null(),
+  cost: z.null(),
+  setBonusThresholds: z.null(),
+}).strict();
+
+const EchoEntitySchema = BaseEntitySchema.extend({
+  type: z.literal(EntityType.ECHO),
+  rank: z.null(),
+  weaponType: z.null(),
+  attribute: z.null(),
+  echoSetIds: z.array(z.number()).min(1),
+  cost: z.number().min(1).max(4),
+  setBonusThresholds: z.null(),
+}).strict();
+
+const EchoSetEntitySchema = BaseEntitySchema.extend({
+  type: z.literal(EntityType.ECHO_SET),
+  rank: z.null(),
+  weaponType: z.null(),
+  attribute: z.null(),
+  echoSetIds: z.null(),
+  cost: z.null(),
+  setBonusThresholds: z.array(z.number()).min(1),
+}).strict();
+
+const EntityValidationSchema = z.discriminatedUnion('type', [
+  CharacterEntitySchema,
+  WeaponEntitySchema,
+  EchoEntitySchema,
+  EchoSetEntitySchema,
+]);
+
+const SkillValidationSchema = z
+  .object({
+    id: z.number(),
+    gameId: z.number().nullable(),
+    entityId: z.number(),
+    name: z.string(),
+    description: z.string().nullable(),
+    iconUrl: z.string().nullable(),
+    originType: z.string().nullable(),
+    createdAt: z.date(),
+    updatedAt: z.date(),
+  })
+  .strict();
+
+const BaseCapabilitySchema = z.object({
+  id: z.number(),
+  skillId: z.number(),
+  name: z.string().nullable(),
+  description: z.string().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+const AttackCapabilityValidationSchema = BaseCapabilitySchema.extend({
+  capabilityType: z.literal(CapabilityType.ATTACK),
+  capabilityJson: DatabaseAttackDataSchema,
+}).strict();
+
+const ModifierCapabilityValidationSchema = BaseCapabilitySchema.extend({
+  capabilityType: z.literal(CapabilityType.MODIFIER),
+  capabilityJson: DatabaseModifierDataSchema,
+}).strict();
+
+const PermanentStatCapabilityValidationSchema = BaseCapabilitySchema.extend({
+  capabilityType: z.literal(CapabilityType.PERMANENT_STAT),
+  capabilityJson: DatabasePermanentStatSchema,
+}).strict();
+
+const CapabilityValidationSchema = z.discriminatedUnion('capabilityType', [
+  AttackCapabilityValidationSchema,
+  ModifierCapabilityValidationSchema,
+  PermanentStatCapabilityValidationSchema,
+]);
+
+// ============================================================================
 // Cross-Table Validation Helpers
 // ============================================================================
 
 /**
- * Type guard to check if a value is a RefineScalableNumber
+ * Validates that entity references exist
  */
-function isRefineScalableNumber(value: unknown): value is RefineScalableNumber {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'base' in value &&
-    'increment' in value &&
-    typeof (value as RefineScalableNumber).base === 'number' &&
-    typeof (value as RefineScalableNumber).increment === 'number'
-  );
+function validateEntityReference(
+  skill: { entityId: number; id: number },
+  entityMap: Map<number, DatabaseEntity>,
+): Array<string> {
+  const issues: Array<string> = [];
+
+  if (!entityMap.has(skill.entityId)) {
+    issues.push(`Skill ${skill.id} references non-existent entity ${skill.entityId}`);
+  }
+
+  return issues;
 }
 
 /**
- * Recursively checks if a value contains any RefineScalableNumbers
+ * Validates that skill references exist
  */
-function containsRefineScalableNumber(value: unknown): boolean {
-  if (isRefineScalableNumber(value)) {
-    return true;
-  }
+function validateSkillReference(
+  capability: { skillId: number; id: number },
+  skillMap: Map<number, DatabaseSkill>,
+): Array<string> {
+  const issues: Array<string> = [];
 
-  if (Array.isArray(value)) {
-    return value.some((item) => containsRefineScalableNumber(item));
-  }
-
-  if (typeof value === 'object' && value !== null) {
-    return Object.values(value).some((nestedValue) =>
-      containsRefineScalableNumber(nestedValue),
+  if (!skillMap.has(capability.skillId)) {
+    issues.push(
+      `Capability ${capability.id} references non-existent skill ${capability.skillId}`,
     );
   }
 
-  return false;
-}
-
-/**
- * Validates character-specific capability requirements
- */
-function validateCharacterCapability(
-  capability: {
-    name: string | null;
-    parentName: string | null;
-    originType: string | null;
-  },
-  entityType: string,
-): Array<string> {
-  const issues: Array<string> = [];
-
-  if (entityType !== EntityType.CHARACTER) {
-    return issues;
-  }
-
-  if (!capability.name) {
-    issues.push('Character capabilities must have a name');
-  }
-  if (!capability.parentName) {
-    issues.push('Character capabilities must have a parentName');
-  }
-  if (!capability.originType) {
-    issues.push('Character capabilities must have an originType');
-  }
-
   return issues;
 }
 
 /**
- * Validates that RefineScalableNumbers are only used for weapon capabilities
+ * Validates that tags are valid (Tag enum values or attack names)
  */
-function validateRefineScalableNumberUsage(
-  capability: { motionValues?: unknown; modifiedStats?: unknown; value?: unknown },
-  entityType: string,
+function validateCapabilityTags(
+  capability: DatabaseCapability,
+  attackNamesForSkill: Set<string>,
 ): Array<string> {
   const issues: Array<string> = [];
 
-  // Check all potential fields that might contain RefineScalableNumbers
-  const fieldsToCheck = [
-    { name: 'motionValues', value: capability.motionValues },
-    { name: 'modifiedStats', value: capability.modifiedStats },
-    { name: 'value', value: capability.value },
-  ];
-
-  for (const field of fieldsToCheck) {
-    if (
-      field.value &&
-      containsRefineScalableNumber(field.value) &&
-      entityType !== EntityType.WEAPON
-    ) {
-      issues.push(
-        `RefineScalableNumber found in ${field.name} but entity is type '${entityType}' (only WEAPON entities should use RefineScalableNumbers)`,
-      );
-    }
-  }
-
-  return issues;
-}
-
-/**
- * Validates that tags in character modifiers/permanent stats are either Tag enum values
- * or attack names from the same character
- */
-function validateCharacterCapabilityTags(
-  capability: Modifier | PermanentStat,
-  entityType: string,
-  attackNames: Set<string>,
-): Array<string> {
-  const issues: Array<string> = [];
-
-  // Only validate for character entities
-  if (entityType !== EntityType.CHARACTER) {
-    return issues;
-  }
-
-  // Get all valid Tag enum values
+  const json = capability.capabilityJson as any;
   const validTagValues = new Set(Object.values(Tag));
-
-  // Get tags from the capability
   let tagsToValidate: Array<string> = [];
 
-  if ('tags' in capability && Array.isArray(capability.tags)) {
-    tagsToValidate = capability.tags;
+  // Collect tags based on capability type
+  if (json.tags && Array.isArray(json.tags)) {
+    tagsToValidate = [...json.tags];
   }
 
-  // Also check tags in modifiedStats for modifiers
-  if ('modifiedStats' in capability && Array.isArray(capability.modifiedStats)) {
-    for (const modifiedStat of capability.modifiedStats) {
-      if ('tags' in modifiedStat && Array.isArray(modifiedStat.tags)) {
-        tagsToValidate.push(...modifiedStat.tags);
+  // For modifiers, also check tags in modifiedStats
+  if (
+    capability.capabilityType === CapabilityType.MODIFIER &&
+    Array.isArray(json.modifiedStats)
+  ) {
+    for (const stat of json.modifiedStats) {
+      if (stat.tags && Array.isArray(stat.tags)) {
+        tagsToValidate.push(...stat.tags);
       }
     }
   }
@@ -166,11 +199,11 @@ function validateCharacterCapabilityTags(
   // Validate each tag
   for (const tag of tagsToValidate) {
     const isValidTagEnum = validTagValues.has(tag as Tag);
-    const isAttackName = attackNames.has(tag);
+    const isAttackName = attackNamesForSkill.has(tag);
 
     if (!isValidTagEnum && !isAttackName) {
       issues.push(
-        `Tag '${tag}' is not a valid Tag enum value or an attack name for this character`,
+        `Tag '${tag}' is not a valid Tag enum value or an attack name for this skill`,
       );
     }
   }
@@ -178,104 +211,15 @@ function validateCharacterCapabilityTags(
   return issues;
 }
 
-/**
- * Validates that capabilities only have fields appropriate for their entity type
- */
-function validateCapabilityFieldConstraints(
-  capability: {
-    echoSetBonusRequirement?: number | null;
-    unlockedAt?: string | null;
-    alternativeDefinitions?: unknown;
-    parentName?: string | null;
-    originType?: string | null;
-    iconUrl?: string | null;
-  },
-  entityType: string,
-): Array<string> {
-  const issues: Array<string> = [];
-
-  // echoSetBonusRequirement should only be populated for ECHO_SET entities
-  // and MUST be populated for all ECHO_SET entities
-  if (entityType === EntityType.ECHO_SET) {
-    if (
-      capability.echoSetBonusRequirement === null ||
-      capability.echoSetBonusRequirement === undefined
-    ) {
-      issues.push('echoSetBonusRequirement must be populated for ECHO_SET entities');
-    }
-  } else if (
-    capability.echoSetBonusRequirement !== null &&
-    capability.echoSetBonusRequirement !== undefined
-  ) {
-    issues.push(
-      `echoSetBonusRequirement should only be populated for ECHO_SET entities (entity is ${entityType})`,
-    );
-  }
-
-  // unlockedAt should only be populated for CHARACTER entities
-  if (
-    capability.unlockedAt !== null &&
-    capability.unlockedAt !== undefined &&
-    entityType !== EntityType.CHARACTER
-  ) {
-    issues.push(
-      `unlockedAt should only be populated for CHARACTER entities (entity is ${entityType})`,
-    );
-  }
-
-  // alternativeDefinitions should only be populated for CHARACTER entities
-  if (
-    capability.alternativeDefinitions !== null &&
-    capability.alternativeDefinitions !== undefined &&
-    entityType !== EntityType.CHARACTER
-  ) {
-    issues.push(
-      `alternativeDefinitions should only be populated for CHARACTER entities (entity is ${entityType})`,
-    );
-  }
-
-  // parentName should only be populated for CHARACTER entities
-  if (
-    capability.parentName !== null &&
-    capability.parentName !== undefined &&
-    entityType !== EntityType.CHARACTER
-  ) {
-    issues.push(
-      `parentName should only be populated for CHARACTER entities (entity is ${entityType})`,
-    );
-  }
-
-  // originType should only be populated for CHARACTER entities
-  if (
-    capability.originType !== null &&
-    capability.originType !== undefined &&
-    entityType !== EntityType.CHARACTER
-  ) {
-    issues.push(
-      `originType should only be populated for CHARACTER entities (entity is ${entityType})`,
-    );
-  }
-
-  // iconUrl should only be populated for CHARACTER entities
-  if (
-    capability.iconUrl !== null &&
-    capability.iconUrl !== undefined &&
-    entityType !== EntityType.CHARACTER
-  ) {
-    issues.push(
-      `iconUrl should only be populated for CHARACTER entities (entity is ${entityType})`,
-    );
-  }
-
-  return issues;
-}
+// ============================================================================
+// Generic Validation Function
+// ============================================================================
 
 const validateRecords = <T>(
   tableName: string,
   schema: z.ZodSchema<T>,
   records: Array<unknown>,
-  entityMap?: Map<number, Entity>,
-  attacksByEntityId?: Map<number, Array<Attack>>,
+  customValidations?: (record: T) => Array<string>,
 ): ValidationResult => {
   const result: ValidationResult = {
     tableName,
@@ -290,7 +234,13 @@ const validateRecords = <T>(
 
     // Schema validation
     try {
-      schema.parse(record);
+      const parsed = schema.parse(record);
+
+      // Run custom validations if provided
+      if (customValidations) {
+        const customIssues = customValidations(parsed);
+        issues.push(...customIssues);
+      }
     } catch (error) {
       if (error instanceof z.ZodError) {
         issues.push(
@@ -299,85 +249,6 @@ const validateRecords = <T>(
             return `${pathString}: ${issue.message}`;
           }),
         );
-      }
-    }
-
-    // Cross-table validation for capabilities
-    if (
-      entityMap &&
-      typeof record === 'object' &&
-      record !== null &&
-      'entityId' in record &&
-      typeof record.entityId === 'number'
-    ) {
-      const entity = entityMap.get(record.entityId);
-
-      if (entity) {
-        // Validate character-specific requirements
-        if ('name' in record && 'parentName' in record && 'originType' in record) {
-          const characterIssues = validateCharacterCapability(
-            {
-              name: record.name as string | null,
-              parentName: record.parentName as string | null,
-              originType: record.originType as string | null,
-            },
-            entity.type,
-          );
-          issues.push(...characterIssues);
-        }
-
-        // Validate RefineScalableNumber usage
-        const refineIssues = validateRefineScalableNumberUsage(
-          record as {
-            motionValues?: unknown;
-            modifiedStats?: unknown;
-            value?: unknown;
-          },
-          entity.type,
-        );
-        issues.push(...refineIssues);
-
-        // Validate tags for character modifiers and permanent stats
-        if (attacksByEntityId && ('tags' in record || 'modifiedStats' in record)) {
-          const attacks = attacksByEntityId.get(record.entityId) ?? [];
-          const attackNames = new Set(
-            attacks
-              .map((attack) => attack.name)
-              .filter((name): name is string => !!name),
-          );
-
-          const tagIssues = validateCharacterCapabilityTags(
-            record as Modifier | PermanentStat,
-            entity.type,
-            attackNames,
-          );
-          issues.push(...tagIssues);
-        }
-
-        // Validate capability field constraints based on entity type
-        if (
-          'echoSetBonusRequirement' in record ||
-          'unlockedAt' in record ||
-          'alternativeDefinitions' in record ||
-          'parentName' in record ||
-          'originType' in record ||
-          'iconUrl' in record
-        ) {
-          const fieldConstraintIssues = validateCapabilityFieldConstraints(
-            record as {
-              echoSetBonusRequirement?: number | null;
-              unlockedAt?: string | null;
-              alternativeDefinitions?: unknown;
-              parentName?: string | null;
-              originType?: string | null;
-              iconUrl?: string | null;
-            },
-            entity.type,
-          );
-          issues.push(...fieldConstraintIssues);
-        }
-      } else {
-        issues.push(`Referenced entity ${record.entityId} does not exist`);
       }
     }
 
@@ -396,77 +267,110 @@ const validateRecords = <T>(
   return result;
 };
 
+// ============================================================================
+// Main Validation Function
+// ============================================================================
+
 async function validateDatabase() {
-  console.log('Validating database records against schemas...\n');
+  console.log('Validating database records...\n');
 
   const results: Array<ValidationResult> = [];
 
-  // Load entities first for cross-table validation
-  console.log('Loading entities for cross-table validation...');
+  // ========================================================================
+  // Step 1: Load and validate entities
+  // ========================================================================
+  console.log('Loading and validating entities...');
   const entities = await database.query.entities.findMany();
   const entityMap = new Map(entities.map((entity) => [entity.id, entity]));
-  console.log(`  Loaded ${entities.length} entities\n`);
 
-  // Validate entities
-  console.log('Validating entities...');
-  const entitiesResult = validateRecords('entities', EntitySchema, entities);
+  const entitiesResult = validateRecords('entities', EntityValidationSchema, entities);
   results.push(entitiesResult);
   console.log(
     `  ${entitiesResult.validRecords}/${entitiesResult.totalRecords} valid\n`,
   );
 
-  // Load attacks and group by entityId for tag validation
-  console.log('Loading attacks for tag validation...');
-  const attacks = await database.query.attacks.findMany();
-  const attacksByEntityId = new Map<number, Array<Attack>>();
-  for (const attack of attacks) {
-    const existing = attacksByEntityId.get(attack.entityId) ?? [];
-    existing.push(attack);
-    attacksByEntityId.set(attack.entityId, existing);
-  }
-  console.log(`  Loaded ${attacks.length} attacks\n`);
+  // ========================================================================
+  // Step 2: Load and validate skills
+  // ========================================================================
+  console.log('Loading and validating skills...');
+  const skills = await database.query.skills.findMany();
+  const skillMap = new Map(skills.map((skill) => [skill.id, skill]));
 
-  // Validate attacks (with cross-table validation)
-  console.log('Validating attacks...');
-  const attacksResult = validateRecords('attacks', AttackSchema, attacks, entityMap);
-  results.push(attacksResult);
-  console.log(`  ${attacksResult.validRecords}/${attacksResult.totalRecords} valid\n`);
-
-  // Validate modifiers (with cross-table validation)
-  console.log('Validating modifiers...');
-  const modifiers = await database.query.modifiers.findMany();
-  const modifiersResult = validateRecords(
-    'modifiers',
-    ModifierSchema,
-    modifiers,
-    entityMap,
-    attacksByEntityId,
+  const skillsResult = validateRecords(
+    'skills',
+    SkillValidationSchema,
+    skills,
+    (skill) => validateEntityReference(skill, entityMap),
   );
-  results.push(modifiersResult);
+  results.push(skillsResult);
+  console.log(`  ${skillsResult.validRecords}/${skillsResult.totalRecords} valid\n`);
+
+  // ========================================================================
+  // Step 3: Group attack names by entity for tag validation
+  // ========================================================================
+  console.log('Building attack name index...');
+  const capabilities = await database.query.capabilities.findMany();
+  const attackNames = new Set(
+    capabilities
+      .filter((capability) => capability.capabilityType === CapabilityType.ATTACK)
+      .map((capability) => capability.name)
+      .filter((name) => name !== null),
+  );
+  console.log(`  Indexed ${attackNames.size} attacks\n`);
+
+  // ========================================================================
+  // Step 4: Validate capabilities
+  // ========================================================================
+  console.log('Validating capabilities...');
+  const capabilitiesResult = validateRecords(
+    'capabilities',
+    CapabilityValidationSchema,
+    capabilities,
+    (capability) => [
+      // Validate skill reference
+      ...validateSkillReference(capability, skillMap),
+      // Validate tags (for modifiers and permanent stats)
+      ...(capability.capabilityType === CapabilityType.MODIFIER ||
+      capability.capabilityType === CapabilityType.PERMANENT_STAT
+        ? validateCapabilityTags(capability, attackNames)
+        : []),
+    ],
+  );
+  results.push(capabilitiesResult);
   console.log(
-    `  ${modifiersResult.validRecords}/${modifiersResult.totalRecords} valid\n`,
+    `  ${capabilitiesResult.validRecords}/${capabilitiesResult.totalRecords} valid\n`,
   );
 
-  // Validate permanent stats (with cross-table validation)
-  console.log('Validating permanent stats...');
-  const permanentStats = await database.query.permanentStats.findMany();
-  const permanentStatsResult = validateRecords(
-    'permanentStats',
-    PermanentStatSchema,
-    permanentStats,
-    entityMap,
-    attacksByEntityId,
-  );
-  results.push(permanentStatsResult);
-  console.log(
-    `  ${permanentStatsResult.validRecords}/${permanentStatsResult.totalRecords} valid\n`,
-  );
-
-  // Print summary
+  // ========================================================================
+  // Print Summary
+  // ========================================================================
   console.log('='.repeat(80));
   console.log('VALIDATION SUMMARY');
   console.log('='.repeat(80));
 
+  // Overall statistics
+  const totalRecords = results.reduce((sum, r) => sum + r.totalRecords, 0);
+  const totalValid = results.reduce((sum, r) => sum + r.validRecords, 0);
+  const totalInvalid = results.reduce((sum, r) => sum + r.invalidRecords, 0);
+
+  console.log(`\nTotal: ${totalRecords} records`);
+  console.log(
+    `Valid: ${totalValid} (${((totalValid / totalRecords) * 100).toFixed(1)}%)`,
+  );
+  console.log(
+    `Invalid: ${totalInvalid} (${((totalInvalid / totalRecords) * 100).toFixed(1)}%)`,
+  );
+
+  // Per-table breakdown
+  console.log('\nPer-table breakdown:');
+  for (const result of results) {
+    const percentage = ((result.validRecords / result.totalRecords) * 100).toFixed(1);
+    console.log(
+      `  ${result.tableName}: ${result.validRecords}/${result.totalRecords} (${percentage}%)`,
+    );
+  }
+
+  // Error details
   let hasErrors = false;
   for (const result of results) {
     if (result.invalidRecords > 0) {
@@ -474,11 +378,20 @@ async function validateDatabase() {
       console.log(
         `\n${result.tableName.toUpperCase()}: ${result.invalidRecords} errors`,
       );
-      for (const error of result.errors) {
+
+      // Show first 10 errors
+      const errorsToShow = result.errors.slice(0, 10);
+      for (const error of errorsToShow) {
         console.log(`\n  Record ID ${error.id}:`);
         for (const issue of error.issues) {
           console.log(`    - ${issue}`);
         }
+      }
+
+      if (result.errors.length > 10) {
+        console.log(
+          `\n  ... and ${result.errors.length - 10} more errors (showing first 10)`,
+        );
       }
     }
   }

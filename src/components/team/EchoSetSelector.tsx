@@ -64,7 +64,7 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
               <div className="selector-main">
                 <SearchableSelect
                   items={echoSetList}
-                  value={selectedSetConfig?.name}
+                  value={selectedSetConfig?.id}
                   onItemClick={(item) => handleUpdateSet(setIndex, item.id)}
                   placeholder="Select echo set"
                   className="w-full"

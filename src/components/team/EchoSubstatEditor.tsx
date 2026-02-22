@@ -40,7 +40,7 @@ export const EchoSubstatEditor = ({
           })
         }
       >
-        <SelectTrigger size="xs" className="w-full">
+        <SelectTrigger size="sm" className="w-full">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -59,7 +59,7 @@ export const EchoSubstatEditor = ({
           })
         }
       >
-        <SelectTrigger size="xs" className="w-full text-right">
+        <SelectTrigger size="sm" className="w-full text-right">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

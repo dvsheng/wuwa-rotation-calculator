@@ -46,7 +46,7 @@ export const EchoPieceEditor = ({
             <Stack spacing="xs">
               <LabelText className="px-1">Cost</LabelText>
               <Select value={String(echo.cost)} onValueChange={handleCostChange}>
-                <SelectTrigger size="xs" className="w-full">
+                <SelectTrigger size="sm" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -70,7 +70,7 @@ export const EchoPieceEditor = ({
                   })
                 }
               >
-                <SelectTrigger size="xs" className="w-full">
+                <SelectTrigger size="sm" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

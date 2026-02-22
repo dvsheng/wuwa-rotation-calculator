@@ -18,14 +18,14 @@ export const EnemySchema = z.object({
 export type Enemy = z.infer<typeof EnemySchema>;
 
 export const initialEnemyData: Enemy = {
-  level: 90,
+  level: 100,
   resistances: {
-    [Attribute.GLACIO]: 10,
-    [Attribute.FUSION]: 10,
-    [Attribute.AERO]: 10,
-    [Attribute.ELECTRO]: 10,
-    [Attribute.HAVOC]: 10,
-    [Attribute.SPECTRO]: 10,
-    [Attribute.PHYSICAL]: 10,
+    [Attribute.GLACIO]: 20,
+    [Attribute.FUSION]: 20,
+    [Attribute.AERO]: 20,
+    [Attribute.ELECTRO]: 20,
+    [Attribute.HAVOC]: 20,
+    [Attribute.SPECTRO]: 20,
+    [Attribute.PHYSICAL]: 20,
   },
 };

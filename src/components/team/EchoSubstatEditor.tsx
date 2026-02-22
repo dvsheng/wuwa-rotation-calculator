@@ -31,7 +31,7 @@ export const EchoSubstatEditor = ({
             const newStat = value as EchoSubstatOptionType;
             draft.stat = newStat;
             const newValues = ECHO_SUBSTAT_VALUES[newStat];
-            draft.value = newValues[0];
+            draft.value = newValues.length === 4 ? newValues[2] : newValues[3];
           })
         }
       >

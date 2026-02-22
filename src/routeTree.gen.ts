@@ -9,10 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as BuildsRouteImport } from './routes/builds'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminEntitiesRouteImport } from './routes/admin.entities'
 import { Route as AdminEntitiesIdRouteImport } from './routes/admin.entities.$id'
 
+const BuildsRoute = BuildsRouteImport.update({
+  id: '/builds',
+  path: '/builds',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,35 +37,46 @@ const AdminEntitiesIdRoute = AdminEntitiesIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/builds': typeof BuildsRoute
   '/admin/entities': typeof AdminEntitiesRouteWithChildren
   '/admin/entities/$id': typeof AdminEntitiesIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/builds': typeof BuildsRoute
   '/admin/entities': typeof AdminEntitiesRouteWithChildren
   '/admin/entities/$id': typeof AdminEntitiesIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/builds': typeof BuildsRoute
   '/admin/entities': typeof AdminEntitiesRouteWithChildren
   '/admin/entities/$id': typeof AdminEntitiesIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin/entities' | '/admin/entities/$id'
+  fullPaths: '/' | '/builds' | '/admin/entities' | '/admin/entities/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin/entities' | '/admin/entities/$id'
-  id: '__root__' | '/' | '/admin/entities' | '/admin/entities/$id'
+  to: '/' | '/builds' | '/admin/entities' | '/admin/entities/$id'
+  id: '__root__' | '/' | '/builds' | '/admin/entities' | '/admin/entities/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BuildsRoute: typeof BuildsRoute
   AdminEntitiesRoute: typeof AdminEntitiesRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/builds': {
+      id: '/builds'
+      path: '/builds'
+      fullPath: '/builds'
+      preLoaderRoute: typeof BuildsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -98,6 +115,7 @@ const AdminEntitiesRouteWithChildren = AdminEntitiesRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BuildsRoute: BuildsRoute,
   AdminEntitiesRoute: AdminEntitiesRouteWithChildren,
 }
 export const routeTree = rootRouteImport

@@ -4,7 +4,6 @@ import type { ReactNode } from 'react';
 import { Suspense, useState } from 'react';
 
 import { EnemyContainer } from '@/components/enemy/EnemyContainer';
-import { LibraryContainer } from '@/components/library/LibraryContainer';
 import { RotationSummary } from '@/components/results/RotationSummary';
 import { RotationBuilder } from '@/components/rotation/RotationBuilder';
 import { TeamContainer } from '@/components/team/TeamContainer';
@@ -19,7 +18,8 @@ export const AppTabs = ({ children }: AppTabsProperties) => {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const isAdminRoute = pathname.startsWith('/admin');
-  const activeTab = isAdminRoute ? 'database' : selectedTab;
+  const isBuildsRoute = pathname === '/builds';
+  const activeTab = isAdminRoute ? 'database' : isBuildsRoute ? 'builds' : selectedTab;
   const isBuildTab =
     activeTab === 'team' || activeTab === 'enemy' || activeTab === 'rotation';
 
@@ -33,7 +33,16 @@ export const AppTabs = ({ children }: AppTabsProperties) => {
       return;
     }
 
-    if (isAdminRoute) {
+    if (nextTab === 'builds') {
+      if (isBuildsRoute) {
+        return;
+      }
+
+      void navigate({ to: '/builds' });
+      return;
+    }
+
+    if (isAdminRoute || isBuildsRoute) {
       setSelectedTab(nextTab);
       void navigate({ to: '/' });
       return;
@@ -80,21 +89,21 @@ export const AppTabs = ({ children }: AppTabsProperties) => {
 
         <div className="mt-6 mb-3 px-2">
           <h2 className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
-            Library
+            Builds
           </h2>
         </div>
         <TabsList className="flex h-auto flex-col items-stretch justify-start gap-1 bg-transparent p-0">
           <TabsTrigger
-            value="library"
+            value="builds"
             className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary flex h-10 items-center justify-start gap-3 border-none px-4 shadow-none"
           >
-            <Library size={18} /> Library
+            <Library size={18} /> Explore builds
           </TabsTrigger>
           <TabsTrigger
             value="database"
             className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary flex h-10 items-center justify-start gap-3 border-none px-4 shadow-none"
           >
-            <Database size={18} /> Database Explorer
+            <Database size={18} /> Configure Entities
           </TabsTrigger>
         </TabsList>
       </aside>
@@ -132,10 +141,10 @@ export const AppTabs = ({ children }: AppTabsProperties) => {
         </TabsContent>
 
         <TabsContent
-          value="library"
+          value="builds"
           className="m-0 space-y-4 focus-visible:outline-none"
         >
-          <LibraryContainer />
+          {children}
         </TabsContent>
 
         <TabsContent

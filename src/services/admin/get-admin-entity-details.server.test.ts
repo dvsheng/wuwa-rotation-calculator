@@ -11,12 +11,16 @@ const mocks = vi.hoisted(() => {
   const from = vi.fn(() => queryBuilder);
   const select = vi.fn(() => ({ from }));
   const findFirst = vi.fn();
+  const findManySkills = vi.fn();
 
   const database = {
     select,
     query: {
       entities: {
         findFirst,
+      },
+      skills: {
+        findMany: findManySkills,
       },
     },
   };
@@ -26,6 +30,7 @@ const mocks = vi.hoisted(() => {
     from,
     select,
     findFirst,
+    findManySkills,
     database,
   };
 });
@@ -41,6 +46,7 @@ describe('getAdminEntityDetailsHandler', () => {
     mocks.queryBuilder.where.mockClear();
     mocks.queryBuilder.orderBy.mockClear();
     mocks.findFirst.mockClear();
+    mocks.findManySkills.mockClear();
   });
 
   it('returns raw full_capabilities rows when capabilities exist', async () => {
@@ -71,21 +77,43 @@ describe('getAdminEntityDetailsHandler', () => {
       setBonusThresholds: undefined,
     };
 
+    mocks.findFirst.mockResolvedValue({
+      id: 100,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      gameId: 1100,
+      name: 'Aalto',
+      type: 'character',
+    });
+    mocks.findManySkills.mockResolvedValue([
+      {
+        id: 12,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        gameId: 12,
+        entityId: 100,
+        name: 'Normal Attack',
+        description: undefined,
+        iconUrl: undefined,
+        originType: 'Normal Attack',
+      },
+    ]);
     mocks.queryBuilder.orderBy.mockResolvedValue([sampleRow]);
 
     const result = await getAdminEntityDetailsHandler({ id: 100 });
 
     expect(result.rows).toHaveLength(1);
+    expect(result.skills).toHaveLength(1);
+    expect(result.entity?.id).toBe(100);
     expect(result.rows[0].skillId).toBe(12);
-    expect(result.entity).toBeUndefined();
-    expect(mocks.findFirst).not.toHaveBeenCalled();
+    expect(mocks.findFirst).toHaveBeenCalledTimes(1);
+    expect(mocks.findManySkills).toHaveBeenCalledTimes(1);
   });
 
-  it('returns empty rows with entity metadata when entity exists without capabilities', async () => {
+  it('returns skills when entity exists without capability rows', async () => {
     const { getAdminEntityDetailsHandler } =
       await import('./get-admin-entity-details.server');
 
-    mocks.queryBuilder.orderBy.mockResolvedValue([]);
     mocks.findFirst.mockResolvedValue({
       id: 100,
       createdAt: new Date(),
@@ -94,23 +122,41 @@ describe('getAdminEntityDetailsHandler', () => {
       name: 'Empty Entity',
       type: 'echo_set',
     });
+    mocks.findManySkills.mockResolvedValue([
+      {
+        id: 301,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        gameId: 301,
+        entityId: 100,
+        name: 'Skill With No Caps',
+        description: undefined,
+        iconUrl: undefined,
+        originType: 'Echo Set',
+      },
+    ]);
+    mocks.queryBuilder.orderBy.mockResolvedValue([]);
 
     const result = await getAdminEntityDetailsHandler({ id: 100 });
 
     expect(result.rows).toEqual([]);
+    expect(result.skills).toHaveLength(1);
+    expect(result.skills[0]?.name).toBe('Skill With No Caps');
     expect(result.entity?.name).toBe('Empty Entity');
     expect(mocks.findFirst).toHaveBeenCalledTimes(1);
+    expect(mocks.findManySkills).toHaveBeenCalledTimes(1);
   });
 
   it('throws when the entity does not exist', async () => {
     const { getAdminEntityDetailsHandler } =
       await import('./get-admin-entity-details.server');
 
-    mocks.queryBuilder.orderBy.mockResolvedValue([]);
     mocks.findFirst.mockImplementation(() => {});
 
     await expect(getAdminEntityDetailsHandler({ id: 999_999 })).rejects.toThrow(
       'Entity not found for ID 999999',
     );
+    expect(mocks.findManySkills).not.toHaveBeenCalled();
+    expect(mocks.select).not.toHaveBeenCalled();
   });
 });

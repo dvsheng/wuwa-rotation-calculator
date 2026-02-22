@@ -3,4 +3,5 @@ export type {
   AdminGetEntityDetailsRequest,
   AdminListEntitiesRequest,
   AdminListEntitiesRow,
+  AdminUpdateCapabilityRequest,
 } from '@/schemas/admin';

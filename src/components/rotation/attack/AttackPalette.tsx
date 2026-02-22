@@ -4,6 +4,7 @@ import {
   PaletteItem,
   PaletteLegend,
 } from '@/components/common/Palette';
+import { ATTACK_SKILL_ORDER, sortAttackOrigins } from '@/components/rotation/constants';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
 import type { Capability } from '@/schemas/rotation';
 import type { AttackOriginType } from '@/services/game-data';
@@ -15,18 +16,6 @@ export interface AttackPaletteProperties {
   className?: string;
 }
 
-const SKILL_ORDER: Array<AttackOriginType> = [
-  'Normal Attack',
-  'Resonance Skill',
-  'Resonance Liberation',
-  'Forte Circuit',
-  'Intro Skill',
-  'Outro Skill',
-  'Tune Break',
-  'Echo',
-  'Weapon',
-];
-
 export const AttackPalette = ({
   onAddAttack,
   onClickAttack,
@@ -36,7 +25,7 @@ export const AttackPalette = ({
   const { attacks } = useTeamDetails();
   const byCharacter = Object.groupBy(attacks, (a) => a.characterName);
 
-  const legend = SKILL_ORDER.map((skill) => ({
+  const legend = ATTACK_SKILL_ORDER.map((skill) => ({
     label: skill,
     className: SKILL_COLORS[skill],
   }));
@@ -52,13 +41,11 @@ export const AttackPalette = ({
 
       {Object.entries(byCharacter).map(([charName, charAttacks]) => {
         const bySkill = Object.groupBy(charAttacks ?? [], (a) => a.originType);
-        // Get ordered skills first, then any remaining skills not in the order
-        const orderedSkills = SKILL_ORDER.filter((skill) => bySkill[skill]?.length);
-        const remainingSkills = (
+        const orderedSkills = (
           Object.keys(bySkill) as Array<AttackOriginType>
-        ).filter((skill) => !SKILL_ORDER.includes(skill));
+        ).toSorted(sortAttackOrigins);
 
-        const allAttacks = [...orderedSkills, ...remainingSkills].flatMap(
+        const allAttacks = orderedSkills.flatMap(
           (skillName) => bySkill[skillName] ?? [],
         );
 

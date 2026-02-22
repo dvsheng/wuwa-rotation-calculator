@@ -1,7 +1,12 @@
 import { z } from 'zod';
 
-import type { DatabaseEntity, DatabaseFullCapability } from '@/db/schema';
-import { EntityType } from '@/services/game-data/types';
+import type {
+  DatabaseEntity,
+  DatabaseFullCapability,
+  DatabaseSkill,
+} from '@/db/schema';
+import { DatabaseCapabilitySchema } from '@/schemas/database';
+import { CapabilityType, EntityType } from '@/services/game-data/types';
 
 export const AdminListEntitiesRequestSchema = z.object({
   entityType: z.enum(EntityType).optional(),
@@ -27,9 +32,32 @@ export type AdminGetEntityDetailsRequest = z.infer<
 
 export const AdminEntityDetailsResponseSchema = z.object({
   entity: z.custom<DatabaseEntity>().optional(),
+  skills: z.array(z.custom<DatabaseSkill>()),
   rows: z.array(z.custom<DatabaseFullCapability>()),
 });
 
 export type AdminEntityDetailsResponse = z.infer<
   typeof AdminEntityDetailsResponseSchema
+>;
+
+export const AdminUpdateCapabilityRequestSchema = z
+  .object({
+    capabilityId: z.number().int().positive(),
+    name: z.string().min(1).optional(),
+    description: z.string().min(1).optional(),
+    capabilityType: z.enum(CapabilityType),
+    capabilityJson: DatabaseCapabilitySchema,
+  })
+  .superRefine((value, context) => {
+    if (value.capabilityJson.type !== value.capabilityType) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Capability type must match capabilityJson.type',
+        path: ['capabilityType'],
+      });
+    }
+  });
+
+export type AdminUpdateCapabilityRequest = z.infer<
+  typeof AdminUpdateCapabilityRequestSchema
 >;

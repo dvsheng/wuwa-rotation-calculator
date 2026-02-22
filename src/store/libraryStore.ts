@@ -6,7 +6,12 @@ import type { SavedRotation, SavedRotationData } from '@/schemas/library';
 
 interface LibraryState {
   rotations: Array<SavedRotation>;
-  addRotation: (name: string, data: SavedRotationData, description?: string) => void;
+  addRotation: (
+    name: string,
+    data: SavedRotationData,
+    description?: string,
+    totalDamage?: number,
+  ) => void;
   deleteRotation: (id: string) => void;
   updateRotation: (id: string, updates: Partial<SavedRotation>) => void;
 }
@@ -15,12 +20,13 @@ export const useLibraryStore = create<LibraryState>()(
   persist(
     immer((set) => ({
       rotations: [],
-      addRotation: (name, data, description) =>
+      addRotation: (name, data, description, totalDamage) =>
         set((state) => {
           const newRotation: SavedRotation = {
             id: crypto.randomUUID(),
             name,
             description,
+            totalDamage,
             data,
             createdAt: Date.now(),
             updatedAt: Date.now(),

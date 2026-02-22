@@ -36,55 +36,59 @@ sqlite3 .local/data/game-data.db "SELECT id, name, type FROM entities WHERE type
 ## Schema
 
 ### entities
-| Column | Type | Notes |
-|---|---|---|
-| id | integer PK AUTOINCREMENT | |
-| game_id | integer UNIQUE | |
-| name | text NOT NULL | |
-| type | text NOT NULL | `character`, `weapon`, `echo`, `echo_set` |
-| icon_url | text | |
-| rank | integer | |
-| weapon_type | text | |
-| description | text | |
-| attribute | text | `glacio`, `fusion`, `electro`, `spectro`, `aero`, `havoc` |
-| echo_set_ids | text | JSON array |
-| set_bonus_thresholds | text | JSON array |
-| cost | integer | |
-| created_at | integer NOT NULL | Unix timestamp |
-| updated_at | integer NOT NULL | Unix timestamp |
+
+| Column               | Type                     | Notes                                                     |
+| -------------------- | ------------------------ | --------------------------------------------------------- |
+| id                   | integer PK AUTOINCREMENT |                                                           |
+| game_id              | integer UNIQUE           |                                                           |
+| name                 | text NOT NULL            |                                                           |
+| type                 | text NOT NULL            | `character`, `weapon`, `echo`, `echo_set`                 |
+| icon_url             | text                     |                                                           |
+| rank                 | integer                  |                                                           |
+| weapon_type          | text                     |                                                           |
+| description          | text                     |                                                           |
+| attribute            | text                     | `glacio`, `fusion`, `electro`, `spectro`, `aero`, `havoc` |
+| echo_set_ids         | text                     | JSON array                                                |
+| set_bonus_thresholds | text                     | JSON array                                                |
+| cost                 | integer                  |                                                           |
+| created_at           | integer NOT NULL         | Unix timestamp                                            |
+| updated_at           | integer NOT NULL         | Unix timestamp                                            |
 
 ### skills
-| Column | Type | Notes |
-|---|---|---|
-| id | integer PK AUTOINCREMENT | |
-| entity_id | integer NOT NULL FK → entities.id | |
-| game_id | integer | |
-| name | text NOT NULL | |
-| description | text | |
-| icon_url | text | |
-| origin_type | text NOT NULL | See origin types below |
-| created_at | integer NOT NULL | Unix timestamp |
-| updated_at | integer NOT NULL | Unix timestamp |
+
+| Column      | Type                              | Notes                  |
+| ----------- | --------------------------------- | ---------------------- |
+| id          | integer PK AUTOINCREMENT          |                        |
+| entity_id   | integer NOT NULL FK → entities.id |                        |
+| game_id     | integer                           |                        |
+| name        | text NOT NULL                     |                        |
+| description | text                              |                        |
+| icon_url    | text                              |                        |
+| origin_type | text NOT NULL                     | See origin types below |
+| created_at  | integer NOT NULL                  | Unix timestamp         |
+| updated_at  | integer NOT NULL                  | Unix timestamp         |
 
 **origin_type values:** `Normal Attack`, `Resonance Skill`, `Resonance Liberation`, `Inherent Skill`, `Intro Skill`, `Forte Circuit`, `Outro Skill`, `Tune Break`, `Echo`, `Echo Set`, `Weapon`, `Base Stats`, `s1`–`s6`
 
 ### capabilities
-| Column | Type | Notes |
-|---|---|---|
-| id | integer PK AUTOINCREMENT | |
-| skill_id | integer NOT NULL FK → skills.id | |
-| name | text | Optional label |
-| description | text | Relevant subset of the parent skill's description |
-| capability_type | text NOT NULL | `attack`, `modifier`, `permanent_stat` |
-| capability_json | text NOT NULL | JSON — see shapes below |
-| created_at | integer NOT NULL | Unix timestamp |
-| updated_at | integer NOT NULL | Unix timestamp |
+
+| Column          | Type                            | Notes                                             |
+| --------------- | ------------------------------- | ------------------------------------------------- |
+| id              | integer PK AUTOINCREMENT        |                                                   |
+| skill_id        | integer NOT NULL FK → skills.id |                                                   |
+| name            | text                            | Optional label                                    |
+| description     | text                            | Relevant subset of the parent skill's description |
+| capability_type | text NOT NULL                   | `attack`, `modifier`, `permanent_stat`            |
+| capability_json | text NOT NULL                   | JSON — see shapes below                           |
+| created_at      | integer NOT NULL                | Unix timestamp                                    |
+| updated_at      | integer NOT NULL                | Unix timestamp                                    |
 
 ---
 
 ## capability_json Shapes
 
 ### attack
+
 ```json
 {
   "type": "attack",
@@ -94,23 +98,25 @@ sqlite3 .local/data/game-data.db "SELECT id, name, type FROM entities WHERE type
   "tags": ["basicAttack"]
 }
 ```
+
 - **scalingStat:** `atk`, `hp`, `def`
 - **attribute:** `glacio`, `fusion`, `electro`, `spectro`, `aero`, `havoc`
 - **motionValues:** array of multipliers (as decimals, e.g. 48.71% → 0.4871)
 
 ### modifier
+
 ```json
 {
   "type": "modifier",
   "target": "self",
-  "modifiedStats": [
-    { "stat": "damageBonus", "value": 0.2, "tags": ["resonanceSkill"] }
-  ]
+  "modifiedStats": [{ "stat": "damageBonus", "value": 0.2, "tags": ["resonanceSkill"] }]
 }
 ```
+
 - **target:** `self`, `activeCharacter`, `team`, `enemy`
 
 ### permanent_stat
+
 ```json
 {
   "type": "permanent_stat",
@@ -141,6 +147,7 @@ Valid for both `permanent_stat.stat` and `modifier.modifiedStats[].stat`:
 ## Insert Examples
 
 ### New permanent_stat capability
+
 ```bash
 sqlite3 .local/data/game-data.db "
 INSERT INTO capabilities (created_at, updated_at, skill_id, name, description, capability_type, capability_json)
@@ -154,6 +161,7 @@ VALUES (
 ```
 
 ### New modifier capability
+
 ```bash
 sqlite3 .local/data/game-data.db "
 INSERT INTO capabilities (created_at, updated_at, skill_id, name, description, capability_type, capability_json)
@@ -167,12 +175,14 @@ VALUES (
 ```
 
 ### Update capability_json field
+
 ```bash
 sqlite3 .local/data/game-data.db \
   "UPDATE capabilities SET capability_json = json_set(capability_json, '$.target', 'activeCharacter') WHERE id = 1328;"
 ```
 
 ### Update description
+
 ```bash
 sqlite3 .local/data/game-data.db \
   "UPDATE capabilities SET description = 'New description.' WHERE id = 1328;"

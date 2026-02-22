@@ -19,6 +19,7 @@ export const SavedRotationSchema = z.object({
   description: z.string().optional(),
   createdAt: z.number(),
   updatedAt: z.number(),
+  totalDamage: z.number().optional(),
   data: SavedRotationDataSchema,
 });
 

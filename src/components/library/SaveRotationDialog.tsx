@@ -14,6 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { calculateRotation } from '@/services/rotation-calculator/calculate-client-rotation-damage';
 import { useStore } from '@/store';
 import { useLibraryStore } from '@/store/libraryStore';
 
@@ -25,23 +26,24 @@ export function SaveRotationDialog() {
   const { team, enemy, attacks, buffs } = useStore();
   const addRotation = useLibraryStore((state) => state.addRotation);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim()) {
       toast.error('Please enter a name for the rotation.');
       return;
     }
 
     try {
-      addRotation(
-        name,
-        {
-          team,
-          enemy,
-          attacks,
-          buffs,
-        },
-        description,
-      );
+      let totalDamage: number | undefined;
+      try {
+        const result = await calculateRotation({
+          data: { team, enemy, attacks, buffs },
+        });
+        totalDamage = result.totalDamage;
+      } catch {
+        // calculation is best-effort; save without it if it fails
+      }
+
+      addRotation(name, { team, enemy, attacks, buffs }, description, totalDamage);
       toast.success('Rotation saved successfully!');
       setOpen(false);
       setName('');

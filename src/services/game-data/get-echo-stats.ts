@@ -5,9 +5,9 @@ import { CharacterStat, Tag } from '@/types';
 import type { PermanentStatBase } from './types';
 
 const ECHO_SECONDARY_STAT_BY_COST: Record<EchoCost, PermanentStatBase> = {
-  1: { stat: CharacterStat.HP_FLAT_BONUS, value: 2280, tags: [Tag.ALL] },
-  3: { stat: CharacterStat.ATTACK_FLAT_BONUS, value: 100, tags: [Tag.ALL] },
-  4: { stat: CharacterStat.ATTACK_FLAT_BONUS, value: 150, tags: [Tag.ALL] },
+  1: { stat: CharacterStat.HP_FLAT, value: 2280, tags: [Tag.ALL] },
+  3: { stat: CharacterStat.ATTACK_FLAT, value: 100, tags: [Tag.ALL] },
+  4: { stat: CharacterStat.ATTACK_FLAT, value: 150, tags: [Tag.ALL] },
 };
 
 const ECHO_PRIMARY_STAT_BY_COST_BY_STAT: Record<

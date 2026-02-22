@@ -29,7 +29,7 @@ export function LibraryContainer() {
           <SaveRotationDialog />
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 lg:grid-cols-2">
           {rotations
             .toSorted((a, b) => b.updatedAt - a.updatedAt)
             .map((rotation) => (

@@ -90,7 +90,7 @@ export const AttackCanvas = ({ onDropAttack }: AttackCanvasProperties) => {
                   attack={attack}
                   index={index}
                   onRemove={handleRemoveAttack}
-                  isInteracting={isInteracting}
+                  isDialogClickable={!isInteracting}
                 />
               </div>
             ))}

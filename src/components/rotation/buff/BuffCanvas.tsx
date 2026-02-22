@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { Layout, LayoutItem } from 'react-grid-layout';
 import GridLayout from 'react-grid-layout';
 
@@ -16,6 +17,7 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
   const { buffs } = useTeamModifierInstances();
   const removeBuff = useStore((state) => state.removeBuff);
   const updateBuffLayout = useStore((state) => state.updateBuffLayout);
+  const [isGridInteractable, setIsGridInteractable] = useState(true);
 
   const onLayoutChange = (layout: Layout) => {
     for (const item of layout) {
@@ -25,7 +27,8 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
 
   const { layout: fullLayoutProperties, isInteracting } = useCanvasLayout({
     gridConfig: { rowHeight: 50, margin: [4, 4] as const },
-    resizeConfig: { enabled: true, handles: ['e', 'w'] },
+    resizeConfig: { enabled: isGridInteractable, handles: ['e', 'w'] },
+    dragConfig: { enabled: isGridInteractable },
     layout: buffs.map((buff) => ({
       i: buff.instanceId,
       x: buff.x,
@@ -75,7 +78,8 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
                 <BuffTimelineCanvasItem
                   buff={buff}
                   onRemove={handleRemoveBuff}
-                  isInteracting={isInteracting}
+                  isDialogClickable={!isInteracting}
+                  onOpenChange={(isOpen: boolean) => setIsGridInteractable(!isOpen)}
                 />
               </div>
             ))}

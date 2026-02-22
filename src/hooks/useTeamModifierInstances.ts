@@ -25,25 +25,25 @@ export const useTeamModifierInstances = () => {
     storedBuffs.map((stored) => {
       const gameData = buffMap.get(`${stored.characterId}:${stored.id}`);
       if (!gameData) return;
-      const parameters = gameData.parameters?.map((parameter) => ({
-        ...parameter,
-        value: stored.parameterValues?.find((p) => p.id === parameter.id)?.value,
-      }));
+      const parameters = gameData.parameters?.map((parameter) => {
+        const storedParameter = stored.parameterValues?.find(
+          (p) => p.id === parameter.id,
+        );
+        return {
+          ...parameter,
+          value: storedParameter?.value,
+          valueConfiguration: storedParameter?.valueConfiguration,
+        };
+      });
       return {
-        instanceId: stored.instanceId,
-        id: gameData.id,
+        ...stored,
         name: gameData.name,
         parentName: gameData.parentName,
         description: gameData.description,
-        characterId: gameData.characterId,
         characterName: gameData.characterName,
         originType: gameData.originType,
         target: gameData.target,
         parameters,
-        x: stored.x,
-        y: stored.y,
-        w: stored.w,
-        h: stored.h,
       };
     }),
   );

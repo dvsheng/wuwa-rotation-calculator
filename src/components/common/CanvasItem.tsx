@@ -19,7 +19,10 @@ export interface CanvasItemProperties {
   parameters?: Array<ParameterInstance & Parameter>;
   /** Called when parameters are saved */
   onSaveParameters?: (values: Array<ParameterInstance & Parameter>) => void;
-  isInteracting: boolean;
+  /** Attacks covered by this item. When length > 1, per-stack configuration is offered. */
+  buffedAttacks?: Array<{ name: string }>;
+  isDialogClickable: boolean;
+  onOpenChange?: (isOpen: boolean) => void;
   /** Children render function or elements */
   children:
     | React.ReactNode
@@ -43,24 +46,35 @@ export const CanvasItem = ({
   description,
   parameters,
   onSaveParameters,
-  isInteracting,
+  buffedAttacks,
+  isDialogClickable,
+  onOpenChange,
   children,
 }: CanvasItemProperties) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const hasParameters = (parameters?.length ?? 0) > 0;
   const shouldShowWarning =
     hasParameters &&
-    (parameters?.some((p) => Number.isNaN(p.value) || isNil(p.value)) ?? false);
+    (parameters?.some((p) => {
+      const hasStackConfig = (p.valueConfiguration?.length ?? 0) > 0;
+      if (hasStackConfig) {
+        return p.valueConfiguration!.some((v) => Number.isNaN(v) || isNil(v));
+      }
+      return Number.isNaN(p.value) || isNil(p.value);
+    }) ??
+      false);
 
   const handleClick = () => {
-    if (hasParameters && onSaveParameters && !isInteracting) {
+    if (hasParameters && onSaveParameters && isDialogClickable) {
       setIsDialogOpen(true);
+      onOpenChange?.(true);
     }
   };
 
   const handleSaveParameters = (values: Array<ParameterInstance & Parameter>) => {
     onSaveParameters?.(values);
     setIsDialogOpen(false);
+    onOpenChange?.(false);
   };
 
   return (
@@ -91,12 +105,31 @@ export const CanvasItem = ({
           )}
           {hasParameters && !shouldShowWarning && (
             <div className="mt-1 space-y-0.5">
-              {parameters?.map((p, index) => (
-                <Text key={index} variant="tiny" className="text-primary font-bold">
-                  {parameters.length > 1 ? `Value ${index + 1}: ` : 'Value: '}
-                  {p.value}
-                </Text>
-              ))}
+              {parameters?.flatMap((p, parameterIndex) => {
+                if ((p.valueConfiguration?.length ?? 0) > 0) {
+                  return p.valueConfiguration!.map((v, stackIndex) => (
+                    <Text
+                      key={`${parameterIndex}-${stackIndex}`}
+                      variant="tiny"
+                      className="text-primary font-bold"
+                    >
+                      {`${buffedAttacks?.[stackIndex]?.name ?? `Attack ${stackIndex + 1}`}: ${v}`}
+                    </Text>
+                  ));
+                }
+                return [
+                  <Text
+                    key={parameterIndex}
+                    variant="tiny"
+                    className="text-primary font-bold"
+                  >
+                    {parameters.length > 1
+                      ? `Value ${parameterIndex + 1}: `
+                      : 'Value: '}
+                    {p.value}
+                  </Text>,
+                ];
+              })}
             </div>
           )}
         </TooltipContent>
@@ -108,8 +141,10 @@ export const CanvasItem = ({
             title={title}
             description={description}
             parameters={parameters}
-            open={isDialogOpen}
-            onOpenChange={setIsDialogOpen}
+            buffedAttacks={buffedAttacks}
+            isOpen={isDialogOpen}
+            onOpenChange={onOpenChange}
+            setIsOpen={setIsDialogOpen}
             onSaveParameters={handleSaveParameters}
           />
         </div>

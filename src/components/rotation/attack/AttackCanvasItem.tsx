@@ -11,14 +11,14 @@ interface AttackCanvasItemProperties {
   attack: DetailedAttackInstance;
   index: number;
   onRemove: (instanceId: string) => void;
-  isInteracting: boolean;
+  isDialogClickable: boolean;
 }
 
 export const AttackCanvasItem = ({
   attack,
   index,
   onRemove,
-  isInteracting,
+  isDialogClickable,
 }: AttackCanvasItemProperties) => {
   const updateAttackParameters = useStore((state) => state.updateAttackParameters);
 
@@ -34,7 +34,7 @@ export const AttackCanvasItem = ({
       onSaveParameters={(parameters) =>
         updateAttackParameters(attack.instanceId, parameters)
       }
-      isInteracting={isInteracting}
+      isDialogClickable={isDialogClickable}
     >
       {({ shouldShowWarning }) => (
         <div className="bg-card hover:bg-accent/50 relative flex h-full flex-col items-center overflow-hidden rounded-lg border px-4 pt-6 pb-3 transition-colors">

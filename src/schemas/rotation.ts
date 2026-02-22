@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const ParameterInstanceSchema = z.object({
   id: z.string(),
   value: z.number().optional(),
+  valueConfiguration: z.array(z.number()).optional(),
 });
 
 export type ParameterInstance = z.infer<typeof ParameterInstanceSchema>;

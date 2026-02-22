@@ -24,6 +24,7 @@ import type {
 import type { Rotation } from '../core/types';
 
 import { createGameDataEnricher } from './enrich-rotation-data';
+import { expandModifiersByValueConfiguration } from './expand-modifiers-by-value-configuration';
 import type { ResolveUserParameterizedType } from './resolve-user-parameterized-values';
 import { resolveUserParameterizedValues } from './resolve-user-parameterized-values';
 
@@ -281,12 +282,16 @@ export const adaptClientInputToRotation = async (
     clientTeam.map((c, index) => [c.id, index]),
   ) as Record<number, CharacterSlotNumber>;
 
+  const expandedBuffs = buffs.flatMap((buff) =>
+    expandModifiersByValueConfiguration(buff),
+  );
+
   const damageInstances = attacks
     .map((attack) => enricher.enrichAttack(attack))
     .map((attack) => resolveUserParameterizedValues(attack))
     .map((attack, index) => ({
       ...attack,
-      modifiers: buffs
+      modifiers: expandedBuffs
         .filter((modifier) => shouldModifierApplyToAttack(index, modifier))
         .map((modifier) => enricher.enrichModifier(modifier))
         .map((modifier) => resolveUserParameterizedValues(modifier))

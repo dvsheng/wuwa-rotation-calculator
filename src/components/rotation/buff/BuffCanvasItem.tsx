@@ -9,6 +9,7 @@ import {
   useSelfBuffAlignment,
 } from '@/hooks/useSelfBuffAlignment';
 import type { AlignmentSegment } from '@/hooks/useSelfBuffAlignment';
+import { useTeamAttackInstances } from '@/hooks/useTeamAttackInstances';
 import type { DetailedModifierInstance } from '@/hooks/useTeamModifierInstances';
 import { cn } from '@/lib/utils';
 import { Target } from '@/services/game-data';
@@ -25,16 +26,21 @@ const SELF_MISALIGNED_CLASSES = 'border-blue-400 bg-transparent text-black';
 interface BuffTimelineCanvasItemProperties {
   buff: DetailedModifierInstance;
   onRemove: (instanceId: string) => void;
-  isInteracting: boolean;
+  isDialogClickable: boolean;
+  onOpenChange?: (isOpen: boolean) => void;
 }
 
 export const BuffTimelineCanvasItem = ({
   buff,
   onRemove,
-  isInteracting,
+  isDialogClickable,
+  onOpenChange,
 }: BuffTimelineCanvasItemProperties) => {
   const updateBuffParameters = useStore((state) => state.updateBuffParameters);
+  const { attacks } = useTeamAttackInstances();
   const alignment = useSelfBuffAlignment(buff);
+
+  const buffedAttacks = attacks.slice(buff.x, buff.x + buff.w);
 
   const { data: iconUrl } = useCapabilityIcon(buff.id);
   const { data: characterIconUrl } = useEntityIcon(buff.characterId);
@@ -87,7 +93,9 @@ export const BuffTimelineCanvasItem = ({
       description={buff.description}
       parameters={parameters}
       onSaveParameters={(vals) => updateBuffParameters(buff.instanceId, vals)}
-      isInteracting={isInteracting}
+      buffedAttacks={buffedAttacks}
+      isDialogClickable={isDialogClickable}
+      onOpenChange={onOpenChange}
     >
       {({ shouldShowWarning }) => (
         <div

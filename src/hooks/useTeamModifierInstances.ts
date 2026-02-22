@@ -18,10 +18,12 @@ export const useTeamModifierInstances = () => {
   const storedBuffs = useStore((state) => state.buffs);
   const { buffs: gameDataBuffs, isLoading, isError } = useTeamDetails();
 
-  const buffMap = new Map(gameDataBuffs.map((buff) => [buff.id, buff]));
+  const buffMap = new Map(
+    gameDataBuffs.map((buff) => [`${buff.characterId}:${buff.id}`, buff]),
+  );
   const fullBuffs = compact(
     storedBuffs.map((stored) => {
-      const gameData = buffMap.get(stored.id);
+      const gameData = buffMap.get(`${stored.characterId}:${stored.id}`);
       if (!gameData) return;
       const parameters = gameData.parameters?.map((parameter) => ({
         ...parameter,

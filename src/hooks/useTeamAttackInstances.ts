@@ -18,10 +18,12 @@ export const useTeamAttackInstances = () => {
   const storedAttacks = useStore((state) => state.attacks);
   const { attacks: gameDataAttacks, isLoading, isError } = useTeamDetails();
 
-  const attackMap = new Map(gameDataAttacks.map((attack) => [attack.id, attack]));
+  const attackMap = new Map(
+    gameDataAttacks.map((attack) => [`${attack.characterId}:${attack.id}`, attack]),
+  );
   const fullAttacks = compact(
     storedAttacks.map((stored) => {
-      const gameData = attackMap.get(stored.id);
+      const gameData = attackMap.get(`${stored.characterId}:${stored.id}`);
       if (!gameData) return;
 
       const parameters = gameData.parameters?.map((parameter) => ({

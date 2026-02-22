@@ -35,6 +35,7 @@ export interface RotationSlice {
     layout: Partial<Pick<ModifierInstance, 'x' | 'y' | 'w' | 'h'>>,
   ) => void;
   updateBuffParameters: (instanceId: string, values: Array<ParameterInstance>) => void;
+  setBuffs: (buffs: Array<ModifierInstance>) => void;
   clearBuffs: () => void;
   clearBuffsForCharacter: (characterId: number) => void;
 
@@ -127,6 +128,11 @@ export const createRotationSlice: StateCreator<
       if (buff) {
         buff.parameterValues = values;
       }
+    }),
+
+  setBuffs: (buffs) =>
+    set((state) => {
+      state.buffs = buffs;
     }),
 
   clearBuffs: () =>

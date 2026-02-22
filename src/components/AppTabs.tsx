@@ -1,7 +1,8 @@
-import { Loader2, Shield, Sword, User } from 'lucide-react';
+import { Library, Loader2, Shield, Sword, User } from 'lucide-react';
 import { Suspense } from 'react';
 
 import { EnemyContainer } from '@/components/enemy/EnemyContainer';
+import { LibraryContainer } from '@/components/library/LibraryContainer';
 import { RotationSummary } from '@/components/results/RotationSummary';
 import { RotationBuilder } from '@/components/rotation/RotationBuilder';
 import { TeamContainer } from '@/components/team/TeamContainer';
@@ -40,6 +41,12 @@ export const AppTabs = () => {
           >
             <Sword size={18} /> Rotation
           </TabsTrigger>
+          <TabsTrigger
+            value="library"
+            className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary flex h-10 items-center justify-start gap-3 border-none px-4 shadow-none"
+          >
+            <Library size={18} /> Library
+          </TabsTrigger>
         </TabsList>
       </aside>
 
@@ -71,6 +78,13 @@ export const AppTabs = () => {
           className="m-0 space-y-4 focus-visible:outline-none"
         >
           <RotationBuilder />
+        </TabsContent>
+
+        <TabsContent
+          value="library"
+          className="m-0 space-y-4 focus-visible:outline-none"
+        >
+          <LibraryContainer />
         </TabsContent>
       </div>
     </Tabs>

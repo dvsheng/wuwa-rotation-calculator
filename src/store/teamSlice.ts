@@ -31,10 +31,12 @@ export interface TeamSlice {
     updater: (draft: EchoPiece) => void,
   ) => void;
   updateEnemy: (updater: (draft: Enemy) => void) => void;
+  setTeam: (team: Team) => void;
+  setEnemy: (enemy: Enemy) => void;
 }
 
 const getEchoSubstatValue = (stat: EchoSubstatOptionType) =>
-  ECHO_SUBSTAT_VALUES[stat][0];
+  ECHO_SUBSTAT_VALUES[stat][3];
 
 const createDefaultEchoStats = (cost: EchoCost): EchoPiece => {
   const mainStatType =
@@ -184,5 +186,13 @@ export const createTeamSlice: StateCreator<
   updateEnemy: (updater) =>
     set((state) => {
       updater(state.enemy);
+    }),
+  setTeam: (team) =>
+    set((state) => {
+      state.team = team;
+    }),
+  setEnemy: (enemy) =>
+    set((state) => {
+      state.enemy = enemy;
     }),
 });

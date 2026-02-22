@@ -3,6 +3,7 @@ import { Play, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import { GameImage } from '@/components/common/GameImage';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,6 +27,7 @@ import type { SavedRotation } from '@/schemas/library';
 import { calculateRotation } from '@/services/rotation-calculator/calculate-client-rotation-damage';
 import { useStore } from '@/store';
 import { useLibraryStore } from '@/store/libraryStore';
+import { Attribute } from '@/types';
 
 interface SavedRotationCardProperties {
   rotation: SavedRotation;
@@ -38,6 +40,13 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
   const { team, enemy, attacks, buffs } = useStore();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isOverwriteDialogOpen, setIsOverwriteDialogOpen] = useState(false);
+  const configuredCharacters = rotation.data.team.filter(
+    (character) => character.id > 0,
+  );
+  const resistanceEntries = Object.values(Attribute).map((attribute) => ({
+    attribute,
+    value: rotation.data.enemy.resistances[attribute],
+  }));
 
   const handleLoad = () => {
     try {
@@ -81,12 +90,92 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
               Last updated: {format(new Date(rotation.updatedAt), 'PPP p')}
             </CardDescription>
           </div>
+          <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <DialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="text-destructive hover:text-destructive"
+                aria-label={`Delete rotation ${rotation.name}`}
+                title="Delete rotation"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Are you sure?</DialogTitle>
+                <DialogDescription>
+                  This action cannot be undone. This will permanently delete the
+                  rotation "{rotation.name}".
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button variant="destructive" onClick={handleDelete}>
+                  Delete
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </CardHeader>
       <CardContent>
         <p className="text-muted-foreground text-sm">
           {rotation.description || 'No description.'}
         </p>
+        <div className="mt-4 space-y-3">
+          <div>
+            <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
+              Team
+            </p>
+            {configuredCharacters.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-2">
+                {configuredCharacters.map((character) => (
+                  <GameImage
+                    key={character.id}
+                    entity="character"
+                    type="icon"
+                    id={character.id}
+                    alt={`Character ${character.id}`}
+                    title={`Character ID: ${character.id}`}
+                    className="h-16 w-16 rounded-full border object-cover"
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm">No characters configured.</p>
+            )}
+          </div>
+
+          <div>
+            <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
+              Enemy
+            </p>
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <span className="text-muted-foreground text-sm">
+                Level: {rotation.data.enemy.level}
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-muted-foreground text-sm">Resistances:</span>
+              {resistanceEntries.map(({ attribute, value }) => (
+                <Badge key={attribute} variant="outline" className="gap-1.5 px-2 py-1">
+                  <GameImage
+                    entity="attribute"
+                    type="icon"
+                    id={attribute}
+                    alt={attribute}
+                    className="h-3.5 w-3.5 object-contain"
+                  />
+                  <span>{value}%</span>
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </div>
         <div className="mt-4 flex flex-wrap gap-2">
           <Badge variant="outline">{rotation.data.attacks.length} Attacks</Badge>
           <Badge variant="outline">{rotation.data.buffs.length} Buffs</Badge>
@@ -121,32 +210,6 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
                 Cancel
               </Button>
               <Button onClick={handleOverwrite}>Overwrite</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="destructive" size="sm">
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Are you sure?</DialogTitle>
-              <DialogDescription>
-                This action cannot be undone. This will permanently delete the rotation
-                "{rotation.name}".
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button variant="destructive" onClick={handleDelete}>
-                Delete
-              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

@@ -2,7 +2,6 @@ import { TooltipProvider } from '@radix-ui/react-tooltip';
 import type { ReactNode } from 'react';
 
 import { AppHeader } from '@/components/AppHeader';
-import { AppTabs } from '@/components/AppTabs';
 
 interface AppShellProperties {
   children?: ReactNode;
@@ -14,9 +13,7 @@ export function AppShell({ children }: AppShellProperties) {
       <div className="bg-background text-foreground flex min-h-screen flex-col font-sans">
         <AppHeader />
 
-        <main className="flex flex-1 overflow-hidden">
-          <AppTabs>{children}</AppTabs>
-        </main>
+        <main className="flex flex-1 overflow-y-auto p-6">{children}</main>
       </div>
     </TooltipProvider>
   );

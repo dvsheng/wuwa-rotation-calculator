@@ -5,7 +5,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { OriginType, Target } from '@/services/game-data';
 import { useStore } from '@/store';
 
-import { BuffTimelineCanvasItem } from './BuffCanvasItem';
+import { BuffCanvasItem } from './BuffCanvasItem';
 
 vi.mock('@/hooks/useIcons');
 vi.mock('@/hooks/useSelfBuffAlignment');
@@ -110,7 +110,7 @@ beforeEach(() => {
   });
 });
 
-describe('BuffTimelineCanvasItem', () => {
+describe('BuffCanvasItem', () => {
   describe('buffedAttacks passed to CanvasItem', () => {
     it('uses the names of attacks at buff positions as dialog labels when stack config is enabled', async () => {
       // buff at x=1, w=2 → covers MOCK_ATTACKS[1] ("Heavy Attack") and MOCK_ATTACKS[2] ("Basic Attack")
@@ -118,11 +118,7 @@ describe('BuffTimelineCanvasItem', () => {
       useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
 
       render(
-        <BuffTimelineCanvasItem
-          buff={buff}
-          onRemove={() => {}}
-          isDialogClickable={true}
-        />,
+        <BuffCanvasItem buff={buff} onRemove={() => {}} isDialogClickable={true} />,
       );
 
       // Click the item to open the configuration dialog
@@ -138,11 +134,7 @@ describe('BuffTimelineCanvasItem', () => {
       useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
 
       render(
-        <BuffTimelineCanvasItem
-          buff={buff}
-          onRemove={() => {}}
-          isDialogClickable={true}
-        />,
+        <BuffCanvasItem buff={buff} onRemove={() => {}} isDialogClickable={true} />,
       );
 
       await userEvent.click(screen.getByText('ATK Buff'));
@@ -157,11 +149,7 @@ describe('BuffTimelineCanvasItem', () => {
       useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
 
       render(
-        <BuffTimelineCanvasItem
-          buff={buff}
-          onRemove={() => {}}
-          isDialogClickable={true}
-        />,
+        <BuffCanvasItem buff={buff} onRemove={() => {}} isDialogClickable={true} />,
       );
 
       // The toggle is only shown when buffedAttacks.length > 1
@@ -176,7 +164,7 @@ describe('BuffTimelineCanvasItem', () => {
       const onOpenChange = vi.fn();
 
       render(
-        <BuffTimelineCanvasItem
+        <BuffCanvasItem
           buff={buff}
           onRemove={() => {}}
           isDialogClickable={true}
@@ -195,7 +183,7 @@ describe('BuffTimelineCanvasItem', () => {
       const onOpenChange = vi.fn();
 
       render(
-        <BuffTimelineCanvasItem
+        <BuffCanvasItem
           buff={buff}
           onRemove={() => {}}
           isDialogClickable={true}
@@ -215,7 +203,7 @@ describe('BuffTimelineCanvasItem', () => {
       const onOpenChange = vi.fn();
 
       render(
-        <BuffTimelineCanvasItem
+        <BuffCanvasItem
           buff={buff}
           onRemove={() => {}}
           isDialogClickable={true}
@@ -235,7 +223,7 @@ describe('BuffTimelineCanvasItem', () => {
       const onOpenChange = vi.fn();
 
       render(
-        <BuffTimelineCanvasItem
+        <BuffCanvasItem
           buff={buff}
           onRemove={() => {}}
           isDialogClickable={false}

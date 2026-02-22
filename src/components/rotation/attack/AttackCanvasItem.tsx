@@ -1,7 +1,11 @@
+import { isNil } from 'es-toolkit/predicate';
 import { AlertTriangle, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 
-import { CanvasItem } from '@/components/common/CanvasItem';
+import { ActivatableDialog } from '@/components/common/ActivatableDialog';
+import { ParameterConfigurationForm } from '@/components/common/ParameterConfigurationForm';
 import { Button } from '@/components/ui/button';
+import { DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Text } from '@/components/ui/typography';
 import { useCapabilityIcon, useEntityIcon } from '@/hooks/useIcons';
 import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
@@ -20,23 +24,27 @@ export const AttackCanvasItem = ({
   onRemove,
   isDialogClickable,
 }: AttackCanvasItemProperties) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const updateAttackParameters = useStore((state) => state.updateAttackParameters);
 
   const { data: iconUrl } = useCapabilityIcon(attack.id);
   const { data: characterIconUrl } = useEntityIcon(attack.characterId);
 
+  const isAttackConfigurable = (attack.parameters?.length ?? 0) > 0;
+  const shouldShowWarning =
+    isAttackConfigurable &&
+    (attack.parameters?.some(
+      (parameter) => Number.isNaN(parameter.value) || isNil(parameter.value),
+    ) ??
+      false);
+
   return (
-    <CanvasItem
-      title={attack.name}
-      subtitle={attack.characterName}
-      description={attack.description}
-      parameters={attack.parameters}
-      onSaveParameters={(parameters) =>
-        updateAttackParameters(attack.instanceId, parameters)
-      }
-      isDialogClickable={isDialogClickable}
+    <ActivatableDialog
+      isOpen={isDialogOpen}
+      setIsOpen={setIsDialogOpen}
+      isDialogClickable={isAttackConfigurable && isDialogClickable}
     >
-      {({ shouldShowWarning }) => (
+      <DialogTrigger asChild>
         <div className="bg-card hover:bg-accent/50 relative flex h-full flex-col items-center overflow-hidden rounded-lg border px-4 pt-6 pb-3 transition-colors">
           {/* Index at top-left */}
           <Text
@@ -95,7 +103,19 @@ export const AttackCanvasItem = ({
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>
-      )}
-    </CanvasItem>
+      </DialogTrigger>
+
+      <DialogContent className="flex max-h-[90vh] flex-col sm:max-w-[520px]">
+        <ParameterConfigurationForm
+          title={attack.name}
+          description={attack.description}
+          parameters={attack.parameters ?? []}
+          onSubmit={(values) => {
+            updateAttackParameters(attack.instanceId, values);
+            setIsDialogOpen(false);
+          }}
+        />
+      </DialogContent>
+    </ActivatableDialog>
   );
 };

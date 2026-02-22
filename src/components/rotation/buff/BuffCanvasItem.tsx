@@ -1,7 +1,11 @@
+import { isNil } from 'es-toolkit/predicate';
 import { AlertTriangle, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 
-import { CanvasItem } from '@/components/common/CanvasItem';
+import { ActivatableDialog } from '@/components/common/ActivatableDialog';
+import { ParameterConfigurationForm } from '@/components/common/ParameterConfigurationForm';
 import { Button } from '@/components/ui/button';
+import { DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Text } from '@/components/ui/typography';
 import { useCapabilityIcon, useEntityIcon } from '@/hooks/useIcons';
 import {
@@ -23,32 +27,25 @@ const SELF_BASE_CLASSES = 'border-blue-400 text-black bg-transparent';
 /** Classes for fully misaligned self buffs (outline only) */
 const SELF_MISALIGNED_CLASSES = 'border-blue-400 bg-transparent text-black';
 
-interface BuffTimelineCanvasItemProperties {
+interface BuffCanvasItemProperties {
   buff: DetailedModifierInstance;
-  onRemove: (instanceId: string) => void;
   isDialogClickable: boolean;
+  onRemove: (instanceId: string) => void;
   onOpenChange?: (isOpen: boolean) => void;
 }
 
-export const BuffTimelineCanvasItem = ({
+export const BuffCanvasItem = ({
   buff,
-  onRemove,
   isDialogClickable,
+  onRemove,
   onOpenChange,
-}: BuffTimelineCanvasItemProperties) => {
+}: BuffCanvasItemProperties) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const updateBuffParameters = useStore((state) => state.updateBuffParameters);
   const { attacks } = useTeamAttackInstances();
   const alignment = useSelfBuffAlignment(buff);
-
-  const buffedAttacks = attacks.slice(buff.x, buff.x + buff.w);
-
   const { data: iconUrl } = useCapabilityIcon(buff.id);
   const { data: characterIconUrl } = useEntityIcon(buff.characterId);
-
-  const parameters = buff.parameters?.map((p) => ({
-    ...p,
-    value: p.value,
-  }));
 
   // Generate styling and segments based on target and alignment
   const getItemClassNameAndSegments = (): {
@@ -85,26 +82,30 @@ export const BuffTimelineCanvasItem = ({
   };
 
   const { itemClassName, segments } = getItemClassNameAndSegments();
+  const isBuffConfigurable = buff.parameters && buff.parameters.length > 0;
+  const buffedAttacks = attacks.slice(buff.x, buff.x + buff.w);
+  const shouldShowWarning =
+    buff.parameters?.some(
+      (parameter) =>
+        (Number.isNaN(parameter.value) || isNil(parameter.value)) &&
+        parameter.valueConfiguration?.some((v) => Number.isNaN(v) || isNil(v)),
+    ) ?? false;
 
   return (
-    <CanvasItem
-      title={buff.name}
-      subtitle={buff.characterName}
-      description={buff.description}
-      parameters={parameters}
-      onSaveParameters={(vals) => updateBuffParameters(buff.instanceId, vals)}
-      buffedAttacks={buffedAttacks}
-      isDialogClickable={isDialogClickable}
+    <ActivatableDialog
+      isOpen={isDialogOpen}
+      setIsOpen={setIsDialogOpen}
+      isDialogClickable={isBuffConfigurable && isDialogClickable}
       onOpenChange={onOpenChange}
     >
-      {({ shouldShowWarning }) => (
+      <DialogTrigger asChild>
         <div
           className={cn(
             'relative flex h-full flex-row items-center gap-2 overflow-hidden rounded-lg border px-2 py-1 transition-colors',
             itemClassName,
           )}
         >
-          {/* Background overlay segments (e.g., alignment indicators) */}
+          {/* Background overlay segments */}
           {segments.map((segment, index) => (
             <div
               key={index}
@@ -151,7 +152,7 @@ export const BuffTimelineCanvasItem = ({
             />
           )}
 
-          {/* Delete button at right */}
+          {/* Delete button */}
           <Button
             variant="ghost"
             size="icon"
@@ -165,7 +166,21 @@ export const BuffTimelineCanvasItem = ({
             <Trash2 className="h-3 w-3" />
           </Button>
         </div>
-      )}
-    </CanvasItem>
+      </DialogTrigger>
+
+      <DialogContent className="flex max-h-[90vh] flex-col sm:max-w-[520px]">
+        <ParameterConfigurationForm
+          title={buff.name}
+          description={buff.description}
+          parameters={buff.parameters ?? []}
+          buffedAttacks={buffedAttacks}
+          onSubmit={(values) => {
+            updateBuffParameters(buff.instanceId, values);
+            setIsDialogOpen(false);
+            onOpenChange?.(false);
+          }}
+        />
+      </DialogContent>
+    </ActivatableDialog>
   );
 };

@@ -7,7 +7,7 @@ import { useCanvasLayout } from '@/hooks/useCanvasLayout';
 import { useTeamModifierInstances } from '@/hooks/useTeamModifierInstances';
 import { useStore } from '@/store';
 
-import { BuffTimelineCanvasItem } from './BuffCanvasItem';
+import { BuffCanvasItem } from './BuffCanvasItem';
 
 interface BuffCanvasProperties {
   onDropBuff: (layout: Layout, item: LayoutItem | undefined, event: Event) => void;
@@ -75,7 +75,7 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
           <GridLayout {...fullLayoutProperties}>
             {buffs.map((buff) => (
               <div key={buff.instanceId} className="group relative">
-                <BuffTimelineCanvasItem
+                <BuffCanvasItem
                   buff={buff}
                   onRemove={handleRemoveBuff}
                   isDialogClickable={!isInteracting}

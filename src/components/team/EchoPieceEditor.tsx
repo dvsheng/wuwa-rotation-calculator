@@ -94,6 +94,9 @@ export const EchoPieceEditor = ({
                 <EchoSubstatEditor
                   key={substatIndex}
                   substat={substat}
+                  usedStats={echo.substats
+                    .filter((_, index) => index !== substatIndex)
+                    .map((s) => s.stat)}
                   onUpdate={(updater) =>
                     updateEchoPiece(characterIndex, echoIndex, (draft) => {
                       updater(draft.substats[substatIndex]);

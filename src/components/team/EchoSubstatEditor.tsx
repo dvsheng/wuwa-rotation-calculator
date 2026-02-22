@@ -13,14 +13,19 @@ import { STAT_LABELS, SUBSTAT_OPTIONS } from './constants';
 
 interface EchoSubstatEditorProperties {
   substat: EchoSubstat;
+  usedStats: Array<EchoSubstatOptionType>;
   onUpdate: (updater: (draft: EchoSubstat) => void) => void;
 }
 
 export const EchoSubstatEditor = ({
   substat,
+  usedStats,
   onUpdate,
 }: EchoSubstatEditorProperties) => {
   const possibleValues = ECHO_SUBSTAT_VALUES[substat.stat];
+  const availableOptions = SUBSTAT_OPTIONS.filter(
+    (opt) => opt === substat.stat || !usedStats.includes(opt),
+  );
 
   return (
     <FormGrid>
@@ -39,7 +44,7 @@ export const EchoSubstatEditor = ({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {SUBSTAT_OPTIONS.map((opt) => (
+          {availableOptions.map((opt) => (
             <SelectItem key={opt} value={opt}>
               {STAT_LABELS[opt] || opt}
             </SelectItem>

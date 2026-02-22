@@ -1,12 +1,7 @@
 import { useNavigate, useRouterState } from '@tanstack/react-router';
-import { Database, Library, Loader2, Shield, Sword, User } from 'lucide-react';
+import { Database, Library, PencilRuler } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { Suspense, useState } from 'react';
 
-import { EnemyContainer } from '@/components/enemy/EnemyContainer';
-import { RotationSummary } from '@/components/results/RotationSummary';
-import { RotationBuilder } from '@/components/rotation/RotationBuilder';
-import { TeamContainer } from '@/components/team/TeamContainer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface AppTabsProperties {
@@ -14,16 +9,22 @@ interface AppTabsProperties {
 }
 
 export const AppTabs = ({ children }: AppTabsProperties) => {
-  const [selectedTab, setSelectedTab] = useState('team');
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const isAdminRoute = pathname.startsWith('/admin');
   const isBuildsRoute = pathname === '/builds';
-  const activeTab = isAdminRoute ? 'database' : isBuildsRoute ? 'builds' : selectedTab;
-  const isBuildTab =
-    activeTab === 'team' || activeTab === 'enemy' || activeTab === 'rotation';
+  const activeTab = isAdminRoute ? 'database' : isBuildsRoute ? 'builds' : 'home';
 
   const handleTabChange = (nextTab: string) => {
+    if (nextTab === 'home') {
+      if (!isAdminRoute && !isBuildsRoute) {
+        return;
+      }
+
+      void navigate({ to: '/' });
+      return;
+    }
+
     if (nextTab === 'database') {
       if (isAdminRoute) {
         return;
@@ -41,14 +42,6 @@ export const AppTabs = ({ children }: AppTabsProperties) => {
       void navigate({ to: '/builds' });
       return;
     }
-
-    if (isAdminRoute || isBuildsRoute) {
-      setSelectedTab(nextTab);
-      void navigate({ to: '/' });
-      return;
-    }
-
-    setSelectedTab(nextTab);
   };
 
   return (
@@ -68,28 +61,16 @@ export const AppTabs = ({ children }: AppTabsProperties) => {
         </div>
         <TabsList className="flex h-auto flex-col items-stretch justify-start gap-1 bg-transparent p-0">
           <TabsTrigger
-            value="team"
+            value="home"
             className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary flex h-10 items-center justify-start gap-3 border-none px-4 shadow-none"
           >
-            <User size={18} /> Team
-          </TabsTrigger>
-          <TabsTrigger
-            value="enemy"
-            className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary flex h-10 items-center justify-start gap-3 border-none px-4 shadow-none"
-          >
-            <Shield size={18} /> Enemy
-          </TabsTrigger>
-          <TabsTrigger
-            value="rotation"
-            className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary flex h-10 items-center justify-start gap-3 border-none px-4 shadow-none"
-          >
-            <Sword size={18} /> Rotation
+            <PencilRuler size={18} /> Build Rotation
           </TabsTrigger>
         </TabsList>
 
         <div className="mt-6 mb-3 px-2">
           <h2 className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
-            Builds
+            Explore
           </h2>
         </div>
         <TabsList className="flex h-auto flex-col items-stretch justify-start gap-1 bg-transparent p-0">
@@ -97,7 +78,7 @@ export const AppTabs = ({ children }: AppTabsProperties) => {
             value="builds"
             className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary flex h-10 items-center justify-start gap-3 border-none px-4 shadow-none"
           >
-            <Library size={18} /> Explore builds
+            <Library size={18} /> Explore Builds
           </TabsTrigger>
           <TabsTrigger
             value="database"
@@ -110,34 +91,8 @@ export const AppTabs = ({ children }: AppTabsProperties) => {
 
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col overflow-y-auto p-6">
-        {isBuildTab && (
-          <div className="mb-8">
-            <RotationSummary />
-          </div>
-        )}
-
-        <TabsContent value="team" className="m-0 space-y-4 focus-visible:outline-none">
-          <Suspense
-            fallback={
-              <div className="text-muted-foreground animate-in fade-in flex flex-col items-center justify-center p-20 duration-500">
-                <Loader2 className="text-primary mb-4 h-10 w-10 animate-spin" />
-                <p className="text-lg font-medium">Loading character data...</p>
-              </div>
-            }
-          >
-            <TeamContainer />
-          </Suspense>
-        </TabsContent>
-
-        <TabsContent value="enemy" className="m-0 space-y-4 focus-visible:outline-none">
-          <EnemyContainer />
-        </TabsContent>
-
-        <TabsContent
-          value="rotation"
-          className="m-0 space-y-4 focus-visible:outline-none"
-        >
-          <RotationBuilder />
+        <TabsContent value="home" className="m-0 space-y-4 focus-visible:outline-none">
+          {children}
         </TabsContent>
 
         <TabsContent

@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Section } from '@/components/ui/layout';
-import { Heading } from '@/components/ui/typography';
 import { EnemySchema } from '@/schemas/enemy';
 import { useStore } from '@/store';
 import { Attribute } from '@/types';
@@ -29,10 +28,6 @@ export const EnemyContainer = () => {
 
   return (
     <Section>
-      <div className="flex items-center justify-between">
-        <Heading>Enemy Configuration</Heading>
-      </div>
-
       <Card className="w-full">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

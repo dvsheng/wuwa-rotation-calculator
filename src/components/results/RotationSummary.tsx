@@ -2,6 +2,7 @@ import { Play } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import { SaveRotationButton } from '@/components/library/SaveRotationButton';
 import { Button } from '@/components/ui/button';
 import { Row } from '@/components/ui/layout';
 import { useRotationCalculation } from '@/hooks/useRotationCalculation';
@@ -44,15 +45,18 @@ export const RotationSummary = () => {
     <div className="flex flex-col gap-4">
       <Row className="justify-end">
         {isCalculateButtonVisible && (
-          <Button
-            size="sm"
-            onClick={handleClick}
-            disabled={isFetching}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20 font-bold shadow-lg"
-          >
-            <Play className="mr-2 h-4 w-4 fill-current" />
-            {isFetching ? 'Calculating...' : 'Calculate Rotation Damage'}
-          </Button>
+          <div className="flex items-center gap-2">
+            <SaveRotationButton />
+            <Button
+              size="sm"
+              onClick={handleClick}
+              disabled={isFetching}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20 font-bold shadow-lg"
+            >
+              <Play className="mr-2 h-4 w-4 fill-current" />
+              {isFetching ? 'Calculating...' : 'Calculate Rotation Damage'}
+            </Button>
+          </div>
         )}
       </Row>
       {showResult && result && (

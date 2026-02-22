@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -18,10 +19,22 @@ import { calculateRotation } from '@/services/rotation-calculator/calculate-clie
 import { useStore } from '@/store';
 import { useLibraryStore } from '@/store/libraryStore';
 
-export function SaveRotationDialog() {
-  const [open, setOpen] = useState(false);
+interface SaveRotationDialogProperties {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  trigger?: ReactNode;
+}
+
+export function SaveRotationDialog({
+  open,
+  onOpenChange,
+  trigger,
+}: SaveRotationDialogProperties = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const isOpen = open ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
 
   const { team, enemy, attacks, buffs } = useStore();
   const addRotation = useLibraryStore((state) => state.addRotation);
@@ -54,11 +67,25 @@ export function SaveRotationDialog() {
     }
   };
 
+  const resolvedTrigger =
+    trigger === undefined ? (
+      <Button variant="default">Save Current Rotation</Button>
+    ) : (
+      trigger
+    );
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="default">Save Current Rotation</Button>
-      </DialogTrigger>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen);
+        if (!nextOpen) {
+          setName('');
+          setDescription('');
+        }
+      }}
+    >
+      {resolvedTrigger && <DialogTrigger asChild>{resolvedTrigger}</DialogTrigger>}
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Save Rotation</DialogTitle>

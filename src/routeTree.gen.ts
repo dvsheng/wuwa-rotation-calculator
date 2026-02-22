@@ -10,33 +10,52 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminEntitiesRouteImport } from './routes/admin.entities'
+import { Route as AdminEntitiesIdRouteImport } from './routes/admin.entities.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminEntitiesRoute = AdminEntitiesRouteImport.update({
+  id: '/admin/entities',
+  path: '/admin/entities',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminEntitiesIdRoute = AdminEntitiesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminEntitiesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin/entities': typeof AdminEntitiesRouteWithChildren
+  '/admin/entities/$id': typeof AdminEntitiesIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin/entities': typeof AdminEntitiesRouteWithChildren
+  '/admin/entities/$id': typeof AdminEntitiesIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin/entities': typeof AdminEntitiesRouteWithChildren
+  '/admin/entities/$id': typeof AdminEntitiesIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/admin/entities' | '/admin/entities/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/admin/entities' | '/admin/entities/$id'
+  id: '__root__' | '/' | '/admin/entities' | '/admin/entities/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminEntitiesRoute: typeof AdminEntitiesRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +67,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/entities': {
+      id: '/admin/entities'
+      path: '/admin/entities'
+      fullPath: '/admin/entities'
+      preLoaderRoute: typeof AdminEntitiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/entities/$id': {
+      id: '/admin/entities/$id'
+      path: '/$id'
+      fullPath: '/admin/entities/$id'
+      preLoaderRoute: typeof AdminEntitiesIdRouteImport
+      parentRoute: typeof AdminEntitiesRoute
+    }
   }
 }
 
+interface AdminEntitiesRouteChildren {
+  AdminEntitiesIdRoute: typeof AdminEntitiesIdRoute
+}
+
+const AdminEntitiesRouteChildren: AdminEntitiesRouteChildren = {
+  AdminEntitiesIdRoute: AdminEntitiesIdRoute,
+}
+
+const AdminEntitiesRouteWithChildren = AdminEntitiesRoute._addFileChildren(
+  AdminEntitiesRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminEntitiesRoute: AdminEntitiesRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

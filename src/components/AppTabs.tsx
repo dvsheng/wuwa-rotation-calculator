@@ -1,4 +1,6 @@
-import { Library, Loader2, Shield, Sword, User } from 'lucide-react';
+import { useNavigate, useRouterState } from '@tanstack/react-router';
+import { Database, Library, Loader2, Shield, Sword, User } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Suspense, useState } from 'react';
 
 import { EnemyContainer } from '@/components/enemy/EnemyContainer';
@@ -8,16 +10,43 @@ import { RotationBuilder } from '@/components/rotation/RotationBuilder';
 import { TeamContainer } from '@/components/team/TeamContainer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-export const AppTabs = () => {
-  const [activeTab, setActiveTab] = useState('team');
+interface AppTabsProperties {
+  children?: ReactNode;
+}
+
+export const AppTabs = ({ children }: AppTabsProperties) => {
+  const [selectedTab, setSelectedTab] = useState('team');
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const isAdminRoute = pathname.startsWith('/admin');
+  const activeTab = isAdminRoute ? 'database' : selectedTab;
   const isBuildTab =
     activeTab === 'team' || activeTab === 'enemy' || activeTab === 'rotation';
+
+  const handleTabChange = (nextTab: string) => {
+    if (nextTab === 'database') {
+      if (isAdminRoute) {
+        return;
+      }
+
+      void navigate({ to: '/admin/entities' });
+      return;
+    }
+
+    if (isAdminRoute) {
+      setSelectedTab(nextTab);
+      void navigate({ to: '/' });
+      return;
+    }
+
+    setSelectedTab(nextTab);
+  };
 
   return (
     <Tabs
       defaultValue="team"
       value={activeTab}
-      onValueChange={setActiveTab}
+      onValueChange={handleTabChange}
       orientation="vertical"
       className="flex w-full flex-row gap-0"
     >
@@ -61,6 +90,12 @@ export const AppTabs = () => {
           >
             <Library size={18} /> Library
           </TabsTrigger>
+          <TabsTrigger
+            value="database"
+            className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary flex h-10 items-center justify-start gap-3 border-none px-4 shadow-none"
+          >
+            <Database size={18} /> Database Explorer
+          </TabsTrigger>
         </TabsList>
       </aside>
 
@@ -101,6 +136,13 @@ export const AppTabs = () => {
           className="m-0 space-y-4 focus-visible:outline-none"
         >
           <LibraryContainer />
+        </TabsContent>
+
+        <TabsContent
+          value="database"
+          className="m-0 space-y-4 focus-visible:outline-none"
+        >
+          {children}
         </TabsContent>
       </div>
     </Tabs>

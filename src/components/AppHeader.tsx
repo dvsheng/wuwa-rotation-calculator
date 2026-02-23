@@ -1,17 +1,18 @@
-import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
-import { Calculator, ChevronDown, Database, Library } from 'lucide-react';
+import { Link, useRouterState } from '@tanstack/react-router';
+import { Calculator, Database, Library } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from '@/components/ui/navigation-menu';
+import { cn } from '@/lib/utils';
 
 export const AppHeader = () => {
-  const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const isBuildRoute = pathname === '/';
   const isExploreRoute = pathname === '/builds' || pathname.startsWith('/admin');
@@ -25,39 +26,67 @@ export const AppHeader = () => {
           </h1>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button asChild variant={isBuildRoute ? 'default' : 'secondary'} size="sm">
-            <Link to="/">
-              <Calculator size={16} />
-              Build
-            </Link>
-          </Button>
+        <div className="flex items-center">
+          <NavigationMenu viewport={false}>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild>
+                  <Link
+                    to="/"
+                    className={cn(
+                      navigationMenuTriggerStyle(),
+                      isBuildRoute &&
+                        'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground',
+                    )}
+                  >
+                    <Calculator size={16} />
+                    Build
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant={isExploreRoute ? 'default' : 'secondary'}
-                size="sm"
-                aria-label="Open explore menu"
-              >
-                Explore
-                <ChevronDown size={16} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={() => void navigate({ to: '/builds' })}>
-                <Library className="h-4 w-4" />
-                Explore builds
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onSelect={() => void navigate({ to: '/admin/entities' })}
-              >
-                <Database className="h-4 w-4" />
-                Configure entities
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger
+                  className={cn(
+                    isExploreRoute &&
+                      'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground',
+                  )}
+                >
+                  Explore
+                </NavigationMenuTrigger>
+                <NavigationMenuContent className="right-0 left-auto min-w-[220px]">
+                  <ul className="grid gap-1">
+                    <li>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          to="/builds"
+                          className="focus:bg-accent focus:text-accent-foreground hover:bg-accent hover:text-accent-foreground block space-y-1 rounded-md p-2 leading-none transition-colors outline-none select-none"
+                        >
+                          <div className="flex items-center gap-2 text-sm font-medium">
+                            <Library className="h-4 w-4" />
+                            Explore builds
+                          </div>
+                        </Link>
+                      </NavigationMenuLink>
+                    </li>
+                    <li>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          to="/admin/entities"
+                          className="focus:bg-accent focus:text-accent-foreground hover:bg-accent hover:text-accent-foreground block space-y-1 rounded-md p-2 leading-none transition-colors outline-none select-none"
+                        >
+                          <div className="flex items-center gap-2 text-sm font-medium">
+                            <Database className="h-4 w-4" />
+                            Configure entities
+                          </div>
+                        </Link>
+                      </NavigationMenuLink>
+                    </li>
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
         </div>
       </div>
     </header>

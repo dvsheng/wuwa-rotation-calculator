@@ -9,6 +9,8 @@ import { calculateNegativeStatusDamage } from '../damage-calculator/calculate-ne
 import { calculateAbilityAttributeValue, sumStatValues } from './calculate-stat-total';
 import { createRuntimeStatResolver } from './resolve-runtime-stat-values';
 
+const HAVOC_BANE_DEFENSE_REDUCTION_PER_STACK = 0.02;
+
 export const calculateAttackDamage = (
   instance: CharacterDamageInstance,
   context: {
@@ -25,7 +27,10 @@ export const calculateAttackDamage = (
     level: enemy.level,
     baseResistance: sumStatValues(resolvedEnemy.stats.baseResistance),
     resistanceReduction: sumStatValues(resolvedEnemy.stats.resistanceReduction),
-    defenseReduction: sumStatValues(resolvedEnemy.stats.defenseReduction),
+    defenseReduction:
+      sumStatValues(resolvedEnemy.stats.defenseReduction) +
+      sumStatValues(resolvedEnemy.stats.havocBane) *
+        HAVOC_BANE_DEFENSE_REDUCTION_PER_STACK,
     spectroFrazzle: sumStatValues(resolvedEnemy.stats.spectroFrazzle),
     aeroErosion: sumStatValues(resolvedEnemy.stats.aeroErosion),
     fusionBurst: sumStatValues(resolvedEnemy.stats.fusionBurst),

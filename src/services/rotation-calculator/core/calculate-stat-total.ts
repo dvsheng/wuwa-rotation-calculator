@@ -45,5 +45,8 @@ export const calculateAbilityAttributeValue = (
         sumStatValues(stats.hpFlatBonus),
       );
     }
+    default: {
+      return 0;
+    }
   }
 };

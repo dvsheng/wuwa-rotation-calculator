@@ -1,4 +1,10 @@
-import type { CharacterDamageInstance, Enemy, Modifier, Team } from '@/types';
+import type {
+  CharacterDamageInstance,
+  Enemy,
+  Modifier,
+  NegativeStatus,
+  Team,
+} from '@/types';
 
 import type { CalculateDamageProperties } from '../damage-calculator/calculate-damage.types';
 
@@ -17,6 +23,11 @@ export interface RotationResult {
   damageInstances: Array<number>;
   damageDetails: Array<{
     instance: CharacterDamageInstance;
-    resolvedStats: CalculateDamageProperties;
+    resolvedStats: Omit<CalculateDamageProperties, 'skill'> & {
+      skill: {
+        motionValue?: number;
+        negativeStatus?: NegativeStatus;
+      };
+    };
   }>;
 }

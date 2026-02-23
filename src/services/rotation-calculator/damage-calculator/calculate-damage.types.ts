@@ -1,3 +1,5 @@
+import type { EnemyStat } from '@/types';
+
 interface SkillProperties {
   motionValue: number;
 }
@@ -16,15 +18,8 @@ interface CharacterStats {
   resistancePenetration: number;
 }
 
-interface EnemyStats {
-  level: number;
-  baseResistance: number;
-  resistanceReduction: number;
-  defenseReduction: number;
-}
-
 export interface CalculateDamageProperties {
   character: CharacterStats;
-  enemy: EnemyStats;
+  enemy: Record<EnemyStat | 'level', number>;
   skill: SkillProperties;
 }

@@ -1,3 +1,5 @@
+import { NegativeStatus } from './negative-status';
+
 /**
  * Defines the base stat used for damage scaling.
  */
@@ -8,9 +10,16 @@ export const AbilityAttribute = {
   ATK: 'atk',
   /** Scales with DEF. */
   DEF: 'def',
+  ...NegativeStatus,
 } as const;
 
 export type AbilityAttribute = (typeof AbilityAttribute)[keyof typeof AbilityAttribute];
+
+export const isNegativeStatusAbilityAttribute = (
+  abilityAttribute: AbilityAttribute,
+): abilityAttribute is NegativeStatus => {
+  return Object.values(NegativeStatus).includes(abilityAttribute as NegativeStatus);
+};
 
 /**
  * Categorizes the source of damage for tag-based filtering.

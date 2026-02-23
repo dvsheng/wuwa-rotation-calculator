@@ -25,24 +25,24 @@ function IndexPage() {
       onValueChange={setSelectedTab}
       className="w-full space-y-6"
     >
-      <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-3">
-        <div className="w-full min-w-0 flex-1 space-y-2">
+      <div className="mx-auto flex w-full max-w-6xl flex-nowrap items-center gap-3">
+        <div className="min-w-0 flex-1 space-y-2">
           <TabsList className="bg-muted/60 border-border grid h-auto w-full grid-cols-3 items-stretch gap-1 rounded-lg border p-1">
             <TabsTrigger
               value="team"
-              className="text-muted-foreground data-[state=active]:bg-background data-[state=active]:text-foreground flex h-10 w-full items-center justify-center gap-2 rounded-md border border-transparent px-4 font-medium transition data-[state=active]:shadow-sm"
+              className="text-muted-foreground data-[state=active]:bg-background data-[state=active]:text-foreground flex h-10 w-full items-center justify-start gap-2 rounded-md border border-transparent px-4 font-medium transition data-[state=active]:shadow-sm"
             >
               <User size={16} /> Team
             </TabsTrigger>
             <TabsTrigger
               value="enemy"
-              className="text-muted-foreground data-[state=active]:bg-background data-[state=active]:text-foreground flex h-10 w-full items-center justify-center gap-2 rounded-md border border-transparent px-4 font-medium transition data-[state=active]:shadow-sm"
+              className="text-muted-foreground data-[state=active]:bg-background data-[state=active]:text-foreground flex h-10 w-full items-center justify-start gap-2 rounded-md border border-transparent px-4 font-medium transition data-[state=active]:shadow-sm"
             >
               <Shield size={16} /> Enemy
             </TabsTrigger>
             <TabsTrigger
               value="rotation"
-              className="text-muted-foreground data-[state=active]:bg-background data-[state=active]:text-foreground flex h-10 w-full items-center justify-center gap-2 rounded-md border border-transparent px-4 font-medium transition data-[state=active]:shadow-sm"
+              className="text-muted-foreground data-[state=active]:bg-background data-[state=active]:text-foreground flex h-10 w-full items-center justify-start gap-2 rounded-md border border-transparent px-4 font-medium transition data-[state=active]:shadow-sm"
             >
               <Sword size={16} /> Rotation
             </TabsTrigger>
@@ -50,7 +50,7 @@ function IndexPage() {
         </div>
 
         {isCalculateButtonVisible && (
-          <div className="flex items-center gap-2">
+          <div className="ml-auto flex shrink-0 items-center gap-2">
             <SaveRotationButton />
             <CalculateRotationButton onCalculated={() => setShowResult(true)} />
           </div>

@@ -150,7 +150,9 @@ export const RotationResultDisplay = ({
                 <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px]">
                   <span className="text-zinc-400">Motion Value</span>
                   <span className="text-right font-mono font-medium text-zinc-100">
-                    {(100 * detail.resolvedStats.skill.motionValue).toFixed(2)}%
+                    {detail.resolvedStats.skill.motionValue
+                      ? `${(100 * detail.resolvedStats.skill.motionValue).toFixed(2)}%`
+                      : detail.resolvedStats.skill.negativeStatus}
                   </span>
                 </div>
               </div>
@@ -193,8 +195,8 @@ export const RotationResultDisplay = ({
                       </span>
                       <span className="text-right font-mono font-medium text-zinc-100">
                         {key === 'level'
-                          ? Math.round(value as number).toLocaleString()
-                          : `${((value as number) * 100).toFixed(1)}%`}
+                          ? Math.round(value).toLocaleString()
+                          : `${(value * 100).toFixed(1)}%`}
                       </span>
                     </Fragment>
                   ))}

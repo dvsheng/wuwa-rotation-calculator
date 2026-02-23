@@ -7,7 +7,7 @@ import {
   filterCharacterStatsByTags,
   filterEnemyStatsByTags,
   filterStatValuesByTags,
-} from './filter-stats-by-tags';
+} from './filter-stats';
 
 describe('filterStatValuesByTags', () => {
   it('includes stats with matching tags', () => {

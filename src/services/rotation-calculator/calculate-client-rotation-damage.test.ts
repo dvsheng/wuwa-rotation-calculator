@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Character } from '@/schemas/character';
 import { EchoMainStatOption, EchoSubstatOption } from '@/schemas/echo';
@@ -6,7 +6,9 @@ import type { Enemy } from '@/schemas/enemy';
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import type { Team } from '@/schemas/team';
 import { calculateRotationHandler } from '@/services/rotation-calculator/calculate-client-rotation-damage';
-import { Attribute, CharacterStat, Tag } from '@/types';
+import { Attribute, CharacterStat, EnemyStat, NegativeStatus, Tag } from '@/types';
+
+import * as enrichRotationData from './client-input-adapter/enrich-rotation-data';
 
 // Use vi.hoisted to define mocks used in vi.mock
 const { mockGetEntityByHakushinId } = vi.hoisted(() => ({
@@ -317,6 +319,115 @@ describe('calculateRotation', () => {
       expect(resultWithMispositionedModifier.totalDamage).toBe(
         resultWithoutModifier.totalDamage,
       );
+    });
+  });
+
+  describe('Aero Erosion negative-status damage', () => {
+    const AERO_CHARACTER_ID = 1601;
+    const AERO_EROSION_ATTACK_ID = 7_701_001;
+    const AERO_EROSION_STACK_MODIFIER_ID = 7_701_002;
+    const AERO_EROSION_AMP_MODIFIER_ID = 7_701_003;
+
+    beforeEach(() => {
+      vi.spyOn(enrichRotationData, 'createGameDataEnricher').mockResolvedValue({
+        enrichAttack: (attack) => ({
+          ...attack,
+          id: AERO_EROSION_ATTACK_ID,
+          name: 'Aero Erosion',
+          parentName: 'Negative Status',
+          originType: 'Inherent Skill',
+          scalingStat: NegativeStatus.AERO_EROSION,
+          attribute: Attribute.AERO,
+          motionValues: [0],
+          tags: [Tag.ALL, Attribute.AERO, NegativeStatus.AERO_EROSION],
+        }),
+        enrichModifier: (modifier) => {
+          if (modifier.id === AERO_EROSION_STACK_MODIFIER_ID) {
+            return {
+              ...modifier,
+              name: 'Aero Erosion Stacks',
+              originType: 'Inherent Skill',
+              parentName: 'Negative Status',
+              target: 'enemy',
+              modifiedStats: [
+                { stat: EnemyStat.AERO_EROSION, value: 9, tags: [Tag.ALL] },
+              ],
+            };
+          }
+          return {
+            ...modifier,
+            name: 'Aero Erosion Damage Amplify',
+            originType: 'Inherent Skill',
+            parentName: 'Negative Status',
+            target: 'team',
+            modifiedStats: [
+              {
+                stat: CharacterStat.DAMAGE_AMPLIFICATION,
+                value: 1,
+                tags: [Tag.AERO_EROSION],
+              },
+            ],
+          };
+        },
+        getPermanentStatsForCharacter: () => [],
+      });
+    });
+
+    it('deals approximately 28,471 total damage with 9 Aero Erosion stacks and +100% amp', async () => {
+      const team: Team = [
+        createTestCharacter(AERO_CHARACTER_ID),
+        createTestCharacter(1304),
+        createTestCharacter(1505),
+      ];
+      const enemy: Enemy = {
+        ...createTestEnemy(),
+        level: 100,
+        resistances: {
+          ...createTestEnemy().resistances,
+          [Attribute.AERO]: 10,
+        },
+      };
+
+      const attack: AttackInstance = {
+        instanceId: 'attack-instance-1',
+        id: AERO_EROSION_ATTACK_ID,
+        characterId: AERO_CHARACTER_ID,
+      };
+      const erosionStacks: ModifierInstance = {
+        instanceId: 'modifier-instance-erosion-stacks',
+        id: AERO_EROSION_STACK_MODIFIER_ID,
+        characterId: AERO_CHARACTER_ID,
+        x: 0,
+        y: 0,
+        w: 1,
+        h: 1,
+      };
+      const erosionAmp: ModifierInstance = {
+        instanceId: 'modifier-instance-erosion-amp',
+        id: AERO_EROSION_AMP_MODIFIER_ID,
+        characterId: AERO_CHARACTER_ID,
+        x: 0,
+        y: 0,
+        w: 1,
+        h: 1,
+      };
+
+      const result = await calculateRotationHandler(
+        team,
+        enemy,
+        [attack],
+        [erosionStacks, erosionAmp],
+      );
+
+      expect(result.damageDetails[0].resolvedStats.enemy.aeroErosion).toBe(9);
+      expect(result.damageDetails[0].resolvedStats.character.damageAmplify).toBe(1);
+      expect(result.totalDamage).toBeCloseTo(28_471, 0);
+      expect(result.damageInstances).toHaveLength(1);
+      expect(result.damageInstances[0]).toBeCloseTo(28_471, 0);
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
     });
   });
 

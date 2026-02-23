@@ -23,6 +23,12 @@ describe('calculateDamage', () => {
       baseResistance: 0.1,
       resistanceReduction: 0,
       defenseReduction: 0,
+      spectroFrazzle: 0,
+      aeroErosion: 0,
+      fusionBurst: 0,
+      glacioChafe: 0,
+      havocBane: 0,
+      electroFlare: 0,
     },
     skill: {
       motionValue: 1,

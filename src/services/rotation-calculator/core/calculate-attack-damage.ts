@@ -1,9 +1,10 @@
 import { clamp, sum } from 'es-toolkit/math';
 
+import { isNegativeStatusAbilityAttribute } from '@/types';
 import type { CharacterDamageInstance, Enemy, Team } from '@/types';
 
 import { calculateDamage } from '../damage-calculator';
-import type { CalculateDamageProperties } from '../damage-calculator/calculate-damage.types';
+import { calculateNegativeStatusDamage } from '../damage-calculator/calculate-negative-status-damage';
 
 import { calculateAbilityAttributeValue, sumStatValues } from './calculate-stat-total';
 import { createRuntimeStatResolver } from './resolve-runtime-stat-values';
@@ -25,6 +26,12 @@ export const calculateAttackDamage = (
     baseResistance: sumStatValues(resolvedEnemy.stats.baseResistance),
     resistanceReduction: sumStatValues(resolvedEnemy.stats.resistanceReduction),
     defenseReduction: sumStatValues(resolvedEnemy.stats.defenseReduction),
+    spectroFrazzle: sumStatValues(resolvedEnemy.stats.spectroFrazzle),
+    aeroErosion: sumStatValues(resolvedEnemy.stats.aeroErosion),
+    fusionBurst: sumStatValues(resolvedEnemy.stats.fusionBurst),
+    glacioChafe: sumStatValues(resolvedEnemy.stats.glacioChafe),
+    havocBane: sumStatValues(resolvedEnemy.stats.havocBane),
+    electroFlare: sumStatValues(resolvedEnemy.stats.electroFlare),
   };
   const calculateDamageCharacterProperties = {
     level: character.level,
@@ -42,14 +49,34 @@ export const calculateAttackDamage = (
     criticalDamage: sumStatValues(resolvedCharacter.stats.criticalDamage),
     damageBonusFinal: sumStatValues(resolvedCharacter.stats.finalDamageBonus),
   };
-  const totalMotionValue = sum(instance.motionValues);
-  const calculateDamageProperties: CalculateDamageProperties = {
+
+  const baseCalculateDamageProperties = {
     character: calculateDamageCharacterProperties,
     enemy: calculateDamageEnemyProperties,
-    skill: { motionValue: totalMotionValue },
   };
-  return {
-    result: calculateDamage(calculateDamageProperties),
-    inputs: calculateDamageProperties,
-  };
+  if (isNegativeStatusAbilityAttribute(instance.scalingStat)) {
+    const negativeStatus = instance.scalingStat;
+    const calculateDamageProperties = {
+      ...baseCalculateDamageProperties,
+      skill: {
+        negativeStatus,
+      },
+    };
+    return {
+      result: calculateNegativeStatusDamage(calculateDamageProperties),
+      inputs: calculateDamageProperties,
+    };
+  } else {
+    const totalMotionValue = sum(instance.motionValues);
+    const calculateDamageProperties = {
+      ...baseCalculateDamageProperties,
+      skill: {
+        motionValue: totalMotionValue,
+      },
+    };
+    return {
+      result: calculateDamage(calculateDamageProperties),
+      inputs: calculateDamageProperties,
+    };
+  }
 };

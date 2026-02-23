@@ -1,8 +1,14 @@
 import { intersection } from 'es-toolkit/array';
 import { mapValues } from 'es-toolkit/object';
 
-import { Tag } from '@/types';
-import type { Character, CharacterStats, Enemy, EnemyStats } from '@/types';
+import { NEGATIVE_STATUS_TO_ATTRIBUTE, Tag } from '@/types';
+import type {
+  Character,
+  CharacterStats,
+  Enemy,
+  EnemyStats,
+  NegativeStatus,
+} from '@/types';
 
 /**
  * Filters stat values in a stats object to only include those matching the given tags.
@@ -27,6 +33,30 @@ export function filterStatValuesByTags<T extends CharacterStats | EnemyStats>(
     });
   }) as T;
 }
+
+export const filterCharacterStatsByNegativeStatus = (
+  character: Character,
+  negativeStatus: NegativeStatus,
+) => {
+  const stats = mapValues(character.stats, (statValues) => {
+    if (!Array.isArray(statValues)) return statValues;
+    return statValues.filter((stat) => {
+      return intersection([negativeStatus], stat.tags).length > 0;
+    });
+  });
+  return {
+    ...character,
+    stats,
+  };
+};
+
+export const filterEnemyStatsByNegativeStatus = (
+  enemy: Enemy,
+  negativeStatus: NegativeStatus,
+) => {
+  const attribute = NEGATIVE_STATUS_TO_ATTRIBUTE[negativeStatus];
+  return filterEnemyStatsByTags(enemy, [attribute, negativeStatus]);
+};
 
 /**
  * Filters a character's stats to only include those matching the given tags.

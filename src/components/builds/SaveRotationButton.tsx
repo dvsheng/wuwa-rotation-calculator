@@ -3,7 +3,7 @@ import { ChevronDown, Save } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { SaveRotationDialog } from '@/components/library/SaveRotationDialog';
+import { SaveRotationDialog } from '@/components/builds/SaveRotationDialog';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,

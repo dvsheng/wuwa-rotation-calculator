@@ -1,3 +1,4 @@
+import { AssetIcon } from '@/components/common/AssetIcon';
 import { GameImage } from '@/components/common/GameImage';
 import type { FilterConfig } from '@/components/common/SelectionDialog';
 import { SelectionDialog } from '@/components/common/SelectionDialog';
@@ -7,8 +8,6 @@ import { cn } from '@/lib/utils';
 import { EntityType } from '@/services/game-data';
 import type { ListEchoesResponseItem } from '@/services/game-data';
 import { useStore } from '@/store';
-
-import { AssetIcon } from '../common/AssetIcon';
 
 interface PrimaryEchoSelectorProperties {
   index: number;

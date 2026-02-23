@@ -4,7 +4,7 @@ import { ArrowLeft, Database } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { sortOriginsByAttackOrder } from '@/components/rotation/constants';
+import { sortOriginsByAttackOrder } from '@/components/rotation-builder/constants';
 import {
   Accordion,
   AccordionContent,

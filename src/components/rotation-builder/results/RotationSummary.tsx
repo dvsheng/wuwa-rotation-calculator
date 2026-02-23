@@ -2,7 +2,7 @@ import { Play } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { SaveRotationButton } from '@/components/library/SaveRotationButton';
+import { SaveRotationButton } from '@/components/builds/SaveRotationButton';
 import { Button } from '@/components/ui/button';
 import { Row } from '@/components/ui/layout';
 import { useRotationCalculation } from '@/hooks/useRotationCalculation';

@@ -1,3 +1,4 @@
+import { AssetIcon } from '@/components/common/AssetIcon';
 import { GameImage } from '@/components/common/GameImage';
 import { SelectionDialog } from '@/components/common/SelectionDialog';
 import type { FilterConfig } from '@/components/common/SelectionDialog';
@@ -15,8 +16,6 @@ import { EntityType } from '@/services/game-data';
 import type { ListWeaponsResponseItem } from '@/services/game-data';
 import { useStore } from '@/store';
 import { WeaponType } from '@/types';
-
-import { AssetIcon } from '../common/AssetIcon';
 
 interface WeaponSelectorProperties {
   index: number;

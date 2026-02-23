@@ -1,5 +1,6 @@
 import { Plus, Trash2 } from 'lucide-react';
 
+import { AssetIcon } from '@/components/common/AssetIcon';
 import { SearchableSelect } from '@/components/common/SearchableSelect';
 import { Button } from '@/components/ui/button';
 import { Row, Stack } from '@/components/ui/layout';
@@ -13,8 +14,6 @@ import {
 import { useEntityList } from '@/hooks/useEntityList';
 import { EntityType } from '@/services/game-data';
 import { useStore } from '@/store';
-
-import { AssetIcon } from '../common/AssetIcon';
 
 interface EchoSetSelectorProperties {
   index: number;

@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-import { LibraryContainer } from '@/components/library/LibraryContainer';
+import { LibraryContainer } from '@/components/builds/LibraryContainer';
 
 function BuildsPage() {
   return <LibraryContainer />;

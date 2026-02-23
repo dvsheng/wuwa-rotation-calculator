@@ -4,7 +4,10 @@ import {
   PaletteItem,
   PaletteLegend,
 } from '@/components/common/Palette';
-import { ATTACK_SKILL_ORDER, sortAttackOrigins } from '@/components/rotation/constants';
+import {
+  ATTACK_SKILL_ORDER,
+  sortAttackOrigins,
+} from '@/components/rotation-builder/constants';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
 import type { Capability } from '@/schemas/rotation';
 import type { AttackOriginType } from '@/services/game-data';

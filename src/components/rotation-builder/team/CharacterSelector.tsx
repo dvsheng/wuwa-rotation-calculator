@@ -1,7 +1,6 @@
 import { useShallow } from 'zustand/react/shallow';
 
 import { AssetIcon } from '@/components/common/AssetIcon';
-import { CharacterSelectionDialog } from '@/components/team/CharacterSelectionDialog';
 import { Row } from '@/components/ui/layout';
 import {
   Select,
@@ -11,6 +10,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useStore } from '@/store';
+
+import { CharacterSelectionDialog } from './CharacterSelectionDialog';
 
 interface CharacterSelectorProperties {
   index: number;

@@ -1,7 +1,7 @@
 import { Library } from 'lucide-react';
 
-import { SavedRotationCard } from '@/components/library/SavedRotationCard';
-import { SaveRotationDialog } from '@/components/library/SaveRotationDialog';
+import { SavedRotationCard } from '@/components/builds/SavedRotationCard';
+import { SaveRotationDialog } from '@/components/builds/SaveRotationDialog';
 import { useLibraryStore } from '@/store/libraryStore';
 
 export function LibraryContainer() {

@@ -1,11 +1,12 @@
-import { CharacterSelector } from '@/components/team/CharacterSelector';
-import { EchoPieceEditor } from '@/components/team/EchoPieceEditor';
-import { EchoSetSelector } from '@/components/team/EchoSetSelector';
-import { PrimaryEchoSelector } from '@/components/team/PrimaryEchoSelector';
-import { WeaponSelector } from '@/components/team/WeaponSelector';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Row, Stack } from '@/components/ui/layout';
 import { ECHO_PIECE_COUNT } from '@/schemas/echo';
+
+import { CharacterSelector } from './CharacterSelector';
+import { EchoPieceEditor } from './EchoPieceEditor';
+import { EchoSetSelector } from './EchoSetSelector';
+import { PrimaryEchoSelector } from './PrimaryEchoSelector';
+import { WeaponSelector } from './WeaponSelector';
 
 interface CharacterCardProperties {
   index: number;

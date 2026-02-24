@@ -75,7 +75,7 @@ export const BuffPalette = ({
               <PaletteItem
                 key={buff.id}
                 text={buff.name}
-                hoverText={buff.description}
+                capability={buff}
                 legendLabel={TARGET_LABELS[buff.target]}
                 onDragStart={
                   onDragBuff ? (event) => onDragBuff(buff, event) : undefined

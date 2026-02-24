@@ -11,9 +11,11 @@ import type { ReactNode } from 'react';
 import { badgePillVariants } from '@/components/ui/badge-pill';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Text } from '@/components/ui/typography';
+import type { DetailedAttack, DetailedModifier } from '@/hooks/useTeamDetails';
 import { cn } from '@/lib/utils';
+
+import { CapabilityTooltip } from './CapabilityTooltip';
 
 // Context for legend filtering
 interface PaletteContextValue {
@@ -131,8 +133,8 @@ PaletteGroup.displayName = 'PaletteGroup';
 
 // PaletteItem component
 export interface PaletteItemProperties {
+  capability: DetailedAttack | DetailedModifier;
   text?: string;
-  hoverText?: string;
   onClick?: () => void;
   onDragStart?: (event: React.DragEvent<HTMLElement>) => void;
   children?: ReactNode;
@@ -142,7 +144,7 @@ export interface PaletteItemProperties {
 
 export const PaletteItem = ({
   text,
-  hoverText,
+  capability,
   onClick,
   onDragStart,
   children,
@@ -151,38 +153,21 @@ export const PaletteItem = ({
 }: PaletteItemProperties) => {
   const isDraggable = onDragStart !== undefined;
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          draggable={isDraggable}
-          onDragStart={onDragStart}
-          onClick={onClick}
-          className={cn(
-            badgePillVariants({
-              interaction: isDraggable ? 'draggable' : onClick ? 'clickable' : 'static',
-            }),
-            className,
-          )}
-        >
-          {text || children}
-        </Button>
-      </TooltipTrigger>
-      {hoverText && (
-        <TooltipContent side="right" className="max-w-75 p-3">
-          <div className="flex flex-col gap-1.5">
-            <Text
-              variant="tiny"
-              className="primary-foreground font-bold tracking-wider uppercase"
-            >
-              {text}
-            </Text>
-            <div className="muted-foreground border-border border-t pt-1.5 text-xs leading-relaxed">
-              {hoverText}
-            </div>
-          </div>
-        </TooltipContent>
-      )}
-    </Tooltip>
+    <CapabilityTooltip capability={capability}>
+      <Button
+        draggable={isDraggable}
+        onDragStart={onDragStart}
+        onClick={onClick}
+        className={cn(
+          badgePillVariants({
+            interaction: isDraggable ? 'draggable' : onClick ? 'clickable' : 'static',
+          }),
+          className,
+        )}
+      >
+        {text || children}
+      </Button>
+    </CapabilityTooltip>
   );
 };
 

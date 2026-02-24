@@ -3,6 +3,7 @@ import { AlertTriangle, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { ActivatableDialog } from '@/components/common/ActivatableDialog';
+import { CapabilityTooltip } from '@/components/common/CapabilityTooltip';
 import { ParameterConfigurationForm } from '@/components/common/ParameterConfigurationForm';
 import { Button } from '@/components/ui/button';
 import { DialogContent, DialogTrigger } from '@/components/ui/dialog';
@@ -98,75 +99,77 @@ export const BuffCanvasItem = ({
       isDialogClickable={isBuffConfigurable && isDialogClickable}
       onOpenChange={onOpenChange}
     >
-      <DialogTrigger asChild>
-        <div
-          className={cn(
-            'relative flex h-full flex-row items-center gap-2 overflow-hidden rounded-lg border px-2 py-1 transition-colors',
-            itemClassName,
-          )}
-        >
-          {/* Background overlay segments */}
-          {segments.map((segment, index) => (
-            <div
-              key={index}
-              className="pointer-events-none absolute inset-y-0 z-0 rounded-md bg-blue-100"
-              style={{
-                left: `${segment.start}%`,
-                width: `${segment.width}%`,
-              }}
-            />
-          ))}
-
-          {/* Character icon */}
-          {characterIconUrl && (
-            <div className="border-border relative z-10 flex aspect-square h-8 shrink-0 items-center justify-center overflow-hidden rounded-full border bg-zinc-800">
-              <img
-                src={characterIconUrl}
-                alt={buff.characterName}
-                className="h-full w-full object-cover"
-              />
-            </div>
-          )}
-
-          {/* Capability icon */}
-          {iconUrl && (
-            <div className="border-border relative z-10 flex aspect-square h-8 shrink-0 items-center justify-center rounded-md border bg-zinc-700">
-              <img
-                src={iconUrl}
-                alt={buff.name}
-                className="h-full w-full object-contain p-0.5"
-              />
-            </div>
-          )}
-
-          {/* Buff name */}
-          <Text className="relative z-10 line-clamp-2 min-w-0 flex-1 text-left text-xs leading-tight">
-            {buff.name}
-          </Text>
-
-          {/* Warning indicator */}
-          {shouldShowWarning && (
-            <AlertTriangle
-              data-testid="alert-triangle"
-              className="relative z-10 h-5 w-5 shrink-0 text-amber-500"
-            />
-          )}
-
-          {/* Delete button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive relative z-10 h-6 w-6 shrink-0"
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={(event) => {
-              event.stopPropagation();
-              onRemove(buff.instanceId);
-            }}
+      <CapabilityTooltip capability={buff}>
+        <DialogTrigger asChild>
+          <div
+            className={cn(
+              'relative flex h-full flex-row items-center gap-2 overflow-hidden rounded-lg border px-2 py-1 transition-colors',
+              itemClassName,
+            )}
           >
-            <Trash2 className="h-3 w-3" />
-          </Button>
-        </div>
-      </DialogTrigger>
+            {/* Background overlay segments */}
+            {segments.map((segment, index) => (
+              <div
+                key={index}
+                className="pointer-events-none absolute inset-y-0 z-0 rounded-md bg-blue-100"
+                style={{
+                  left: `${segment.start}%`,
+                  width: `${segment.width}%`,
+                }}
+              />
+            ))}
+
+            {/* Character icon */}
+            {characterIconUrl && (
+              <div className="border-border relative z-10 flex aspect-square h-8 shrink-0 items-center justify-center overflow-hidden rounded-full border bg-zinc-800">
+                <img
+                  src={characterIconUrl}
+                  alt={buff.characterName}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            )}
+
+            {/* Capability icon */}
+            {iconUrl && (
+              <div className="border-border relative z-10 flex aspect-square h-8 shrink-0 items-center justify-center rounded-md border bg-zinc-700">
+                <img
+                  src={iconUrl}
+                  alt={buff.name}
+                  className="h-full w-full object-contain p-0.5"
+                />
+              </div>
+            )}
+
+            {/* Buff name */}
+            <Text className="relative z-10 line-clamp-2 min-w-0 flex-1 text-left text-xs leading-tight">
+              {buff.name}
+            </Text>
+
+            {/* Warning indicator */}
+            {shouldShowWarning && (
+              <AlertTriangle
+                data-testid="alert-triangle"
+                className="relative z-10 h-5 w-5 shrink-0 text-amber-500"
+              />
+            )}
+
+            {/* Delete button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive relative z-10 h-6 w-6 shrink-0"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+                onRemove(buff.instanceId);
+              }}
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </div>
+        </DialogTrigger>
+      </CapabilityTooltip>
 
       <DialogContent className="flex max-h-screen flex-col sm:max-w-lg">
         <ParameterConfigurationForm

@@ -55,7 +55,7 @@ export const AttackPalette = ({
               <PaletteItem
                 key={attack.id}
                 text={attack.name}
-                hoverText={attack.description}
+                capability={attack}
                 legendLabel={attack.originType}
                 onDragStart={
                   onDragAttack ? (event) => onDragAttack(attack, event) : undefined

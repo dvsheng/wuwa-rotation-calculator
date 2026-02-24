@@ -51,7 +51,7 @@ export const RotationSummary = () => {
               size="sm"
               onClick={handleClick}
               disabled={isFetching}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20 font-bold shadow-lg"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20 shadow-lg"
             >
               <Play className="mr-2 h-4 w-4 fill-current" />
               {isFetching ? 'Calculating...' : 'Calculate Rotation Damage'}

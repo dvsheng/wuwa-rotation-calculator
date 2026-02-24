@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Heading } from '@/components/ui/typography';
 import { EnemySchema } from '@/schemas/enemy';
 import { useStore } from '@/store';
 import { Attribute } from '@/types';
@@ -40,7 +41,7 @@ export const EnemyContainer = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Enemy Stats
+            <Heading> Enemy Stats </Heading>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -80,9 +81,7 @@ export const EnemyContainer = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Attribute</TableHead>
-                      <TableHead className="w-[180px] text-right">
-                        Resistance (%)
-                      </TableHead>
+                      <TableHead className="w-44 text-right">Resistance (%)</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -92,9 +91,7 @@ export const EnemyContainer = () => {
                         name={`resistances.${attribute}`}
                         children={(field) => (
                           <TableRow>
-                            <TableCell className="font-medium capitalize">
-                              {attribute}
-                            </TableCell>
+                            <TableCell className="capitalize">{attribute}</TableCell>
                             <TableCell className="space-y-1 text-right">
                               <Input
                                 id={field.name}

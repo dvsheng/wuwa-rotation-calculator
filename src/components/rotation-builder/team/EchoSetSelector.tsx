@@ -3,7 +3,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { AssetIcon } from '@/components/common/AssetIcon';
 import { SearchableSelect } from '@/components/common/SearchableSelect';
 import { Button } from '@/components/ui/button';
-import { Row, Stack } from '@/components/ui/layout';
+import { Row } from '@/components/ui/layout';
 import {
   Select,
   SelectContent,
@@ -52,72 +52,68 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
   };
 
   return (
-    <Stack spacing="sm">
-      <Stack spacing="sm">
-        {selectedEchoSets.map((set, setIndex) => {
-          const selectedSetConfig = echoSetList.find((s) => s.id === set.id);
-          const availableTiers = selectedSetConfig?.tiers || [2, 5];
-          return (
-            <Row key={setIndex} className="selector-row">
-              <AssetIcon name="guord" className="selector-icon" />
-              <div className="selector-main">
-                <SearchableSelect
-                  items={echoSetList}
-                  value={selectedSetConfig?.id}
-                  onItemClick={(item) => handleUpdateSet(setIndex, item.id)}
-                  placeholder="Select echo set"
-                  className="w-full"
-                />
-              </div>
+    <>
+      {selectedEchoSets.map((set, setIndex) => {
+        const selectedSetConfig = echoSetList.find((s) => s.id === set.id);
+        const availableTiers = selectedSetConfig?.tiers || [2, 5];
+        return (
+          <Row key={setIndex} className="selector-row">
+            <AssetIcon name="guord" className="selector-icon" />
+            <div className="selector-main">
+              <SearchableSelect
+                items={echoSetList}
+                value={selectedSetConfig?.id}
+                onItemClick={(item) => handleUpdateSet(setIndex, item.id)}
+                placeholder="Select echo set"
+              />
+            </div>
 
-              <div className="selector-secondary">
-                {set.id && (
-                  <Select
-                    value={String(set.requirement)}
-                    onValueChange={(value) =>
-                      setEchoSetRequirement(index, setIndex, value)
-                    }
-                  >
-                    <SelectTrigger className="h-9 w-full px-2">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableTiers.map((tier) => (
-                        <SelectItem key={tier} value={String(tier)}>
-                          {tier}-Pc
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
+            {set.id && (
+              <Select
+                value={String(set.requirement)}
+                onValueChange={(value) => setEchoSetRequirement(index, setIndex, value)}
+              >
+                <SelectTrigger className="selector-secondary">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableTiers.map((tier) => (
+                    <SelectItem key={tier} value={String(tier)}>
+                      {tier}-Pc
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
 
-              {selectedEchoSets.length > 1 &&
-                (setIndex === 1 || selectedEchoSets[1]?.id) && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-destructive h-8 w-8"
-                    onClick={() => handleRemoveSet(setIndex)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-            </Row>
-          );
-        })}
+            {selectedEchoSets.length > 1 &&
+              (setIndex === 1 || selectedEchoSets[1]?.id) && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground hover:text-destructive h-8 w-8"
+                  onClick={() => handleRemoveSet(setIndex)}
+                >
+                  <Trash2 />
+                </Button>
+              )}
+          </Row>
+        );
+      })}
 
-        {selectedEchoSets.length < 2 && (
+      {selectedEchoSets.length < 2 && (
+        <Row className="selector-row">
+          <div className="selector-icon"></div>
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 w-fit gap-1 text-[10px]"
             onClick={handleAddSet}
+            className="text-muted-foreground"
           >
             <Plus className="h-3 w-3" /> Add Echo Set Bonus
           </Button>
-        )}
-      </Stack>
-    </Stack>
+        </Row>
+      )}
+    </>
   );
 };

@@ -57,7 +57,7 @@ export const RotationResultDisplay = ({
         accessorKey: 'index',
         header: () => <div className="w-10 text-center">#</div>,
         cell: ({ row }) => (
-          <div className="text-muted-foreground w-10 text-center font-mono text-xs">
+          <div className="text-muted-foreground w-10 text-center text-xs">
             {row.original.index + 1}
           </div>
         ),
@@ -66,7 +66,7 @@ export const RotationResultDisplay = ({
         accessorKey: 'characterName',
         header: 'Character',
         cell: ({ row }) => (
-          <div className="text-primary/80 font-semibold">
+          <div className="text-foreground">
             {row.original.attack?.characterName ?? 'Unknown'}
           </div>
         ),
@@ -79,10 +79,8 @@ export const RotationResultDisplay = ({
           if (!attack)
             return <div className="text-muted-foreground italic">Removed</div>;
           return (
-            <div className="max-w-[300px] truncate pr-2">
-              <Text variant="small" className="font-medium">
-                {attack.parentName}
-              </Text>
+            <div className="max-w-72 truncate pr-2">
+              <Text variant="small">{attack.parentName}</Text>
               <Text variant="tiny" className="text-muted-foreground truncate">
                 {attack.name}
               </Text>
@@ -94,7 +92,7 @@ export const RotationResultDisplay = ({
         accessorKey: 'damage',
         header: () => <div className="text-right">Average Damage</div>,
         cell: ({ row }) => (
-          <div className="text-right font-mono font-bold">
+          <div className="text-right">
             {Math.round(row.original.damage).toLocaleString()}
           </div>
         ),
@@ -119,7 +117,7 @@ export const RotationResultDisplay = ({
                   <div className="border-b border-white/10 bg-zinc-800/50 p-3">
                     <Text
                       variant="tiny"
-                      className="font-bold tracking-wider text-zinc-300 uppercase"
+                      className="font-semibold tracking-wider text-zinc-300 uppercase"
                     >
                       Calculation Snapshot
                     </Text>
@@ -127,7 +125,7 @@ export const RotationResultDisplay = ({
                       {detail.instance.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="rounded bg-zinc-700/50 px-1.5 py-0.5 text-[10px] text-zinc-400"
+                          className="rounded bg-zinc-700/50 px-1.5 py-0.5 text-xs text-zinc-400"
                         >
                           {tag}
                         </span>
@@ -135,18 +133,18 @@ export const RotationResultDisplay = ({
                     </div>
                   </div>
 
-                  <ScrollArea className="max-h-[500px] p-3">
+                  <ScrollArea className="max-h-96 p-3">
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <Text
                           variant="tiny"
-                          className="font-bold text-amber-500 uppercase"
+                          className="font-semibold text-amber-500 uppercase"
                         >
                           Skill
                         </Text>
-                        <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px]">
+                        <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
                           <span className="text-zinc-400">Motion Value</span>
-                          <span className="text-right font-mono font-medium text-zinc-100">
+                          <span className="text-right font-mono text-zinc-100">
                             {detail.resolvedStats.skill.motionValue
                               ? `${(100 * detail.resolvedStats.skill.motionValue).toFixed(2)}%`
                               : detail.resolvedStats.skill.negativeStatus}
@@ -157,18 +155,18 @@ export const RotationResultDisplay = ({
                       <div className="space-y-2">
                         <Text
                           variant="tiny"
-                          className="font-bold text-blue-400 uppercase"
+                          className="font-semibold text-blue-400 uppercase"
                         >
                           Character Stats
                         </Text>
-                        <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px]">
+                        <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
                           {Object.entries(detail.resolvedStats.character).map(
                             ([key, value]) => (
                               <Fragment key={key}>
                                 <span className="text-zinc-400 capitalize">
                                   {key.replaceAll(/([A-Z])/g, ' $1').trim()}
                                 </span>
-                                <span className="text-right font-mono font-medium text-zinc-100">
+                                <span className="text-right font-mono text-zinc-100">
                                   {[
                                     'level',
                                     'abilityAttributeValue',
@@ -186,18 +184,18 @@ export const RotationResultDisplay = ({
                       <div className="space-y-2">
                         <Text
                           variant="tiny"
-                          className="font-bold text-red-400 uppercase"
+                          className="font-semibold text-red-400 uppercase"
                         >
                           Enemy Stats
                         </Text>
-                        <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px]">
+                        <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
                           {Object.entries(detail.resolvedStats.enemy).map(
                             ([key, value]) => (
                               <Fragment key={key}>
                                 <span className="text-zinc-400 capitalize">
                                   {key.replaceAll(/([A-Z])/g, ' $1').trim()}
                                 </span>
-                                <span className="text-right font-mono font-medium text-zinc-100">
+                                <span className="text-right font-mono text-zinc-100">
                                   {key === 'level'
                                     ? Math.round(value).toLocaleString()
                                     : `${(value * 100).toFixed(1)}%`}
@@ -226,7 +224,7 @@ export const RotationResultDisplay = ({
           <div className="mb-2 flex items-center gap-3 rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-amber-500">
             <AlertCircle className="h-5 w-5 shrink-0" />
             <div className="flex-1">
-              <Text variant="small" className="font-semibold text-amber-500">
+              <Text variant="small" className="text-amber-500">
                 Outdated Result
               </Text>
               <Text variant="tiny" className="text-amber-500/80">
@@ -240,7 +238,7 @@ export const RotationResultDisplay = ({
           <div>
             <Text
               variant="small"
-              className="text-muted-foreground font-bold tracking-wider uppercase"
+              className="text-muted-foreground font-semibold tracking-wider uppercase"
             >
               Total Rotation Damage
             </Text>
@@ -258,7 +256,7 @@ export const RotationResultDisplay = ({
             scrollArea: 'max-h-[400px]',
             header: 'bg-muted/50 sticky top-0 z-10',
             headerRow: 'hover:bg-transparent',
-            headerCell: 'text-[10px] font-bold tracking-wider uppercase',
+            headerCell: 'text-xs font-semibold tracking-wider uppercase',
             row: 'hover:bg-muted/30 transition-colors',
           }}
         />

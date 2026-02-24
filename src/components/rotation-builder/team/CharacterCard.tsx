@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Row, Stack } from '@/components/ui/layout';
+import { Stack } from '@/components/ui/layout';
 import { ECHO_PIECE_COUNT } from '@/schemas/echo';
 
 import { CharacterSelector } from './CharacterSelector';
@@ -14,19 +14,17 @@ interface CharacterCardProperties {
 
 export const CharacterCard = ({ index }: CharacterCardProperties) => {
   return (
-    <Card className="flex h-full flex-col shadow-lg">
-      <CardHeader className="bg-secondary/20 pb-2">
+    <Card>
+      <CardHeader>
         <Stack>
-          <Row className="w-full justify-between gap-2">
-            <CharacterSelector index={index} />
-          </Row>
+          <CharacterSelector index={index} />
           <WeaponSelector index={index} />
           <EchoSetSelector index={index} />
           <PrimaryEchoSelector index={index} />
         </Stack>
       </CardHeader>
-      <CardContent className="p-4">
-        <Stack className="mt-4">
+      <CardContent>
+        <Stack>
           {Array.from({ length: ECHO_PIECE_COUNT }, (_, echoIndex) => (
             <EchoPieceEditor
               key={echoIndex}

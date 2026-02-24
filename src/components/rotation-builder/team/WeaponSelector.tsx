@@ -69,17 +69,15 @@ export const WeaponSelector = ({ index }: WeaponSelectorProperties) => {
                 />
               </div>
               <div className="space-y-1">
-                <div className="max-w-[120px] truncate text-sm font-bold">
-                  {_weapon.name}
-                </div>
+                <div className="max-w-30 truncate text-sm">{_weapon.name}</div>
                 <span
                   className={cn(
-                    'rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase',
+                    'rounded-full px-1.5 py-0.5 text-xs uppercase',
                     _weapon.rarity === 5
-                      ? 'bg-yellow-500/10 text-yellow-600'
+                      ? 'text-foreground bg-yellow-500/10'
                       : _weapon.rarity === 4
-                        ? 'bg-purple-500/10 text-purple-600'
-                        : 'bg-blue-500/10 text-blue-600',
+                        ? 'text-foreground bg-purple-500/10'
+                        : 'text-foreground bg-blue-500/10',
                   )}
                 >
                   {_weapon.rarity}★
@@ -99,23 +97,21 @@ export const WeaponSelector = ({ index }: WeaponSelectorProperties) => {
           triggerClassName="h-9"
         />
       </div>
-      <div className="selector-secondary">
-        <Select
-          value={String(weapon.refine)}
-          onValueChange={(value) => setRefine(index, value)}
-        >
-          <SelectTrigger className="h-9 w-full px-2">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {[1, 2, 3, 4, 5].map((r) => (
-              <SelectItem key={r} value={String(r)}>
-                R{r}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <Select
+        value={String(weapon.refine)}
+        onValueChange={(value) => setRefine(index, value)}
+      >
+        <SelectTrigger className="selector-secondary">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {[1, 2, 3, 4, 5].map((r) => (
+            <SelectItem key={r} value={String(r)}>
+              R{r}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </Row>
   );
 };

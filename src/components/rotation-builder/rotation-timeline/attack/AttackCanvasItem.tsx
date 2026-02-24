@@ -49,7 +49,7 @@ export const AttackCanvasItem = ({
           {/* Index at top-left */}
           <Text
             variant="tiny"
-            className="text-muted-foreground absolute top-1 left-1.5 font-mono"
+            className="text-muted-foreground absolute top-1 left-1.5"
           >
             {index + 1}
           </Text>
@@ -64,7 +64,7 @@ export const AttackCanvasItem = ({
 
           {/* Character icon */}
           {characterIconUrl && (
-            <div className="border-border flex aspect-square w-full max-w-[3.5rem] flex-shrink-0 items-center justify-center overflow-hidden rounded-full border bg-zinc-800">
+            <div className="border-border flex aspect-square w-full max-w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border bg-zinc-800">
               <img
                 src={characterIconUrl}
                 alt={attack.characterName}
@@ -75,7 +75,7 @@ export const AttackCanvasItem = ({
 
           {/* Capability icon */}
           {iconUrl && (
-            <div className="border-border mt-4 flex aspect-square w-full max-w-[4rem] flex-shrink items-center justify-center rounded-md border bg-zinc-700">
+            <div className="border-border mt-4 flex aspect-square w-full max-w-16 items-center justify-center rounded-md border bg-zinc-700">
               <img
                 src={iconUrl}
                 alt={attack.name}
@@ -85,7 +85,7 @@ export const AttackCanvasItem = ({
           )}
 
           {/* Attack name */}
-          <Text className="mt-4 line-clamp-3 w-full flex-shrink-[2] text-center text-xs leading-tight font-medium">
+          <Text className="mt-4 line-clamp-3 w-full text-center text-xs leading-tight">
             {attack.name}
           </Text>
 
@@ -105,7 +105,7 @@ export const AttackCanvasItem = ({
         </div>
       </DialogTrigger>
 
-      <DialogContent className="flex max-h-[90vh] flex-col sm:max-w-[520px]">
+      <DialogContent className="flex max-h-screen flex-col sm:max-w-lg">
         <ParameterConfigurationForm
           title={attack.name}
           description={attack.description}

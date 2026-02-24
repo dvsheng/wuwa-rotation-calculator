@@ -72,7 +72,6 @@ export const SelectionDialog = <T extends { id: number; name: string }>({
   renderItem,
   getItemStyle,
   sortFn,
-  gridCols = { default: 2, md: 3 },
 }: SelectionDialogProperties<T>) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -123,17 +122,6 @@ export const SelectionDialog = <T extends { id: number; name: string }>({
     (values) => values.size > 0,
   );
 
-  // Build grid class name
-  const gridClassName = cn(
-    'grid gap-2 p-2',
-    gridCols.default === 2 && 'grid-cols-2',
-    gridCols.default === 3 && 'grid-cols-3',
-    gridCols.default === 4 && 'grid-cols-4',
-    gridCols.md === 2 && 'md:grid-cols-2',
-    gridCols.md === 3 && 'md:grid-cols-3',
-    gridCols.md === 4 && 'md:grid-cols-4',
-  );
-
   return (
     <>
       <Button
@@ -149,7 +137,6 @@ export const SelectionDialog = <T extends { id: number; name: string }>({
         onOpenChange={setIsOpen}
         title={title}
         description={`Select from ${items.length} options`}
-        className="max-w-2xl"
       >
         <CommandInput
           placeholder={searchPlaceholder}
@@ -215,10 +202,10 @@ export const SelectionDialog = <T extends { id: number; name: string }>({
           </div>
         )}
 
-        <CommandList className="max-h-[60vh]">
+        <CommandList className="overflow-y-auto">
           <CommandEmpty>No items found matching your filters.</CommandEmpty>
           <CommandGroup>
-            <div className={gridClassName}>
+            <div className="grid grid-cols-3 gap-3">
               {sortedItems.map((item) => (
                 <CommandItem
                   key={item.id}

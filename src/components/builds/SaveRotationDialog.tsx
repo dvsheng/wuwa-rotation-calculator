@@ -86,7 +86,7 @@ export function SaveRotationDialog({
       }}
     >
       {resolvedTrigger && <DialogTrigger asChild>{resolvedTrigger}</DialogTrigger>}
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-106.25">
         <DialogHeader>
           <DialogTitle>Save Rotation</DialogTitle>
           <DialogDescription>

@@ -168,7 +168,7 @@ export const PaletteItem = ({
         </Button>
       </TooltipTrigger>
       {hoverText && (
-        <TooltipContent side="right" className="max-w-[300px] p-3">
+        <TooltipContent side="right" className="max-w-75 p-3">
           <div className="flex flex-col gap-1.5">
             <Text
               variant="tiny"
@@ -176,7 +176,7 @@ export const PaletteItem = ({
             >
               {text}
             </Text>
-            <div className="muted-foreground border-border border-t pt-1.5 text-[10px] leading-relaxed">
+            <div className="muted-foreground border-border border-t pt-1.5 text-xs leading-relaxed">
               {hoverText}
             </div>
           </div>

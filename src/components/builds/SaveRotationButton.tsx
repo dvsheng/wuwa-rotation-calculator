@@ -125,7 +125,7 @@ export function SaveRotationButton() {
       />
 
       <Dialog open={isUpdateDialogOpen} onOpenChange={setIsUpdateDialogOpen}>
-        <DialogContent className="sm:max-w-[520px]">
+        <DialogContent className="sm:max-w-130">
           <DialogHeader>
             <DialogTitle>Update Existing Rotation</DialogTitle>
             <DialogDescription>

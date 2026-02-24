@@ -22,10 +22,10 @@ import { useStore } from '@/store';
 import { TARGET_COLORS } from './BuffPalette';
 
 /** Classes for self buffs with segments (border + text, background handled by segments) */
-const SELF_BASE_CLASSES = 'border-blue-400 text-black bg-transparent';
+const SELF_BASE_CLASSES = 'border-blue-400 text-foreground bg-transparent';
 
 /** Classes for fully misaligned self buffs (outline only) */
-const SELF_MISALIGNED_CLASSES = 'border-blue-400 bg-transparent text-black';
+const SELF_MISALIGNED_CLASSES = 'border-blue-400 bg-transparent text-foreground';
 
 interface BuffCanvasItemProperties {
   buff: DetailedModifierInstance;
@@ -140,7 +140,7 @@ export const BuffCanvasItem = ({
           )}
 
           {/* Buff name */}
-          <Text className="relative z-10 line-clamp-2 min-w-0 flex-1 text-left text-xs leading-tight font-medium">
+          <Text className="relative z-10 line-clamp-2 min-w-0 flex-1 text-left text-xs leading-tight">
             {buff.name}
           </Text>
 
@@ -168,7 +168,7 @@ export const BuffCanvasItem = ({
         </div>
       </DialogTrigger>
 
-      <DialogContent className="flex max-h-[90vh] flex-col sm:max-w-[520px]">
+      <DialogContent className="flex max-h-screen flex-col sm:max-w-lg">
         <ParameterConfigurationForm
           title={buff.name}
           description={buff.description}

@@ -47,11 +47,11 @@ export const RotationBuilder = () => {
   };
 
   return (
-    <Section className="min-h-0 flex-1">
+    <Section className="flex h-full min-h-0 w-full flex-1 flex-col">
       {/* Main Card */}
-      <Card className="gap-0 overflow-hidden py-0">
+      <Card className="min-h-0 flex-1 gap-0 overflow-hidden py-0">
         <CardHeader className="px-4 py-3">
-          <Row className="items-center justify-between">
+          <Row className="justify-between">
             <CardTitle className="text-base tracking-wider uppercase">
               Rotation Builder
             </CardTitle>
@@ -74,7 +74,7 @@ export const RotationBuilder = () => {
         />
 
         {/* Shared scroll container for both canvases */}
-        <div className="flex min-h-0 flex-1 flex-col overflow-x-auto">
+        <div className="flex min-h-0 flex-1 flex-col overflow-x-auto overflow-y-hidden">
           <AttackCanvas onDropAttack={handleDropAttack} />
           <BuffCanvas onDropBuff={handleDropBuff} />
         </div>

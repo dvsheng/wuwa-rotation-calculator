@@ -21,13 +21,13 @@ const ATTRIBUTES = Object.values(Attribute).filter(
 );
 const RARITIES = [5, 4];
 const ATTRIBUTE_FILTER_CLASSNAMES: Record<Attribute, string> = {
-  fusion: 'border-rose-500/70 text-rose-600',
-  glacio: 'border-sky-500/70 text-sky-600',
-  aero: 'border-emerald-500/70 text-emerald-600',
-  electro: 'border-violet-500/70 text-violet-600',
-  spectro: 'border-amber-500/70 text-amber-600',
-  havoc: 'border-fuchsia-600/70 text-fuchsia-700',
-  physical: 'border-zinc-500/70 text-zinc-600',
+  fusion: 'border-rose-500/70 text-foreground',
+  glacio: 'border-sky-500/70 text-foreground',
+  aero: 'border-emerald-500/70 text-foreground',
+  electro: 'border-violet-500/70 text-foreground',
+  spectro: 'border-amber-500/70 text-foreground',
+  havoc: 'border-fuchsia-600/70 text-foreground',
+  physical: 'border-zinc-500/70 text-foreground',
 };
 
 export const CharacterSelectionDialog = ({
@@ -80,19 +80,19 @@ export const CharacterSelectionDialog = ({
             />
           </div>
           <div className="space-y-1">
-            <div className="max-w-[120px] truncate text-sm font-bold">{char.name}</div>
+            <div className="max-w-30 truncate text-sm">{char.name}</div>
             <div className="flex items-center justify-center gap-1">
               <span
                 className={cn(
-                  'rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase',
+                  'rounded-full px-1.5 py-0.5 text-xs uppercase',
                   char.rarity === 5
-                    ? 'bg-yellow-500/10 text-yellow-600'
-                    : 'bg-purple-500/10 text-purple-600',
+                    ? 'text-foreground bg-yellow-500/10'
+                    : 'text-foreground bg-purple-500/10',
                 )}
               >
                 {char.rarity}★
               </span>
-              <span className="text-muted-foreground text-[10px] capitalize">
+              <span className="text-muted-foreground text-xs capitalize">
                 {char.attribute}
               </span>
             </div>

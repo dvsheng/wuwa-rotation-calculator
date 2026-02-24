@@ -149,26 +149,26 @@ code {
 /* Team selector row styles */
 @layer components {
   .selector-row {
-    @apply flex w-full items-center gap-2 px-1;
-  }
-
-  .selector-icon {
-    @apply w-5 shrink-0 brightness-0 dark:invert;
+    @apply h-9 shrink-0 gap-2 px-1;
   }
 
   .selector-main {
-    @apply min-w-0 flex-1;
+    @apply w-full truncate;
+  }
+
+  .selector-icon {
+    @apply w-8;
   }
 
   .selector-secondary {
-    @apply w-16 shrink-0;
+    @apply w-30;
   }
 }
 
 /* Canvas component styles for rotation builder sections */
 @layer components {
   .canvas-section {
-    @apply flex min-h-0 min-w-fit flex-col border-t;
+    @apply flex min-h-0 min-w-full flex-col border-t;
   }
 
   .canvas-header {

@@ -28,7 +28,7 @@ export const CharacterSelector = ({ index }: CharacterSelectorProperties) => {
   const setSequence = useStore((state) => state.setSequence);
 
   return (
-    <Row className="selector-row flex-1 overflow-hidden">
+    <Row className="selector-row">
       <AssetIcon name="role" className="selector-icon" />
       <div className="selector-main">
         <CharacterSelectionDialog
@@ -37,23 +37,21 @@ export const CharacterSelector = ({ index }: CharacterSelectorProperties) => {
           excludeIds={otherSelectedCharacterIds}
         />
       </div>
-      <div className="selector-secondary">
-        <Select
-          value={String(character.sequence)}
-          onValueChange={(value) => setSequence(index, Number.parseInt(value))}
-        >
-          <SelectTrigger className="h-9 w-full px-2">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {[0, 1, 2, 3, 4, 5, 6].map((s) => (
-              <SelectItem key={s} value={String(s)}>
-                S{s}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <Select
+        value={String(character.sequence)}
+        onValueChange={(value) => setSequence(index, Number.parseInt(value))}
+      >
+        <SelectTrigger className="selector-secondary">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {[0, 1, 2, 3, 4, 5, 6].map((s) => (
+            <SelectItem key={s} value={String(s)}>
+              S{s}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </Row>
   );
 };

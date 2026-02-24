@@ -95,10 +95,10 @@ export const BuffPalette = ({
  * Color classes for each modifier target type.
  */
 export const TARGET_COLORS: Record<Target, string> = {
-  [Target.SELF]: 'border-blue-400 bg-blue-100 text-black',
-  [Target.TEAM]: 'border-green-400 bg-green-100 text-black',
-  [Target.ACTIVE_CHARACTER]: 'border-amber-400 bg-amber-100 text-black',
-  [Target.ENEMY]: 'border-red-400 bg-red-100 text-black',
+  [Target.SELF]: 'border-blue-400 bg-blue-100 text-foreground',
+  [Target.TEAM]: 'border-green-400 bg-green-100 text-foreground',
+  [Target.ACTIVE_CHARACTER]: 'border-amber-400 bg-amber-100 text-foreground',
+  [Target.ENEMY]: 'border-red-400 bg-red-100 text-foreground',
 };
 
 const TARGET_LABELS: Record<Target, string> = {

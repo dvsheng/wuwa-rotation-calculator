@@ -62,10 +62,7 @@ export const AttackCanvas = ({ onDropAttack }: AttackCanvasProperties) => {
         <Text className="text-sm font-semibold tracking-wider uppercase">
           Attack Sequence
         </Text>
-        <Text
-          variant="tiny"
-          className="text-muted-foreground bg-card sticky right-4 font-medium"
-        >
+        <Text variant="tiny" className="text-muted-foreground bg-card sticky right-4">
           {attacks.length} {attacks.length === 1 ? 'Attack' : 'Attacks'}
         </Text>
       </div>
@@ -77,7 +74,7 @@ export const AttackCanvas = ({ onDropAttack }: AttackCanvasProperties) => {
         >
           {attacks.length === 0 && (
             <div className="canvas-empty-state">
-              <Text className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
+              <Text className="text-muted-foreground text-xs tracking-wider uppercase">
                 Drag attacks here to build your rotation
               </Text>
             </div>

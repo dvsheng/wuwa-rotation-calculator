@@ -25,7 +25,7 @@ export const RotationBuilderContainer = () => {
       defaultValue="team"
       value={selectedTab}
       onValueChange={setSelectedTab}
-      className="w-full space-y-6"
+      className="h-full min-h-0 w-full flex-1 space-y-6 overflow-y-auto pr-1"
     >
       <div className="mx-auto flex w-full max-w-6xl flex-nowrap items-center gap-3">
         <div className="min-w-0 flex-1 space-y-2">
@@ -60,7 +60,7 @@ export const RotationBuilderContainer = () => {
 
         {isCalculateButtonVisible && (
           <div className="ml-auto flex shrink-0 items-center gap-2">
-            <ButtonGroup className="[&_[data-role='save-main']]:rounded-r-none [&_[data-role='save-menu']]:rounded-l-none [&_[data-role='save-menu']]:border-l [&_[data-role='save-menu']]:border-l-white/30">
+            <ButtonGroup>
               <SaveRotationButton />
               <CalculateRotationButton onCalculated={() => setShowResult(true)} />
             </ButtonGroup>
@@ -76,13 +76,13 @@ export const RotationBuilderContainer = () => {
 
       <TabsContent
         value="team"
-        className="m-0 mx-auto w-full max-w-[94rem] space-y-4 focus-visible:outline-none"
+        className="m-0 mx-auto w-full max-w-screen-2xl focus-visible:outline-none"
       >
         <Suspense
           fallback={
             <div className="text-muted-foreground animate-in fade-in flex flex-col items-center justify-center p-20 duration-500">
               <Loader2 className="text-primary mb-4 h-10 w-10 animate-spin" />
-              <p className="text-lg font-medium">Loading character data...</p>
+              <p className="text-lg">Loading character data...</p>
             </div>
           }
         >
@@ -92,16 +92,18 @@ export const RotationBuilderContainer = () => {
 
       <TabsContent
         value="enemy"
-        className="m-0 mx-auto w-full max-w-6xl space-y-4 focus-visible:outline-none"
+        className="m-0 mx-auto w-full max-w-6xl focus-visible:outline-none"
       >
         <EnemyContainer />
       </TabsContent>
 
       <TabsContent
         value="rotation"
-        className="m-0 space-y-4 focus-visible:outline-none"
+        className="m-0 flex min-h-0 w-full flex-col focus-visible:outline-none"
       >
-        <RotationBuilder />
+        <div className="flex h-full min-h-0 w-full flex-1 flex-col">
+          <RotationBuilder />
+        </div>
       </TabsContent>
     </Tabs>
   );

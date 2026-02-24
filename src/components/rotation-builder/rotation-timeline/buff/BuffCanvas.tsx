@@ -51,10 +51,7 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
         <Text className="text-sm font-semibold tracking-wider uppercase">
           Buff Timeline
         </Text>
-        <Text
-          variant="tiny"
-          className="text-muted-foreground bg-card sticky right-4 font-medium"
-        >
+        <Text variant="tiny" className="text-muted-foreground bg-card sticky right-4">
           {buffs.length} {buffs.length === 1 ? 'Buff' : 'Buffs'}
         </Text>
       </div>
@@ -66,7 +63,7 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
         >
           {buffs.length === 0 && (
             <div className="canvas-empty-state">
-              <Text className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
+              <Text className="text-muted-foreground text-xs tracking-wider uppercase">
                 Drag buffs here to align with attacks
               </Text>
             </div>

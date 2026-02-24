@@ -5,6 +5,7 @@ import prettierPlugin from 'eslint-plugin-prettier';
 import reactCompiler from 'eslint-plugin-react-compiler';
 import reactHooks from 'eslint-plugin-react-hooks';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
+import tailwindcss from 'eslint-plugin-tailwindcss';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 
 export default [
@@ -17,6 +18,7 @@ export default [
       'src/routeTree.gen.ts',
       'src/lib/utils.ts',
       'scripts/seed-database.ts',
+      'src/components/ui/**',
     ],
   },
 
@@ -27,12 +29,21 @@ export default [
       'react-compiler': reactCompiler,
       'react-hooks': reactHooks,
       'simple-import-sort': simpleImportSort,
+      tailwindcss,
       prettier: prettierPlugin,
+    },
+    settings: {
+      tailwindcss: {
+        config: false,
+        callees: ['cn', 'clsx', 'cva'],
+      },
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
       'prettier/prettier': 'error',
       'react-compiler/react-compiler': 'error',
+      'tailwindcss/no-arbitrary-value': 'error',
+      'tailwindcss/no-unnecessary-arbitrary-value': 'error',
       'import/order': [
         'error',
         {

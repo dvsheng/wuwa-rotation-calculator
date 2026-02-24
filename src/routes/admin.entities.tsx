@@ -78,7 +78,7 @@ function AdminEntitiesPage() {
         </p>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-[220px_1fr]">
+      <div className="grid gap-3">
         <Select
           value={searchParameters.entityType ?? 'all'}
           onValueChange={(value) => {

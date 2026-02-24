@@ -183,67 +183,6 @@ describe('Palette', () => {
       // No error should occur - this test passes if no exception is thrown
     });
 
-    describe('add button', () => {
-      it('renders add button when onAdd is provided', () => {
-        const onAdd = vi.fn();
-        render(
-          <Palette>
-            <PaletteGroup name="Test">
-              <PaletteItem text="Test Item" onAdd={onAdd} />
-            </PaletteGroup>
-          </Palette>,
-        );
-
-        expect(screen.getByRole('button')).toBeInTheDocument();
-      });
-
-      it('does not render add button when onAdd is not provided', () => {
-        render(
-          <Palette>
-            <PaletteGroup name="Test">
-              <PaletteItem text="Test Item" />
-            </PaletteGroup>
-          </Palette>,
-        );
-
-        expect(screen.queryByRole('button')).not.toBeInTheDocument();
-      });
-
-      it('calls onAdd when add button is clicked', async () => {
-        const user = userEvent.setup();
-        const onAdd = vi.fn();
-        render(
-          <Palette>
-            <PaletteGroup name="Test">
-              <PaletteItem text="Test Item" onAdd={onAdd} />
-            </PaletteGroup>
-          </Palette>,
-        );
-
-        await user.click(screen.getByRole('button'));
-
-        expect(onAdd).toHaveBeenCalledTimes(1);
-      });
-
-      it('does not trigger onClick when add button is clicked', async () => {
-        const user = userEvent.setup();
-        const onAdd = vi.fn();
-        const onClick = vi.fn();
-        render(
-          <Palette>
-            <PaletteGroup name="Test">
-              <PaletteItem text="Test Item" onAdd={onAdd} onClick={onClick} />
-            </PaletteGroup>
-          </Palette>,
-        );
-
-        await user.click(screen.getByRole('button'));
-
-        expect(onAdd).toHaveBeenCalledTimes(1);
-        expect(onClick).not.toHaveBeenCalled();
-      });
-    });
-
     describe('drag behavior', () => {
       it('calls onDragStart when the item is dragged', () => {
         const onDragStart = vi.fn();
@@ -255,7 +194,7 @@ describe('Palette', () => {
           </Palette>,
         );
 
-        const item = screen.getByText('Test Item').closest('div[draggable]');
+        const item = screen.getByText('Test Item').closest('button[draggable]');
         fireEvent.dragStart(item!);
 
         expect(onDragStart).toHaveBeenCalledTimes(1);
@@ -271,7 +210,7 @@ describe('Palette', () => {
           </Palette>,
         );
 
-        const item = screen.getByText('Test Item').closest('div[draggable]');
+        const item = screen.getByText('Test Item').closest('button[draggable]');
         expect(item).toHaveAttribute('draggable', 'true');
       });
 

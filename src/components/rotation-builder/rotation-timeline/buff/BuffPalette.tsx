@@ -11,7 +11,7 @@ import { Target } from '@/services/game-data';
 
 export interface BuffPaletteProperties {
   onClickBuff?: (buff: Capability) => void;
-  onDragBuff?: (buff: Capability, event: React.DragEvent) => void;
+  onDragBuff?: (buff: Capability, event: React.DragEvent<HTMLElement>) => void;
   className?: string;
 }
 
@@ -27,6 +27,13 @@ const SKILL_ORDER: Array<OriginType> = [
   'Echo',
   'Weapon',
   'Echo Set',
+];
+
+const TARGET_ORDER: Array<Target> = [
+  Target.SELF,
+  Target.TEAM,
+  Target.ACTIVE_CHARACTER,
+  Target.ENEMY,
 ];
 
 export const BuffPalette = ({
@@ -58,10 +65,13 @@ export const BuffPalette = ({
         const allBuffs = [...orderedSkills, ...remainingSkills].flatMap(
           (skillName) => bySkill[skillName] ?? [],
         );
+        const sortedBuffs = allBuffs.toSorted(
+          (a, b) => TARGET_ORDER.indexOf(a.target) - TARGET_ORDER.indexOf(b.target),
+        );
 
         return (
           <PaletteGroup key={charName} name={charName}>
-            {allBuffs.map((buff) => (
+            {sortedBuffs.map((buff) => (
               <PaletteItem
                 key={buff.id}
                 text={buff.name}

@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react';
+import { Button } from '@base-ui/react';
 import React, {
   Children,
   createContext,
@@ -8,8 +8,9 @@ import React, {
 } from 'react';
 import type { ReactNode } from 'react';
 
-import { Button } from '@/components/ui/button';
+import { badgePillVariants } from '@/components/ui/badge-pill';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Text } from '@/components/ui/typography';
 import { cn } from '@/lib/utils';
@@ -17,7 +18,7 @@ import { cn } from '@/lib/utils';
 // Context for legend filtering
 interface PaletteContextValue {
   activeFilters: Set<string>;
-  toggleFilter: (label: string) => void;
+  setFilters: (labels: Array<string>) => void;
   clearFilters: () => void;
 }
 
@@ -47,14 +48,8 @@ const PaletteRoot = ({
 }: PaletteProperties) => {
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set());
 
-  const toggleFilter = (label: string) => {
-    const newFilters = new Set(activeFilters);
-    if (newFilters.has(label)) {
-      newFilters.delete(label);
-    } else {
-      newFilters.add(label);
-    }
-    setActiveFilters(newFilters);
+  const setFilters = (labels: Array<string>) => {
+    setActiveFilters(new Set(labels));
   };
 
   const clearFilters = () => {
@@ -63,7 +58,7 @@ const PaletteRoot = ({
 
   const contextValue: PaletteContextValue = {
     activeFilters,
-    toggleFilter,
+    setFilters,
     clearFilters,
   };
 
@@ -138,9 +133,8 @@ PaletteGroup.displayName = 'PaletteGroup';
 export interface PaletteItemProperties {
   text?: string;
   hoverText?: string;
-  onAdd?: () => void;
   onClick?: () => void;
-  onDragStart?: (event: React.DragEvent<HTMLDivElement>) => void;
+  onDragStart?: (event: React.DragEvent<HTMLElement>) => void;
   children?: ReactNode;
   legendLabel?: string;
   className?: string;
@@ -149,51 +143,29 @@ export interface PaletteItemProperties {
 export const PaletteItem = ({
   text,
   hoverText,
-  onAdd,
   onClick,
   onDragStart,
   children,
   legendLabel: _legendLabel,
   className,
 }: PaletteItemProperties) => {
-  // If using children-based composition (no text prop)
-  if (!text && children) {
-    return <div className={className}>{children}</div>;
-  }
-
-  // Original PaletteItem behavior with text prop
   const isDraggable = onDragStart !== undefined;
-
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div
+        <Button
           draggable={isDraggable}
           onDragStart={onDragStart}
           onClick={onClick}
           className={cn(
-            'inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium transition-all hover:brightness-95',
-            isDraggable && 'cursor-grab active:cursor-grabbing',
-            onClick && 'cursor-pointer',
+            badgePillVariants({
+              interaction: isDraggable ? 'draggable' : onClick ? 'clickable' : 'static',
+            }),
             className,
           )}
         >
           {text || children}
-          {onAdd && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hover:bg-primary hover:text-primary-foreground -mr-1 ml-1 h-5 w-5 cursor-pointer transition-colors"
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={(event) => {
-                event.stopPropagation();
-                onAdd();
-              }}
-            >
-              <Plus className="h-3 w-3" />
-            </Button>
-          )}
-        </div>
+        </Button>
       </TooltipTrigger>
       {hoverText && (
         <TooltipContent side="right" className="max-w-[300px] p-3">
@@ -228,7 +200,7 @@ export interface PaletteLegendProperties {
 }
 
 export const PaletteLegend = ({ items, className }: PaletteLegendProperties) => {
-  const { activeFilters, toggleFilter, clearFilters } = usePaletteContext();
+  const { activeFilters, setFilters, clearFilters } = usePaletteContext();
 
   if (items.length === 0) return;
 
@@ -247,25 +219,23 @@ export const PaletteLegend = ({ items, className }: PaletteLegendProperties) => 
           </button>
         )}
       </div>
-      <div className="flex flex-wrap gap-2">
-        {items.map((item) => {
-          const isActive = activeFilters.has(item.label);
-          return (
-            <button
-              key={item.label}
-              onClick={() => toggleFilter(item.label)}
-              className={cn(
-                'ring-primary/20 inline-flex cursor-pointer items-center rounded-md border px-3 py-1 text-sm font-medium transition-all hover:ring-2 hover:ring-offset-1 hover:brightness-95',
-                item.className,
-                activeFilters.size > 0 && !isActive ? 'opacity-30' : 'opacity-100',
-                isActive && 'ring-primary ring-2 ring-offset-1 brightness-95',
-              )}
-            >
-              {item.label}
-            </button>
-          );
-        })}
-      </div>
+      <ToggleGroup
+        type="multiple"
+        variant="outline"
+        className="w-full flex-wrap justify-start"
+        value={[...activeFilters]}
+        onValueChange={(values) => setFilters(values)}
+      >
+        {items.map((item) => (
+          <ToggleGroupItem
+            key={item.label}
+            value={item.label}
+            className={item.className}
+          >
+            {item.label}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
     </div>
   );
 };

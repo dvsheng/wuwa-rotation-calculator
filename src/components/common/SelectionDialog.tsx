@@ -2,7 +2,6 @@ import { Filter, X } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
 import { useState } from 'react';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   CommandDialog,
@@ -12,20 +11,20 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 
 export interface FilterOption {
   value: string | number;
   label: string;
   icon?: string;
-  color?: string;
+  className?: string;
 }
 
 export interface FilterConfig<T> {
   label: string;
   options: Array<FilterOption>;
   getValue: (item: T) => string | number | undefined;
-  renderBadge?: (option: FilterOption, isSelected: boolean) => ReactNode;
   defaultValue?: string | number;
 }
 
@@ -79,29 +78,30 @@ export const SelectionDialog = <T extends { id: number; name: string }>({
   const [searchTerm, setSearchTerm] = useState('');
 
   const getDefaultFilters = () => {
-    const defaults = new Map<number, string | number>();
+    const defaults = new Map<number, Set<string>>();
     for (const [index, filter] of filters.entries()) {
       if (filter.defaultValue !== undefined) {
-        defaults.set(index, filter.defaultValue);
+        defaults.set(index, new Set([String(filter.defaultValue)]));
       }
     }
     return defaults;
   };
 
   const [activeFilters, setActiveFilters] =
-    useState<Map<number, string | number>>(getDefaultFilters);
+    useState<Map<number, Set<string>>>(getDefaultFilters);
 
   const selectedItem = items.find((item) => item.id === value);
 
   // Multi-criteria filtering
   const filteredItems = items.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilters = [...activeFilters.entries()].every(
-      ([filterIndex, filterValue]) => {
-        const filter = filters[filterIndex];
-        return filter.getValue(item) === filterValue;
-      },
-    );
+    const matchesFilters = filters.every((filter, filterIndex) => {
+      const selectedValues = activeFilters.get(filterIndex);
+      if (!selectedValues || selectedValues.size === 0) return true;
+      const itemValue = filter.getValue(item);
+      if (itemValue === undefined) return false;
+      return selectedValues.has(String(itemValue));
+    });
     const isNotExcluded = !excludeIds.includes(item.id);
     return matchesSearch && matchesFilters && isNotExcluded;
   });
@@ -116,20 +116,12 @@ export const SelectionDialog = <T extends { id: number; name: string }>({
 
   const resetFilters = () => {
     setSearchTerm('');
-    setActiveFilters(getDefaultFilters());
+    setActiveFilters(new Map());
   };
 
-  const toggleFilter = (filterIndex: number, filterValue: string | number) => {
-    const newFilters = new Map(activeFilters);
-    if (newFilters.get(filterIndex) === filterValue) {
-      newFilters.delete(filterIndex);
-    } else {
-      newFilters.set(filterIndex, filterValue);
-    }
-    setActiveFilters(newFilters);
-  };
-
-  const hasActiveFilters = activeFilters.size > 0;
+  const hasActiveFilters = [...activeFilters.values()].some(
+    (values) => values.size > 0,
+  );
 
   // Build grid class name
   const gridClassName = cn(
@@ -174,34 +166,40 @@ export const SelectionDialog = <T extends { id: number; name: string }>({
             </div>
 
             {filters.map((filter, filterIndex) => (
-              <div key={filterIndex} className="flex gap-1">
-                {filter.options.map((option) => {
-                  const isSelected = activeFilters.get(filterIndex) === option.value;
-
-                  if (filter.renderBadge) {
-                    return (
-                      <div
-                        key={option.value}
-                        onClick={() => toggleFilter(filterIndex, option.value)}
-                        className="cursor-pointer"
-                      >
-                        {filter.renderBadge(option, isSelected)}
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <Badge
-                      key={option.value}
-                      variant={isSelected ? 'default' : 'outline'}
-                      className="cursor-pointer"
-                      onClick={() => toggleFilter(filterIndex, option.value)}
-                    >
-                      {option.label}
-                    </Badge>
-                  );
-                })}
-              </div>
+              <ToggleGroup
+                key={filterIndex}
+                type="multiple"
+                variant="outline"
+                value={[...(activeFilters.get(filterIndex) ?? new Set())]}
+                onValueChange={(values) => {
+                  setActiveFilters((previous) => {
+                    const next = new Map(previous);
+                    if (values.length === 0) {
+                      next.delete(filterIndex);
+                    } else {
+                      next.set(filterIndex, new Set(values));
+                    }
+                    return next;
+                  });
+                }}
+              >
+                {filter.options.map((option) => (
+                  <ToggleGroupItem
+                    key={option.value}
+                    value={String(option.value)}
+                    className={cn('gap-1.5', option.className)}
+                  >
+                    {option.icon && (
+                      <img
+                        src={option.icon}
+                        alt={option.label}
+                        className="h-3.5 w-3.5"
+                      />
+                    )}
+                    <span className="capitalize">{option.label}</span>
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
             ))}
 
             {hasActiveFilters && (

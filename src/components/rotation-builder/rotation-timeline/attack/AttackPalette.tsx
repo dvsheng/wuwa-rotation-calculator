@@ -13,14 +13,12 @@ import type { Capability } from '@/schemas/rotation';
 import type { AttackOriginType } from '@/services/game-data';
 
 export interface AttackPaletteProperties {
-  onAddAttack?: (attack: Capability) => void;
   onClickAttack?: (attack: Capability) => void;
-  onDragAttack?: (attack: Capability, event: React.DragEvent) => void;
+  onDragAttack?: (attack: Capability, event: React.DragEvent<HTMLElement>) => void;
   className?: string;
 }
 
 export const AttackPalette = ({
-  onAddAttack,
   onClickAttack,
   onDragAttack,
   className,
@@ -62,7 +60,6 @@ export const AttackPalette = ({
                 onDragStart={
                   onDragAttack ? (event) => onDragAttack(attack, event) : undefined
                 }
-                onAdd={onAddAttack ? () => onAddAttack(attack) : undefined}
                 onClick={onClickAttack ? () => onClickAttack(attack) : undefined}
                 className={SKILL_COLORS[attack.originType]}
               />

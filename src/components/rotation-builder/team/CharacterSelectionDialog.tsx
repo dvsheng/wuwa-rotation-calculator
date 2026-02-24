@@ -1,7 +1,6 @@
 import { GameImage } from '@/components/common/GameImage';
 import { SelectionDialog } from '@/components/common/SelectionDialog';
 import type { FilterConfig } from '@/components/common/SelectionDialog';
-import { Badge } from '@/components/ui/badge';
 import { useEntityList } from '@/hooks/useEntityList';
 import { cn } from '@/lib/utils';
 import { EntityType } from '@/services/game-data';
@@ -17,8 +16,19 @@ interface CharacterSelectionDialogProperties {
   excludeIds?: Array<number>;
 }
 
-const ATTRIBUTES = Object.values(Attribute);
+const ATTRIBUTES = Object.values(Attribute).filter(
+  (attribute) => attribute !== Attribute.PHYSICAL,
+);
 const RARITIES = [5, 4];
+const ATTRIBUTE_FILTER_CLASSNAMES: Record<Attribute, string> = {
+  fusion: 'border-rose-500/70 text-rose-600',
+  glacio: 'border-sky-500/70 text-sky-600',
+  aero: 'border-emerald-500/70 text-emerald-600',
+  electro: 'border-violet-500/70 text-violet-600',
+  spectro: 'border-amber-500/70 text-amber-600',
+  havoc: 'border-fuchsia-600/70 text-fuchsia-700',
+  physical: 'border-zinc-500/70 text-zinc-600',
+};
 
 export const CharacterSelectionDialog = ({
   value,
@@ -34,28 +44,12 @@ export const CharacterSelectionDialog = ({
       value: attribute,
       label: attribute,
       icon: resolveImagePath('attribute', 'icon', attribute),
-      color: ATTRIBUTE_COLORS[attribute],
+      className: cn(
+        ATTRIBUTE_FILTER_CLASSNAMES[attribute],
+        '[&>span]:hidden [&>img]:h-5 [&>img]:w-5',
+      ),
     })),
     getValue: (char) => char.attribute,
-    renderBadge: (option, isSelected) => (
-      <Badge
-        variant={isSelected ? undefined : 'outline'}
-        className="cursor-pointer gap-1.5 transition-all"
-        style={{
-          backgroundColor: isSelected ? option.color : undefined,
-          borderColor: option.color,
-          color: isSelected ? 'white' : option.color,
-          transform: isSelected ? 'scale(1.05)' : 'scale(1)',
-        }}
-      >
-        <img
-          src={option.icon}
-          alt={option.label}
-          className={cn('h-3.5 w-3.5', !isSelected && 'brightness-100 contrast-125')}
-        />
-        <span className="capitalize">{option.label}</span>
-      </Badge>
-    ),
   };
 
   const rarityFilter: FilterConfig<ListCharactersResponseItem> = {

@@ -43,12 +43,7 @@ export const BuffPalette = ({
   }));
 
   return (
-    <Palette
-      emptyMessage="No buffs available"
-      className={className}
-      isCollapsible={true}
-      headerText="Buff Palette"
-    >
+    <Palette emptyMessage="No buffs available" className={className} headerText="Buffs">
       <PaletteLegend items={legend} />
 
       {Object.entries(byCharacter).map(([charName, charBuffs]) => {

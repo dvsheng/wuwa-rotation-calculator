@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import React, {
   Children,
   createContext,
@@ -9,11 +9,6 @@ import React, {
 import type { ReactNode } from 'react';
 
 import { Button } from '@/components/ui/button';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Text } from '@/components/ui/typography';
@@ -40,21 +35,16 @@ const usePaletteContext = () => {
 export interface PaletteProperties {
   children?: ReactNode;
   className?: string;
-  isCollapsible?: boolean;
   headerText?: string;
-  defaultOpen?: boolean;
   emptyMessage?: string;
 }
 
 const PaletteRoot = ({
   children,
   className,
-  isCollapsible = false,
   headerText,
-  defaultOpen = true,
   emptyMessage = 'No items available',
 }: PaletteProperties) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set());
 
   const toggleFilter = (label: string) => {
@@ -91,44 +81,17 @@ const PaletteRoot = ({
     </div>
   );
 
-  if (isCollapsible) {
-    return (
-      <PaletteContext.Provider value={contextValue}>
-        <div className={cn('bg-background border-border border', className)}>
-          <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-            <CollapsibleTrigger asChild>
-              <Button
-                variant="ghost"
-                className="flex w-full items-center justify-between px-4 py-2 hover:bg-transparent"
-              >
-                <Text className="text-sm font-semibold tracking-wider uppercase">
-                  {headerText}
-                </Text>
-                {isOpen ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="border-t">{content}</CollapsibleContent>
-          </Collapsible>
-        </div>
-      </PaletteContext.Provider>
-    );
-  }
-
   return (
     <PaletteContext.Provider value={contextValue}>
-      <div className={cn('bg-background border-border border', className)}>
+      <div className={cn('w-full', className)}>
         {headerText && (
-          <div className="border-border border-b px-4 py-2">
+          <div className="border-border border-t px-4 py-2">
             <Text className="text-sm font-semibold tracking-wider uppercase">
               {headerText}
             </Text>
           </div>
         )}
-        {content}
+        <div className="border-border border-t">{content}</div>
       </div>
     </PaletteContext.Provider>
   );

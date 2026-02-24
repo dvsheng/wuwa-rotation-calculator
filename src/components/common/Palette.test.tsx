@@ -65,61 +65,18 @@ describe('Palette', () => {
     });
   });
 
-  describe('collapsible behavior', () => {
-    it('renders collapsible when isCollapsible is true', () => {
+  describe('always-expanded behavior', () => {
+    it('keeps content visible', () => {
       render(
-        <Palette isCollapsible headerText="Collapsible Palette">
+        <Palette headerText="Palette">
           <PaletteGroup name="Test">
             <PaletteItem text="Item" />
           </PaletteGroup>
         </Palette>,
       );
 
-      expect(
-        screen.getByRole('button', { name: /Collapsible Palette/i }),
-      ).toBeInTheDocument();
-    });
-
-    it('is open by default when defaultOpen is true', () => {
-      render(
-        <Palette isCollapsible headerText="Palette" defaultOpen={true}>
-          <PaletteGroup name="Test">
-            <PaletteItem text="Item" />
-          </PaletteGroup>
-        </Palette>,
-      );
-
+      expect(screen.getByText('Palette')).toBeInTheDocument();
       expect(screen.getByText('Item')).toBeInTheDocument();
-    });
-
-    it('is closed by default when defaultOpen is false', () => {
-      render(
-        <Palette isCollapsible headerText="Palette" defaultOpen={false}>
-          <PaletteGroup name="Test">
-            <PaletteItem text="Item" />
-          </PaletteGroup>
-        </Palette>,
-      );
-
-      expect(screen.queryByText('Item')).not.toBeInTheDocument();
-    });
-
-    it('toggles open/closed when header is clicked', async () => {
-      const user = userEvent.setup();
-      render(
-        <Palette isCollapsible headerText="Palette" defaultOpen={true}>
-          <PaletteGroup name="Test">
-            <PaletteItem text="Item" />
-          </PaletteGroup>
-        </Palette>,
-      );
-
-      expect(screen.getByText('Item')).toBeInTheDocument();
-
-      await user.click(screen.getByRole('button', { name: /Palette/i }));
-
-      // After animation, item should not be visible
-      expect(screen.queryByText('Item')).not.toBeInTheDocument();
     });
   });
 

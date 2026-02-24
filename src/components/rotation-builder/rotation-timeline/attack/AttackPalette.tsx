@@ -37,8 +37,7 @@ export const AttackPalette = ({
     <Palette
       emptyMessage="No attacks available"
       className={className}
-      isCollapsible={true}
-      headerText="Attack Palette"
+      headerText="Attacks"
     >
       <PaletteLegend items={legend} />
 

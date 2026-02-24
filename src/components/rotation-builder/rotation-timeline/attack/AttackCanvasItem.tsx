@@ -64,7 +64,7 @@ export const AttackCanvasItem = ({
 
           {/* Character icon */}
           {characterIconUrl && (
-            <div className="border-border flex aspect-square w-full max-w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border bg-zinc-800">
+            <div className="border-border flex aspect-square w-full max-w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border bg-zinc-800">
               <img
                 src={characterIconUrl}
                 alt={attack.characterName}

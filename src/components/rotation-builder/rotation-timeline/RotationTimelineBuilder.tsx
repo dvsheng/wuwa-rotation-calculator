@@ -9,6 +9,7 @@ import { AttackCanvas } from './attack/AttackCanvas';
 import { AttackPalette } from './attack/AttackPalette';
 import { BuffCanvas } from './buff/BuffCanvas';
 import { BuffPalette } from './buff/BuffPalette';
+import { TimelinePanWrapper } from './TimelinePanWrapper';
 
 export const RotationBuilder = () => {
   const clearAll = useStore((state) => state.clearAll);
@@ -74,10 +75,10 @@ export const RotationBuilder = () => {
         />
 
         {/* Shared scroll container for both canvases */}
-        <div className="flex min-h-0 flex-1 flex-col overflow-x-auto overflow-y-hidden">
+        <TimelinePanWrapper className="min-h-0 flex-1">
           <AttackCanvas onDropAttack={handleDropAttack} />
           <BuffCanvas onDropBuff={handleDropBuff} />
-        </div>
+        </TimelinePanWrapper>
 
         <BuffPalette onClickBuff={handleAddBuff} onDragBuff={handleDragBuff} />
       </Card>

@@ -119,7 +119,7 @@ export const BuffCanvasItem = ({
 
           {/* Character icon */}
           {characterIconUrl && (
-            <div className="border-border relative z-10 flex aspect-square h-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border bg-zinc-800">
+            <div className="border-border relative z-10 flex aspect-square h-8 shrink-0 items-center justify-center overflow-hidden rounded-full border bg-zinc-800">
               <img
                 src={characterIconUrl}
                 alt={buff.characterName}
@@ -130,7 +130,7 @@ export const BuffCanvasItem = ({
 
           {/* Capability icon */}
           {iconUrl && (
-            <div className="border-border relative z-10 flex aspect-square h-8 flex-shrink-0 items-center justify-center rounded-md border bg-zinc-700">
+            <div className="border-border relative z-10 flex aspect-square h-8 shrink-0 items-center justify-center rounded-md border bg-zinc-700">
               <img
                 src={iconUrl}
                 alt={buff.name}
@@ -148,7 +148,7 @@ export const BuffCanvasItem = ({
           {shouldShowWarning && (
             <AlertTriangle
               data-testid="alert-triangle"
-              className="relative z-10 h-5 w-5 flex-shrink-0 text-amber-500"
+              className="relative z-10 h-5 w-5 shrink-0 text-amber-500"
             />
           )}
 
@@ -156,7 +156,7 @@ export const BuffCanvasItem = ({
           <Button
             variant="ghost"
             size="icon"
-            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive relative z-10 h-6 w-6 flex-shrink-0"
+            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive relative z-10 h-6 w-6 shrink-0"
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => {
               event.stopPropagation();

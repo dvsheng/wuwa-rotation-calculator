@@ -19,6 +19,8 @@ export default [
       'src/lib/utils.ts',
       'scripts/seed-database.ts',
       'src/components/ui/**',
+      'eslint.config.js',
+      'prettier.config.js',
     ],
   },
 

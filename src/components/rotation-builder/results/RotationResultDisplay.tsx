@@ -172,8 +172,8 @@ export const RotationResultDisplay = ({
                                     'abilityAttributeValue',
                                     'flatDamage',
                                   ].includes(key)
-                                    ? Math.round(value as number).toLocaleString()
-                                    : `${((value as number) * 100).toFixed(1)}%`}
+                                    ? Math.round(value).toLocaleString()
+                                    : `${(value * 100).toFixed(1)}%`}
                                 </span>
                               </Fragment>
                             ),

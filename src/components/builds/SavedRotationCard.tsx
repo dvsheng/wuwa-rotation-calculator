@@ -1,10 +1,11 @@
 import { useNavigate } from '@tanstack/react-router';
 import { format } from 'date-fns';
-import { Play, Save, Trash2 } from 'lucide-react';
+import { Play, Save } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { GameImage } from '@/components/common/GameImage';
+import { TrashButton } from '@/components/common/TrashButton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -95,15 +96,10 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
           </div>
           <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
             <DialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                className="text-destructive hover:text-destructive"
-                aria-label={`Delete rotation ${rotation.name}`}
-                title="Delete rotation"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <TrashButton
+                stopPropagation={false}
+                onRemove={() => setIsDeleteDialogOpen(true)}
+              />
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>

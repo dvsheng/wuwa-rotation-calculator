@@ -16,7 +16,6 @@ export function LibraryContainer() {
           <Library className="h-6 w-6" />
           <h2 className="text-2xl font-bold tracking-tight">Library</h2>
         </div>
-        <SaveRotationDialog />
       </div>
 
       {rotations.length === 0 ? (

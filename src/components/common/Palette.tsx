@@ -179,6 +179,15 @@ interface LegendItem {
   className: string;
 }
 
+const getSelectedColorClasses = (className: string) =>
+  className
+    .split(' ')
+    .filter((token) =>
+      ['bg-', 'text-', 'border-'].some((prefix) => token.startsWith(prefix)),
+    )
+    .map((token) => `data-[state=on]:${token}`)
+    .join(' ');
+
 export interface PaletteLegendProperties {
   items: Array<LegendItem>;
   className?: string;
@@ -190,15 +199,20 @@ export const PaletteLegend = ({ items, className }: PaletteLegendProperties) => 
   if (items.length === 0) return;
 
   return (
-    <div className={cn('flex flex-col gap-2 px-3 pb-3', className)}>
+    <div
+      className={cn(
+        'border-border/60 bg-muted/20 mx-3 my-2 flex flex-col gap-2 rounded-md border px-3 py-2',
+        className,
+      )}
+    >
       <div className="flex items-center justify-between">
-        <Text className="text-muted-foreground text-sm font-medium tracking-tight uppercase">
+        <Text className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
           Filter by:
         </Text>
         {activeFilters.size > 0 && (
           <button
             onClick={clearFilters}
-            className="text-muted-foreground hover:text-foreground text-sm font-medium underline underline-offset-2 transition-colors"
+            className="text-muted-foreground hover:text-foreground text-xs font-medium tracking-wide uppercase underline underline-offset-2 transition-colors"
           >
             Clear Filters
           </button>
@@ -206,7 +220,7 @@ export const PaletteLegend = ({ items, className }: PaletteLegendProperties) => 
       </div>
       <ToggleGroup
         type="multiple"
-        className="justify-start"
+        className="flex-wrap justify-start gap-1"
         value={[...activeFilters]}
         onValueChange={(values) => setFilters(values)}
       >
@@ -214,7 +228,12 @@ export const PaletteLegend = ({ items, className }: PaletteLegendProperties) => 
           <ToggleGroupItem
             key={item.label}
             value={item.label}
-            className={item.className}
+            className={cn(
+              'h-7 rounded-sm border border-transparent px-2 text-xs font-medium tracking-tight shadow-none transition-all',
+              'data-[state=on]:border-foreground/40 data-[state=on]:ring-foreground/35 data-[state=on]:font-semibold data-[state=on]:shadow-sm data-[state=on]:ring-2',
+              item.className,
+              getSelectedColorClasses(item.className),
+            )}
           >
             {item.label}
           </ToggleGroupItem>

@@ -1,11 +1,11 @@
 import { isNil } from 'es-toolkit/predicate';
-import { AlertTriangle, Trash2 } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 
 import { ActivatableDialog } from '@/components/common/ActivatableDialog';
 import { CapabilityTooltip } from '@/components/common/CapabilityTooltip';
 import { ParameterConfigurationForm } from '@/components/common/ParameterConfigurationForm';
-import { Button } from '@/components/ui/button';
+import { TrashButton } from '@/components/common/TrashButton';
 import { DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Text } from '@/components/ui/typography';
 import { useCapabilityIcon, useEntityIcon } from '@/hooks/useIcons';
@@ -155,18 +155,10 @@ export const BuffCanvasItem = ({
             )}
 
             {/* Delete button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive relative z-10 h-6 w-6 shrink-0"
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={(event) => {
-                event.stopPropagation();
-                onRemove(buff.instanceId);
-              }}
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
+            <TrashButton
+              className="relative z-10 shrink-0"
+              onRemove={() => onRemove(buff.instanceId)}
+            />
           </div>
         </DialogTrigger>
       </CapabilityTooltip>

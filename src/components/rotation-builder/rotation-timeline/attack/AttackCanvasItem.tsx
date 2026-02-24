@@ -1,11 +1,11 @@
 import { isNil } from 'es-toolkit/predicate';
-import { AlertTriangle, Trash2 } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 
 import { ActivatableDialog } from '@/components/common/ActivatableDialog';
 import { CapabilityTooltip } from '@/components/common/CapabilityTooltip';
 import { ParameterConfigurationForm } from '@/components/common/ParameterConfigurationForm';
-import { Button } from '@/components/ui/button';
+import { TrashButton } from '@/components/common/TrashButton';
 import { DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Text } from '@/components/ui/typography';
 import { useCapabilityIcon, useEntityIcon } from '@/hooks/useIcons';
@@ -90,18 +90,11 @@ export const AttackCanvasItem = ({
             </Text>
 
             {/* Delete button at bottom-center */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive absolute bottom-1 left-1/2 h-6 w-6 -translate-x-1/2"
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={(event) => {
-                event.stopPropagation();
-                onRemove(attack.instanceId);
-              }}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+            <TrashButton
+              className="absolute bottom-1 left-1/2 -translate-x-1/2"
+              onRemove={() => onRemove(attack.instanceId)}
+              stopPropagation={true}
+            />
           </div>
         </DialogTrigger>
       </CapabilityTooltip>

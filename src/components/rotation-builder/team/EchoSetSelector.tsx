@@ -1,7 +1,8 @@
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 import { AssetIcon } from '@/components/common/AssetIcon';
 import { SearchableSelect } from '@/components/common/SearchableSelect';
+import { TrashButton } from '@/components/common/TrashButton';
 import { Button } from '@/components/ui/button';
 import { Row } from '@/components/ui/layout';
 import {
@@ -88,14 +89,10 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
 
             {selectedEchoSets.length > 1 &&
               (setIndex === 1 || selectedEchoSets[1]?.id) && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-destructive h-8 w-8"
-                  onClick={() => handleRemoveSet(setIndex)}
-                >
-                  <Trash2 />
-                </Button>
+                <TrashButton
+                  className="size-8"
+                  onRemove={() => handleRemoveSet(setIndex)}
+                />
               )}
           </Row>
         );

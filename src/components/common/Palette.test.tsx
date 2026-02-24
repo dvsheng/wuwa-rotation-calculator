@@ -2,6 +2,8 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
+import type { DetailedAttack } from '@/hooks/useTeamDetails';
+
 import { Palette, PaletteGroup, PaletteItem, PaletteLegend } from './Palette';
 
 // Mock ResizeObserver for ScrollArea component
@@ -13,13 +15,23 @@ beforeAll(() => {
   };
 });
 
+const mockCapability = {
+  id: 1,
+  name: 'Mock Capability',
+  description: 'Mock description',
+  parentName: 'Mock parent',
+  parameters: [],
+  characterId: 1001,
+  characterName: 'Mock Character',
+} as unknown as DetailedAttack;
+
 describe('Palette', () => {
   describe('root component', () => {
     it('renders children', () => {
       render(
         <Palette>
           <PaletteGroup name="Test Group">
-            <PaletteItem text="Test Item" />
+            <PaletteItem capability={mockCapability} text="Test Item" />
           </PaletteGroup>
         </Palette>,
       );
@@ -32,7 +44,7 @@ describe('Palette', () => {
       render(
         <Palette headerText="My Palette">
           <PaletteGroup name="Test Group">
-            <PaletteItem text="Test Item" />
+            <PaletteItem capability={mockCapability} text="Test Item" />
           </PaletteGroup>
         </Palette>,
       );
@@ -56,7 +68,7 @@ describe('Palette', () => {
       const { container } = render(
         <Palette className="custom-class">
           <PaletteGroup name="Test">
-            <PaletteItem text="Item" />
+            <PaletteItem capability={mockCapability} text="Item" />
           </PaletteGroup>
         </Palette>,
       );
@@ -70,7 +82,7 @@ describe('Palette', () => {
       render(
         <Palette headerText="Palette">
           <PaletteGroup name="Test">
-            <PaletteItem text="Item" />
+            <PaletteItem capability={mockCapability} text="Item" />
           </PaletteGroup>
         </Palette>,
       );
@@ -85,7 +97,7 @@ describe('Palette', () => {
       render(
         <Palette>
           <PaletteGroup name="Characters">
-            <PaletteItem text="Item" />
+            <PaletteItem capability={mockCapability} text="Item" />
           </PaletteGroup>
         </Palette>,
       );
@@ -97,9 +109,9 @@ describe('Palette', () => {
       render(
         <Palette>
           <PaletteGroup name="Test">
-            <PaletteItem text="Item 1" />
-            <PaletteItem text="Item 2" />
-            <PaletteItem text="Item 3" />
+            <PaletteItem capability={mockCapability} text="Item 1" />
+            <PaletteItem capability={mockCapability} text="Item 2" />
+            <PaletteItem capability={mockCapability} text="Item 3" />
           </PaletteGroup>
         </Palette>,
       );
@@ -113,7 +125,7 @@ describe('Palette', () => {
       const { container } = render(
         <Palette>
           <PaletteGroup name="Test" className="custom-group">
-            <PaletteItem text="Item" />
+            <PaletteItem capability={mockCapability} text="Item" />
           </PaletteGroup>
         </Palette>,
       );
@@ -125,10 +137,10 @@ describe('Palette', () => {
       render(
         <Palette>
           <PaletteGroup name="Group 1">
-            <PaletteItem text="Item A" />
+            <PaletteItem capability={mockCapability} text="Item A" />
           </PaletteGroup>
           <PaletteGroup name="Group 2">
-            <PaletteItem text="Item B" />
+            <PaletteItem capability={mockCapability} text="Item B" />
           </PaletteGroup>
         </Palette>,
       );
@@ -145,7 +157,7 @@ describe('Palette', () => {
       render(
         <Palette>
           <PaletteGroup name="Test">
-            <PaletteItem text="Test Item" />
+            <PaletteItem capability={mockCapability} text="Test Item" />
           </PaletteGroup>
         </Palette>,
       );
@@ -159,7 +171,11 @@ describe('Palette', () => {
       render(
         <Palette>
           <PaletteGroup name="Test">
-            <PaletteItem text="Test Item" onClick={onClick} />
+            <PaletteItem
+              capability={mockCapability}
+              text="Test Item"
+              onClick={onClick}
+            />
           </PaletteGroup>
         </Palette>,
       );
@@ -174,7 +190,7 @@ describe('Palette', () => {
       render(
         <Palette>
           <PaletteGroup name="Test">
-            <PaletteItem text="Test Item" />
+            <PaletteItem capability={mockCapability} text="Test Item" />
           </PaletteGroup>
         </Palette>,
       );
@@ -189,7 +205,11 @@ describe('Palette', () => {
         render(
           <Palette>
             <PaletteGroup name="Test">
-              <PaletteItem text="Test Item" onDragStart={onDragStart} />
+              <PaletteItem
+                capability={mockCapability}
+                text="Test Item"
+                onDragStart={onDragStart}
+              />
             </PaletteGroup>
           </Palette>,
         );
@@ -205,7 +225,11 @@ describe('Palette', () => {
         render(
           <Palette>
             <PaletteGroup name="Test">
-              <PaletteItem text="Test Item" onDragStart={onDragStart} />
+              <PaletteItem
+                capability={mockCapability}
+                text="Test Item"
+                onDragStart={onDragStart}
+              />
             </PaletteGroup>
           </Palette>,
         );
@@ -218,7 +242,7 @@ describe('Palette', () => {
         render(
           <Palette>
             <PaletteGroup name="Test">
-              <PaletteItem text="Test Item" />
+              <PaletteItem capability={mockCapability} text="Test Item" />
             </PaletteGroup>
           </Palette>,
         );
@@ -229,24 +253,34 @@ describe('Palette', () => {
     });
 
     describe('tooltip', () => {
-      it('renders without error when hoverText is provided', () => {
+      it('renders without error when capability is provided', () => {
         expect(() =>
           render(
             <Palette>
               <PaletteGroup name="Test">
-                <PaletteItem text="Test Item" hoverText="Hover description" />
+                <PaletteItem capability={mockCapability} text="Test Item" />
               </PaletteGroup>
             </Palette>,
           ),
         ).not.toThrow();
       });
 
-      it('renders without error when hoverText is not provided', () => {
+      it('renders without error when description is absent', () => {
+        const capabilityWithoutDescription = {
+          ...mockCapability,
+          description: '',
+          parentName: '',
+          parameters: [],
+        } as unknown as DetailedAttack;
+
         expect(() =>
           render(
             <Palette>
               <PaletteGroup name="Test">
-                <PaletteItem text="Test Item" />
+                <PaletteItem
+                  capability={capabilityWithoutDescription}
+                  text="Test Item"
+                />
               </PaletteGroup>
             </Palette>,
           ),
@@ -260,7 +294,7 @@ describe('Palette', () => {
       render(
         <Palette>
           <PaletteGroup name="Test">
-            <PaletteItem>
+            <PaletteItem capability={mockCapability}>
               <div data-testid="custom-child">Custom Content</div>
             </PaletteItem>
           </PaletteGroup>
@@ -275,7 +309,7 @@ describe('Palette', () => {
       const { container } = render(
         <Palette>
           <PaletteGroup name="Test">
-            <PaletteItem className="custom-item">
+            <PaletteItem capability={mockCapability} className="custom-item">
               <div>Content</div>
             </PaletteItem>
           </PaletteGroup>
@@ -298,7 +332,7 @@ describe('Palette', () => {
         <Palette>
           <PaletteLegend items={legendItems} />
           <PaletteGroup name="Test">
-            <PaletteItem text="Item" />
+            <PaletteItem capability={mockCapability} text="Item" />
           </PaletteGroup>
         </Palette>,
       );
@@ -313,7 +347,7 @@ describe('Palette', () => {
         <Palette>
           <PaletteLegend items={legendItems} />
           <PaletteGroup name="Test">
-            <PaletteItem text="Item" />
+            <PaletteItem capability={mockCapability} text="Item" />
           </PaletteGroup>
         </Palette>,
       );
@@ -326,7 +360,7 @@ describe('Palette', () => {
         <Palette>
           <PaletteLegend items={[]} />
           <PaletteGroup name="Test">
-            <PaletteItem text="Item" />
+            <PaletteItem capability={mockCapability} text="Item" />
           </PaletteGroup>
         </Palette>,
       );
@@ -340,9 +374,21 @@ describe('Palette', () => {
         <Palette>
           <PaletteLegend items={legendItems} />
           <PaletteGroup name="Test">
-            <PaletteItem text="Fire Item" legendLabel="Fire" />
-            <PaletteItem text="Ice Item" legendLabel="Ice" />
-            <PaletteItem text="Wind Item" legendLabel="Wind" />
+            <PaletteItem
+              capability={mockCapability}
+              text="Fire Item"
+              legendLabel="Fire"
+            />
+            <PaletteItem
+              capability={mockCapability}
+              text="Ice Item"
+              legendLabel="Ice"
+            />
+            <PaletteItem
+              capability={mockCapability}
+              text="Wind Item"
+              legendLabel="Wind"
+            />
           </PaletteGroup>
         </Palette>,
       );
@@ -367,9 +413,21 @@ describe('Palette', () => {
         <Palette>
           <PaletteLegend items={legendItems} />
           <PaletteGroup name="Test">
-            <PaletteItem text="Fire Item" legendLabel="Fire" />
-            <PaletteItem text="Ice Item" legendLabel="Ice" />
-            <PaletteItem text="Wind Item" legendLabel="Wind" />
+            <PaletteItem
+              capability={mockCapability}
+              text="Fire Item"
+              legendLabel="Fire"
+            />
+            <PaletteItem
+              capability={mockCapability}
+              text="Ice Item"
+              legendLabel="Ice"
+            />
+            <PaletteItem
+              capability={mockCapability}
+              text="Wind Item"
+              legendLabel="Wind"
+            />
           </PaletteGroup>
         </Palette>,
       );
@@ -390,7 +448,11 @@ describe('Palette', () => {
         <Palette>
           <PaletteLegend items={legendItems} />
           <PaletteGroup name="Test">
-            <PaletteItem text="Fire Item" legendLabel="Fire" />
+            <PaletteItem
+              capability={mockCapability}
+              text="Fire Item"
+              legendLabel="Fire"
+            />
           </PaletteGroup>
         </Palette>,
       );
@@ -408,9 +470,21 @@ describe('Palette', () => {
         <Palette>
           <PaletteLegend items={legendItems} />
           <PaletteGroup name="Test">
-            <PaletteItem text="Fire Item" legendLabel="Fire" />
-            <PaletteItem text="Ice Item" legendLabel="Ice" />
-            <PaletteItem text="Wind Item" legendLabel="Wind" />
+            <PaletteItem
+              capability={mockCapability}
+              text="Fire Item"
+              legendLabel="Fire"
+            />
+            <PaletteItem
+              capability={mockCapability}
+              text="Ice Item"
+              legendLabel="Ice"
+            />
+            <PaletteItem
+              capability={mockCapability}
+              text="Wind Item"
+              legendLabel="Wind"
+            />
           </PaletteGroup>
         </Palette>,
       );
@@ -434,8 +508,16 @@ describe('Palette', () => {
         <Palette>
           <PaletteLegend items={legendItems} />
           <PaletteGroup name="Test">
-            <PaletteItem text="Fire Item" legendLabel="Fire" />
-            <PaletteItem text="Ice Item" legendLabel="Ice" />
+            <PaletteItem
+              capability={mockCapability}
+              text="Fire Item"
+              legendLabel="Fire"
+            />
+            <PaletteItem
+              capability={mockCapability}
+              text="Ice Item"
+              legendLabel="Ice"
+            />
           </PaletteGroup>
         </Palette>,
       );
@@ -456,7 +538,7 @@ describe('Palette', () => {
         <Palette>
           <PaletteLegend items={legendItems} className="custom-legend" />
           <PaletteGroup name="Test">
-            <PaletteItem text="Item" />
+            <PaletteItem capability={mockCapability} text="Item" />
           </PaletteGroup>
         </Palette>,
       );
@@ -477,10 +559,18 @@ describe('Palette', () => {
         <Palette>
           <PaletteLegend items={legendItems} />
           <PaletteGroup name="Fire Group">
-            <PaletteItem text="Fire Item" legendLabel="Fire" />
+            <PaletteItem
+              capability={mockCapability}
+              text="Fire Item"
+              legendLabel="Fire"
+            />
           </PaletteGroup>
           <PaletteGroup name="Ice Group">
-            <PaletteItem text="Ice Item" legendLabel="Ice" />
+            <PaletteItem
+              capability={mockCapability}
+              text="Ice Item"
+              legendLabel="Ice"
+            />
           </PaletteGroup>
         </Palette>,
       );
@@ -503,8 +593,12 @@ describe('Palette', () => {
         <Palette>
           <PaletteLegend items={legendItems} />
           <PaletteGroup name="Test">
-            <PaletteItem text="Fire Item" legendLabel="Fire" />
-            <PaletteItem text="No Label Item" />
+            <PaletteItem
+              capability={mockCapability}
+              text="Fire Item"
+              legendLabel="Fire"
+            />
+            <PaletteItem capability={mockCapability} text="No Label Item" />
           </PaletteGroup>
         </Palette>,
       );
@@ -529,13 +623,21 @@ describe('Palette', () => {
             ]}
           />
           <PaletteGroup name="Group 1">
-            <PaletteItem text="Text Item" legendLabel="Type A" />
-            <PaletteItem legendLabel="Type B">
+            <PaletteItem
+              capability={mockCapability}
+              text="Text Item"
+              legendLabel="Type A"
+            />
+            <PaletteItem capability={mockCapability} legendLabel="Type B">
               <div data-testid="custom-1">Custom 1</div>
             </PaletteItem>
           </PaletteGroup>
           <PaletteGroup name="Group 2">
-            <PaletteItem text="Another Text" legendLabel="Type A" />
+            <PaletteItem
+              capability={mockCapability}
+              text="Another Text"
+              legendLabel="Type A"
+            />
           </PaletteGroup>
         </Palette>,
       );

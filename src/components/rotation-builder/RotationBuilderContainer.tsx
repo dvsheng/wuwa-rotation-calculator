@@ -6,6 +6,7 @@ import { EnemyContainer } from '@/components/rotation-builder/enemy/EnemyContain
 import { CalculateRotationButton } from '@/components/rotation-builder/results/CalculateRotationButton';
 import { RotationResultDisplay } from '@/components/rotation-builder/results/RotationResultDisplay';
 import { TeamContainer } from '@/components/rotation-builder/team/TeamContainer';
+import { ButtonGroup } from '@/components/ui/button-group';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useRotationCalculation } from '@/hooks/useRotationCalculation';
@@ -59,8 +60,10 @@ export const RotationBuilderContainer = () => {
 
         {isCalculateButtonVisible && (
           <div className="ml-auto flex shrink-0 items-center gap-2">
-            <SaveRotationButton />
-            <CalculateRotationButton onCalculated={() => setShowResult(true)} />
+            <ButtonGroup className="[&_[data-role='save-main']]:rounded-r-none [&_[data-role='save-menu']]:rounded-l-none [&_[data-role='save-menu']]:border-l [&_[data-role='save-menu']]:border-l-white/30">
+              <SaveRotationButton />
+              <CalculateRotationButton onCalculated={() => setShowResult(true)} />
+            </ButtonGroup>
           </div>
         )}
       </div>

@@ -2,6 +2,8 @@ import { Library } from 'lucide-react';
 
 import { SavedRotationCard } from '@/components/builds/SavedRotationCard';
 import { SaveRotationDialog } from '@/components/builds/SaveRotationDialog';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Text } from '@/components/ui/typography';
 import { useLibraryStore } from '@/store/libraryStore';
 
 export function LibraryContainer() {
@@ -18,16 +20,20 @@ export function LibraryContainer() {
       </div>
 
       {rotations.length === 0 ? (
-        <div className="animate-in fade-in-50 flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-          <div className="bg-muted/50 mx-auto flex h-20 w-20 items-center justify-center rounded-full">
-            <Library className="h-10 w-10 opacity-20" />
-          </div>
-          <h3 className="mt-4 text-lg font-semibold">No saved rotations</h3>
-          <p className="text-muted-foreground mb-4 text-sm">
-            Save your current configuration to see it here.
-          </p>
-          <SaveRotationDialog />
-        </div>
+        <Card className="animate-in fade-in-50 border-dashed">
+          <CardHeader className="items-center text-center">
+            <div className="bg-muted/50 mx-auto flex h-20 w-20 items-center justify-center rounded-full">
+              <Library className="h-10 w-10 opacity-20" />
+            </div>
+            <CardTitle>No saved rotations</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center gap-4 text-center">
+            <Text className="text-muted-foreground text-sm">
+              Save your current configuration to see it here.
+            </Text>
+            <SaveRotationDialog />
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid gap-6 lg:grid-cols-2">
           {rotations

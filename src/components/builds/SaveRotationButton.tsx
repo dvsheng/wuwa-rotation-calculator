@@ -16,7 +16,10 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { SavedRotation } from '@/schemas/library';
@@ -27,6 +30,7 @@ import { useLibraryStore } from '@/store/libraryStore';
 export function SaveRotationButton() {
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
+  const [saveAction, setSaveAction] = useState<'save' | 'update'>('save');
   const [isUpdatingRotationId, setIsUpdatingRotationId] = useState<string>();
   const rotations = useLibraryStore((state) => state.rotations);
   const updateRotation = useLibraryStore((state) => state.updateRotation);
@@ -66,8 +70,8 @@ export function SaveRotationButton() {
     <>
       <div className="flex items-center">
         <Button
+          data-role="save-main"
           size="sm"
-          className="rounded-r-none"
           onClick={() => setIsSaveDialogOpen(true)}
         >
           <Save className="mr-2 h-4 w-4" />
@@ -76,16 +80,26 @@ export function SaveRotationButton() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
+              data-role="save-menu"
               size="sm"
-              className="rounded-l-none border-l border-l-white/30 px-2"
+              className="px-2"
               aria-label="Save rotation options"
             >
               <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              onSelect={() => {
+            <DropdownMenuLabel>Save Action</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuRadioGroup
+              value={saveAction}
+              onValueChange={(value) => {
+                const next = value as 'save' | 'update';
+                setSaveAction(next);
+                if (next === 'save') {
+                  setIsSaveDialogOpen(true);
+                  return;
+                }
                 if (rotations.length === 0) {
                   toast.error('No saved rotations to update.');
                   return;
@@ -93,8 +107,13 @@ export function SaveRotationButton() {
                 setIsUpdateDialogOpen(true);
               }}
             >
-              Update Existing Rotation
-            </DropdownMenuItem>
+              <DropdownMenuRadioItem value="save">
+                Save New Rotation
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="update" disabled={rotations.length === 0}>
+                Update Existing Rotation
+              </DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

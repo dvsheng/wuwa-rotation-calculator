@@ -1,4 +1,4 @@
-import { Dialog } from '../ui/dialog';
+import { Dialog } from '@/components/ui/dialog';
 
 type ActivatableDialogProperties = {
   children: React.ReactNode;
@@ -12,11 +12,11 @@ export function ActivatableDialog({
   children,
   isOpen,
   setIsOpen,
-  isDialogClickable,
+  isDialogClickable = false,
   onOpenChange,
 }: ActivatableDialogProperties) {
   const handleOnOpenChange = (open: boolean) => {
-    if (!isDialogClickable) return;
+    if (open && !isDialogClickable) return;
     onOpenChange?.(open);
     setIsOpen(open);
   };

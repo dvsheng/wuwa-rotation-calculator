@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { ParameterInstance } from '@/schemas/rotation';
 import type { Parameter } from '@/services/game-data';
 
@@ -30,6 +30,25 @@ const validateValue = (value: number | undefined, parameter: Parameter) => {
     return `Value must be at least ${parameter.minimum}`;
   if (parameter.maximum && numberValue > parameter.maximum)
     return `Value must be at most ${parameter.maximum}`;
+};
+
+const ParameterInputHint = ({
+  parameter,
+  error,
+  small,
+}: {
+  parameter: Parameter;
+  error?: string;
+  small?: boolean;
+}) => {
+  const className = small ? 'text-[10px]' : 'text-xs';
+  if (error) return <p className={`text-destructive ${className}`}>{error}</p>;
+  return (
+    <p className={`text-muted-foreground ${className}`}>
+      Min: {parameter.minimum}
+      {parameter.maximum ? `, Max: ${parameter.maximum}` : ''}
+    </p>
+  );
 };
 
 export const ParameterConfigurationForm = ({
@@ -99,17 +118,22 @@ export const ParameterConfigurationForm = ({
         <DialogDescription>{description}</DialogDescription>
       </DialogHeader>
       <div className="grid gap-6 overflow-y-auto py-4 pr-1">
-        {/* Global Toggle (Moved outside the loop for a cleaner UI if multiple params exist) */}
         {canToggleView && (
-          <div className="flex items-center gap-2 border-b pb-2">
-            <Switch
-              id="mode-toggle"
-              checked={isPerAttack}
-              onCheckedChange={setIsPerAttack}
-            />
-            <Label htmlFor="mode-toggle" className="font-medium">
-              Configure per-attack stacks
-            </Label>
+          <div className="flex items-center justify-between gap-3 border-b pb-2">
+            <Label className="font-medium">Configuration mode</Label>
+            <ToggleGroup
+              type="single"
+              value={isPerAttack ? 'per-attack' : 'single'}
+              onValueChange={(value) => {
+                if (!value) return;
+                setIsPerAttack(value === 'per-attack');
+              }}
+              size="sm"
+              variant="outline"
+            >
+              <ToggleGroupItem value="single">Single value</ToggleGroupItem>
+              <ToggleGroupItem value="per-attack">Per-attack stacks</ToggleGroupItem>
+            </ToggleGroup>
           </div>
         )}
 
@@ -142,16 +166,11 @@ export const ParameterConfigurationForm = ({
                               field.handleChange(event.target.valueAsNumber)
                             }
                           />
-                          {field.state.meta.errors[0] ? (
-                            <p className="text-destructive text-[10px]">
-                              {field.state.meta.errors[0]}
-                            </p>
-                          ) : (
-                            <p className="text-muted-foreground text-[10px]">
-                              Min: {parameter.minimum}
-                              {parameter.maximum ? `, Max: ${parameter.maximum}` : ''}
-                            </p>
-                          )}
+                          <ParameterInputHint
+                            parameter={parameter}
+                            error={field.state.meta.errors[0]}
+                            small={true}
+                          />
                         </div>
                       </div>
                     )}
@@ -179,16 +198,10 @@ export const ParameterConfigurationForm = ({
                           field.handleChange(event.target.valueAsNumber)
                         }
                       />
-                      {field.state.meta.errors[0] ? (
-                        <p className="text-destructive text-xs">
-                          {field.state.meta.errors[0]}
-                        </p>
-                      ) : (
-                        <p className="text-muted-foreground text-xs">
-                          Min: {parameter.minimum}
-                          {parameter.maximum ? `, Max: ${parameter.maximum}` : ''}
-                        </p>
-                      )}
+                      <ParameterInputHint
+                        parameter={parameter}
+                        error={field.state.meta.errors[0]}
+                      />
                     </div>
                   </div>
                 )}

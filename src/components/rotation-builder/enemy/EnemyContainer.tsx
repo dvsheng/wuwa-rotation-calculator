@@ -6,6 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Section } from '@/components/ui/layout';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { EnemySchema } from '@/schemas/enemy';
 import { useStore } from '@/store';
 import { Attribute } from '@/types';
@@ -65,35 +73,52 @@ export const EnemyContainer = () => {
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
-              {Object.values(Attribute).map((attribute) => (
-                <form.Field
-                  key={attribute}
-                  name={`resistances.${attribute}`}
-                  children={(field) => (
-                    <div className="space-y-2">
-                      <Label htmlFor={field.name}>
-                        {attribute.charAt(0).toUpperCase() + attribute.slice(1)}{' '}
+            <div className="space-y-2">
+              <Label>Attribute Resistances</Label>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Attribute</TableHead>
+                      <TableHead className="w-[180px] text-right">
                         Resistance (%)
-                      </Label>
-                      <Input
-                        id={field.name}
-                        type="number"
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(Number(event.target.value))
-                        }
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {Object.values(Attribute).map((attribute) => (
+                      <form.Field
+                        key={attribute}
+                        name={`resistances.${attribute}`}
+                        children={(field) => (
+                          <TableRow>
+                            <TableCell className="font-medium capitalize">
+                              {attribute}
+                            </TableCell>
+                            <TableCell className="space-y-1 text-right">
+                              <Input
+                                id={field.name}
+                                type="number"
+                                value={field.state.value}
+                                onBlur={field.handleBlur}
+                                onChange={(event) =>
+                                  field.handleChange(Number(event.target.value))
+                                }
+                                className="ml-auto w-32 text-right"
+                              />
+                              {field.state.meta.errors.length > 0 ? (
+                                <p className="text-destructive text-xs">
+                                  {field.state.meta.errors.join(', ')}
+                                </p>
+                              ) : undefined}
+                            </TableCell>
+                          </TableRow>
+                        )}
                       />
-                      {field.state.meta.errors.length > 0 ? (
-                        <p className="text-destructive text-sm">
-                          {field.state.meta.errors.join(', ')}
-                        </p>
-                      ) : undefined}
-                    </div>
-                  )}
-                />
-              ))}
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
 
             <div className="flex justify-end pt-4">

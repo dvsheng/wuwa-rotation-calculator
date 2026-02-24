@@ -221,8 +221,7 @@ export const PaletteLegend = ({ items, className }: PaletteLegendProperties) => 
       </div>
       <ToggleGroup
         type="multiple"
-        variant="outline"
-        className="w-full flex-wrap justify-start"
+        className="justify-start"
         value={[...activeFilters]}
         onValueChange={(values) => setFilters(values)}
       >

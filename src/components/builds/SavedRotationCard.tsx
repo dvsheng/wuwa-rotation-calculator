@@ -1,3 +1,4 @@
+import { useNavigate } from '@tanstack/react-router';
 import { format } from 'date-fns';
 import { Play, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
@@ -34,6 +35,7 @@ interface SavedRotationCardProperties {
 }
 
 export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
+  const navigate = useNavigate();
   const { setTeam, setEnemy, setAttacks, setBuffs } = useStore();
   const deleteRotation = useLibraryStore((state) => state.deleteRotation);
   const updateRotation = useLibraryStore((state) => state.updateRotation);
@@ -55,6 +57,7 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
       setAttacks(rotation.data.attacks);
       setBuffs(rotation.data.buffs);
       toast.success(`Loaded rotation: ${rotation.name}`);
+      void navigate({ to: '/' });
     } catch (error) {
       console.error('Failed to load rotation:', error);
       toast.error('Failed to load rotation.');

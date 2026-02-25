@@ -1,8 +1,13 @@
 import { intersection } from 'es-toolkit/array';
 import { mapValues } from 'es-toolkit/object';
 
-import { NEGATIVE_STATUS_TO_ATTRIBUTE, Tag } from '@/types';
+import {
+  NEGATIVE_STATUS_TO_ATTRIBUTE,
+  Tag,
+  isNegativeStatusAbilityAttribute,
+} from '@/types';
 import type {
+  AbilityAttribute,
   Character,
   CharacterStats,
   Enemy,
@@ -98,3 +103,34 @@ export function filterEnemyStatsByTags(enemy: Enemy, tags: Array<string>): Enemy
     stats: filterStatValuesByTags(enemy.stats, tags),
   };
 }
+
+export interface StatFilteringStrategy {
+  filterCharacterStats: (character: Character) => Character;
+  filterEnemyStats: (enemy: Enemy) => Enemy;
+}
+
+const createTagBasedFilteringStrategy = (
+  tags: Array<string>,
+): StatFilteringStrategy => ({
+  filterCharacterStats: (character: Character) =>
+    filterCharacterStatsByTags(character, tags),
+  filterEnemyStats: (enemy: Enemy) => filterEnemyStatsByTags(enemy, tags),
+});
+
+const createNegativeStatusFilteringStrategy = (
+  scalingStat: NegativeStatus,
+): StatFilteringStrategy => ({
+  filterCharacterStats: (character: Character) =>
+    filterCharacterStatsByNegativeStatus(character, scalingStat),
+  filterEnemyStats: (enemy: Enemy) =>
+    filterEnemyStatsByNegativeStatus(enemy, scalingStat),
+});
+
+export const createStatFilteringStrategy = (
+  scalingStat: AbilityAttribute,
+  tags: Array<string>,
+): StatFilteringStrategy => {
+  return isNegativeStatusAbilityAttribute(scalingStat)
+    ? createNegativeStatusFilteringStrategy(scalingStat)
+    : createTagBasedFilteringStrategy(tags);
+};

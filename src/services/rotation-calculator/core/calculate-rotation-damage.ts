@@ -1,14 +1,6 @@
-import { isNegativeStatusAbilityAttribute } from '@/types';
-import type { Character, Enemy } from '@/types';
-
 import { applyModifiers } from './apply-modifiers';
 import { calculateAttackDamage } from './calculate-attack-damage';
-import {
-  filterCharacterStatsByNegativeStatus,
-  filterCharacterStatsByTags,
-  filterEnemyStatsByNegativeStatus,
-  filterEnemyStatsByTags,
-} from './filter-stats';
+import { createStatFilteringStrategy } from './filter-stats';
 import type { Rotation, RotationResult } from './types';
 
 export const calculateRotationDamage = (rotation: Rotation): RotationResult => {
@@ -19,20 +11,15 @@ export const calculateRotationDamage = (rotation: Rotation): RotationResult => {
         rotation.enemy,
         modifiers,
       );
-      const scalingStat = instance.scalingStat;
-      const filterCharacterStats = isNegativeStatusAbilityAttribute(scalingStat)
-        ? (character: Character) =>
-            filterCharacterStatsByNegativeStatus(character, scalingStat)
-        : (character: Character) =>
-            filterCharacterStatsByTags(character, instance.tags);
-      const teamWithRelevantStats = teamWithModifiers.map((character) =>
-        filterCharacterStats(character),
+      const filteringStrategy = createStatFilteringStrategy(
+        instance.scalingStat,
+        instance.tags,
       );
-
-      const filterEnemyStats = isNegativeStatusAbilityAttribute(scalingStat)
-        ? (enemy: Enemy) => filterEnemyStatsByNegativeStatus(enemy, scalingStat)
-        : (enemy: Enemy) => filterEnemyStatsByTags(enemy, instance.tags);
-      const enemyWithRelevantStats = filterEnemyStats(enemyWithModifiers);
+      const teamWithRelevantStats = teamWithModifiers.map((character) =>
+        filteringStrategy.filterCharacterStats(character),
+      );
+      const enemyWithRelevantStats =
+        filteringStrategy.filterEnemyStats(enemyWithModifiers);
       const instanceDamage = calculateAttackDamage(instance, {
         team: teamWithRelevantStats,
         enemy: enemyWithRelevantStats,

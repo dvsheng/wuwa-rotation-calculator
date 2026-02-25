@@ -8,7 +8,7 @@ export const calculateDamage = (properties: CalculateDamageProperties) => {
       (properties.skill.motionValue + properties.character.damageMultiplierBonus) +
     properties.character.flatDamage;
   const damageBonusMultiplier = 1 + properties.character.damageBonus;
-  const damageAmplifyMultiplier = 1 + properties.character.damageAmplify;
+  const damageAmplifyMultiplier = 1 + properties.character.damageAmplification;
   const criticalMultiplier =
     1 + properties.character.criticalRate * properties.character.criticalDamage;
   const defenseMultiplier = calculateDefenseMultiplier({
@@ -26,7 +26,7 @@ export const calculateDamage = (properties: CalculateDamageProperties) => {
     baseDamage *
     damageBonusMultiplier *
     damageAmplifyMultiplier *
-    (1 + properties.character.damageBonusFinal) *
+    (1 + properties.character.finalDamageBonus) *
     criticalMultiplier *
     defenseMultiplier *
     resistanceMultiplier;

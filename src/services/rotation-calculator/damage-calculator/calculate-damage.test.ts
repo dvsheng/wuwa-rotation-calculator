@@ -11,8 +11,8 @@ describe('calculateDamage', () => {
       flatDamage: 0,
       damageBonus: 0,
       damageMultiplierBonus: 0,
-      damageAmplify: 0,
-      damageBonusFinal: 0,
+      damageAmplification: 0,
+      finalDamageBonus: 0,
       criticalRate: 0,
       criticalDamage: 0.5,
       defenseIgnore: 0,
@@ -68,7 +68,7 @@ describe('calculateDamage', () => {
       ...baseProperties,
       character: {
         ...baseProperties.character,
-        damageBonusFinal: 0.1, // 10% final damage bonus
+        finalDamageBonus: 0.1, // 10% final damage bonus
       },
     };
     // expected = 451.187 * 1.1 = 496.306
@@ -84,7 +84,7 @@ describe('calculateDamage', () => {
         ...baseProperties.character,
         damageBonus: 0.5,
         damageMultiplierBonus: 0.2,
-        damageBonusFinal: 0.1,
+        finalDamageBonus: 0.1,
       },
     };
     // baseDamage = 1000 * (0.5 + 0.2) = 700

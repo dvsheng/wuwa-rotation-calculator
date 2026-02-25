@@ -1,25 +1,26 @@
 import type { EnemyStat } from '@/types';
+import { CharacterStat } from '@/types';
 
 interface SkillProperties {
   motionValue: number;
 }
 
-interface CharacterStats {
-  level: number;
-  abilityAttributeValue: number;
-  flatDamage: number;
-  damageBonus: number;
-  damageMultiplierBonus: number;
-  damageAmplify: number;
-  damageBonusFinal: number;
-  criticalRate: number;
-  criticalDamage: number;
-  defenseIgnore: number;
-  resistancePenetration: number;
-}
+const RelevantCharacterStats = [
+  CharacterStat.CRITICAL_DAMAGE,
+  CharacterStat.CRITICAL_RATE,
+  CharacterStat.DAMAGE_BONUS,
+  CharacterStat.DAMAGE_MULTIPLIER_BONUS,
+  CharacterStat.DEFENSE_IGNORE,
+  CharacterStat.RESISTANCE_PENETRATION,
+  CharacterStat.FINAL_DAMAGE_BONUS,
+  CharacterStat.DAMAGE_AMPLIFICATION,
+  CharacterStat.FLAT_DAMAGE,
+] as const;
+
+type RelevantCharacterStats = (typeof RelevantCharacterStats)[number];
 
 export interface CalculateDamageProperties {
-  character: CharacterStats;
+  character: Record<RelevantCharacterStats | 'level' | 'abilityAttributeValue', number>;
   enemy: Record<EnemyStat | 'level', number>;
   skill: SkillProperties;
 }

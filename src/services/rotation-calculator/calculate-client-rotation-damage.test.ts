@@ -420,7 +420,9 @@ describe('calculateRotation', () => {
       );
 
       expect(result.damageDetails[0].resolvedStats.enemy.aeroErosion).toBe(9);
-      expect(result.damageDetails[0].resolvedStats.character.damageAmplify).toBe(1);
+      expect(result.damageDetails[0].resolvedStats.character.damageAmplification).toBe(
+        1,
+      );
       expect(result.totalDamage).toBeCloseTo(28_471, 0);
       expect(result.damageInstances).toHaveLength(1);
       expect(result.damageInstances[0]).toBeCloseTo(28_471, 0);

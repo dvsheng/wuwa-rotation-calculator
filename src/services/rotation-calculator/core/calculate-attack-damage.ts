@@ -1,15 +1,110 @@
 import { clamp, sum } from 'es-toolkit/math';
+import { mapValues } from 'es-toolkit/object';
 
 import { isNegativeStatusAbilityAttribute } from '@/types';
-import type { CharacterDamageInstance, Enemy, Team } from '@/types';
+import type { CharacterDamageInstance, Enemy, NegativeStatus, Team } from '@/types';
 
 import { calculateDamage } from '../damage-calculator';
+import type { CalculateDamageProperties } from '../damage-calculator/calculate-damage.types';
 import { calculateNegativeStatusDamage } from '../damage-calculator/calculate-negative-status-damage';
 
 import { calculateAbilityAttributeValue, sumStatValues } from './calculate-stat-total';
 import { createRuntimeStatResolver } from './resolve-runtime-stat-values';
 
 const HAVOC_BANE_DEFENSE_REDUCTION_PER_STACK = 0.02;
+
+export type ResolvedDamageStatValues = Omit<CalculateDamageProperties, 'skill'>;
+type AttackDamageResolvedInputs = ResolvedDamageStatValues & {
+  skill: {
+    motionValue?: number;
+    negativeStatus?: NegativeStatus;
+  };
+};
+
+interface DamageCalculationResult {
+  result: number;
+  inputs: AttackDamageResolvedInputs;
+}
+
+interface DamageCalculationStrategy {
+  calculate: (
+    instance: CharacterDamageInstance,
+    resolvedStats: ResolvedDamageStatValues,
+  ) => DamageCalculationResult;
+}
+
+const negativeStatusDamageStrategy: DamageCalculationStrategy = {
+  calculate: (instance, resolvedStats) => {
+    const calculateDamageProperties: AttackDamageResolvedInputs = {
+      ...resolvedStats,
+      skill: {
+        negativeStatus: instance.scalingStat as NegativeStatus,
+      },
+    };
+    if (!calculateDamageProperties.skill.negativeStatus) {
+      throw new Error('Invalid negative status');
+    }
+    return {
+      result: calculateNegativeStatusDamage(calculateDamageProperties),
+      inputs: calculateDamageProperties,
+    };
+  },
+};
+
+const directDamageStrategy: DamageCalculationStrategy = {
+  calculate: (instance, resolvedStats) => {
+    const totalMotionValue = sum(instance.motionValues);
+    const calculateDamageProperties: AttackDamageResolvedInputs = {
+      ...resolvedStats,
+      skill: {
+        motionValue: totalMotionValue,
+      },
+    };
+    return {
+      result: calculateDamage(calculateDamageProperties as CalculateDamageProperties),
+      inputs: calculateDamageProperties,
+    };
+  },
+};
+
+const getDamageCalculationStrategy = (instance: CharacterDamageInstance) => {
+  return isNegativeStatusAbilityAttribute(instance.scalingStat)
+    ? negativeStatusDamageStrategy
+    : directDamageStrategy;
+};
+
+export const resolveStatValues = (
+  instance: CharacterDamageInstance,
+  context: {
+    team: Team;
+    enemy: Enemy;
+  },
+): ResolvedDamageStatValues => {
+  const { team, enemy } = context;
+  const resolveStats = createRuntimeStatResolver(team, enemy);
+  const character = team[instance.characterIndex];
+  const resolvedCharacter = resolveStats(character);
+  const resolvedEnemy = resolveStats(enemy);
+  return {
+    character: {
+      level: character.level,
+      abilityAttributeValue: calculateAbilityAttributeValue(
+        resolvedCharacter.stats,
+        instance.scalingStat,
+      ),
+      ...mapValues(resolvedCharacter.stats, sumStatValues),
+      criticalRate: clamp(sumStatValues(resolvedCharacter.stats.criticalRate), 1),
+    },
+    enemy: {
+      level: enemy.level,
+      ...mapValues(resolvedEnemy.stats, sumStatValues),
+      defenseReduction:
+        sumStatValues(resolvedEnemy.stats.defenseReduction) +
+        sumStatValues(resolvedEnemy.stats.havocBane) *
+          HAVOC_BANE_DEFENSE_REDUCTION_PER_STACK,
+    },
+  };
+};
 
 export const calculateAttackDamage = (
   instance: CharacterDamageInstance,
@@ -18,70 +113,7 @@ export const calculateAttackDamage = (
     enemy: Enemy;
   },
 ) => {
-  const { team, enemy } = context;
-  const resolveStats = createRuntimeStatResolver(team, enemy);
-  const character = team[instance.characterIndex];
-  const resolvedCharacter = resolveStats(character);
-  const resolvedEnemy = resolveStats(enemy);
-  const calculateDamageEnemyProperties = {
-    level: enemy.level,
-    baseResistance: sumStatValues(resolvedEnemy.stats.baseResistance),
-    resistanceReduction: sumStatValues(resolvedEnemy.stats.resistanceReduction),
-    defenseReduction:
-      sumStatValues(resolvedEnemy.stats.defenseReduction) +
-      sumStatValues(resolvedEnemy.stats.havocBane) *
-        HAVOC_BANE_DEFENSE_REDUCTION_PER_STACK,
-    spectroFrazzle: sumStatValues(resolvedEnemy.stats.spectroFrazzle),
-    aeroErosion: sumStatValues(resolvedEnemy.stats.aeroErosion),
-    fusionBurst: sumStatValues(resolvedEnemy.stats.fusionBurst),
-    glacioChafe: sumStatValues(resolvedEnemy.stats.glacioChafe),
-    havocBane: sumStatValues(resolvedEnemy.stats.havocBane),
-    electroFlare: sumStatValues(resolvedEnemy.stats.electroFlare),
-  };
-  const calculateDamageCharacterProperties = {
-    level: character.level,
-    abilityAttributeValue: calculateAbilityAttributeValue(
-      resolvedCharacter.stats,
-      instance.scalingStat,
-    ),
-    flatDamage: sumStatValues(resolvedCharacter.stats.flatDamage),
-    damageBonus: sumStatValues(resolvedCharacter.stats.damageBonus),
-    damageMultiplierBonus: sumStatValues(resolvedCharacter.stats.damageMultiplierBonus),
-    damageAmplify: sumStatValues(resolvedCharacter.stats.damageAmplification),
-    defenseIgnore: sumStatValues(resolvedCharacter.stats.defenseIgnore),
-    resistancePenetration: sumStatValues(resolvedCharacter.stats.resistancePenetration),
-    criticalRate: clamp(sumStatValues(resolvedCharacter.stats.criticalRate), 1),
-    criticalDamage: sumStatValues(resolvedCharacter.stats.criticalDamage),
-    damageBonusFinal: sumStatValues(resolvedCharacter.stats.finalDamageBonus),
-  };
-
-  const baseCalculateDamageProperties = {
-    character: calculateDamageCharacterProperties,
-    enemy: calculateDamageEnemyProperties,
-  };
-  if (isNegativeStatusAbilityAttribute(instance.scalingStat)) {
-    const negativeStatus = instance.scalingStat;
-    const calculateDamageProperties = {
-      ...baseCalculateDamageProperties,
-      skill: {
-        negativeStatus,
-      },
-    };
-    return {
-      result: calculateNegativeStatusDamage(calculateDamageProperties),
-      inputs: calculateDamageProperties,
-    };
-  } else {
-    const totalMotionValue = sum(instance.motionValues);
-    const calculateDamageProperties = {
-      ...baseCalculateDamageProperties,
-      skill: {
-        motionValue: totalMotionValue,
-      },
-    };
-    return {
-      result: calculateDamage(calculateDamageProperties),
-      inputs: calculateDamageProperties,
-    };
-  }
+  const resolvedStats = resolveStatValues(instance, context);
+  const strategy = getDamageCalculationStrategy(instance);
+  return strategy.calculate(instance, resolvedStats);
 };

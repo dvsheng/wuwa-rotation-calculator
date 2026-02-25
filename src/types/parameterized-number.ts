@@ -1,5 +1,5 @@
 import type { CharacterStat } from './character';
-import type { AbilityAttribute } from './damage-instance';
+import type { AttackScalingProperty } from './damage-instance';
 import type { EnemyStat } from './enemy';
 
 export interface LinearParameterizedNumber<T extends string> {
@@ -38,7 +38,7 @@ export interface LinearScalingParameterConfig {
  * Useful for effects that scale based on another stat (e.g., Energy Regen).
  */
 export interface RotationRuntimeResolvableNumber extends LinearParameterizedNumber<
-  CharacterStat | EnemyStat | AbilityAttribute
+  CharacterStat | EnemyStat | AttackScalingProperty
 > {
   /**
    * The name of the character whose stats are used for resolution.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { AbilityAttribute, Attribute, CharacterStat, Tag } from '@/types';
+import { AttackScalingProperty, Attribute, CharacterStat, Tag } from '@/types';
 import type { Character, Enemy, Modifier, Team } from '@/types';
 
 import { calculateRotationDamage } from './calculate-rotation-damage';
@@ -143,7 +143,7 @@ describe('calculateRotationDamage', () => {
           {
             instance: {
               characterIndex: 0,
-              scalingStat: AbilityAttribute.ATK,
+              scalingStat: AttackScalingProperty.ATK,
               motionValues: [1],
               tags: [Tag.BASIC_ATTACK, Tag.ELECTRO],
             },
@@ -158,6 +158,53 @@ describe('calculateRotationDamage', () => {
       // - Runtime-resolvable: (180% - 150%) * 2 = 60%, capped at 50%
       // Total: 150%
       expect(result.damageDetails[0].resolvedStats.character.criticalDamage).toBe(1.5);
+    });
+  });
+
+  describe('flat scaling strategy', () => {
+    it('returns motion value total without regular damage formula multipliers', () => {
+      const team: Team = [
+        createTestCharacter(1),
+        createTestCharacter(2),
+        createTestCharacter(3),
+      ];
+      const enemy = createTestEnemy();
+
+      const largeOffensiveModifier: Modifier = {
+        targets: [0],
+        modifiedStats: {
+          [CharacterStat.ATTACK_FLAT]: [{ tags: [Tag.ALL], value: 9999 }],
+          [CharacterStat.DAMAGE_BONUS]: [{ tags: [Tag.ELECTRO], value: 5 }],
+          [CharacterStat.DAMAGE_AMPLIFICATION]: [{ tags: [Tag.ELECTRO], value: 5 }],
+          [CharacterStat.CRITICAL_DAMAGE]: [{ tags: [Tag.ALL], value: 10 }],
+        },
+      };
+
+      const rotation: Rotation = {
+        team,
+        enemy,
+        duration: 10,
+        damageInstances: [
+          {
+            instance: {
+              characterIndex: 0,
+              scalingStat: AttackScalingProperty.FLAT,
+              motionValues: [123.4, 76.6],
+              tags: [Tag.ELECTRO, Tag.BASIC_ATTACK],
+            },
+            modifiers: [largeOffensiveModifier],
+          },
+        ],
+      };
+
+      const result = calculateRotationDamage(rotation);
+
+      expect(result.totalDamage).toBeCloseTo(200, 10);
+      expect(result.damageInstances[0]).toBeCloseTo(200, 10);
+      expect(result.damageDetails[0].resolvedStats.skill.motionValue).toBeCloseTo(
+        200,
+        10,
+      );
     });
   });
 });

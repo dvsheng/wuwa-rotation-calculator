@@ -1,19 +1,18 @@
 import { intersection } from 'es-toolkit/array';
 import { mapValues } from 'es-toolkit/object';
 
-import {
-  NEGATIVE_STATUS_TO_ATTRIBUTE,
-  Tag,
-  isNegativeStatusAbilityAttribute,
-} from '@/types';
+import { NEGATIVE_STATUS_TO_ATTRIBUTE, Tag } from '@/types';
 import type {
-  AbilityAttribute,
+  AttackScalingProperty,
   Character,
   CharacterStats,
   Enemy,
   EnemyStats,
   NegativeStatus,
 } from '@/types';
+
+import { getAttackScalingType } from './type-converters';
+import { AttackScalingType } from './types';
 
 /**
  * Filters stat values in a stats object to only include those matching the given tags.
@@ -127,10 +126,19 @@ const createNegativeStatusFilteringStrategy = (
 });
 
 export const createStatFilteringStrategy = (
-  scalingStat: AbilityAttribute,
+  scalingStat: AttackScalingProperty,
   tags: Array<string>,
 ): StatFilteringStrategy => {
-  return isNegativeStatusAbilityAttribute(scalingStat)
-    ? createNegativeStatusFilteringStrategy(scalingStat)
-    : createTagBasedFilteringStrategy(tags);
+  const attackScalingType = getAttackScalingType(scalingStat);
+  switch (attackScalingType) {
+    case AttackScalingType.NEGATIVE_STATUS: {
+      return createNegativeStatusFilteringStrategy(scalingStat as NegativeStatus);
+    }
+    case AttackScalingType.REGULAR: {
+      return createTagBasedFilteringStrategy(tags);
+    }
+    default: {
+      return createTagBasedFilteringStrategy(tags);
+    }
+  }
 };

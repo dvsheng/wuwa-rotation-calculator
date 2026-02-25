@@ -169,7 +169,7 @@ export const RotationResultDisplay = ({
                                 <span className="text-right font-mono text-zinc-100">
                                   {[
                                     'level',
-                                    'abilityAttributeValue',
+                                    'attackScalingPropertyValue',
                                     'flatDamage',
                                   ].includes(key)
                                     ? Math.round(value).toLocaleString()

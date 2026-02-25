@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { AbilityAttribute, CharacterStat } from '@/types';
+import { AttackScalingProperty, CharacterStat } from '@/types';
 import type { CharacterStats } from '@/types';
 
-import { calculateAbilityAttributeValue, sumStatValues } from './calculate-stat-total';
+import {
+  calculateAttackScalingPropertyValue,
+  sumStatValues,
+} from './calculate-stat-total';
 
 const createMockStats = (
   attackFlat: number,
@@ -55,70 +58,94 @@ describe('sumStatValues', () => {
   });
 });
 
-describe('calculateAbilityAttributeValue', () => {
+describe('calculateAttackScalingPropertyValue', () => {
   describe('ATK calculation', () => {
     it('calculates ATK with flat only', () => {
       const stats = createMockStats(100, 0, 0, 0, 0, 0, 0, 0, 0);
-      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.ATK)).toBe(100);
+      expect(
+        calculateAttackScalingPropertyValue(stats, AttackScalingProperty.ATK),
+      ).toBe(100);
     });
 
     it('calculates ATK with scaling bonus', () => {
       const stats = createMockStats(100, 0.5, 0, 0, 0, 0, 0, 0, 0);
-      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.ATK)).toBe(150);
+      expect(
+        calculateAttackScalingPropertyValue(stats, AttackScalingProperty.ATK),
+      ).toBe(150);
     });
 
     it('calculates ATK with flat bonus', () => {
       const stats = createMockStats(100, 0, 50, 0, 0, 0, 0, 0, 0);
-      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.ATK)).toBe(150);
+      expect(
+        calculateAttackScalingPropertyValue(stats, AttackScalingProperty.ATK),
+      ).toBe(150);
     });
 
     it('calculates ATK with all components', () => {
       const stats = createMockStats(100, 0.5, 50, 0, 0, 0, 0, 0, 0);
-      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.ATK)).toBe(200);
+      expect(
+        calculateAttackScalingPropertyValue(stats, AttackScalingProperty.ATK),
+      ).toBe(200);
     });
   });
 
   describe('DEF calculation', () => {
     it('calculates DEF with flat only', () => {
       const stats = createMockStats(0, 0, 0, 100, 0, 0, 0, 0, 0);
-      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.DEF)).toBe(100);
+      expect(
+        calculateAttackScalingPropertyValue(stats, AttackScalingProperty.DEF),
+      ).toBe(100);
     });
 
     it('calculates DEF with scaling bonus', () => {
       const stats = createMockStats(0, 0, 0, 100, 0.5, 0, 0, 0, 0);
-      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.DEF)).toBe(150);
+      expect(
+        calculateAttackScalingPropertyValue(stats, AttackScalingProperty.DEF),
+      ).toBe(150);
     });
 
     it('calculates DEF with flat bonus', () => {
       const stats = createMockStats(0, 0, 0, 100, 0, 50, 0, 0, 0);
-      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.DEF)).toBe(150);
+      expect(
+        calculateAttackScalingPropertyValue(stats, AttackScalingProperty.DEF),
+      ).toBe(150);
     });
 
     it('calculates DEF with all components', () => {
       const stats = createMockStats(0, 0, 0, 100, 0.5, 50, 0, 0, 0);
-      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.DEF)).toBe(200);
+      expect(
+        calculateAttackScalingPropertyValue(stats, AttackScalingProperty.DEF),
+      ).toBe(200);
     });
   });
 
   describe('HP calculation', () => {
     it('calculates HP with flat only', () => {
       const stats = createMockStats(0, 0, 0, 0, 0, 0, 100, 0, 0);
-      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.HP)).toBe(100);
+      expect(calculateAttackScalingPropertyValue(stats, AttackScalingProperty.HP)).toBe(
+        100,
+      );
     });
 
     it('calculates HP with scaling bonus', () => {
       const stats = createMockStats(0, 0, 0, 0, 0, 0, 100, 0.5, 0);
-      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.HP)).toBe(150);
+      expect(calculateAttackScalingPropertyValue(stats, AttackScalingProperty.HP)).toBe(
+        150,
+      );
     });
 
     it('calculates HP with flat bonus', () => {
       const stats = createMockStats(0, 0, 0, 0, 0, 0, 100, 0, 50);
-      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.HP)).toBe(150);
+      expect(calculateAttackScalingPropertyValue(stats, AttackScalingProperty.HP)).toBe(
+        150,
+      );
     });
 
     it('calculates HP with all components', () => {
       const stats = createMockStats(0, 0, 0, 0, 0, 0, 100, 0.5, 50);
-      expect(calculateAbilityAttributeValue(stats, AbilityAttribute.HP)).toBe(200);
+      expect(calculateAttackScalingPropertyValue(stats, AttackScalingProperty.HP)).toBe(
+        200,
+      );
     });
   });
 });

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import type { Team as ClientTeam } from '@/schemas/team';
-import { AbilityAttribute, Attribute, CharacterStat, Tag } from '@/types';
+import { AttackScalingProperty, Attribute, CharacterStat, Tag } from '@/types';
 
 import { GameDataNotFoundError, createGameDataEnricher } from './enrich-rotation-data';
 
@@ -22,7 +22,7 @@ const mockAttackDetails = [
     name: 'Basic Attack 1',
     description: 'A basic attack',
     originType: 'Normal Attack',
-    scalingStat: AbilityAttribute.ATK,
+    scalingStat: AttackScalingProperty.ATK,
     attribute: Attribute.PHYSICAL,
     motionValues: [1.5, 2],
     tags: [Tag.BASIC_ATTACK],
@@ -32,7 +32,7 @@ const mockAttackDetails = [
     name: 'Skill Attack',
     description: 'A skill attack',
     originType: 'Resonance Skill',
-    scalingStat: AbilityAttribute.ATK,
+    scalingStat: AttackScalingProperty.ATK,
     attribute: Attribute.ELECTRO,
     motionValues: [3],
     tags: [Tag.RESONANCE_SKILL, Tag.ELECTRO],
@@ -160,7 +160,7 @@ describe('createGameDataEnricher', () => {
         name: 'Basic Attack 1',
         description: 'A basic attack',
         originType: 'Normal Attack',
-        scalingStat: AbilityAttribute.ATK,
+        scalingStat: AttackScalingProperty.ATK,
         attribute: Attribute.PHYSICAL,
         motionValues: [1.5, 2],
         tags: [Tag.BASIC_ATTACK],

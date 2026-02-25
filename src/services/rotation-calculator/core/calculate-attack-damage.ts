@@ -1,19 +1,24 @@
 import { clamp, sum } from 'es-toolkit/math';
 import { mapValues } from 'es-toolkit/object';
 
-import { isNegativeStatusAbilityAttribute } from '@/types';
 import type { CharacterDamageInstance, Enemy, NegativeStatus, Team } from '@/types';
 
 import { calculateDamage } from '../damage-calculator';
 import type { CalculateDamageProperties } from '../damage-calculator/calculate-damage.types';
 import { calculateNegativeStatusDamage } from '../damage-calculator/calculate-negative-status-damage';
 
-import { calculateAbilityAttributeValue, sumStatValues } from './calculate-stat-total';
+import {
+  calculateAttackScalingPropertyValue,
+  sumStatValues,
+} from './calculate-stat-total';
 import { createRuntimeStatResolver } from './resolve-runtime-stat-values';
+import { getAttackScalingType } from './type-converters';
+import { AttackScalingType } from './types';
 
 const HAVOC_BANE_DEFENSE_REDUCTION_PER_STACK = 0.02;
 
 export type ResolvedDamageStatValues = Omit<CalculateDamageProperties, 'skill'>;
+
 type AttackDamageResolvedInputs = ResolvedDamageStatValues & {
   skill: {
     motionValue?: number;
@@ -67,10 +72,38 @@ const directDamageStrategy: DamageCalculationStrategy = {
   },
 };
 
+const flatDamageStrategy: DamageCalculationStrategy = {
+  calculate: (instance, resolvedStats) => {
+    const totalMotionValue = sum(instance.motionValues);
+    const calculateDamageProperties: AttackDamageResolvedInputs = {
+      ...resolvedStats,
+      skill: {
+        motionValue: totalMotionValue,
+      },
+    };
+    return {
+      result: totalMotionValue,
+      inputs: calculateDamageProperties,
+    };
+  },
+};
+
 const getDamageCalculationStrategy = (instance: CharacterDamageInstance) => {
-  return isNegativeStatusAbilityAttribute(instance.scalingStat)
-    ? negativeStatusDamageStrategy
-    : directDamageStrategy;
+  const attackScalingType = getAttackScalingType(instance.scalingStat);
+  switch (attackScalingType) {
+    case AttackScalingType.NEGATIVE_STATUS: {
+      return negativeStatusDamageStrategy;
+    }
+    case AttackScalingType.REGULAR: {
+      return directDamageStrategy;
+    }
+    case AttackScalingType.FLAT: {
+      return flatDamageStrategy;
+    }
+    default: {
+      return directDamageStrategy;
+    }
+  }
 };
 
 export const resolveStatValues = (
@@ -88,7 +121,7 @@ export const resolveStatValues = (
   return {
     character: {
       level: character.level,
-      abilityAttributeValue: calculateAbilityAttributeValue(
+      attackScalingPropertyValue: calculateAttackScalingPropertyValue(
         resolvedCharacter.stats,
         instance.scalingStat,
       ),

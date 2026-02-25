@@ -6,7 +6,7 @@ import type {
   Modifier as GameDataModifier,
   GameDataRotationRuntimeResolvableNumber,
 } from '@/services/game-data';
-import { AbilityAttribute, Attribute, CharacterStat, Tag } from '@/types';
+import { AttackScalingProperty, Attribute, CharacterStat, Tag } from '@/types';
 import type { CharacterSlotNumber } from '@/types';
 
 import {
@@ -53,7 +53,7 @@ const createMockAttack = (
   id,
   characterId,
   description: 'Test attack description',
-  scalingStat: AbilityAttribute.ATK,
+  scalingStat: AttackScalingProperty.ATK,
   attribute: Attribute.PHYSICAL,
   tags: [Tag.BASIC_ATTACK],
   motionValues: [1],

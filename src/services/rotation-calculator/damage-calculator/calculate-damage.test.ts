@@ -7,7 +7,7 @@ describe('calculateDamage', () => {
   const baseProperties: CalculateDamageProperties = {
     character: {
       level: 90,
-      abilityAttributeValue: 1000,
+      attackScalingPropertyValue: 1000,
       flatDamage: 0,
       damageBonus: 0,
       damageMultiplierBonus: 0,

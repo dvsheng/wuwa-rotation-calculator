@@ -3,22 +3,24 @@ import { NegativeStatus } from './negative-status';
 /**
  * Defines the base stat used for damage scaling.
  */
-export const AbilityAttribute = {
+export const AttackScalingProperty = {
   /** Scales with Max HP. */
   HP: 'hp',
   /** Scales with ATK. */
   ATK: 'atk',
   /** Scales with DEF. */
   DEF: 'def',
+  FLAT: 'flat',
   ...NegativeStatus,
 } as const;
 
-export type AbilityAttribute = (typeof AbilityAttribute)[keyof typeof AbilityAttribute];
+export type AttackScalingProperty =
+  (typeof AttackScalingProperty)[keyof typeof AttackScalingProperty];
 
-export const isNegativeStatusAbilityAttribute = (
-  abilityAttribute: AbilityAttribute,
-): abilityAttribute is NegativeStatus => {
-  return Object.values(NegativeStatus).includes(abilityAttribute as NegativeStatus);
+export const AttackScalingType = {
+  REGULAR: 'regular',
+  NEGATIVE_STATUS: 'negativeStatus',
+  FLAT: 'flat',
 };
 
 /**
@@ -55,7 +57,7 @@ export interface CharacterDamageInstance {
   /** Index of the character performing the attack in the team array (0-2). */
   characterIndex: number;
   /** The primary stat this damage scales with. */
-  scalingStat: AbilityAttribute;
+  scalingStat: AttackScalingProperty;
   /**
    * Motion values for each hit in the sequence (e.g., [0.112, 0.084, 0.084]).
    */
@@ -65,11 +67,11 @@ export interface CharacterDamageInstance {
 }
 
 /**
- * Checks if a string key is a valid AbilityAttribute.
+ * Checks if a string key is a valid AttackScalingProperty.
  *
  * @param key - The key to check.
- * @returns True if the key is a valid AbilityAttribute.
+ * @returns True if the key is a valid AttackScalingProperty.
  */
-export const isAbilityAttribute = (key: string): key is AbilityAttribute => {
-  return Object.values(AbilityAttribute).includes(key as AbilityAttribute);
+export const isAttackScalingProperty = (key: string): key is AttackScalingProperty => {
+  return Object.values(AttackScalingProperty).includes(key as AttackScalingProperty);
 };

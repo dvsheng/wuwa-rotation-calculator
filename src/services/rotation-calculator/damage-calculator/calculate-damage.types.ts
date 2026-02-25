@@ -20,7 +20,10 @@ const RelevantCharacterStats = [
 type RelevantCharacterStats = (typeof RelevantCharacterStats)[number];
 
 export interface CalculateDamageProperties {
-  character: Record<RelevantCharacterStats | 'level' | 'abilityAttributeValue', number>;
+  character: Record<
+    RelevantCharacterStats | 'level' | 'attackScalingPropertyValue',
+    number
+  >;
   enemy: Record<EnemyStat | 'level', number>;
   skill: SkillProperties;
 }

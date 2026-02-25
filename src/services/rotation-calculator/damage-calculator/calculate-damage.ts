@@ -4,7 +4,7 @@ import { calculateResistanceMultiplier } from './resistance';
 
 export const calculateDamage = (properties: CalculateDamageProperties) => {
   const baseDamage =
-    properties.character.abilityAttributeValue *
+    properties.character.attackScalingPropertyValue *
       (properties.skill.motionValue + properties.character.damageMultiplierBonus) +
     properties.character.flatDamage;
   const damageBonusMultiplier = 1 + properties.character.damageBonus;

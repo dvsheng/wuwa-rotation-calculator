@@ -1,5 +1,5 @@
 import type {
-  AbilityAttribute,
+  AttackScalingProperty,
   Attribute,
   CharacterStat,
   EnemyStat,
@@ -115,7 +115,7 @@ export interface BaseCapability {
 }
 
 export interface GameDataRotationRuntimeResolvableNumber extends LinearParameterizedNumber<
-  CharacterStat | EnemyStat | AbilityAttribute
+  CharacterStat | EnemyStat | AttackScalingProperty
 > {
   /**
    * The reference to the character whose stats are used to resolve the value at rotation runtime.
@@ -183,7 +183,7 @@ export type Modifier<T = {}> = ModifierBase & T;
  */
 interface AttackBase extends BaseCapability {
   /** The stat used for damage scaling (e.g., ATK, DEF, HP) */
-  scalingStat: AbilityAttribute;
+  scalingStat: AttackScalingProperty;
   /** The elemental attribute of the damage */
   attribute: Attribute;
   /** The multipliers for each level of the attack */

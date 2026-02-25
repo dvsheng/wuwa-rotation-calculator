@@ -1,7 +1,13 @@
 import { z } from 'zod';
 
 import { CapabilityType, Sequence, Target } from '@/services/game-data';
-import { AbilityAttribute, Attribute, CharacterStat, EnemyStat, Tag } from '@/types';
+import {
+  AttackScalingProperty,
+  Attribute,
+  CharacterStat,
+  EnemyStat,
+  Tag,
+} from '@/types';
 
 // ============================================================================
 // RefineScalableNumber Schema
@@ -93,7 +99,7 @@ const DatabaseBaseAttackDataSchema = z
     ),
     tags: z.array(z.enum(Tag)),
     attribute: z.enum(Attribute),
-    scalingStat: z.enum(AbilityAttribute),
+    scalingStat: z.enum(AttackScalingProperty),
   })
   .strict();
 

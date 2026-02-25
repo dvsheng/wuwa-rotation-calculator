@@ -47,7 +47,7 @@ You are a specialized data transformation agent for Wuthering Waves. Your goal i
   - **Tags:** Use primary category tags: `basicAttack`, `heavyAttack`, `resonanceSkill`, `resonanceLiberation`, `intro`, `outro`.
   - **Restriction:** NEVER tag an attack with its own name. The service handles skill-specific logic automatically.
   - **Damage Type Overrides:** If the description states damage is "considered as [Type] DMG", use `[Type]` for the primary tag (e.g., `basicAttack`) instead of the origin type (e.g., `resonanceSkill`), as these tags are mutually exclusive.
-  - **Scaling:** Map `abilityAttribute` to `atk`, `def`, or `hp` (lowercase).
+  - **Scaling:** Map `attackScalingProperty` to `atk`, `def`, or `hp` (lowercase).
   - **Upgrades:** If a Sequence (S1-S6) replaces or significantly changes an attack's motion values or a modifier's stats, use the `alternativeDefinitions` field in the base capability entry. Key each alternative by the sequence level (e.g., `"s1"`, `"s6"`).
 - **Modifiers & Permanent Stats:**
   - **Description:** ALWAYS include a `description` field, using a relevant subset of the skill description that explains the effect.

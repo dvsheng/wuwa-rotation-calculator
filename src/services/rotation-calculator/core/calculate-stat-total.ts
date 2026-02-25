@@ -1,13 +1,13 @@
 import { sumBy } from 'es-toolkit/math';
 
-import { AbilityAttribute } from '@/types';
+import { AttackScalingProperty } from '@/types';
 import type { CharacterStats } from '@/types';
 
-export const isAbilityAttribute = (key: string): key is AbilityAttribute => {
-  return Object.values(AbilityAttribute).includes(key as AbilityAttribute);
+export const isAttackScalingProperty = (key: string): key is AttackScalingProperty => {
+  return Object.values(AttackScalingProperty).includes(key as AttackScalingProperty);
 };
 
-const calculateAbilityAttributeTotal = (
+const calculateAttackScalingPropertyTotal = (
   flat: number,
   scalingBonus: number,
   flatBonus: number,
@@ -19,27 +19,27 @@ export const sumStatValues = (statValues: Array<{ value: number }>) => {
   return sumBy(statValues, (statValue) => statValue.value);
 };
 
-export const calculateAbilityAttributeValue = (
+export const calculateAttackScalingPropertyValue = (
   stats: CharacterStats<number>,
-  attribute: AbilityAttribute,
+  attribute: AttackScalingProperty,
 ) => {
   switch (attribute) {
-    case AbilityAttribute.ATK: {
-      return calculateAbilityAttributeTotal(
+    case AttackScalingProperty.ATK: {
+      return calculateAttackScalingPropertyTotal(
         sumStatValues(stats.attackFlat),
         sumStatValues(stats.attackScalingBonus),
         sumStatValues(stats.attackFlatBonus),
       );
     }
-    case AbilityAttribute.DEF: {
-      return calculateAbilityAttributeTotal(
+    case AttackScalingProperty.DEF: {
+      return calculateAttackScalingPropertyTotal(
         sumStatValues(stats.defenseFlat),
         sumStatValues(stats.defenseScalingBonus),
         sumStatValues(stats.defenseFlatBonus),
       );
     }
-    case AbilityAttribute.HP: {
-      return calculateAbilityAttributeTotal(
+    case AttackScalingProperty.HP: {
+      return calculateAttackScalingPropertyTotal(
         sumStatValues(stats.hpFlat),
         sumStatValues(stats.hpScalingBonus),
         sumStatValues(stats.hpFlatBonus),

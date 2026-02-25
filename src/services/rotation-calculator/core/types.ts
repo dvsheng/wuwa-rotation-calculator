@@ -31,3 +31,12 @@ export interface RotationResult {
     };
   }>;
 }
+
+export const AttackScalingType = {
+  REGULAR: 'regular',
+  NEGATIVE_STATUS: 'negativeStatus',
+  FLAT: 'flat',
+};
+
+export type AttackScalingType =
+  (typeof AttackScalingType)[keyof typeof AttackScalingType];

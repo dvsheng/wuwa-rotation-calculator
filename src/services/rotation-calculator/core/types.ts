@@ -35,7 +35,7 @@ export interface RotationResult {
 export const AttackScalingType = {
   REGULAR: 'regular',
   NEGATIVE_STATUS: 'negativeStatus',
-  FLAT: 'flat',
+  FIXED: 'fixed',
 };
 
 export type AttackScalingType =

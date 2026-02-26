@@ -188,7 +188,7 @@ describe('calculateRotationDamage', () => {
           {
             instance: {
               characterIndex: 0,
-              scalingStat: AttackScalingProperty.FLAT,
+              scalingStat: AttackScalingProperty.FIXED,
               motionValues: [123.4, 76.6],
               tags: [Tag.ELECTRO, Tag.BASIC_ATTACK],
             },

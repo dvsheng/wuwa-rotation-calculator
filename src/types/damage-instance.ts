@@ -10,7 +10,7 @@ export const AttackScalingProperty = {
   ATK: 'atk',
   /** Scales with DEF. */
   DEF: 'def',
-  FLAT: 'flat',
+  FIXED: 'fixed',
   ...NegativeStatus,
 } as const;
 

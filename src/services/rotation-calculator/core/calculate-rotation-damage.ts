@@ -1,6 +1,6 @@
 import { applyModifiers } from './apply-modifiers';
 import { calculateAttackDamage } from './calculate-attack-damage';
-import { createStatFilteringStrategy } from './filter-stats';
+import { getStatFilterer } from './filter-stats';
 import type { Rotation, RotationResult } from './types';
 
 export const calculateRotationDamage = (rotation: Rotation): RotationResult => {
@@ -11,18 +11,14 @@ export const calculateRotationDamage = (rotation: Rotation): RotationResult => {
         rotation.enemy,
         modifiers,
       );
-      const filteringStrategy = createStatFilteringStrategy(
-        instance.scalingStat,
-        instance.tags,
+      const filterStats = getStatFilterer(instance.scalingStat, instance.tags);
+      const { filteredTeam, filteredEnemy } = filterStats(
+        teamWithModifiers,
+        enemyWithModifiers,
       );
-      const teamWithRelevantStats = teamWithModifiers.map((character) =>
-        filteringStrategy.filterCharacterStats(character),
-      );
-      const enemyWithRelevantStats =
-        filteringStrategy.filterEnemyStats(enemyWithModifiers);
       const instanceDamage = calculateAttackDamage(instance, {
-        team: teamWithRelevantStats,
-        enemy: enemyWithRelevantStats,
+        team: filteredTeam,
+        enemy: filteredEnemy,
       });
       const { totalDamage, damageInstances, damageDetails } = reducer;
       return {
@@ -31,8 +27,8 @@ export const calculateRotationDamage = (rotation: Rotation): RotationResult => {
         damageDetails: [
           ...damageDetails,
           {
-            team: teamWithRelevantStats,
-            enemy: enemyWithRelevantStats,
+            team: filteredTeam,
+            enemy: filteredEnemy,
             instance,
             resolvedStats: instanceDamage.inputs,
           },

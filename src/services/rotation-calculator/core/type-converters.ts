@@ -1,4 +1,4 @@
-import type { AttackScalingProperty } from '@/types';
+import { AttackScalingProperty } from '@/types';
 
 import { AttackScalingType } from './types';
 
@@ -6,13 +6,13 @@ export const getAttackScalingType = (
   property: AttackScalingProperty,
 ): AttackScalingType => {
   switch (property) {
-    case 'hp':
-    case 'atk':
-    case 'def': {
+    case AttackScalingProperty.ATK:
+    case AttackScalingProperty.HP:
+    case AttackScalingProperty.DEF: {
       return AttackScalingType.REGULAR;
     }
-    case 'flat': {
-      return AttackScalingType.FLAT;
+    case AttackScalingProperty.FIXED: {
+      return AttackScalingType.FIXED;
     }
     default: {
       return AttackScalingType.NEGATIVE_STATUS;

@@ -1,268 +1,182 @@
 import { describe, expect, it } from 'vitest';
 
-import { CharacterStat, Tag } from '@/types';
-import type { Character, CharacterStats, Enemy } from '@/types';
-
 import {
-  filterCharacterStatsByTags,
-  filterEnemyStatsByTags,
-  filterStatValuesByTags,
-} from './filter-stats';
+  AttackScalingProperty,
+  Attribute,
+  CharacterStat,
+  EnemyStat,
+  NegativeStatus,
+  Tag,
+} from '@/types';
+import type {
+  Character,
+  CharacterStats,
+  Enemy,
+  EnemyStats,
+  TaggedStatValue,
+} from '@/types';
 
-describe('filterStatValuesByTags', () => {
-  it('includes stats with matching tags', () => {
-    const stats: CharacterStats = {
-      [CharacterStat.DAMAGE_BONUS]: [
-        { tags: [Tag.ELECTRO], value: 0.2 },
-        { tags: [Tag.GLACIO], value: 0.15 },
-        { tags: [Tag.BASIC_ATTACK], value: 0.1 },
-      ],
-      [CharacterStat.CRITICAL_RATE]: [{ tags: [Tag.ALL], value: 0.5 }],
-      [CharacterStat.ATTACK_FLAT]: [],
-      [CharacterStat.ATTACK_SCALING_BONUS]: [],
-      [CharacterStat.ATTACK_FLAT_BONUS]: [],
-      [CharacterStat.DEFENSE_FLAT]: [],
-      [CharacterStat.DEFENSE_SCALING_BONUS]: [],
-      [CharacterStat.DEFENSE_FLAT_BONUS]: [],
-      [CharacterStat.HP_FLAT]: [],
-      [CharacterStat.HP_SCALING_BONUS]: [],
-      [CharacterStat.HP_FLAT_BONUS]: [],
-      [CharacterStat.CRITICAL_DAMAGE]: [],
-      [CharacterStat.DEFENSE_IGNORE]: [],
-      [CharacterStat.RESISTANCE_PENETRATION]: [],
-      [CharacterStat.DAMAGE_AMPLIFICATION]: [],
-      [CharacterStat.DAMAGE_MULTIPLIER_BONUS]: [],
-      [CharacterStat.FINAL_DAMAGE_BONUS]: [],
-      [CharacterStat.FLAT_DAMAGE]: [],
-      [CharacterStat.OFF_TUNE_BUILDUP_RATE]: [],
-      [CharacterStat.TUNE_BREAK_BOOST]: [],
-      [CharacterStat.ENERGY_REGEN]: [],
-      [CharacterStat.HEALING_BONUS]: [],
-    };
+import { getStatFilterer } from './filter-stats';
 
-    const filtered = filterStatValuesByTags(stats, [Tag.ELECTRO, Tag.BASIC_ATTACK]);
+const createEmptyCharacterStats = (): CharacterStats => {
+  return Object.fromEntries(
+    Object.values(CharacterStat).map((stat) => [stat, [] as Array<TaggedStatValue>]),
+  ) as CharacterStats;
+};
 
-    // Should include ELECTRO and BASIC_ATTACK damage bonuses
-    expect(filtered[CharacterStat.DAMAGE_BONUS]).toHaveLength(2);
-    expect(filtered[CharacterStat.DAMAGE_BONUS]).toContainEqual({
-      tags: [Tag.ELECTRO],
-      value: 0.2,
-    });
-    expect(filtered[CharacterStat.DAMAGE_BONUS]).toContainEqual({
-      tags: [Tag.BASIC_ATTACK],
-      value: 0.1,
-    });
+const createEmptyEnemyStats = (): EnemyStats => {
+  return Object.fromEntries(
+    Object.values(EnemyStat).map((stat) => [stat, [] as Array<TaggedStatValue>]),
+  ) as EnemyStats;
+};
 
-    // Should NOT include GLACIO damage bonus
-    expect(filtered[CharacterStat.DAMAGE_BONUS]).not.toContainEqual({
-      tags: [Tag.GLACIO],
-      value: 0.15,
-    });
-  });
-
-  it('always includes stats tagged with Tag.ALL', () => {
-    const stats: CharacterStats = {
-      [CharacterStat.DAMAGE_BONUS]: [{ tags: [Tag.ELECTRO], value: 0.2 }],
-      [CharacterStat.CRITICAL_RATE]: [{ tags: [Tag.ALL], value: 0.5 }],
-      [CharacterStat.CRITICAL_DAMAGE]: [{ tags: [Tag.ALL], value: 1.5 }],
-      [CharacterStat.ATTACK_FLAT]: [],
-      [CharacterStat.ATTACK_SCALING_BONUS]: [],
-      [CharacterStat.ATTACK_FLAT_BONUS]: [],
-      [CharacterStat.DEFENSE_FLAT]: [],
-      [CharacterStat.DEFENSE_SCALING_BONUS]: [],
-      [CharacterStat.DEFENSE_FLAT_BONUS]: [],
-      [CharacterStat.HP_FLAT]: [],
-      [CharacterStat.HP_SCALING_BONUS]: [],
-      [CharacterStat.HP_FLAT_BONUS]: [],
-      [CharacterStat.DEFENSE_IGNORE]: [],
-      [CharacterStat.RESISTANCE_PENETRATION]: [],
-      [CharacterStat.DAMAGE_AMPLIFICATION]: [],
-      [CharacterStat.DAMAGE_MULTIPLIER_BONUS]: [],
-      [CharacterStat.FINAL_DAMAGE_BONUS]: [],
-      [CharacterStat.FLAT_DAMAGE]: [],
-      [CharacterStat.OFF_TUNE_BUILDUP_RATE]: [],
-      [CharacterStat.TUNE_BREAK_BOOST]: [],
-      [CharacterStat.ENERGY_REGEN]: [],
-      [CharacterStat.HEALING_BONUS]: [],
-    };
-
-    const filtered = filterStatValuesByTags(stats, [Tag.GLACIO]);
-
-    // Should NOT include ELECTRO damage bonus (tags don't match)
-    expect(filtered[CharacterStat.DAMAGE_BONUS]).toHaveLength(0);
-
-    // Should include ALL-tagged stats even though tags are [GLACIO]
-    expect(filtered[CharacterStat.CRITICAL_RATE]).toHaveLength(1);
-    expect(filtered[CharacterStat.CRITICAL_RATE][0].value).toBe(0.5);
-    expect(filtered[CharacterStat.CRITICAL_DAMAGE]).toHaveLength(1);
-    expect(filtered[CharacterStat.CRITICAL_DAMAGE][0].value).toBe(1.5);
-  });
-
-  it('handles stats with multiple tags', () => {
-    const stats: CharacterStats = {
-      [CharacterStat.DAMAGE_BONUS]: [
-        { tags: [Tag.ELECTRO, Tag.BASIC_ATTACK], value: 0.25 },
-        { tags: [Tag.ELECTRO, Tag.RESONANCE_SKILL], value: 0.3 },
-        { tags: [Tag.GLACIO], value: 0.15 },
-      ],
-      [CharacterStat.ATTACK_FLAT]: [],
-      [CharacterStat.ATTACK_SCALING_BONUS]: [],
-      [CharacterStat.ATTACK_FLAT_BONUS]: [],
-      [CharacterStat.DEFENSE_FLAT]: [],
-      [CharacterStat.DEFENSE_SCALING_BONUS]: [],
-      [CharacterStat.DEFENSE_FLAT_BONUS]: [],
-      [CharacterStat.HP_FLAT]: [],
-      [CharacterStat.HP_SCALING_BONUS]: [],
-      [CharacterStat.HP_FLAT_BONUS]: [],
-      [CharacterStat.CRITICAL_RATE]: [],
-      [CharacterStat.CRITICAL_DAMAGE]: [],
-      [CharacterStat.DEFENSE_IGNORE]: [],
-      [CharacterStat.RESISTANCE_PENETRATION]: [],
-      [CharacterStat.DAMAGE_AMPLIFICATION]: [],
-      [CharacterStat.DAMAGE_MULTIPLIER_BONUS]: [],
-      [CharacterStat.FINAL_DAMAGE_BONUS]: [],
-      [CharacterStat.FLAT_DAMAGE]: [],
-      [CharacterStat.OFF_TUNE_BUILDUP_RATE]: [],
-      [CharacterStat.TUNE_BREAK_BOOST]: [],
-      [CharacterStat.ENERGY_REGEN]: [],
-      [CharacterStat.HEALING_BONUS]: [],
-    };
-
-    const filtered = filterStatValuesByTags(stats, [Tag.ELECTRO, Tag.BASIC_ATTACK]);
-
-    // Should include both ELECTRO bonuses (both have ELECTRO tag)
-    expect(filtered[CharacterStat.DAMAGE_BONUS]).toHaveLength(2);
-    expect(filtered[CharacterStat.DAMAGE_BONUS]).toContainEqual({
-      tags: [Tag.ELECTRO, Tag.BASIC_ATTACK],
-      value: 0.25,
-    });
-    expect(filtered[CharacterStat.DAMAGE_BONUS]).toContainEqual({
-      tags: [Tag.ELECTRO, Tag.RESONANCE_SKILL],
-      value: 0.3,
-    });
-  });
-
-  it('returns empty arrays for stats with no matching tags', () => {
-    const stats: CharacterStats = {
-      [CharacterStat.DAMAGE_BONUS]: [
-        { tags: [Tag.GLACIO], value: 0.2 },
-        { tags: [Tag.FUSION], value: 0.15 },
-      ],
-      [CharacterStat.ATTACK_FLAT]: [],
-      [CharacterStat.ATTACK_SCALING_BONUS]: [],
-      [CharacterStat.ATTACK_FLAT_BONUS]: [],
-      [CharacterStat.DEFENSE_FLAT]: [],
-      [CharacterStat.DEFENSE_SCALING_BONUS]: [],
-      [CharacterStat.DEFENSE_FLAT_BONUS]: [],
-      [CharacterStat.HP_FLAT]: [],
-      [CharacterStat.HP_SCALING_BONUS]: [],
-      [CharacterStat.HP_FLAT_BONUS]: [],
-      [CharacterStat.CRITICAL_RATE]: [],
-      [CharacterStat.CRITICAL_DAMAGE]: [],
-      [CharacterStat.DEFENSE_IGNORE]: [],
-      [CharacterStat.RESISTANCE_PENETRATION]: [],
-      [CharacterStat.DAMAGE_AMPLIFICATION]: [],
-      [CharacterStat.DAMAGE_MULTIPLIER_BONUS]: [],
-      [CharacterStat.FINAL_DAMAGE_BONUS]: [],
-      [CharacterStat.FLAT_DAMAGE]: [],
-      [CharacterStat.OFF_TUNE_BUILDUP_RATE]: [],
-      [CharacterStat.TUNE_BREAK_BOOST]: [],
-      [CharacterStat.ENERGY_REGEN]: [],
-      [CharacterStat.HEALING_BONUS]: [],
-    };
-
-    const filtered = filterStatValuesByTags(stats, [Tag.ELECTRO]);
-
-    // No ELECTRO damage bonuses
-    expect(filtered[CharacterStat.DAMAGE_BONUS]).toHaveLength(0);
-  });
+const createCharacter = (stats: Partial<CharacterStats> = {}): Character => ({
+  id: 1,
+  level: 90,
+  stats: {
+    ...createEmptyCharacterStats(),
+    ...stats,
+  },
 });
 
-describe('filterCharacterStatsByTags', () => {
-  it('filters character stats while preserving other properties', () => {
-    const character: Character = {
-      id: 12_345,
-      level: 90,
-      stats: {
+const createEnemy = (stats: Partial<EnemyStats> = {}): Enemy => ({
+  level: 100,
+  stats: {
+    ...createEmptyEnemyStats(),
+    ...stats,
+  },
+});
+
+describe('getStatFilterer', () => {
+  it('keeps tag-matching and Tag.ALL stats for regular scaling', () => {
+    const team = [
+      createCharacter({
         [CharacterStat.DAMAGE_BONUS]: [
           { tags: [Tag.ELECTRO], value: 0.2 },
-          { tags: [Tag.GLACIO], value: 0.15 },
+          { tags: [Tag.GLACIO], value: 0.1 },
+          { tags: [Tag.ALL], value: 0.05 },
         ],
-        [CharacterStat.CRITICAL_RATE]: [{ tags: [Tag.ALL], value: 0.5 }],
-        [CharacterStat.ATTACK_FLAT]: [],
-        [CharacterStat.ATTACK_SCALING_BONUS]: [],
-        [CharacterStat.ATTACK_FLAT_BONUS]: [],
-        [CharacterStat.DEFENSE_FLAT]: [],
-        [CharacterStat.DEFENSE_SCALING_BONUS]: [],
-        [CharacterStat.DEFENSE_FLAT_BONUS]: [],
-        [CharacterStat.HP_FLAT]: [],
-        [CharacterStat.HP_SCALING_BONUS]: [],
-        [CharacterStat.HP_FLAT_BONUS]: [],
-        [CharacterStat.CRITICAL_DAMAGE]: [],
-        [CharacterStat.DEFENSE_IGNORE]: [],
-        [CharacterStat.RESISTANCE_PENETRATION]: [],
-        [CharacterStat.DAMAGE_AMPLIFICATION]: [],
-        [CharacterStat.DAMAGE_MULTIPLIER_BONUS]: [],
-        [CharacterStat.FINAL_DAMAGE_BONUS]: [],
-        [CharacterStat.FLAT_DAMAGE]: [],
-        [CharacterStat.OFF_TUNE_BUILDUP_RATE]: [],
-        [CharacterStat.TUNE_BREAK_BOOST]: [],
-        [CharacterStat.ENERGY_REGEN]: [],
-        [CharacterStat.HEALING_BONUS]: [],
-      },
-    };
-
-    const filtered = filterCharacterStatsByTags(character, [Tag.ELECTRO]);
-
-    // Preserves character properties
-    expect(filtered.id).toBe(12_345);
-    expect(filtered.level).toBe(90);
-
-    // Filters stats
-    expect(filtered.stats[CharacterStat.DAMAGE_BONUS]).toHaveLength(1);
-    expect(filtered.stats[CharacterStat.DAMAGE_BONUS][0]).toEqual({
-      tags: [Tag.ELECTRO],
-      value: 0.2,
+      }),
+    ];
+    const enemy = createEnemy({
+      [EnemyStat.BASE_RESISTANCE]: [
+        { tags: [Tag.ELECTRO], value: 0.1 },
+        { tags: [Tag.GLACIO], value: 0.2 },
+        { tags: [Tag.ALL], value: 0.05 },
+      ],
     });
 
-    // Includes Tag.ALL stats
-    expect(filtered.stats[CharacterStat.CRITICAL_RATE]).toHaveLength(1);
+    const filterStats = getStatFilterer(AttackScalingProperty.ATK, [
+      Tag.ELECTRO,
+      Tag.BASIC_ATTACK,
+    ]);
+    const { filteredTeam, filteredEnemy } = filterStats(team, enemy);
+
+    expect(filteredTeam[0].stats[CharacterStat.DAMAGE_BONUS]).toEqual([
+      { tags: [Tag.ELECTRO], value: 0.2 },
+      { tags: [Tag.ALL], value: 0.05 },
+    ]);
+    expect(filteredEnemy.stats[EnemyStat.BASE_RESISTANCE]).toEqual([
+      { tags: [Tag.ELECTRO], value: 0.1 },
+      { tags: [Tag.ALL], value: 0.05 },
+    ]);
   });
-});
 
-describe('filterEnemyStatsByTags', () => {
-  it('filters enemy stats while preserving other properties', () => {
-    const enemy: Enemy = {
-      level: 90,
-      stats: {
-        baseResistance: [
-          { tags: [Tag.ELECTRO], value: 0.1 },
-          { tags: [Tag.GLACIO], value: 0.2 },
+  it('treats legacy flat stat keys as regular scaling in declarative config', () => {
+    const team = [
+      createCharacter({
+        [CharacterStat.DAMAGE_BONUS]: [
+          { tags: [Tag.ELECTRO], value: 0.2 },
+          { tags: [Tag.ALL], value: 0.1 },
         ],
-        defenseReduction: [{ tags: [Tag.ALL], value: 0.15 }],
-        resistanceReduction: [],
-        glacioChafe: [],
-        spectroFrazzle: [],
-        fusionBurst: [],
-        havocBane: [],
-        aeroErosion: [],
-        electroFlare: [],
-      },
-    };
+      }),
+    ];
+    const enemy = createEnemy();
 
-    const filtered = filterEnemyStatsByTags(enemy, [Tag.ELECTRO]);
+    const filterStats = getStatFilterer(
+      CharacterStat.ATTACK_FLAT as unknown as AttackScalingProperty,
+      [Tag.ELECTRO],
+    );
+    const { filteredTeam } = filterStats(team, enemy);
 
-    // Preserves enemy properties
-    expect(filtered.level).toBe(90);
+    expect(filteredTeam[0].stats[CharacterStat.DAMAGE_BONUS]).toEqual([
+      { tags: [Tag.ELECTRO], value: 0.2 },
+      { tags: [Tag.ALL], value: 0.1 },
+    ]);
+  });
 
-    // Filters stats
-    expect(filtered.stats.baseResistance).toHaveLength(1);
-    expect(filtered.stats.baseResistance[0]).toEqual({
-      tags: [Tag.ELECTRO],
-      value: 0.1,
+  it('removes all tagged stats for fixed scaling', () => {
+    const team = [
+      createCharacter({
+        [CharacterStat.FINAL_DAMAGE_BONUS]: [{ tags: [Tag.ALL], value: 0.5 }],
+      }),
+    ];
+    const enemy = createEnemy({
+      [EnemyStat.DEFENSE_REDUCTION]: [{ tags: [Tag.ALL], value: 0.5 }],
     });
 
-    // Includes Tag.ALL stats
-    expect(filtered.stats.defenseReduction).toHaveLength(1);
+    const filterStats = getStatFilterer(AttackScalingProperty.FIXED, [Tag.ELECTRO]);
+    const { filteredTeam, filteredEnemy } = filterStats(team, enemy);
+
+    expect(filteredTeam[0].stats[CharacterStat.FINAL_DAMAGE_BONUS]).toEqual([]);
+    expect(filteredEnemy.stats[EnemyStat.DEFENSE_REDUCTION]).toEqual([]);
+  });
+
+  it('uses per-stat declarative negative-status rules for character stats', () => {
+    const team = [
+      createCharacter({
+        [CharacterStat.DEFENSE_IGNORE]: [
+          { tags: [Attribute.AERO], value: 0.3 },
+          { tags: [Attribute.FUSION], value: 0.9 },
+        ],
+        [CharacterStat.DAMAGE_AMPLIFICATION]: [
+          { tags: [Attribute.AERO], value: 1 },
+          { tags: [NegativeStatus.AERO_EROSION], value: 2 },
+        ],
+      }),
+    ];
+    const enemy = createEnemy();
+
+    const filterStats = getStatFilterer(AttackScalingProperty.AERO_EROSION, [
+      Tag.ALL,
+      Attribute.AERO,
+      NegativeStatus.AERO_EROSION,
+    ]);
+    const { filteredTeam } = filterStats(team, enemy);
+
+    expect(filteredTeam[0].stats[CharacterStat.DEFENSE_IGNORE]).toEqual([
+      { tags: [Attribute.AERO], value: 0.3 },
+    ]);
+    expect(filteredTeam[0].stats[CharacterStat.DAMAGE_AMPLIFICATION]).toEqual([
+      { tags: [NegativeStatus.AERO_EROSION], value: 2 },
+    ]);
+  });
+
+  it('keeps negative-status enemy stats for both attribute and status tags', () => {
+    const team = [createCharacter()];
+    const enemy = createEnemy({
+      [EnemyStat.BASE_RESISTANCE]: [
+        { tags: [Attribute.AERO], value: 0.1 },
+        { tags: [Attribute.FUSION], value: 0.2 },
+      ],
+      [EnemyStat.AERO_EROSION]: [
+        { tags: [NegativeStatus.AERO_EROSION], value: 9 },
+        { tags: [NegativeStatus.FUSION_BURST], value: 4 },
+      ],
+    });
+
+    const filterStats = getStatFilterer(AttackScalingProperty.AERO_EROSION, [
+      Tag.ALL,
+      Attribute.AERO,
+      NegativeStatus.AERO_EROSION,
+    ]);
+    const { filteredEnemy } = filterStats(team, enemy);
+
+    expect(filteredEnemy.stats[EnemyStat.BASE_RESISTANCE]).toEqual([
+      { tags: [Attribute.AERO], value: 0.1 },
+    ]);
+    expect(filteredEnemy.stats[EnemyStat.AERO_EROSION]).toEqual([
+      { tags: [NegativeStatus.AERO_EROSION], value: 9 },
+    ]);
   });
 });

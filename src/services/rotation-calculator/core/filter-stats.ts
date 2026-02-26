@@ -1,144 +1,141 @@
 import { intersection } from 'es-toolkit/array';
 import { mapValues } from 'es-toolkit/object';
 
-import { NEGATIVE_STATUS_TO_ATTRIBUTE, Tag } from '@/types';
-import type {
+import type { Enemy, TaggedStatValue, Team } from '@/types';
+import {
   AttackScalingProperty,
-  Character,
-  CharacterStats,
-  Enemy,
-  EnemyStats,
-  NegativeStatus,
+  CharacterStat,
+  EnemyStat,
+  NEGATIVE_STATUS_TO_ATTRIBUTE,
+  Tag,
 } from '@/types';
 
-import { getAttackScalingType } from './type-converters';
-import { AttackScalingType } from './types';
+/**
+ * Declarative mapping of each stat key to the list of tags allowed for that stat
+ * in a single damage calculation context.
+ */
+type StatFilterConfiguration = Record<CharacterStat | EnemyStat, Array<string>>;
 
 /**
- * Filters stat values in a stats object to only include those matching the given tags.
- * Stats tagged with Tag.ALL are always included.
+ * Filters a stat record using a per-stat tag allowlist configuration.
  *
- * @param stats - The stats object to filter (CharacterStats or EnemyStats)
- * @param tags - The tags to filter by (e.g., attack tags like BASIC_ATTACK, ELECTRO)
- * @returns A new stats object with only matching stat values
- *
- * @example
- * const filtered = filterStatValuesByTags(character.stats, [Tag.BASIC_ATTACK, Tag.ELECTRO]);
- * // Only stats with tags matching BASIC_ATTACK, ELECTRO, or ALL remain
+ * @param stats - Character or enemy stat record to filter.
+ * @param configuration - Per-stat tag allowlist.
+ * @returns A new stat record containing only entries with at least one matching tag.
  */
-export function filterStatValuesByTags<T extends CharacterStats | EnemyStats>(
-  stats: T,
-  tags: Array<string>,
-): T {
-  return mapValues(stats, (statValues) => {
-    if (!statValues || !Array.isArray(statValues)) return statValues;
-    return statValues.filter((stat) => {
-      return intersection(tags, stat.tags).length > 0 || stat.tags.includes(Tag.ALL);
-    });
-  }) as T;
-}
-
-export const filterCharacterStatsByNegativeStatus = (
-  character: Character,
-  negativeStatus: NegativeStatus,
-) => {
-  const stats = mapValues(character.stats, (statValues) => {
-    if (!Array.isArray(statValues)) return statValues;
-    return statValues.filter((stat) => {
-      return intersection([negativeStatus], stat.tags).length > 0;
+const filterStats = <T extends CharacterStat | EnemyStat>(
+  stats: Record<T, Array<TaggedStatValue>>,
+  configuration: StatFilterConfiguration,
+): Record<T, Array<TaggedStatValue>> => {
+  return mapValues(stats, (statValues, stat) => {
+    const tags = configuration[stat];
+    return statValues.filter((statValue) => {
+      return intersection(tags, statValue.tags).length > 0;
     });
   });
-  return {
-    ...character,
-    stats,
-  };
-};
-
-export const filterEnemyStatsByNegativeStatus = (
-  enemy: Enemy,
-  negativeStatus: NegativeStatus,
-) => {
-  const attribute = NEGATIVE_STATUS_TO_ATTRIBUTE[negativeStatus];
-  return filterEnemyStatsByTags(enemy, [attribute, negativeStatus]);
 };
 
 /**
- * Filters a character's stats to only include those matching the given tags.
- * Stats tagged with Tag.ALL are always included.
+ * Creates a reusable filter function bound to a specific stat filtering configuration.
  *
- * @param character - The character whose stats should be filtered
- * @param tags - The tags to filter by (e.g., attack tags like BASIC_ATTACK, ELECTRO)
- * @returns A new character object with filtered stats
- *
- * @example
- * const filtered = filterCharacterStatsByTags(character, [Tag.BASIC_ATTACK, Tag.ELECTRO]);
- * // Character with only relevant stats for an Electro basic attack
+ * @param configuration - Per-stat tag allowlist for this damage context.
+ * @returns Function that filters both team and enemy stats for the same context.
  */
-export function filterCharacterStatsByTags(
-  character: Character,
-  tags: Array<string>,
-): Character {
-  return {
-    ...character,
-    stats: filterStatValuesByTags(character.stats, tags),
+const createStatFilterer = (configuration: StatFilterConfiguration) => {
+  return (team: Team, enemy: Enemy) => {
+    const filteredTeam = team.map((character) => {
+      return {
+        ...character,
+        stats: filterStats(character.stats, configuration),
+      };
+    });
+    const filteredEnemy = {
+      ...enemy,
+      stats: filterStats(enemy.stats, configuration),
+    };
+    return { filteredTeam, filteredEnemy };
   };
-}
+};
 
 /**
- * Filters an enemy's stats to only include those matching the given tags.
- * Stats tagged with Tag.ALL are always included.
+ * Builds the declarative stat filter configuration for a given attack scaling property.
  *
- * @param enemy - The enemy whose stats should be filtered
- * @param tags - The tags to filter by (e.g., attack tags like BASIC_ATTACK, ELECTRO)
- * @returns A new enemy object with filtered stats
+ * Rules:
+ * - Regular scaling (ATK/HP/DEF): keep tag-matching stats plus Tag.ALL.
+ * - Fixed scaling: keep no tagged stats.
+ * - Negative status scaling: keep most stats by status + attribute + Tag.ALL, but
+ *   for non-scaling offensive stats, only keep status-tagged entries.
  *
- * @example
- * const filtered = filterEnemyStatsByTags(enemy, [Tag.BASIC_ATTACK, Tag.ELECTRO]);
- * // Enemy with only relevant stats for an Electro basic attack
+ * @param attackScalingProperty - Attack scaling key for the current damage instance.
+ * @param tags - Damage instance tags used for regular scaling filtering.
+ * @returns Per-stat tag allowlist configuration for downstream filtering.
  */
-export function filterEnemyStatsByTags(enemy: Enemy, tags: Array<string>): Enemy {
-  return {
-    ...enemy,
-    stats: filterStatValuesByTags(enemy.stats, tags),
-  };
-}
-
-export interface StatFilteringStrategy {
-  filterCharacterStats: (character: Character) => Character;
-  filterEnemyStats: (enemy: Enemy) => Enemy;
-}
-
-const createTagBasedFilteringStrategy = (
+const getStatFilterConfiguration = (
+  attackScalingProperty: AttackScalingProperty,
   tags: Array<string>,
-): StatFilteringStrategy => ({
-  filterCharacterStats: (character: Character) =>
-    filterCharacterStatsByTags(character, tags),
-  filterEnemyStats: (enemy: Enemy) => filterEnemyStatsByTags(enemy, tags),
-});
-
-const createNegativeStatusFilteringStrategy = (
-  scalingStat: NegativeStatus,
-): StatFilteringStrategy => ({
-  filterCharacterStats: (character: Character) =>
-    filterCharacterStatsByNegativeStatus(character, scalingStat),
-  filterEnemyStats: (enemy: Enemy) =>
-    filterEnemyStatsByNegativeStatus(enemy, scalingStat),
-});
-
-export const createStatFilteringStrategy = (
-  scalingStat: AttackScalingProperty,
-  tags: Array<string>,
-): StatFilteringStrategy => {
-  const attackScalingType = getAttackScalingType(scalingStat);
-  switch (attackScalingType) {
-    case AttackScalingType.NEGATIVE_STATUS: {
-      return createNegativeStatusFilteringStrategy(scalingStat as NegativeStatus);
+): StatFilterConfiguration => {
+  const allStats = [...Object.values(CharacterStat), ...Object.values(EnemyStat)];
+  switch (attackScalingProperty) {
+    case AttackScalingProperty.ATK:
+    case AttackScalingProperty.HP:
+    case AttackScalingProperty.DEF: {
+      const tagsForRegularAttack = [...tags, Tag.ALL];
+      return Object.fromEntries(
+        allStats.map((stat) => [stat, tagsForRegularAttack]),
+      ) as StatFilterConfiguration;
     }
-    case AttackScalingType.REGULAR: {
-      return createTagBasedFilteringStrategy(tags);
+    case AttackScalingProperty.FIXED: {
+      const tagsForFixedAttack: Array<string> = [];
+      return Object.fromEntries(
+        allStats.map((stat) => [stat, tagsForFixedAttack]),
+      ) as StatFilterConfiguration;
     }
-    default: {
-      return createTagBasedFilteringStrategy(tags);
+    case AttackScalingProperty.AERO_EROSION:
+    case AttackScalingProperty.ELECTRO_FLARE:
+    case AttackScalingProperty.FUSION_BURST:
+    case AttackScalingProperty.GLACIO_CHAFE:
+    case AttackScalingProperty.HAVOC_BANE:
+    case AttackScalingProperty.SPECTRO_FRAZZLE: {
+      const tagsGeneral = [
+        attackScalingProperty,
+        NEGATIVE_STATUS_TO_ATTRIBUTE[attackScalingProperty],
+        Tag.ALL,
+      ];
+      const tagsForTargetedStat = [attackScalingProperty];
+      const statsThatPropertyDoesNotScaleBy = [
+        CharacterStat.CRITICAL_RATE,
+        CharacterStat.CRITICAL_DAMAGE,
+        CharacterStat.DAMAGE_BONUS,
+        CharacterStat.DAMAGE_AMPLIFICATION,
+        CharacterStat.DAMAGE_MULTIPLIER_BONUS,
+        CharacterStat.FLAT_DAMAGE,
+      ];
+      return {
+        ...Object.fromEntries(allStats.map((stat) => [stat, tagsGeneral])),
+        ...Object.fromEntries(
+          statsThatPropertyDoesNotScaleBy.map((stat) => [stat, tagsForTargetedStat]),
+        ),
+      } as StatFilterConfiguration;
     }
   }
+};
+
+/**
+ * Filter function returned by {@link getStatFilterer}.
+ */
+export type StatFilterer = ReturnType<typeof createStatFilterer>;
+
+/**
+ * Returns a stat filter function configured for the provided scaling stat and tags.
+ *
+ * @param scalingStat - Scaling stat of the current damage instance.
+ * @param tags - Damage instance tags used for regular stat filtering.
+ * @returns A function that filters both team and enemy stats for calculation.
+ */
+export const getStatFilterer = (
+  scalingStat: AttackScalingProperty,
+  tags: Array<string>,
+): StatFilterer => {
+  const statFilterConfiguration = getStatFilterConfiguration(scalingStat, tags);
+  return createStatFilterer(statFilterConfiguration);
 };

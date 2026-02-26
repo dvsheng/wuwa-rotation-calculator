@@ -97,7 +97,7 @@ const getDamageCalculationStrategy = (instance: CharacterDamageInstance) => {
     case AttackScalingType.REGULAR: {
       return directDamageStrategy;
     }
-    case AttackScalingType.FLAT: {
+    case AttackScalingType.FIXED: {
       return flatDamageStrategy;
     }
     default: {

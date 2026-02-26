@@ -6,7 +6,14 @@ import type { Enemy } from '@/schemas/enemy';
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import type { Team } from '@/schemas/team';
 import { calculateRotationHandler } from '@/services/rotation-calculator/calculate-client-rotation-damage';
-import { Attribute, CharacterStat, EnemyStat, NegativeStatus, Tag } from '@/types';
+import {
+  AttackScalingProperty,
+  Attribute,
+  CharacterStat,
+  EnemyStat,
+  NegativeStatus,
+  Tag,
+} from '@/types';
 
 import * as enrichRotationData from './client-input-adapter/enrich-rotation-data';
 
@@ -116,7 +123,7 @@ const createMockCharacterData = (
     name: string;
     tags: Array<string>;
     motionValues: Array<number>;
-    scalingStat?: string;
+    scalingStat?: AttackScalingProperty;
   }> = [],
   modifiers: Array<{
     id: number;
@@ -132,7 +139,7 @@ const createMockCharacterData = (
     attacks: attacks.map((a) => ({
       ...a,
       parentName: name,
-      scalingStat: a.scalingStat ?? CharacterStat.ATTACK_FLAT,
+      scalingStat: a.scalingStat ?? AttackScalingProperty.ATK,
     })),
     modifiers,
     permanentStats: [
@@ -217,6 +224,7 @@ describe('calculateRotation', () => {
           name: 'Basic Attack Stage 1',
           tags: [Tag.BASIC_ATTACK],
           motionValues: [0.5, 0.5], // Example motion values
+          scalingStat: AttackScalingProperty.ATK,
         },
       ],
       [
@@ -327,6 +335,7 @@ describe('calculateRotation', () => {
     const AERO_EROSION_ATTACK_ID = 7_701_001;
     const AERO_EROSION_STACK_MODIFIER_ID = 7_701_002;
     const AERO_EROSION_AMP_MODIFIER_ID = 7_701_003;
+    const AERO_EROSION_DEFENSE_IGNORE_MODIFIER_ID = 7_701_004;
 
     beforeEach(() => {
       vi.spyOn(enrichRotationData, 'createGameDataEnricher').mockResolvedValue({
@@ -351,6 +360,22 @@ describe('calculateRotation', () => {
               target: 'enemy',
               modifiedStats: [
                 { stat: EnemyStat.AERO_EROSION, value: 9, tags: [Tag.ALL] },
+              ],
+            };
+          }
+          if (modifier.id === AERO_EROSION_DEFENSE_IGNORE_MODIFIER_ID) {
+            return {
+              ...modifier,
+              name: 'Aero Erosion Defense Ignore',
+              originType: 'Inherent Skill',
+              parentName: 'Negative Status',
+              target: 'team',
+              modifiedStats: [
+                {
+                  stat: CharacterStat.DEFENSE_IGNORE,
+                  value: 0.3,
+                  tags: [Attribute.AERO],
+                },
               ],
             };
           }
@@ -426,6 +451,70 @@ describe('calculateRotation', () => {
       expect(result.totalDamage).toBeCloseTo(28_471, 0);
       expect(result.damageInstances).toHaveLength(1);
       expect(result.damageInstances[0]).toBeCloseTo(28_471, 0);
+    });
+
+    it('applies defense ignore modifiers to negative-status damage', async () => {
+      const team: Team = [
+        createTestCharacter(AERO_CHARACTER_ID),
+        createTestCharacter(1304),
+        createTestCharacter(1505),
+      ];
+      const enemy: Enemy = {
+        ...createTestEnemy(),
+        level: 100,
+        resistances: {
+          ...createTestEnemy().resistances,
+          [Attribute.AERO]: 10,
+        },
+      };
+
+      const attack: AttackInstance = {
+        instanceId: 'attack-instance-1',
+        id: AERO_EROSION_ATTACK_ID,
+        characterId: AERO_CHARACTER_ID,
+      };
+      const erosionStacks: ModifierInstance = {
+        instanceId: 'modifier-instance-erosion-stacks',
+        id: AERO_EROSION_STACK_MODIFIER_ID,
+        characterId: AERO_CHARACTER_ID,
+        x: 0,
+        y: 0,
+        w: 1,
+        h: 1,
+      };
+      const erosionDefenseIgnore: ModifierInstance = {
+        instanceId: 'modifier-instance-erosion-defense-ignore',
+        id: AERO_EROSION_DEFENSE_IGNORE_MODIFIER_ID,
+        characterId: AERO_CHARACTER_ID,
+        x: 0,
+        y: 0,
+        w: 1,
+        h: 1,
+      };
+
+      const resultWithoutDefenseIgnore = await calculateRotationHandler(
+        team,
+        enemy,
+        [attack],
+        [erosionStacks],
+      );
+      const resultWithDefenseIgnore = await calculateRotationHandler(
+        team,
+        enemy,
+        [attack],
+        [erosionStacks, erosionDefenseIgnore],
+      );
+
+      expect(
+        resultWithoutDefenseIgnore.damageDetails[0].resolvedStats.character
+          .defenseIgnore,
+      ).toBe(0);
+      expect(
+        resultWithDefenseIgnore.damageDetails[0].resolvedStats.character.defenseIgnore,
+      ).toBe(0.3);
+      expect(resultWithDefenseIgnore.totalDamage).toBeGreaterThan(
+        resultWithoutDefenseIgnore.totalDamage,
+      );
     });
 
     afterEach(() => {

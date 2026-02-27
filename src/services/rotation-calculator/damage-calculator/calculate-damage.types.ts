@@ -14,7 +14,6 @@ const RelevantCharacterStats = [
   CharacterStat.RESISTANCE_PENETRATION,
   CharacterStat.FINAL_DAMAGE_BONUS,
   CharacterStat.DAMAGE_AMPLIFICATION,
-  CharacterStat.FLAT_DAMAGE,
 ] as const;
 
 type RelevantCharacterStats = (typeof RelevantCharacterStats)[number];

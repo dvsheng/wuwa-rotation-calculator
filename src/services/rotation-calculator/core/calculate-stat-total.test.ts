@@ -36,7 +36,6 @@ const createMockStats = (
   [CharacterStat.DAMAGE_AMPLIFICATION]: [],
   [CharacterStat.DAMAGE_MULTIPLIER_BONUS]: [],
   [CharacterStat.FINAL_DAMAGE_BONUS]: [],
-  [CharacterStat.FLAT_DAMAGE]: [],
   [CharacterStat.OFF_TUNE_BUILDUP_RATE]: [],
   [CharacterStat.TUNE_BREAK_BOOST]: [],
   [CharacterStat.ENERGY_REGEN]: [],

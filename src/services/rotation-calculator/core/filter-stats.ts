@@ -108,7 +108,6 @@ const getStatFilterConfiguration = (
         CharacterStat.DAMAGE_BONUS,
         CharacterStat.DAMAGE_AMPLIFICATION,
         CharacterStat.DAMAGE_MULTIPLIER_BONUS,
-        CharacterStat.FLAT_DAMAGE,
       ];
       return {
         ...Object.fromEntries(allStats.map((stat) => [stat, tagsGeneral])),

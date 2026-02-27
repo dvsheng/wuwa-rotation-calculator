@@ -178,18 +178,20 @@ interface ModifierBase extends BaseCapability {
  */
 export type Modifier<T = {}> = ModifierBase & T;
 
+export interface AttackDamageInstance {
+  motionValue: number | UserParameterizedNumber;
+  tags: Array<string>;
+  scalingStat: AttackScalingProperty;
+}
+
 /**
  * Internal base for attacks.
  */
 interface AttackBase extends BaseCapability {
-  /** The stat used for damage scaling (e.g., ATK, DEF, HP) */
-  scalingStat: AttackScalingProperty;
   /** The elemental attribute of the damage */
   attribute: Attribute;
-  /** The multipliers for each level of the attack */
-  motionValues: Array<number | UserParameterizedNumber>;
-  /** Tags identifying the type of attack (e.g., Basic Attack, Resonance Skill) */
-  tags: Array<string>;
+  /** Individual damage instances, each with their own motion value, tags, and scaling stat */
+  damageInstances: Array<AttackDamageInstance>;
 }
 
 /**

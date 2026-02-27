@@ -139,13 +139,17 @@ describe('calculateRotationDamage', () => {
         team,
         enemy,
         duration: 10,
-        damageInstances: [
+        attacks: [
           {
-            instance: {
+            attack: {
               characterIndex: 0,
-              scalingStat: AttackScalingProperty.ATK,
-              motionValues: [1],
-              tags: [Tag.BASIC_ATTACK, Tag.ELECTRO],
+              damageInstances: [
+                {
+                  scalingStat: AttackScalingProperty.ATK,
+                  motionValue: 1,
+                  tags: [Tag.BASIC_ATTACK, Tag.ELECTRO],
+                },
+              ],
             },
             modifiers: [modifier],
           },
@@ -157,7 +161,7 @@ describe('calculateRotationDamage', () => {
       // - 100% base
       // - Runtime-resolvable: (180% - 150%) * 2 = 60%, capped at 50%
       // Total: 150%
-      expect(result.damageDetails[0].resolvedStats.character.criticalDamage).toBe(1.5);
+      expect(result.damageDetails[0].character.criticalDamage).toBe(1.5);
     });
   });
 
@@ -184,13 +188,22 @@ describe('calculateRotationDamage', () => {
         team,
         enemy,
         duration: 10,
-        damageInstances: [
+        attacks: [
           {
-            instance: {
+            attack: {
               characterIndex: 0,
-              scalingStat: AttackScalingProperty.FIXED,
-              motionValues: [123.4, 76.6],
-              tags: [Tag.ELECTRO, Tag.BASIC_ATTACK],
+              damageInstances: [
+                {
+                  scalingStat: AttackScalingProperty.FIXED,
+                  motionValue: 123.4,
+                  tags: [Tag.ELECTRO, Tag.BASIC_ATTACK],
+                },
+                {
+                  scalingStat: AttackScalingProperty.FIXED,
+                  motionValue: 76.6,
+                  tags: [Tag.ELECTRO, Tag.BASIC_ATTACK],
+                },
+              ],
             },
             modifiers: [largeOffensiveModifier],
           },
@@ -200,11 +213,10 @@ describe('calculateRotationDamage', () => {
       const result = calculateRotationDamage(rotation);
 
       expect(result.totalDamage).toBeCloseTo(200, 10);
-      expect(result.damageInstances[0]).toBeCloseTo(200, 10);
-      expect(result.damageDetails[0].resolvedStats.skill.motionValue).toBeCloseTo(
-        200,
-        10,
-      );
+      expect(
+        result.damageDetails[0].damage + result.damageDetails[1].damage,
+      ).toBeCloseTo(200, 10);
+      expect(result.damageDetails[0].skill.motionValue).toBeCloseTo(123.4, 10);
     });
   });
 });

@@ -121,9 +121,11 @@ const createMockCharacterData = (
   attacks: Array<{
     id: number;
     name: string;
-    tags: Array<string>;
-    motionValues: Array<number>;
-    scalingStat?: AttackScalingProperty;
+    damageInstances: Array<{
+      motionValue: number;
+      tags: Array<string>;
+      scalingStat: AttackScalingProperty;
+    }>;
   }> = [],
   modifiers: Array<{
     id: number;
@@ -139,7 +141,6 @@ const createMockCharacterData = (
     attacks: attacks.map((a) => ({
       ...a,
       parentName: name,
-      scalingStat: a.scalingStat ?? AttackScalingProperty.ATK,
     })),
     modifiers,
     permanentStats: [
@@ -222,9 +223,18 @@ describe('calculateRotation', () => {
         {
           id: AUGUSTA_BASIC_ATTACK_1_ID,
           name: 'Basic Attack Stage 1',
-          tags: [Tag.BASIC_ATTACK],
-          motionValues: [0.5, 0.5], // Example motion values
-          scalingStat: AttackScalingProperty.ATK,
+          damageInstances: [
+            {
+              motionValue: 0.5,
+              tags: [Tag.BASIC_ATTACK],
+              scalingStat: AttackScalingProperty.ATK,
+            },
+            {
+              motionValue: 0.5,
+              tags: [Tag.BASIC_ATTACK],
+              scalingStat: AttackScalingProperty.ATK,
+            },
+          ],
         },
       ],
       [
@@ -345,10 +355,14 @@ describe('calculateRotation', () => {
           name: 'Aero Erosion',
           parentName: 'Negative Status',
           originType: 'Inherent Skill',
-          scalingStat: NegativeStatus.AERO_EROSION,
           attribute: Attribute.AERO,
-          motionValues: [0],
-          tags: [Tag.ALL, Attribute.AERO, NegativeStatus.AERO_EROSION],
+          damageInstances: [
+            {
+              motionValue: 0,
+              tags: [Tag.ALL, Attribute.AERO, NegativeStatus.AERO_EROSION],
+              scalingStat: NegativeStatus.AERO_EROSION,
+            },
+          ],
         }),
         enrichModifier: (modifier) => {
           if (modifier.id === AERO_EROSION_STACK_MODIFIER_ID) {
@@ -444,13 +458,11 @@ describe('calculateRotation', () => {
         [erosionStacks, erosionAmp],
       );
 
-      expect(result.damageDetails[0].resolvedStats.enemy.aeroErosion).toBe(9);
-      expect(result.damageDetails[0].resolvedStats.character.damageAmplification).toBe(
-        1,
-      );
+      expect(result.damageDetails[0].enemy.aeroErosion).toBe(9);
+      expect(result.damageDetails[0].character.damageAmplification).toBe(1);
       expect(result.totalDamage).toBeCloseTo(28_471, 0);
-      expect(result.damageInstances).toHaveLength(1);
-      expect(result.damageInstances[0]).toBeCloseTo(28_471, 0);
+      expect(result.damageDetails).toHaveLength(1);
+      expect(result.damageDetails[0].damage).toBeCloseTo(28_471, 0);
     });
 
     it('applies defense ignore modifiers to negative-status damage', async () => {
@@ -505,13 +517,12 @@ describe('calculateRotation', () => {
         [erosionStacks, erosionDefenseIgnore],
       );
 
-      expect(
-        resultWithoutDefenseIgnore.damageDetails[0].resolvedStats.character
-          .defenseIgnore,
-      ).toBe(0);
-      expect(
-        resultWithDefenseIgnore.damageDetails[0].resolvedStats.character.defenseIgnore,
-      ).toBe(0.3);
+      expect(resultWithoutDefenseIgnore.damageDetails[0].character.defenseIgnore).toBe(
+        0,
+      );
+      expect(resultWithDefenseIgnore.damageDetails[0].character.defenseIgnore).toBe(
+        0.3,
+      );
       expect(resultWithDefenseIgnore.totalDamage).toBeGreaterThan(
         resultWithoutDefenseIgnore.totalDamage,
       );

@@ -53,10 +53,14 @@ const createMockAttack = (
   id,
   characterId,
   description: 'Test attack description',
-  scalingStat: AttackScalingProperty.ATK,
   attribute: Attribute.PHYSICAL,
-  tags: [Tag.BASIC_ATTACK],
-  motionValues: [1],
+  damageInstances: [
+    {
+      motionValue: 1,
+      tags: [Tag.BASIC_ATTACK],
+      scalingStat: AttackScalingProperty.ATK,
+    },
+  ],
   name: `Attack ${id}`,
   originType: 'Echo',
 });

@@ -51,27 +51,25 @@ export const DamageType = {
 export type DamageType = (typeof DamageType)[keyof typeof DamageType];
 
 /**
- * A single damage-dealing instance, including its motion values and classification tags.
+ * A single instance of damage, including its motion values and classification tags.
  */
 export interface CharacterDamageInstance {
-  /** Index of the character performing the attack in the team array (0-2). */
-  characterIndex: number;
   /** The primary stat this damage scales with. */
   scalingStat: AttackScalingProperty;
   /**
-   * Motion values for each hit in the sequence (e.g., [0.112, 0.084, 0.084]).
+   * Motion value / scaling value for the attack
+   * For fixed damage, the motion value is the damage dealt by the fixed damage
+   * For negative attributes, the motion value is the number of negative status stacks
    */
-  motionValues: Array<number>;
-  /** Tags for filtering modifiers (e.g., BasicAttack, Fusion). */
+  motionValue: number;
   tags: Array<string>;
 }
 
 /**
- * Checks if a string key is a valid AttackScalingProperty.
- *
- * @param key - The key to check.
- * @returns True if the key is a valid AttackScalingProperty.
+ * A single damage-dealing attack, including its motion values and classification tags.
  */
-export const isAttackScalingProperty = (key: string): key is AttackScalingProperty => {
-  return Object.values(AttackScalingProperty).includes(key as AttackScalingProperty);
-};
+export interface CharacterAttack {
+  /** Index of the character performing the attack in the team array (0-2). */
+  characterIndex: number;
+  damageInstances: Array<CharacterDamageInstance>;
+}

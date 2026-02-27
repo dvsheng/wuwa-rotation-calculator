@@ -5,6 +5,7 @@ import { calculateDefenseMultiplier } from './defense';
 import { calculateResistanceMultiplier } from './resistance';
 
 interface SkillProperties {
+  motionValue: number;
   negativeStatus?: NegativeStatusType;
 }
 
@@ -80,7 +81,7 @@ export const calculateNegativeStatusDamage = (
 
   const motionValue = getNegativeStatusMotionValue(
     properties.skill.negativeStatus,
-    properties.enemy[properties.skill.negativeStatus],
+    properties.skill.motionValue,
   );
   if (motionValue <= 0) return 0;
 

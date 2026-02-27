@@ -1,11 +1,24 @@
 import { applyModifiers } from './apply-modifiers';
 import { calculateAttackDamage } from './calculate-attack-damage';
 import { getStatFilterer } from './filter-stats';
+import { resolveStats } from './resolve-runtime-stat-values';
 import type { Rotation, RotationResult } from './types';
 
 export const calculateRotationDamage = (rotation: Rotation): RotationResult => {
-  return rotation.damageInstances.reduce(
-    (reducer, { instance, modifiers }) => {
+  const flattenedDamageInstances = rotation.attacks.flatMap(
+    ({ attack, modifiers }, attackIndex) => {
+      return attack.damageInstances.map((instance) => ({
+        instance: {
+          ...instance,
+          characterIndex: attack.characterIndex,
+        },
+        modifiers,
+        attackIndex,
+      }));
+    },
+  );
+  return flattenedDamageInstances.reduce(
+    (reducer, { instance, modifiers, attackIndex }) => {
       const [teamWithModifiers, enemyWithModifiers] = applyModifiers(
         rotation.team,
         rotation.enemy,
@@ -16,28 +29,30 @@ export const calculateRotationDamage = (rotation: Rotation): RotationResult => {
         teamWithModifiers,
         enemyWithModifiers,
       );
-      const instanceDamage = calculateAttackDamage(instance, {
-        team: filteredTeam,
-        enemy: filteredEnemy,
-      });
-      const { totalDamage, damageInstances, damageDetails } = reducer;
+      const { team: resolvedTeam, enemy: resolvedEnemy } = resolveStats(
+        filteredTeam,
+        filteredEnemy,
+      );
+      const { result, inputs } = calculateAttackDamage(
+        instance,
+        instance.characterIndex,
+        resolvedTeam,
+        resolvedEnemy,
+      );
       return {
-        totalDamage: totalDamage + instanceDamage.result,
-        damageInstances: [...damageInstances, instanceDamage.result],
+        totalDamage: reducer.totalDamage + result,
         damageDetails: [
-          ...damageDetails,
+          ...reducer.damageDetails,
           {
-            team: filteredTeam,
-            enemy: filteredEnemy,
-            instance,
-            resolvedStats: instanceDamage.inputs,
+            ...inputs,
+            attackIndex,
+            damage: result,
           },
         ],
       };
     },
     {
       totalDamage: 0,
-      damageInstances: new Array<number>(),
       damageDetails: new Array<RotationResult['damageDetails'][number]>(),
     },
   );

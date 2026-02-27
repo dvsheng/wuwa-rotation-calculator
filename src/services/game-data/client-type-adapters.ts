@@ -10,7 +10,8 @@ import type { Attack, AttackOriginType, Modifier } from './types';
  */
 export const toClientAttack = (attack: Attack): ClientAttack => {
   const parameters = uniqBy(
-    attack.motionValues
+    attack.damageInstances
+      .map((di) => di.motionValue)
       .filter((v) => isUserParameterizedNumber(v))
       .flatMap((v) => Object.entries(v.parameterConfigs))
       .map(([id, config]) => ({

@@ -22,20 +22,33 @@ const mockAttackDetails = [
     name: 'Basic Attack 1',
     description: 'A basic attack',
     originType: 'Normal Attack',
-    scalingStat: AttackScalingProperty.ATK,
     attribute: Attribute.PHYSICAL,
-    motionValues: [1.5, 2],
-    tags: [Tag.BASIC_ATTACK],
+    damageInstances: [
+      {
+        motionValue: 1.5,
+        tags: [Tag.BASIC_ATTACK],
+        scalingStat: AttackScalingProperty.ATK,
+      },
+      {
+        motionValue: 2,
+        tags: [Tag.BASIC_ATTACK],
+        scalingStat: AttackScalingProperty.ATK,
+      },
+    ],
   },
   {
     id: 102,
     name: 'Skill Attack',
     description: 'A skill attack',
     originType: 'Resonance Skill',
-    scalingStat: AttackScalingProperty.ATK,
     attribute: Attribute.ELECTRO,
-    motionValues: [3],
-    tags: [Tag.RESONANCE_SKILL, Tag.ELECTRO],
+    damageInstances: [
+      {
+        motionValue: 3,
+        tags: [Tag.RESONANCE_SKILL, Tag.ELECTRO],
+        scalingStat: AttackScalingProperty.ATK,
+      },
+    ],
   },
 ];
 
@@ -160,10 +173,19 @@ describe('createGameDataEnricher', () => {
         name: 'Basic Attack 1',
         description: 'A basic attack',
         originType: 'Normal Attack',
-        scalingStat: AttackScalingProperty.ATK,
         attribute: Attribute.PHYSICAL,
-        motionValues: [1.5, 2],
-        tags: [Tag.BASIC_ATTACK],
+        damageInstances: [
+          {
+            motionValue: 1.5,
+            tags: [Tag.BASIC_ATTACK],
+            scalingStat: AttackScalingProperty.ATK,
+          },
+          {
+            motionValue: 2,
+            tags: [Tag.BASIC_ATTACK],
+            scalingStat: AttackScalingProperty.ATK,
+          },
+        ],
       });
     });
 

@@ -71,10 +71,11 @@ const toAttack = (
     description: attack.capabilityDescription ?? attack.skillDescription,
     originType: attack.skillOriginType,
     parentName: attack.skillName,
-    scalingStat: json.scalingStat,
     attribute: json.attribute,
-    motionValues: json.motionValues,
-    tags: compact([...json.tags, attack.capabilityName, json.attribute]),
+    damageInstances: json.damageInstances.map((di) => ({
+      ...di,
+      tags: compact([...di.tags, attack.capabilityName, json.attribute]),
+    })),
   };
 };
 

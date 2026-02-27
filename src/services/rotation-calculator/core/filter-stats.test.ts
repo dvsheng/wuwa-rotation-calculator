@@ -82,29 +82,6 @@ describe('getStatFilterer', () => {
     ]);
   });
 
-  it('treats legacy flat stat keys as regular scaling in declarative config', () => {
-    const team = [
-      createCharacter({
-        [CharacterStat.DAMAGE_BONUS]: [
-          { tags: [Tag.ELECTRO], value: 0.2 },
-          { tags: [Tag.ALL], value: 0.1 },
-        ],
-      }),
-    ];
-    const enemy = createEnemy();
-
-    const filterStats = getStatFilterer(
-      CharacterStat.ATTACK_FLAT as unknown as AttackScalingProperty,
-      [Tag.ELECTRO],
-    );
-    const { filteredTeam } = filterStats(team, enemy);
-
-    expect(filteredTeam[0].stats[CharacterStat.DAMAGE_BONUS]).toEqual([
-      { tags: [Tag.ELECTRO], value: 0.2 },
-      { tags: [Tag.ALL], value: 0.1 },
-    ]);
-  });
-
   it('removes all tagged stats for fixed scaling', () => {
     const team = [
       createCharacter({

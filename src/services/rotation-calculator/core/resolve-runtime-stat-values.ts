@@ -126,3 +126,19 @@ export function createRuntimeStatResolver(team: Team, enemy: Enemy) {
     return value as ResolveRuntimeStatType<T>;
   };
 }
+
+export const resolveStats = (
+  team: Team,
+  enemy: Enemy,
+): {
+  team: ResolveRuntimeStatType<Team>;
+  enemy: ResolveRuntimeStatType<Enemy>;
+} => {
+  const resolve = createRuntimeStatResolver(team, enemy);
+  const resolvedTeam = resolve(team);
+  const resolvedEnemy = resolve(enemy);
+  return {
+    team: resolvedTeam,
+    enemy: resolvedEnemy,
+  };
+};

@@ -33,10 +33,14 @@ export const createNegativeStatusAttacks = (attribute?: Attribute): Array<Attack
       description: `${NEGATIVE_STATUS_ATTACK_LABELS[negativeStatus]} damage instance`,
       originType: OriginType.INHERENT_SKILL,
       parentName: 'Negative Status',
-      scalingStat: negativeStatus,
       attribute,
-      motionValues: [0],
-      tags: [negativeStatus, attribute],
+      damageInstances: [
+        {
+          motionValue: 0,
+          tags: [negativeStatus, attribute],
+          scalingStat: negativeStatus,
+        },
+      ],
     },
   ];
 };

@@ -43,11 +43,11 @@ export const RotationResultDisplay = ({
     // Build a map from instanceId to resolved attack for quick lookup
     const attackMap = new Map(resolvedAttacks.map((a) => [a.instanceId, a]));
 
-    return result.damageInstances.map((dmg, index) => ({
-      index: index,
-      attack: attackMap.get(storedAttacks[index]?.instanceId),
-      detail: result.damageDetails[index],
-      damage: dmg,
+    return result.damageDetails.map((detail, index) => ({
+      index,
+      attack: attackMap.get(storedAttacks[detail.attackIndex]?.instanceId),
+      detail,
+      damage: detail.damage,
     }));
   }, [result, storedAttacks, resolvedAttacks]);
 
@@ -121,16 +121,6 @@ export const RotationResultDisplay = ({
                     >
                       Calculation Snapshot
                     </Text>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {detail.instance.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="rounded bg-zinc-700/50 px-1.5 py-0.5 text-xs text-zinc-400"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
                   </div>
 
                   <ScrollArea className="max-h-96 p-3">
@@ -145,9 +135,7 @@ export const RotationResultDisplay = ({
                         <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
                           <span className="text-zinc-400">Motion Value</span>
                           <span className="text-right font-mono text-zinc-100">
-                            {detail.resolvedStats.skill.motionValue
-                              ? `${(100 * detail.resolvedStats.skill.motionValue).toFixed(2)}%`
-                              : detail.resolvedStats.skill.negativeStatus}
+                            {`${(100 * detail.skill.motionValue).toFixed(2)}%`}
                           </span>
                         </div>
                       </div>
@@ -160,24 +148,22 @@ export const RotationResultDisplay = ({
                           Character Stats
                         </Text>
                         <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
-                          {Object.entries(detail.resolvedStats.character).map(
-                            ([key, value]) => (
-                              <Fragment key={key}>
-                                <span className="text-zinc-400 capitalize">
-                                  {key.replaceAll(/([A-Z])/g, ' $1').trim()}
-                                </span>
-                                <span className="text-right font-mono text-zinc-100">
-                                  {[
-                                    'level',
-                                    'attackScalingPropertyValue',
-                                    'flatDamage',
-                                  ].includes(key)
-                                    ? Math.round(value).toLocaleString()
-                                    : `${(value * 100).toFixed(1)}%`}
-                                </span>
-                              </Fragment>
-                            ),
-                          )}
+                          {Object.entries(detail.character).map(([key, value]) => (
+                            <Fragment key={key}>
+                              <span className="text-zinc-400 capitalize">
+                                {key.replaceAll(/([A-Z])/g, ' $1').trim()}
+                              </span>
+                              <span className="text-right font-mono text-zinc-100">
+                                {[
+                                  'level',
+                                  'attackScalingPropertyValue',
+                                  'flatDamage',
+                                ].includes(key)
+                                  ? Math.round(value).toLocaleString()
+                                  : `${(value * 100).toFixed(1)}%`}
+                              </span>
+                            </Fragment>
+                          ))}
                         </div>
                       </div>
 
@@ -189,20 +175,18 @@ export const RotationResultDisplay = ({
                           Enemy Stats
                         </Text>
                         <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
-                          {Object.entries(detail.resolvedStats.enemy).map(
-                            ([key, value]) => (
-                              <Fragment key={key}>
-                                <span className="text-zinc-400 capitalize">
-                                  {key.replaceAll(/([A-Z])/g, ' $1').trim()}
-                                </span>
-                                <span className="text-right font-mono text-zinc-100">
-                                  {key === 'level'
-                                    ? Math.round(value).toLocaleString()
-                                    : `${(value * 100).toFixed(1)}%`}
-                                </span>
-                              </Fragment>
-                            ),
-                          )}
+                          {Object.entries(detail.enemy).map(([key, value]) => (
+                            <Fragment key={key}>
+                              <span className="text-zinc-400 capitalize">
+                                {key.replaceAll(/([A-Z])/g, ' $1').trim()}
+                              </span>
+                              <span className="text-right font-mono text-zinc-100">
+                                {key === 'level'
+                                  ? Math.round(value).toLocaleString()
+                                  : `${(value * 100).toFixed(1)}%`}
+                              </span>
+                            </Fragment>
+                          ))}
                         </div>
                       </div>
                     </div>

@@ -92,14 +92,19 @@ export type DatabaseUserParameterizedResolvableNumber = z.infer<
   typeof DatabaseUserParameterizedResolvableNUmberSchema
 >;
 
+const DatabaseAttackDamageInstanceSchema = z.object({
+  motionValue: z.union([
+    DatabaseNumberSchema,
+    DatabaseUserParameterizedResolvableNUmberSchema,
+  ]),
+  tags: z.array(z.enum(Tag)),
+  scalingStat: z.enum(AttackScalingProperty),
+});
+
 const DatabaseBaseAttackDataSchema = z
   .object({
-    motionValues: z.array(
-      z.union([DatabaseNumberSchema, DatabaseUserParameterizedResolvableNUmberSchema]),
-    ),
-    tags: z.array(z.enum(Tag)),
     attribute: z.enum(Attribute),
-    scalingStat: z.enum(AttackScalingProperty),
+    damageInstances: z.array(DatabaseAttackDamageInstanceSchema),
   })
   .strict();
 

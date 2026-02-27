@@ -12,7 +12,7 @@ import type {
 import { getEchoStats } from '@/services/game-data';
 import { CharacterStat, Tag } from '@/types';
 import type {
-  CharacterDamageInstance,
+  CharacterAttack,
   CharacterSlotNumber,
   CharacterStats,
   EnemyStat,
@@ -158,18 +158,20 @@ export const toRotationPermanentStat = (
 };
 
 /**
- * Converts an attack instance to a character damage instance for the rotation calculator.
+ * Converts an attack instance to a CharacterAttack for the rotation calculator.
  */
-export const toRotationDamageInstance = (
+export const toRotationAttack = (
   instance: AttackInstance &
     ResolveUserParameterizedType<Attack> & { modifiers: Array<RotationModifier> },
   characterIdToSlotNumberMap: Record<number, CharacterSlotNumber>,
-): CharacterDamageInstance => {
+): CharacterAttack => {
   return {
-    scalingStat: instance.scalingStat,
-    tags: instance.tags,
-    motionValues: instance.motionValues,
     characterIndex: characterIdToSlotNumberMap[instance.characterId],
+    damageInstances: instance.damageInstances.map((di) => ({
+      scalingStat: di.scalingStat,
+      tags: di.tags,
+      motionValue: di.motionValue,
+    })),
   };
 };
 
@@ -286,7 +288,7 @@ export const adaptClientInputToRotation = async (
     expandModifiersByValueConfiguration(buff),
   );
 
-  const damageInstances = attacks
+  const rotationAttacks = attacks
     .map((attack) => enricher.enrichAttack(attack))
     .map((attack) => resolveUserParameterizedValues(attack))
     .map((attack, index) => ({
@@ -300,7 +302,7 @@ export const adaptClientInputToRotation = async (
         ),
     }))
     .map((instance) => ({
-      instance: toRotationDamageInstance(instance, characterIdToSlotNumberMap),
+      attack: toRotationAttack(instance, characterIdToSlotNumberMap),
       modifiers: instance.modifiers,
     }));
 
@@ -308,6 +310,6 @@ export const adaptClientInputToRotation = async (
     team,
     enemy,
     duration: 25,
-    damageInstances,
+    attacks: rotationAttacks,
   };
 };

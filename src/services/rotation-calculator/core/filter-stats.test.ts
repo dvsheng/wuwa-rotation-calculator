@@ -156,4 +156,83 @@ describe('getStatFilterer', () => {
       { tags: [NegativeStatus.AERO_EROSION], value: 9 },
     ]);
   });
+
+  it('matches tune rupture atk conditional offensive stats only on the tune rupture tag', () => {
+    const team = [
+      createCharacter({
+        [CharacterStat.DAMAGE_BONUS]: [
+          { tags: [Tag.TUNE_RUPTURE], value: 0.3 },
+          { tags: [Tag.ELECTRO], value: 0.2 },
+          { tags: [Tag.ALL], value: 0.1 },
+        ],
+        [CharacterStat.CRITICAL_DAMAGE]: [
+          { tags: [Tag.TUNE_RUPTURE], value: 0.5 },
+          { tags: [Tag.BASIC_ATTACK], value: 0.25 },
+        ],
+      }),
+    ];
+    const enemy = createEnemy();
+
+    const filterStats = getStatFilterer(AttackScalingProperty.TUNE_RUPTURE_ATK, [
+      Tag.ELECTRO,
+      Tag.BASIC_ATTACK,
+      Tag.TUNE_RUPTURE,
+    ]);
+    const { filteredTeam } = filterStats(team, enemy);
+
+    expect(filteredTeam[0].stats[CharacterStat.DAMAGE_BONUS]).toEqual([
+      { tags: [Tag.TUNE_RUPTURE], value: 0.3 },
+    ]);
+    expect(filteredTeam[0].stats[CharacterStat.CRITICAL_DAMAGE]).toEqual([
+      { tags: [Tag.TUNE_RUPTURE], value: 0.5 },
+    ]);
+  });
+
+  it('still applies non-conditional stats generally for tune rupture atk', () => {
+    const team = [
+      createCharacter({
+        [CharacterStat.FINAL_DAMAGE_BONUS]: [
+          { tags: [Tag.TUNE_RUPTURE], value: 0.15 },
+          { tags: [Tag.ELECTRO], value: 0.25 },
+          { tags: [Tag.ALL], value: 0.05 },
+          { tags: [Tag.GLACIO], value: 0.9 },
+        ],
+        [CharacterStat.TUNE_BREAK_BOOST]: [
+          { tags: [Tag.TUNE_RUPTURE], value: 0.4 },
+          { tags: [Tag.ALL], value: 0.2 },
+          { tags: [Tag.GLACIO], value: 0.8 },
+        ],
+      }),
+    ];
+    const enemy = createEnemy({
+      [EnemyStat.BASE_RESISTANCE]: [
+        { tags: [Tag.ELECTRO], value: 0.1 },
+        { tags: [Tag.TUNE_RUPTURE], value: 0.05 },
+        { tags: [Tag.ALL], value: 0.02 },
+        { tags: [Tag.GLACIO], value: 0.2 },
+      ],
+    });
+
+    const filterStats = getStatFilterer(AttackScalingProperty.TUNE_RUPTURE_ATK, [
+      Tag.ELECTRO,
+      Tag.BASIC_ATTACK,
+      Tag.TUNE_RUPTURE,
+    ]);
+    const { filteredTeam, filteredEnemy } = filterStats(team, enemy);
+
+    expect(filteredTeam[0].stats[CharacterStat.FINAL_DAMAGE_BONUS]).toEqual([
+      { tags: [Tag.TUNE_RUPTURE], value: 0.15 },
+      { tags: [Tag.ELECTRO], value: 0.25 },
+      { tags: [Tag.ALL], value: 0.05 },
+    ]);
+    expect(filteredTeam[0].stats[CharacterStat.TUNE_BREAK_BOOST]).toEqual([
+      { tags: [Tag.TUNE_RUPTURE], value: 0.4 },
+      { tags: [Tag.ALL], value: 0.2 },
+    ]);
+    expect(filteredEnemy.stats[EnemyStat.BASE_RESISTANCE]).toEqual([
+      { tags: [Tag.ELECTRO], value: 0.1 },
+      { tags: [Tag.TUNE_RUPTURE], value: 0.05 },
+      { tags: [Tag.ALL], value: 0.02 },
+    ]);
+  });
 });

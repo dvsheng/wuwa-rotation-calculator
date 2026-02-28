@@ -133,9 +133,9 @@ export const RotationResultDisplay = ({
                           Skill
                         </Text>
                         <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
-                          <span className="text-zinc-400">Motion Value</span>
+                          <span className="text-zinc-400">Base Damage</span>
                           <span className="text-right font-mono text-zinc-100">
-                            {`${(100 * detail.skill.motionValue).toFixed(2)}%`}
+                            {`${detail.baseDamage}`}
                           </span>
                         </div>
                       </div>

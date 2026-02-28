@@ -14,6 +14,11 @@ export const getAttackScalingType = (
     case AttackScalingProperty.FIXED: {
       return AttackScalingType.FIXED;
     }
+    case AttackScalingProperty.TUNE_RUPTURE_ATK:
+    case AttackScalingProperty.TUNE_RUPTURE_DEF:
+    case AttackScalingProperty.TUNE_RUPTURE_HP: {
+      return AttackScalingType.TUNE_RUPTURE;
+    }
     default: {
       return AttackScalingType.NEGATIVE_STATUS;
     }

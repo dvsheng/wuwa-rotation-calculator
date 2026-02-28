@@ -215,7 +215,8 @@ describe('calculateRotationDamage', () => {
       expect(
         result.damageDetails[0].damage + result.damageDetails[1].damage,
       ).toBeCloseTo(200, 10);
-      expect(result.damageDetails[0].skill.motionValue).toBeCloseTo(123.4, 10);
+      expect(result.damageDetails[0].baseDamage).toBeCloseTo(123.4, 10);
+      expect(result.damageDetails[1].baseDamage).toBeCloseTo(76.6, 10);
     });
   });
 });

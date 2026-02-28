@@ -1,10 +1,6 @@
 import type { EnemyStat } from '@/types';
 import { CharacterStat } from '@/types';
 
-interface SkillProperties {
-  motionValue: number;
-}
-
 const RelevantCharacterStats = [
   CharacterStat.CRITICAL_DAMAGE,
   CharacterStat.CRITICAL_RATE,
@@ -19,10 +15,7 @@ const RelevantCharacterStats = [
 type RelevantCharacterStats = (typeof RelevantCharacterStats)[number];
 
 export interface CalculateDamageProperties {
-  character: Record<
-    RelevantCharacterStats | 'level' | 'attackScalingPropertyValue',
-    number
-  >;
+  character: Record<RelevantCharacterStats | 'level', number>;
   enemy: Record<EnemyStat | 'level', number>;
-  skill: SkillProperties;
+  baseDamage: number;
 }

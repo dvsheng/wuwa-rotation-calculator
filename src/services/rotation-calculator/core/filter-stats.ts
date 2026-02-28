@@ -2,19 +2,21 @@ import { intersection } from 'es-toolkit/array';
 import { mapValues } from 'es-toolkit/object';
 
 import type { Enemy, TaggedStatValue, Team } from '@/types';
-import {
-  AttackScalingProperty,
-  CharacterStat,
-  EnemyStat,
-  NEGATIVE_STATUS_TO_ATTRIBUTE,
-  Tag,
-} from '@/types';
+import { AttackScalingProperty, CharacterStat, EnemyStat, Tag } from '@/types';
 
 /**
  * Declarative mapping of each stat key to the list of tags allowed for that stat
  * in a single damage calculation context.
  */
 type StatFilterConfiguration = Record<CharacterStat | EnemyStat, Array<string>>;
+
+const CONDITIONAL_SCALING_PROPERTIES = [
+  CharacterStat.CRITICAL_RATE,
+  CharacterStat.CRITICAL_DAMAGE,
+  CharacterStat.DAMAGE_BONUS,
+  CharacterStat.DAMAGE_AMPLIFICATION,
+  CharacterStat.DAMAGE_MULTIPLIER_BONUS,
+];
 
 /**
  * Filters a stat record using a per-stat tag allowlist configuration.
@@ -90,29 +92,26 @@ const getStatFilterConfiguration = (
         allStats.map((stat) => [stat, tagsForFixedAttack]),
       ) as StatFilterConfiguration;
     }
+    case AttackScalingProperty.TUNE_RUPTURE_ATK:
+    case AttackScalingProperty.TUNE_RUPTURE_DEF:
+    case AttackScalingProperty.TUNE_RUPTURE_HP: {
+      return {
+        ...Object.fromEntries(allStats.map((stat) => [stat, [...tags, Tag.ALL]])),
+        ...Object.fromEntries(
+          CONDITIONAL_SCALING_PROPERTIES.map((stat) => [stat, [Tag.TUNE_RUPTURE]]),
+        ),
+      } as StatFilterConfiguration;
+    }
     case AttackScalingProperty.AERO_EROSION:
     case AttackScalingProperty.ELECTRO_FLARE:
     case AttackScalingProperty.FUSION_BURST:
     case AttackScalingProperty.GLACIO_CHAFE:
     case AttackScalingProperty.HAVOC_BANE:
     case AttackScalingProperty.SPECTRO_FRAZZLE: {
-      const tagsGeneral = [
-        attackScalingProperty,
-        NEGATIVE_STATUS_TO_ATTRIBUTE[attackScalingProperty],
-        Tag.ALL,
-      ];
-      const tagsForTargetedStat = [attackScalingProperty];
-      const statsThatPropertyDoesNotScaleBy = [
-        CharacterStat.CRITICAL_RATE,
-        CharacterStat.CRITICAL_DAMAGE,
-        CharacterStat.DAMAGE_BONUS,
-        CharacterStat.DAMAGE_AMPLIFICATION,
-        CharacterStat.DAMAGE_MULTIPLIER_BONUS,
-      ];
       return {
-        ...Object.fromEntries(allStats.map((stat) => [stat, tagsGeneral])),
+        ...Object.fromEntries(allStats.map((stat) => [stat, [...tags, Tag.ALL]])),
         ...Object.fromEntries(
-          statsThatPropertyDoesNotScaleBy.map((stat) => [stat, tagsForTargetedStat]),
+          CONDITIONAL_SCALING_PROPERTIES.map((stat) => [stat, [attackScalingProperty]]),
         ),
       } as StatFilterConfiguration;
     }

@@ -7,8 +7,6 @@ describe('calculateDamage', () => {
   const baseProperties: CalculateDamageProperties = {
     character: {
       level: 90,
-      attackScalingPropertyValue: 1000,
-      flatDamage: 0,
       damageBonus: 0,
       damageMultiplierBonus: 0,
       damageAmplification: 0,
@@ -30,9 +28,7 @@ describe('calculateDamage', () => {
       havocBane: 0,
       electroFlare: 0,
     },
-    skill: {
-      motionValue: 1,
-    },
+    baseDamage: 1000,
   };
 
   it('calculates basic damage correctly', () => {
@@ -47,16 +43,12 @@ describe('calculateDamage', () => {
     expect(result).toBeCloseTo(451.19, 2);
   });
 
-  it('applies damageMultiplierBonus correctly', () => {
+  it('uses the provided precomputed baseDamage', () => {
     const properties = {
       ...baseProperties,
-      skill: { motionValue: 0.5 },
-      character: {
-        ...baseProperties.character,
-        damageMultiplierBonus: 0.2, // 20% multiplier bonus
-      },
+      baseDamage: 700,
     };
-    // baseDamage = 1000 * (0.5 + 0.2) + 0 = 700
+    // baseDamage is provided by the caller after scaling logic
     // defense/res = 0.50131926 * 0.9 = 0.451187334
     // expected = 700 * 0.451187334 = 315.8311338
     const result = calculateDamage(properties);
@@ -79,15 +71,14 @@ describe('calculateDamage', () => {
   it('combines multiple multipliers correctly', () => {
     const properties = {
       ...baseProperties,
-      skill: { motionValue: 0.5 },
+      baseDamage: 700,
       character: {
         ...baseProperties.character,
         damageBonus: 0.5,
-        damageMultiplierBonus: 0.2,
         finalDamageBonus: 0.1,
       },
     };
-    // baseDamage = 1000 * (0.5 + 0.2) = 700
+    // baseDamage is provided by the caller after scaling logic
     // multipliers:
     // (1 + 0.5) * (1 + 0.1) = 1.5 * 1.1 = 1.65
     // defense/res = 0.50131926 * 0.9 = 0.451187334

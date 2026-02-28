@@ -23,6 +23,7 @@ export const AttackScalingType = {
   REGULAR: 'regular',
   NEGATIVE_STATUS: 'negativeStatus',
   FIXED: 'fixed',
+  TUNE_RUPTURE: 'tuneRupture',
 };
 
 export type AttackScalingType =

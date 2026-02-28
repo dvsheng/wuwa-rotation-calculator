@@ -11,6 +11,11 @@ export const AttackScalingProperty = {
   /** Scales with DEF. */
   DEF: 'def',
   FIXED: 'fixed',
+  // TODO: Maybe TuneRupture versus ATK / DEF / HP
+  // should be considered separately
+  TUNE_RUPTURE_ATK: 'tuneRuptureAtk',
+  TUNE_RUPTURE_HP: 'tuneRuptureHp',
+  TUNE_RUPTURE_DEF: 'tuneRuptureDef',
   ...NegativeStatus,
 } as const;
 

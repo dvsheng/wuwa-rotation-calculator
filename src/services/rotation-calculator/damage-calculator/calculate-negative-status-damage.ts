@@ -1,9 +1,6 @@
 import { NegativeStatus } from '@/types';
 import type { EnemyStat, NegativeStatus as NegativeStatusType } from '@/types';
 
-import { calculateDefenseMultiplier } from './defense';
-import { calculateResistanceMultiplier } from './resistance';
-
 interface SkillProperties {
   motionValue: number;
   negativeStatus?: NegativeStatusType;
@@ -66,42 +63,10 @@ const NEGATIVE_STATUS_STACK_MULTIPLIERS: Partial<
   },
 };
 
-export const getNegativeStatusMotionValue = (
+export const getNegativeStatusBaseDamage = (
   negativeStatus: NegativeStatusType,
   stackCount: number,
 ): number => {
   const multiplier = NEGATIVE_STATUS_STACK_MULTIPLIERS[negativeStatus]?.[stackCount];
-  return multiplier ?? 0;
-};
-
-export const calculateNegativeStatusDamage = (
-  properties: CalculateNegativeStatusDamageProperties,
-) => {
-  if (!properties.skill.negativeStatus) return 0;
-
-  const motionValue = getNegativeStatusMotionValue(
-    properties.skill.negativeStatus,
-    properties.skill.motionValue,
-  );
-  if (motionValue <= 0) return 0;
-
-  const defenseMultiplier = calculateDefenseMultiplier({
-    characterLevel: properties.character.level,
-    enemyLevel: properties.enemy.level,
-    defenseReduction: properties.enemy.defenseReduction,
-    defenseIgnore: properties.character.defenseIgnore,
-  });
-  const resistanceMultiplier = calculateResistanceMultiplier({
-    baseResistance: properties.enemy.baseResistance,
-    resistanceReduction: properties.enemy.resistanceReduction,
-    resistancePenetration: properties.character.resistancePenetration,
-  });
-  const damageAmplifyMultiplier = 1 + properties.character.damageAmplification;
-  return (
-    NEGATIVE_STATUS_BASE_DAMAGE *
-    motionValue *
-    damageAmplifyMultiplier *
-    defenseMultiplier *
-    resistanceMultiplier
-  );
+  return NEGATIVE_STATUS_BASE_DAMAGE * (multiplier ?? 0);
 };

@@ -21,13 +21,13 @@ const ATTRIBUTES = Object.values(Attribute).filter(
 );
 const RARITIES = [5, 4];
 const ATTRIBUTE_FILTER_CLASSNAMES: Record<Attribute, string> = {
-  fusion: 'border-rose-500/70 text-foreground',
-  glacio: 'border-sky-500/70 text-foreground',
-  aero: 'border-emerald-500/70 text-foreground',
-  electro: 'border-violet-500/70 text-foreground',
-  spectro: 'border-amber-500/70 text-foreground',
-  havoc: 'border-fuchsia-600/70 text-foreground',
-  physical: 'border-zinc-500/70 text-foreground',
+  fusion: 'border-attribute-fusion/70 text-foreground',
+  glacio: 'border-attribute-glacio/70 text-foreground',
+  aero: 'border-attribute-aero/70 text-foreground',
+  electro: 'border-attribute-electro/70 text-foreground',
+  spectro: 'border-attribute-spectro/70 text-foreground',
+  havoc: 'border-attribute-havoc/70 text-foreground',
+  physical: 'border-attribute-physical/70 text-foreground',
 };
 
 export const CharacterSelectionDialog = ({
@@ -86,8 +86,8 @@ export const CharacterSelectionDialog = ({
                 className={cn(
                   'rounded-full px-1.5 py-0.5 text-xs uppercase',
                   char.rarity === 5
-                    ? 'text-foreground bg-yellow-500/10'
-                    : 'text-foreground bg-purple-500/10',
+                    ? 'text-foreground bg-rarity-5/10'
+                    : 'text-foreground bg-rarity-4/10',
                 )}
               >
                 {char.rarity}★

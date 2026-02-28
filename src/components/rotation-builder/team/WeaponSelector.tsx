@@ -74,10 +74,10 @@ export const WeaponSelector = ({ index }: WeaponSelectorProperties) => {
                   className={cn(
                     'rounded-full px-1.5 py-0.5 text-xs uppercase',
                     _weapon.rarity === 5
-                      ? 'text-foreground bg-yellow-500/10'
+                      ? 'text-foreground bg-rarity-5/10'
                       : _weapon.rarity === 4
-                        ? 'text-foreground bg-purple-500/10'
-                        : 'text-foreground bg-blue-500/10',
+                        ? 'text-foreground bg-rarity-4/10'
+                        : 'text-foreground bg-rarity-3/10',
                   )}
                 >
                   {_weapon.rarity}★

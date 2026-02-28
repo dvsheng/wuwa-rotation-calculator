@@ -3,13 +3,13 @@ import { EchoMainStatOption, EchoSubstatOption } from '@/schemas/echo';
 import type { Attribute } from '@/types';
 
 export const ATTRIBUTE_COLORS: Record<Attribute, string> = {
-  fusion: '#C32439',
-  glacio: '#56B9D7',
-  aero: '#36BA92',
-  electro: '#A242B1',
-  spectro: '#BAA525',
-  havoc: '#8F1D4F',
-  physical: '#999999',
+  fusion: 'var(--color-attribute-fusion)',
+  glacio: 'var(--color-attribute-glacio)',
+  aero: 'var(--color-attribute-aero)',
+  electro: 'var(--color-attribute-electro)',
+  spectro: 'var(--color-attribute-spectro)',
+  havoc: 'var(--color-attribute-havoc)',
+  physical: 'var(--color-attribute-physical)',
 } as const;
 
 export const ATTRIBUTE_ICONS: Record<Attribute, string> = {

@@ -18,6 +18,7 @@ export const CharacterStat = {
   DAMAGE_BONUS: 'damageBonus',
   DAMAGE_AMPLIFICATION: 'damageAmplification',
   DAMAGE_MULTIPLIER_BONUS: 'damageMultiplierBonus',
+  TUNE_STRAIN_DAMAGE_BONUS: 'tuneStrainDamageBonus',
   FINAL_DAMAGE_BONUS: 'finalDamageBonus',
   OFF_TUNE_BUILDUP_RATE: 'offTuneBuildupRate',
   TUNE_BREAK_BOOST: 'tuneBreakBoost',

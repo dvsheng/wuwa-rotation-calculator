@@ -27,6 +27,7 @@ describe('calculateDamage', () => {
       glacioChafe: 0,
       havocBane: 0,
       electroFlare: 0,
+      tuneStrainStacks: 0,
     },
     baseDamage: 1000,
   };

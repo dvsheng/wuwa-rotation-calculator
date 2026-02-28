@@ -35,6 +35,7 @@ const createTestCharacter = (
     [CharacterStat.FINAL_DAMAGE_BONUS]: [],
     [CharacterStat.OFF_TUNE_BUILDUP_RATE]: [],
     [CharacterStat.TUNE_BREAK_BOOST]: [],
+    [CharacterStat.TUNE_STRAIN_DAMAGE_BONUS]: [],
     [CharacterStat.ENERGY_REGEN]: [{ tags: [Tag.ALL], value: 1 }],
     [CharacterStat.HEALING_BONUS]: [],
   },
@@ -61,6 +62,7 @@ const createTestEnemy = (): Enemy => ({
     havocBane: [],
     aeroErosion: [],
     electroFlare: [],
+    tuneStrainStacks: [],
   },
 });
 

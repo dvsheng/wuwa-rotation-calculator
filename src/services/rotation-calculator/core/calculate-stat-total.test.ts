@@ -38,6 +38,7 @@ const createMockStats = (
   [CharacterStat.FINAL_DAMAGE_BONUS]: [],
   [CharacterStat.OFF_TUNE_BUILDUP_RATE]: [],
   [CharacterStat.TUNE_BREAK_BOOST]: [],
+  [CharacterStat.TUNE_STRAIN_DAMAGE_BONUS]: [],
   [CharacterStat.ENERGY_REGEN]: [],
   [CharacterStat.HEALING_BONUS]: [],
 });

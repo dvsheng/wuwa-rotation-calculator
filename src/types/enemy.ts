@@ -6,6 +6,7 @@ export const EnemyStat = {
   BASE_RESISTANCE: 'baseResistance',
   RESISTANCE_REDUCTION: 'resistanceReduction',
   DEFENSE_REDUCTION: 'defenseReduction',
+  TUNE_STRAIN_STACKS: 'tuneStrainStacks',
   ...NegativeStatus,
 } as const;
 

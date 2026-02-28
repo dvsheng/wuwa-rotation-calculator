@@ -1,5 +1,7 @@
 import { compact } from 'es-toolkit/array';
 
+import { OriginType } from '@/services/game-data';
+import { TUNE_BREAK_ATTACK_ID } from '@/services/rotation-calculator/tune-break';
 import { useStore } from '@/store';
 
 import { useTeamDetails } from './useTeamDetails';
@@ -23,6 +25,22 @@ export const useTeamAttackInstances = () => {
   );
   const fullAttacks = compact(
     storedAttacks.map((stored) => {
+      // Virtual tune break attack: not backed by a single game-data capability
+      if (stored.id === TUNE_BREAK_ATTACK_ID) {
+        return {
+          instanceId: stored.instanceId,
+          id: TUNE_BREAK_ATTACK_ID,
+          name: 'Tune Break',
+          parentName: 'Other',
+          description:
+            'Combined Tune Break damage from all characters with Tune Break capabilities.',
+          characterId: 0,
+          characterName: 'All Characters',
+          originType: OriginType.TUNE_BREAK,
+          parameters: [] as Array<never>,
+        };
+      }
+
       const gameData = attackMap.get(`${stored.characterId}:${stored.id}`);
       if (!gameData) return;
 

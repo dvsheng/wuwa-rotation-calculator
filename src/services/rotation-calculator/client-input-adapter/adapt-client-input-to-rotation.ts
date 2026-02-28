@@ -10,6 +10,7 @@ import type {
   PermanentStatBase,
 } from '@/services/game-data';
 import { getEchoStats } from '@/services/game-data';
+import { TUNE_BREAK_ATTACK_ID } from '@/services/rotation-calculator/tune-break';
 import { CharacterStat, Tag } from '@/types';
 import type {
   CharacterAttack,
@@ -93,7 +94,7 @@ export const CHARACTER_BASE_STATS: CharacterStats = {
  */
 export const toRotationModifier = (
   modifier: ModifierInstance & ResolveUserParameterizedType<GameDataModifier>,
-  attack: AttackInstance & ResolveUserParameterizedType<Attack>,
+  attack: Pick<AttackInstance, 'characterId'>,
   characterIdToSlotNumberMap: Record<number, CharacterSlotNumber>,
 ): RotationModifier => {
   // Map resolveWith from 'self' to character index for each stat value
@@ -287,23 +288,53 @@ export const adaptClientInputToRotation = async (
     expandModifiersByValueConfiguration(buff),
   );
 
-  const rotationAttacks = attacks
-    .map((attack) => enricher.enrichAttack(attack))
-    .map((attack) => resolveUserParameterizedValues(attack))
-    .map((attack, index) => ({
-      ...attack,
-      modifiers: expandedBuffs
-        .filter((modifier) => shouldModifierApplyToAttack(index, modifier))
-        .map((modifier) => enricher.enrichModifier(modifier))
-        .map((modifier) => resolveUserParameterizedValues(modifier))
-        .map((modifier) =>
-          toRotationModifier(modifier, attack, characterIdToSlotNumberMap),
+  const buildModifiers = (storedIndex: number, activeCharacterId: number) =>
+    expandedBuffs
+      .filter((modifier) => shouldModifierApplyToAttack(storedIndex, modifier))
+      .map((modifier) => enricher.enrichModifier(modifier))
+      .map((modifier) => resolveUserParameterizedValues(modifier))
+      .map((modifier) =>
+        toRotationModifier(
+          modifier,
+          { characterId: activeCharacterId },
+          characterIdToSlotNumberMap,
         ),
-    }))
-    .map((instance) => ({
-      attack: toRotationAttack(instance, characterIdToSlotNumberMap),
-      modifiers: instance.modifiers,
-    }));
+      );
+
+  const rotationAttacks = attacks.flatMap((attack, storedIndex) => {
+    if (attack.id === TUNE_BREAK_ATTACK_ID) {
+      const tuneBreakAttacks = enricher.getTuneBreakAttacks();
+      return tuneBreakAttacks.map(({ attack: tbAttack, characterIndex }) => {
+        const resolved = resolveUserParameterizedValues(tbAttack);
+        return {
+          attack: {
+            characterIndex,
+            damageInstances: resolved.damageInstances.map((di) => ({
+              scalingStat: di.scalingStat,
+              tags: di.tags,
+              motionValue: di.motionValue,
+            })),
+          },
+          modifiers: buildModifiers(storedIndex, clientTeam[characterIndex].id),
+          storedAttackIndex: storedIndex,
+        };
+      });
+    }
+
+    const enriched = enricher.enrichAttack(attack);
+    const resolved = resolveUserParameterizedValues(enriched);
+    const modifiers = buildModifiers(storedIndex, attack.characterId);
+    return [
+      {
+        attack: toRotationAttack(
+          { ...resolved, modifiers },
+          characterIdToSlotNumberMap,
+        ),
+        modifiers,
+        storedAttackIndex: storedIndex,
+      },
+    ];
+  });
 
   return {
     team,

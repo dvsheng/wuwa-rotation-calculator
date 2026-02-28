@@ -13,6 +13,7 @@ import type { useRotationCalculation } from '@/hooks/useRotationCalculation';
 import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
 import { useTeamAttackInstances } from '@/hooks/useTeamAttackInstances';
 import type { RotationResult } from '@/services/rotation-calculator/core/types';
+import { TUNE_BREAK_ATTACK_ID } from '@/services/rotation-calculator/tune-break';
 import { useStore } from '@/store';
 
 interface RotationResultDisplayProperties {
@@ -25,6 +26,8 @@ type DamageDetail = RotationResult['damageDetails'][number];
 interface DamageRow {
   index: number;
   attack: DetailedAttackInstance | undefined;
+  /** Resolved display name for the character that dealt this damage. */
+  characterName: string;
   detail: DamageDetail;
   damage: number;
 }
@@ -37,19 +40,40 @@ export const RotationResultDisplay = ({
   isStale,
 }: RotationResultDisplayProperties) => {
   const storedAttacks = useStore((state) => state.attacks);
+  const teamSlots = useStore((state) => state.team);
   const { attacks: resolvedAttacks } = useTeamAttackInstances();
 
+  // Map characterId → characterName for per-character tune break row labelling
+  const characterIdToName = useMemo(
+    () => new Map(resolvedAttacks.map((a) => [a.characterId, a.characterName])),
+    [resolvedAttacks],
+  );
+
+  // Ordered by team slot so detail.characterIndex maps directly to a name
+  const characterIndexToName = useMemo(
+    () => teamSlots.map((c) => characterIdToName.get(c.id) ?? 'Unknown'),
+    [teamSlots, characterIdToName],
+  );
+
   const data: Array<DamageRow> = useMemo(() => {
-    // Build a map from instanceId to resolved attack for quick lookup
     const attackMap = new Map(resolvedAttacks.map((a) => [a.instanceId, a]));
 
-    return result.damageDetails.map((detail, index) => ({
-      index,
-      attack: attackMap.get(storedAttacks[detail.attackIndex]?.instanceId),
-      detail,
-      damage: detail.damage,
-    }));
-  }, [result, storedAttacks, resolvedAttacks]);
+    return result.damageDetails.map((detail, index) => {
+      const attack = attackMap.get(storedAttacks[detail.attackIndex]?.instanceId);
+      const isTuneBreak = attack?.id === TUNE_BREAK_ATTACK_ID;
+      const characterName = isTuneBreak
+        ? (characterIndexToName[detail.characterIndex] ?? 'Unknown')
+        : (attack?.characterName ?? 'Unknown');
+
+      return {
+        index,
+        attack,
+        characterName,
+        detail,
+        damage: detail.damage,
+      };
+    });
+  }, [result, storedAttacks, resolvedAttacks, characterIndexToName]);
 
   const columns = useMemo<Array<ColumnDef<DamageRow>>>(
     () => [
@@ -66,24 +90,27 @@ export const RotationResultDisplay = ({
         accessorKey: 'characterName',
         header: 'Character',
         cell: ({ row }) => (
-          <div className="text-foreground">
-            {row.original.attack?.characterName ?? 'Unknown'}
-          </div>
+          <div className="text-foreground">{row.original.characterName}</div>
         ),
       },
       {
         accessorKey: 'attack',
         header: 'Attack',
         cell: ({ row }) => {
-          const attack = row.original.attack;
+          const { attack } = row.original;
           if (!attack)
             return <div className="text-muted-foreground italic">Removed</div>;
+          const isTuneBreak = attack.id === TUNE_BREAK_ATTACK_ID;
           return (
             <div className="max-w-72 truncate pr-2">
-              <Text variant="small">{attack.parentName}</Text>
-              <Text variant="tiny" className="text-muted-foreground truncate">
-                {attack.name}
+              <Text variant="small">
+                {isTuneBreak ? 'Tune Break' : attack.parentName}
               </Text>
+              {!isTuneBreak && (
+                <Text variant="tiny" className="text-muted-foreground truncate">
+                  {attack.name}
+                </Text>
+              )}
             </div>
           );
         },

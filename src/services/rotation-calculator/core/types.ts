@@ -9,13 +9,25 @@ export interface Rotation {
   attacks: Array<{
     attack: CharacterAttack;
     modifiers: Array<Modifier>;
+    /**
+     * Index back into the original stored attacks array. Used to map damage
+     * results back to the correct stored attack, especially when one stored
+     * attack (e.g. virtual Tune Break) expands to multiple CharacterAttacks.
+     * Falls back to the enumeration index when not set.
+     */
+    storedAttackIndex?: number;
   }>;
 }
 
 export interface RotationResult {
   totalDamage: number;
   damageDetails: Array<
-    CalculateDamageProperties & { attackIndex: number; damage: number }
+    CalculateDamageProperties & {
+      attackIndex: number;
+      /** Index of the character in the team (0–2) that dealt this damage. */
+      characterIndex: number;
+      damage: number;
+    }
   >;
 }
 

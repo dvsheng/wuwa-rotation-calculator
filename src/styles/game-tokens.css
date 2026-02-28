@@ -9,18 +9,18 @@
 
 @theme inline {
   /* ── Attribute / element colors ───────────────────────────────────────── */
-  --color-attribute-fusion:   #c32439;
-  --color-attribute-glacio:   #56b9d7;
-  --color-attribute-aero:     #36ba92;
-  --color-attribute-electro:  #a242b1;
-  --color-attribute-spectro:  #baa525;
-  --color-attribute-havoc:    #8f1d4f;
+  --color-attribute-fusion: #c32439;
+  --color-attribute-glacio: #56b9d7;
+  --color-attribute-aero: #36ba92;
+  --color-attribute-electro: #a242b1;
+  --color-attribute-spectro: #baa525;
+  --color-attribute-havoc: #8f1d4f;
   --color-attribute-physical: #999999;
 
   /* ── Rarity tier colors ───────────────────────────────────────────────── */
   /* Matched to Tailwind's yellow-500 / purple-500 / blue-500 so that
      bg-rarity-5/10 produces the same tint currently hardcoded as bg-yellow-500/10 */
-  --color-rarity-5: oklch(0.795 0.184 86);   /* golden */
-  --color-rarity-4: oklch(0.627 0.265 304);  /* purple */
-  --color-rarity-3: oklch(0.623 0.214 260);  /* blue   */
+  --color-rarity-5: oklch(0.795 0.184 86); /* golden */
+  --color-rarity-4: oklch(0.627 0.265 304); /* purple */
+  --color-rarity-3: oklch(0.623 0.214 260); /* blue   */
 }

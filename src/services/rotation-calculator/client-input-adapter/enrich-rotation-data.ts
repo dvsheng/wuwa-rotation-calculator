@@ -8,7 +8,8 @@ import type {
   BaseEntity,
   Modifier as GameDataModifier,
 } from '@/services/game-data';
-import { getEntityByHakushinId } from '@/services/game-data';
+import { OriginType, getEntityByHakushinId } from '@/services/game-data';
+import type { CharacterSlotNumber } from '@/types';
 
 /**
  * Error thrown when game data is not found.
@@ -62,6 +63,26 @@ export const createGameDataEnricher = async (clientTeam: ClientTeam) => {
     getPermanentStatsForCharacter: (characterIndex: number) => {
       return entityDetailsByCharacterIndex[characterIndex].flatMap(
         (entity) => entity.capabilities.permanentStats,
+      );
+    },
+
+    /**
+     * Returns all Tune Break attacks across the team, paired with the
+     * character slot index they belong to.
+     */
+    getTuneBreakAttacks: (): Array<{
+      attack: Attack;
+      characterIndex: CharacterSlotNumber;
+    }> => {
+      return entityDetailsByCharacterIndex.flatMap((entities, charIndex) =>
+        entities.flatMap((entity) =>
+          entity.capabilities.attacks
+            .filter((a) => a.originType === OriginType.TUNE_BREAK)
+            .map((attack) => ({
+              attack,
+              characterIndex: charIndex as CharacterSlotNumber,
+            })),
+        ),
       );
     },
   };

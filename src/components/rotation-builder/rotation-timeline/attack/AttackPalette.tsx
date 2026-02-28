@@ -8,9 +8,12 @@ import {
   ATTACK_SKILL_ORDER,
   sortAttackOrigins,
 } from '@/components/rotation-builder/constants';
+import type { DetailedAttack } from '@/hooks/useTeamDetails';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
 import type { Capability } from '@/schemas/rotation';
+import { OriginType } from '@/services/game-data';
 import type { AttackOriginType } from '@/services/game-data';
+import { TUNE_BREAK_ATTACK_ID } from '@/services/rotation-calculator/tune-break';
 
 export interface AttackPaletteProperties {
   onClickAttack?: (attack: Capability) => void;
@@ -18,13 +21,26 @@ export interface AttackPaletteProperties {
   className?: string;
 }
 
+const TUNE_BREAK_CAPABILITY: DetailedAttack = {
+  id: TUNE_BREAK_ATTACK_ID,
+  characterId: 0,
+  characterName: 'All Characters',
+  name: 'Tune Break',
+  parentName: 'Other',
+  originType: OriginType.TUNE_BREAK,
+};
+
 export const AttackPalette = ({
   onClickAttack,
   onDragAttack,
   className,
 }: AttackPaletteProperties) => {
   const { attacks } = useTeamDetails();
-  const byCharacter = Object.groupBy(attacks, (a) => a.characterName);
+  const hasTuneBreak = attacks.some((a) => a.originType === OriginType.TUNE_BREAK);
+  const nonTuneBreakAttacks = attacks.filter(
+    (a) => a.originType !== OriginType.TUNE_BREAK,
+  );
+  const byCharacter = Object.groupBy(nonTuneBreakAttacks, (a) => a.characterName);
 
   const legend = ATTACK_SKILL_ORDER.map((skill) => ({
     label: skill,
@@ -67,6 +83,25 @@ export const AttackPalette = ({
           </PaletteGroup>
         );
       })}
+
+      {hasTuneBreak && (
+        <PaletteGroup name="Other">
+          <PaletteItem
+            text="Tune Break"
+            capability={TUNE_BREAK_CAPABILITY}
+            legendLabel={OriginType.TUNE_BREAK}
+            onDragStart={
+              onDragAttack
+                ? (event) => onDragAttack(TUNE_BREAK_CAPABILITY, event)
+                : undefined
+            }
+            onClick={
+              onClickAttack ? () => onClickAttack(TUNE_BREAK_CAPABILITY) : undefined
+            }
+            className={SKILL_COLORS[OriginType.TUNE_BREAK]}
+          />
+        </PaletteGroup>
+      )}
     </Palette>
   );
 };

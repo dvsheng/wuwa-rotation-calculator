@@ -58,7 +58,13 @@ describe('getAdminEntityDetailsHandler', () => {
       capabilityName: 'Strike',
       capabilityDescription: undefined,
       capabilityType: 'attack',
-      capabilityJson: { type: 'attack', motionValues: [1] },
+      capabilityJson: {
+        type: 'attack',
+        attribute: 'aero',
+        damageInstances: [
+          { motionValue: 1, tags: ['basicAttack'], scalingStat: 'atk' },
+        ],
+      },
       skillId: 12,
       skillName: 'Normal Attack',
       skillDescription: undefined,

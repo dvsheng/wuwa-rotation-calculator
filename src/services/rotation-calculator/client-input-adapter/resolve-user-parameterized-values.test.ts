@@ -311,7 +311,7 @@ describe('resolveUserParameterizedValues', () => {
   });
 
   describe('complex real-world scenarios', () => {
-    it('should resolve attack with motion values', () => {
+    it('should resolve attack with damage instance motion values', () => {
       const motionValue1: UserParameterizedNumber = {
         offset: 100,
         parameterConfigs: {
@@ -322,7 +322,11 @@ describe('resolveUserParameterizedValues', () => {
       const attack = {
         id: 1,
         characterId: 'char-1',
-        motionValues: [motionValue1, 200, 150],
+        damageInstances: [
+          { motionValue: motionValue1, tags: ['BasicAttack'], scalingStat: 'atk' },
+          { motionValue: 200, tags: ['BasicAttack'], scalingStat: 'atk' },
+          { motionValue: 150, tags: ['BasicAttack'], scalingStat: 'atk' },
+        ],
         parameterValues: [{ id: '0', value: 5 }] as Array<ParameterInstance>,
       };
 
@@ -331,7 +335,11 @@ describe('resolveUserParameterizedValues', () => {
       expect(result).toEqual({
         id: 1,
         characterId: 'char-1',
-        motionValues: [150, 200, 150], // 100 + (5 * 10) = 150
+        damageInstances: [
+          { motionValue: 150, tags: ['BasicAttack'], scalingStat: 'atk' }, // 100 + (5 * 10) = 150
+          { motionValue: 200, tags: ['BasicAttack'], scalingStat: 'atk' },
+          { motionValue: 150, tags: ['BasicAttack'], scalingStat: 'atk' },
+        ],
       });
     });
 

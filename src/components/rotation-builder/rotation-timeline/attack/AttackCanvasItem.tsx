@@ -1,6 +1,6 @@
 import { isNil } from 'es-toolkit/predicate';
 import { AlertTriangle } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { ActivatableDialog } from '@/components/common/ActivatableDialog';
 import { CapabilityTooltip } from '@/components/common/CapabilityTooltip';
@@ -10,6 +10,9 @@ import { DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Text } from '@/components/ui/typography';
 import { useCapabilityIcon, useEntityIcon } from '@/hooks/useIcons';
 import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
+import { useTeamDetails } from '@/hooks/useTeamDetails';
+import { OriginType } from '@/services/game-data';
+import { TUNE_BREAK_ATTACK_ID } from '@/services/rotation-calculator/tune-break';
 import { useStore } from '@/store';
 
 interface AttackCanvasItemProperties {
@@ -18,6 +21,55 @@ interface AttackCanvasItemProperties {
   onRemove: (instanceId: string) => void;
   isDialogClickable: boolean;
 }
+
+/** A single character portrait used inside the Tune Break stacked icon view. */
+const CharacterIcon = ({
+  characterId,
+  characterName,
+  overlap,
+}: {
+  characterId: number;
+  characterName: string;
+  overlap: boolean;
+}) => {
+  const { data: iconUrl } = useEntityIcon(characterId);
+  if (!iconUrl) return;
+  return (
+    <img
+      src={iconUrl}
+      alt={characterName}
+      className={`border-background h-10 w-10 rounded-full border-2 object-contain${overlap ? '-ml-3' : ''}`}
+    />
+  );
+};
+
+/** Stacked row of character icons for all team members contributing Tune Break damage. */
+const TuneBreakCharacterStack = () => {
+  const { attacks } = useTeamDetails();
+
+  const contributors = useMemo(() => {
+    const seen = new Set<number>();
+    return attacks.filter((a) => {
+      if (a.originType !== OriginType.TUNE_BREAK) return false;
+      if (seen.has(a.characterId)) return false;
+      seen.add(a.characterId);
+      return true;
+    });
+  }, [attacks]);
+
+  return (
+    <div className="flex items-center justify-center">
+      {contributors.map((c, index) => (
+        <CharacterIcon
+          key={c.characterId}
+          characterId={c.characterId}
+          characterName={c.characterName}
+          overlap={index > 0}
+        />
+      ))}
+    </div>
+  );
+};
 
 export const AttackCanvasItem = ({
   attack,
@@ -31,6 +83,7 @@ export const AttackCanvasItem = ({
   const { data: iconUrl } = useCapabilityIcon(attack.id);
   const { data: characterIconUrl } = useEntityIcon(attack.characterId);
 
+  const isTuneBreak = attack.id === TUNE_BREAK_ATTACK_ID;
   const isAttackConfigurable = (attack.parameters?.length ?? 0) > 0;
   const shouldShowWarning =
     isAttackConfigurable &&
@@ -64,13 +117,17 @@ export const AttackCanvasItem = ({
               />
             )}
 
-            {/* Character icon */}
-            {characterIconUrl && (
-              <img
-                src={characterIconUrl}
-                alt={attack.characterName}
-                className="border-border max-w-20 items-center justify-center"
-              />
+            {/* Character icon(s) */}
+            {isTuneBreak ? (
+              <TuneBreakCharacterStack />
+            ) : (
+              characterIconUrl && (
+                <img
+                  src={characterIconUrl}
+                  alt={attack.characterName}
+                  className="border-border max-w-20 items-center justify-center"
+                />
+              )
             )}
 
             {/* Capability icon */}

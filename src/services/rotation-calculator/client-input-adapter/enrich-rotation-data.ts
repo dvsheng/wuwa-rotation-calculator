@@ -9,7 +9,6 @@ import type {
   Modifier as GameDataModifier,
 } from '@/services/game-data';
 import { OriginType, getEntityByHakushinId } from '@/services/game-data';
-import type { CharacterSlotNumber } from '@/types';
 
 /**
  * Error thrown when game data is not found.
@@ -72,7 +71,7 @@ export const createGameDataEnricher = async (clientTeam: ClientTeam) => {
      */
     getTuneBreakAttacks: (): Array<{
       attack: Attack;
-      characterIndex: CharacterSlotNumber;
+      characterIndex: number;
     }> => {
       return entityDetailsByCharacterIndex.flatMap((entities, charIndex) =>
         entities.flatMap((entity) =>
@@ -80,7 +79,7 @@ export const createGameDataEnricher = async (clientTeam: ClientTeam) => {
             .filter((a) => a.originType === OriginType.TUNE_BREAK)
             .map((attack) => ({
               attack,
-              characterIndex: charIndex as CharacterSlotNumber,
+              characterIndex: charIndex,
             })),
         ),
       );

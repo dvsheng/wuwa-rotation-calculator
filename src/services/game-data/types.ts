@@ -3,9 +3,7 @@ import type {
   Attribute,
   CharacterStat,
   EnemyStat,
-  LinearParameterizedNumber,
   Tagged,
-  UserParameterizedNumber,
 } from '@/types';
 
 /**
@@ -98,6 +96,7 @@ export const OriginType = {
 export type OriginType = (typeof OriginType)[keyof typeof OriginType];
 
 export type AttackOriginType = Exclude<OriginType, 'Inherent Skill' | 'Base Stats'>;
+
 /**
  * Base properties for any capability (Attack, Modifier, PermanentStat)
  */
@@ -114,14 +113,63 @@ export interface BaseCapability {
   description?: string;
 }
 
-export interface GameDataRotationRuntimeResolvableNumber extends LinearParameterizedNumber<
-  CharacterStat | EnemyStat | AttackScalingProperty
-> {
-  /**
-   * The reference to the character whose stats are used to resolve the value at rotation runtime.
-   */
+// ============================================================================
+// Game-data number types (after Tier 1 / refine-scalable resolution)
+//
+// All DatabaseLeafNumber values are plain `number` at this layer.
+// DatabaseUserNumber  → GameDataUserNumber  (bounds now plain numbers)
+// DatabaseNumberNode  → GameDataNumberNode  (same tree, no refine-scalable leaves)
+//
+// statParameterizedNumber still uses resolveWith: 'self' | 'enemy'; this is
+// resolved to a concrete characterIndex at rotation-enrich time.
+// ============================================================================
+
+/** A user-parameterized number node after refine-scalable values are resolved. */
+export interface GameDataUserParameterizedNumberNode {
+  type: 'userParameterizedNumber';
+  parameterId: '0' | '1' | '2';
+  minimum?: number;
+  maximum?: number;
+}
+
+/**
+ * Tier-1-or-Tier-2 number at the game-data layer.
+ * All refine-scalable numbers have been resolved to plain numbers.
+ */
+export type GameDataUserNumber = number | GameDataUserParameterizedNumberNode;
+
+/** A stat-parameterized reference at the game-data layer. */
+export interface GameDataStatParameterizedNumber {
+  type: 'statParameterizedNumber';
+  stat: CharacterStat | EnemyStat;
+  /** Resolved to a concrete characterIndex at enrich time. */
   resolveWith: 'self' | 'enemy';
 }
+
+/**
+ * Full expression tree at the game-data layer.
+ * All refine-scalable numbers are plain numbers; user params and stat refs
+ * are still present and resolved in subsequent pipeline steps.
+ */
+export type GameDataNumberNode<T = GameDataUserNumber> =
+  | T
+  | { type: 'sum'; operands: Array<GameDataNumberNode<T>> }
+  | { type: 'product'; operands: Array<GameDataNumberNode<T>> }
+  | {
+      type: 'clamp';
+      operand: T;
+      minimum: T;
+      maximum: T;
+    }
+  | {
+      type: 'conditional';
+      operand: T;
+      operator: '>' | '>=' | '<' | '<=';
+      threshold: T;
+      valueIfTrue: T;
+      valueIfFalse: T;
+    }
+  | GameDataStatParameterizedNumber;
 
 /**
  * Internal base for permanent stats.
@@ -129,8 +177,8 @@ export interface GameDataRotationRuntimeResolvableNumber extends LinearParameter
 export interface PermanentStatBase extends Tagged {
   /** The specific stat being modified */
   stat: CharacterStat | EnemyStat;
-  /** The value of the stat, which can be a literal number or a resolvable parameter */
-  value: number | GameDataRotationRuntimeResolvableNumber;
+  /** The value of the stat — a full expression tree (may reference character/enemy stats). */
+  value: GameDataNumberNode<number>;
 }
 
 /**
@@ -159,8 +207,8 @@ export type Target = (typeof Target)[keyof typeof Target];
 export interface ModifierStat extends Tagged {
   /** The specific stat being modified */
   stat: CharacterStat | EnemyStat;
-  /** The value of the stat, which can be a literal number or a resolvable parameter. Modifier stats can also be user-parameterized. */
-  value: number | GameDataRotationRuntimeResolvableNumber | UserParameterizedNumber;
+  /** The value — a full expression tree (may be stat-dependent or user-parameterized). */
+  value: GameDataNumberNode;
 }
 
 /**
@@ -179,7 +227,8 @@ interface ModifierBase extends BaseCapability {
 export type Modifier<T = {}> = ModifierBase & T;
 
 export interface AttackDamageInstance {
-  motionValue: number | UserParameterizedNumber;
+  /** Motion value — Tier 2 only: fixed, refine-scalable, or user-parameterized. */
+  motionValue: GameDataUserNumber;
   tags: Array<string>;
   scalingStat: AttackScalingProperty;
 }

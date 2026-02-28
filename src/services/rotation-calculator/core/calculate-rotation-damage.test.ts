@@ -10,10 +10,9 @@ import type { Rotation } from './types';
  * Creates a minimal character for testing.
  */
 const createTestCharacter = (
-  id: number,
+  _id: number,
   overrides: Partial<Character> = {},
 ): Character => ({
-  id,
   level: 90,
   stats: {
     [CharacterStat.ATTACK_FLAT]: [{ tags: [Tag.ALL], value: 1000 }],
@@ -122,14 +121,26 @@ describe('calculateRotationDamage', () => {
             {
               tags: [Tag.ALL],
               value: {
-                resolveWith: 0, // Resolve using character 0's stats
-                parameterConfigs: {
-                  [CharacterStat.CRITICAL_RATE]: {
-                    scale: 2, // 2% crit dmg per 1% crit rate
-                    minimum: 1.5, // Only applies above 150% crit rate
-                    maximum: 1.75, // Caps at 175% crit rate (50% bonus)
+                type: 'product',
+                operands: [
+                  {
+                    type: 'clamp',
+                    operand: {
+                      type: 'sum',
+                      operands: [
+                        {
+                          type: 'statParameterizedNumber',
+                          stat: CharacterStat.CRITICAL_RATE,
+                          characterIndex: 0,
+                        },
+                        -1.5,
+                      ],
+                    },
+                    minimum: 0,
+                    maximum: 0.25,
                   },
-                },
+                  2,
+                ],
               },
             },
           ],

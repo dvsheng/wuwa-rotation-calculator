@@ -31,7 +31,6 @@ const createEmptyEnemyStats = (): EnemyStats => {
 };
 
 const createCharacter = (stats: Partial<CharacterStats> = {}): Character => ({
-  id: 1,
   level: 90,
   stats: {
     ...createEmptyCharacterStats(),

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { Attribute, NegativeStatus, Tag, isUserParameterizedNumber } from '@/types';
+import { Attribute, NegativeStatus, Tag } from '@/types';
 
 import {
   NEGATIVE_STATUS_MODIFIER_IDS,
@@ -35,16 +35,14 @@ describe('negative-status-modifiers', () => {
 
       const modifiedStat = modifier.modifiedStats[0];
       expect(modifiedStat.tags).toEqual([Tag.ALL]);
-      expect(isUserParameterizedNumber(modifiedStat.value)).toBe(true);
-      if (!isUserParameterizedNumber(modifiedStat.value)) continue;
+      expect(typeof modifiedStat.value).toBe('object');
+      if (typeof modifiedStat.value === 'number') continue;
+      expect(modifiedStat.value.type).toBe('userParameterizedNumber');
+      if (modifiedStat.value.type !== 'userParameterizedNumber') continue;
 
+      expect(modifiedStat.value.parameterId).toBe('0');
       expect(modifiedStat.value.minimum).toBe(0);
       expect(modifiedStat.value.maximum).toBe(13);
-      expect(modifiedStat.value.parameterConfigs['0']).toEqual({
-        scale: 1,
-        minimum: 0,
-        maximum: 13,
-      });
     }
   });
 });

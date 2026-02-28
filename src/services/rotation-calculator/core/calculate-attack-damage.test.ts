@@ -1,60 +1,63 @@
 import { describe, expect, it } from 'vitest';
 
 import { AttackScalingProperty, CharacterStat, EnemyStat, Tag } from '@/types';
-import type { CharacterStats, Enemy, EnemyStats, TaggedStatValue, Team } from '@/types';
 
 import { calculateAttackDamage } from './calculate-attack-damage';
-import type { ResolveRuntimeStatType } from './resolve-runtime-stat-values';
 
-const createEmptyCharacterStats = (): CharacterStats<number> => {
-  return Object.fromEntries(
-    Object.values(CharacterStat).map((stat) => [
-      stat,
-      [] as Array<TaggedStatValue<number>>,
-    ]),
-  ) as CharacterStats<number>;
-};
-
-const createEmptyEnemyStats = (): EnemyStats<number> => {
-  return Object.fromEntries(
-    Object.values(EnemyStat).map((stat) => [
-      stat,
-      [] as Array<TaggedStatValue<number>>,
-    ]),
-  ) as EnemyStats<number>;
-};
-
-const createCharacter = (
-  stats: Partial<CharacterStats<number>> = {},
-): ResolveRuntimeStatType<Team>[number] => ({
-  id: 1,
+const createCharacterStats = (
+  overrides: Partial<Record<CharacterStat | 'level', number>> = {},
+): Record<CharacterStat | 'level', number> => ({
   level: 90,
-  stats: {
-    ...createEmptyCharacterStats(),
-    ...stats,
-  },
+  [CharacterStat.ATTACK_FLAT]: 0,
+  [CharacterStat.ATTACK_SCALING_BONUS]: 0,
+  [CharacterStat.ATTACK_FLAT_BONUS]: 0,
+  [CharacterStat.DEFENSE_FLAT]: 0,
+  [CharacterStat.DEFENSE_SCALING_BONUS]: 0,
+  [CharacterStat.DEFENSE_FLAT_BONUS]: 0,
+  [CharacterStat.HP_FLAT]: 0,
+  [CharacterStat.HP_SCALING_BONUS]: 0,
+  [CharacterStat.HP_FLAT_BONUS]: 0,
+  [CharacterStat.DAMAGE_BONUS]: 0,
+  [CharacterStat.CRITICAL_RATE]: 0,
+  [CharacterStat.CRITICAL_DAMAGE]: 0,
+  [CharacterStat.DEFENSE_IGNORE]: 0,
+  [CharacterStat.RESISTANCE_PENETRATION]: 0,
+  [CharacterStat.DAMAGE_AMPLIFICATION]: 0,
+  [CharacterStat.DAMAGE_MULTIPLIER_BONUS]: 0,
+  [CharacterStat.FINAL_DAMAGE_BONUS]: 0,
+  [CharacterStat.OFF_TUNE_BUILDUP_RATE]: 0,
+  [CharacterStat.TUNE_BREAK_BOOST]: 0,
+  [CharacterStat.TUNE_STRAIN_DAMAGE_BONUS]: 0,
+  [CharacterStat.ENERGY_REGEN]: 0,
+  [CharacterStat.HEALING_BONUS]: 0,
+  ...overrides,
 });
 
-const createEnemy = (
-  stats: Partial<EnemyStats<number>> = {},
-): ResolveRuntimeStatType<Enemy> => ({
+const createEnemyStats = (
+  overrides: Partial<Record<EnemyStat | 'level', number>> = {},
+): Record<EnemyStat | 'level', number> => ({
   level: 90,
-  stats: {
-    ...createEmptyEnemyStats(),
-    ...stats,
-  },
+  [EnemyStat.BASE_RESISTANCE]: 0,
+  [EnemyStat.DEFENSE_REDUCTION]: 0,
+  [EnemyStat.RESISTANCE_REDUCTION]: 0,
+  [EnemyStat.GLACIO_CHAFE]: 0,
+  [EnemyStat.SPECTRO_FRAZZLE]: 0,
+  [EnemyStat.FUSION_BURST]: 0,
+  [EnemyStat.HAVOC_BANE]: 0,
+  [EnemyStat.AERO_EROSION]: 0,
+  [EnemyStat.ELECTRO_FLARE]: 0,
+  [EnemyStat.TUNE_STRAIN_STACKS]: 0,
+  ...overrides,
 });
 
 describe('calculateAttackDamage', () => {
   it('uses atk scaling and applies tune break boost for tune rupture atk', () => {
-    const team = [
-      createCharacter({
-        [CharacterStat.ATTACK_FLAT]: [{ tags: [Tag.ALL], value: 1000 }],
-        [CharacterStat.TUNE_BREAK_BOOST]: [{ tags: [Tag.TUNE_RUPTURE], value: 25 }],
-      }),
-    ];
-    const enemy = createEnemy({
-      [EnemyStat.BASE_RESISTANCE]: [{ tags: [Tag.ALL], value: 0 }],
+    const characterStats = createCharacterStats({
+      [CharacterStat.ATTACK_FLAT]: 1000,
+      [CharacterStat.TUNE_BREAK_BOOST]: 25,
+    });
+    const enemyStats = createEnemyStats({
+      [EnemyStat.BASE_RESISTANCE]: 0,
     });
 
     const { result, inputs } = calculateAttackDamage(
@@ -63,9 +66,8 @@ describe('calculateAttackDamage', () => {
         motionValue: 1,
         tags: [Tag.TUNE_RUPTURE, Tag.ELECTRO],
       },
-      0,
-      team,
-      enemy,
+      characterStats,
+      enemyStats,
     );
 
     expect(inputs.character.attackScalingPropertyValue).toBe(1000);
@@ -74,14 +76,12 @@ describe('calculateAttackDamage', () => {
   });
 
   it('uses the matching underlying hp and def scaling stats for tune rupture variants', () => {
-    const team = [
-      createCharacter({
-        [CharacterStat.HP_FLAT]: [{ tags: [Tag.ALL], value: 2000 }],
-        [CharacterStat.DEFENSE_FLAT]: [{ tags: [Tag.ALL], value: 500 }],
-      }),
-    ];
-    const enemy = createEnemy({
-      [EnemyStat.BASE_RESISTANCE]: [{ tags: [Tag.ALL], value: 0 }],
+    const characterStats = createCharacterStats({
+      [CharacterStat.HP_FLAT]: 2000,
+      [CharacterStat.DEFENSE_FLAT]: 500,
+    });
+    const enemyStats = createEnemyStats({
+      [EnemyStat.BASE_RESISTANCE]: 0,
     });
 
     const hpResult = calculateAttackDamage(
@@ -90,9 +90,8 @@ describe('calculateAttackDamage', () => {
         motionValue: 1,
         tags: [Tag.TUNE_RUPTURE],
       },
-      0,
-      team,
-      enemy,
+      characterStats,
+      enemyStats,
     );
     const defenseResult = calculateAttackDamage(
       {
@@ -100,9 +99,8 @@ describe('calculateAttackDamage', () => {
         motionValue: 1,
         tags: [Tag.TUNE_RUPTURE],
       },
-      0,
-      team,
-      enemy,
+      characterStats,
+      enemyStats,
     );
 
     expect(hpResult.inputs.character.attackScalingPropertyValue).toBe(2000);

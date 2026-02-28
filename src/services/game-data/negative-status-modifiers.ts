@@ -2,12 +2,11 @@ import type {
   Attribute,
   EnemyStat,
   NegativeStatus as NegativeStatusType,
-  UserParameterizedNumber,
 } from '@/types';
 import { Attribute as AttributeEnum, NegativeStatus, Tag } from '@/types';
 
 import { OriginType, Target } from './types';
-import type { Modifier } from './types';
+import type { GameDataNumberNode, Modifier } from './types';
 
 export const SPECIAL_MODIFIER_CHARACTER_ID = -1;
 
@@ -42,16 +41,11 @@ const ATTRIBUTE_TO_NEGATIVE_STATUS: Partial<Record<Attribute, NegativeStatusType
   [AttributeEnum.HAVOC]: NegativeStatus.HAVOC_BANE,
 };
 
-const createNegativeStatusValue = (): UserParameterizedNumber => ({
+const createNegativeStatusValue = (): GameDataNumberNode => ({
+  type: 'userParameterizedNumber',
+  parameterId: '0',
   minimum: 0,
   maximum: 13,
-  parameterConfigs: {
-    '0': {
-      scale: 1,
-      minimum: 0,
-      maximum: 13,
-    },
-  },
 });
 
 export const createNegativeStatusModifiers = (

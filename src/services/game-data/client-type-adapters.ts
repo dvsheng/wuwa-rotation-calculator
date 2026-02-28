@@ -1,9 +1,55 @@
 import { uniqBy } from 'es-toolkit/array';
 
-import { isUserParameterizedNumber } from '@/types';
-
 import type { ClientAttack, ClientModifier } from './get-entity-details.types';
-import type { Attack, AttackOriginType, Modifier } from './types';
+import type {
+  Attack,
+  AttackOriginType,
+  GameDataUserParameterizedNumberNode,
+  Modifier,
+} from './types';
+
+/**
+ * Recursively collects all userParameterizedNumber nodes from a GameDataNumberNode tree.
+ */
+/**
+ * Runtime type guard to check if a value is a RefineScalableNumber.
+ */
+export const isUserParameterizedNumber = (
+  value: unknown,
+): value is GameDataUserParameterizedNumberNode => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'type' in value &&
+    value.type === 'userParameterizedNumber'
+  );
+};
+
+export const collectUserParameters = (
+  data: unknown,
+): Array<GameDataUserParameterizedNumberNode> => {
+  // Handle RefineScalableNumber - resolve to plain number
+  if (isUserParameterizedNumber(data)) {
+    return [data];
+  }
+
+  // Handle arrays recursively
+  if (Array.isArray(data)) {
+    return data.flatMap((item) => collectUserParameters(item));
+  }
+
+  // Handle objects recursively
+  if (typeof data === 'object' && data !== null) {
+    return Object.values(data).flatMap((value) => collectUserParameters(value));
+  }
+  return [];
+};
+
+const userParameterToParameter = (node: GameDataUserParameterizedNumberNode) => ({
+  id: node.parameterId,
+  minimum: node.minimum ?? 0,
+  maximum: node.maximum ?? 100,
+});
 
 /**
  * Converts a game-data Attack into a client-facing enriched Attack structure.
@@ -11,15 +57,9 @@ import type { Attack, AttackOriginType, Modifier } from './types';
 export const toClientAttack = (attack: Attack): ClientAttack => {
   const parameters = uniqBy(
     attack.damageInstances
-      .map((di) => di.motionValue)
-      .filter((v) => isUserParameterizedNumber(v))
-      .flatMap((v) => Object.entries(v.parameterConfigs))
-      .map(([id, config]) => ({
-        minimum: config.minimum ?? 0,
-        maximum: config.maximum ?? 100,
-        id,
-      })),
-    (p) => p.id,
+      .flatMap((di) => collectUserParameters(di.motionValue))
+      .map((instance) => userParameterToParameter(instance)),
+    (parameter) => parameter.id,
   );
 
   return {
@@ -37,18 +77,10 @@ export const toClientAttack = (attack: Attack): ClientAttack => {
  */
 export const toClientBuff = (modifier: Modifier): ClientModifier => {
   const parameters = uniqBy(
-    Object.values(
-      modifier.modifiedStats
-        .map((s) => s.value)
-        .filter((v) => isUserParameterizedNumber(v)),
-    )
-      .flatMap((v) => Object.entries(v.parameterConfigs))
-      .map(([id, config]) => ({
-        minimum: config.minimum ?? 0,
-        maximum: config.maximum ?? 100,
-        id,
-      })),
-    (p) => p.id,
+    modifier.modifiedStats
+      .flatMap((stat) => collectUserParameters(stat.value))
+      .map((stat) => userParameterToParameter(stat)),
+    (parameter) => parameter.id,
   );
 
   return {

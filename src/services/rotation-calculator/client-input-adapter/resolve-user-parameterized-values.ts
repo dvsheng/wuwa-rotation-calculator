@@ -1,7 +1,5 @@
 import type { ParameterInstance } from '@/schemas/rotation';
-import { calculateParameterizedNumberValue } from '@/services/rotation-calculator/core/calculate-parameterized-number';
-import type { UserParameterizedNumber } from '@/types';
-import { isUserParameterizedNumber } from '@/types';
+import type { GameDataUserNumber } from '@/services/game-data';
 
 /**
  * Converts user-parameterized number types to plain numbers.
@@ -30,73 +28,70 @@ import { isUserParameterizedNumber } from '@/types';
  * // Output: { modifiedStats: Array<{ value: number }> }
  */
 export type ResolveUserParameterizedType<T> =
-  T extends Array<infer U>
-    ? Array<ResolveUserParameterizedType<U>>
-    : T extends UserParameterizedNumber
+  // convert first (before object recursion)
+  T extends GameDataUserNumber
+    ? number
+    : T extends number
       ? number
-      : T extends number
-        ? number
+      : T extends Array<infer U>
+        ? Array<ResolveUserParameterizedType<U>>
         : T extends object
           ? { [K in keyof T]: ResolveUserParameterizedType<T[K]> }
           : T;
 
 /**
- * Resolves UserParameterizedNumber values to plain numbers by looking for parameterValues
- * in the object hierarchy.
- *
- * - Converts `UserParameterizedNumber` → `number` using parameterValues from closest parent
- * - Recursively processes arrays and objects
- * - Preserves structure while resolving nested user-parameterized numbers
- * - Throws an error if a UserParameterizedNumber is encountered without parameterValues in any parent
- *
- * @param value - The value to resolve (can contain UserParameterizedNumber)
- * @param currentParameterValues - Parameter values from the current or parent scope
- * @returns The resolved value with all UserParameterizedNumber instances converted to numbers
- *
- * @example
- * const attack = {
- *   motionValues: [userParameterized1, 100, userParameterized2],
- *   parameterValues: [{ id: '0', value: 50 }]
- * };
- * const resolved = resolveUserParameterizedValues(attack);
- * // All UserParameterizedNumber in motionValues are resolved using parameterValues
- *
- * @example
- * const modifier = {
- *   modifiedStats: [{ value: userParameterized }],
- *   parameterValues: [{ id: '0', value: 100 }]
- * };
- * const resolved = resolveUserParameterizedValues(modifier);
- * // UserParameterizedNumber in modifiedStats.value is resolved
+ * Type guard for userParameterizedNumber nodes in the GameDataNumberNode format.
  */
+const isUserParameterizedNode = (
+  value: unknown,
+): value is { type: 'userParameterizedNumber'; parameterId: string } =>
+  typeof value === 'object' &&
+  value !== null &&
+  'type' in value &&
+  (value as Record<string, unknown>).type === 'userParameterizedNumber' &&
+  'parameterId' in value;
+
+/**
+ * Resolves userParameterizedNumber nodes in a GameDataNumberNode tree to plain numbers
+ * using parameterValues from the enclosing rotation action or modifier.
+ *
+ * - Converts `{ type: 'userParameterizedNumber', parameterId }` → `number`
+ * - Recursively processes arrays and objects
+ * - Preserves all other node types (sum, product, clamp, conditional, statParameterizedNumber)
+ * - Throws if a userParameterizedNumber is encountered without parameterValues in any parent
+ *
+ * @param value - The value to resolve (may contain userParameterizedNumber nodes)
+ * @param currentParameterValues - Parameter values from the current or parent scope
+ * @returns The resolved value with all userParameterizedNumber nodes converted to numbers
+ */
+
 export function resolveUserParameterizedValues<T>(
   value: T,
   currentParameterValues?: Record<string, number>,
 ): ResolveUserParameterizedType<T> {
-  // Handle UserParameterizedNumber - resolve to plain number
-  if (isUserParameterizedNumber(value)) {
+  // Handle userParameterizedNumber node - resolve to plain number
+  if (isUserParameterizedNode(value)) {
     if (!currentParameterValues) {
       throw new Error(
-        'Encountered UserParameterizedNumber without parameterValues in any parent object',
+        'Encountered userParameterizedNumber without parameterValues in any parent object',
       );
     }
-    const resolved = calculateParameterizedNumberValue(value, currentParameterValues);
-    return resolved as ResolveUserParameterizedType<T>;
+    return (currentParameterValues[value.parameterId] ??
+      0) as ResolveUserParameterizedType<T>;
   }
 
   // Handle arrays recursively
   if (Array.isArray(value)) {
-    const resolvedArray = value.map((item) =>
+    return value.map((item) =>
       resolveUserParameterizedValues(item, currentParameterValues),
-    );
-    return resolvedArray as ResolveUserParameterizedType<T>;
+    ) as ResolveUserParameterizedType<T>;
   }
 
   // Handle objects recursively
   if (typeof value === 'object' && value !== null) {
     const object = value as Record<string, unknown>;
 
-    // Check if this object has parameterValues field
+    // Check if this object has a parameterValues field
     let parameterValues = currentParameterValues;
     if ('parameterValues' in object && Array.isArray(object.parameterValues)) {
       parameterValues = Object.fromEntries(
@@ -110,9 +105,7 @@ export function resolveUserParameterizedValues<T>(
     const resolved: Record<string, unknown> = {};
     for (const [key, nestedValue] of Object.entries(object)) {
       // Skip the parameterValues field itself in the output
-      if (key === 'parameterValues') {
-        continue;
-      }
+      if (key === 'parameterValues') continue;
       resolved[key] = resolveUserParameterizedValues(nestedValue, parameterValues);
     }
     return resolved as ResolveUserParameterizedType<T>;

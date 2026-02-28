@@ -2,88 +2,97 @@ import { describe, expect, it } from 'vitest';
 
 import { CharacterStat } from '@/types';
 
-import { DatabaseDynamicNumberSchema } from './database';
+import { DatabaseNumberNodeSchema } from './database';
 
-describe('DatabaseDynamicNumberSchema', () => {
-  describe('nested dynamic numbers', () => {
-    it('parses a RotationRuntimeResolvable whose scale is itself a RotationRuntimeResolvable', () => {
-      // Outer: resolves against character stats
-      // Inner (scale): also resolves against character stats — e.g. crit DMG that scales
-      // with a value that is itself derived from another stat at runtime.
+describe('DatabaseNumberNodeSchema', () => {
+  describe('recursive number nodes', () => {
+    it('parses a stat-based expression tree', () => {
       const input = {
-        resolveWith: 'self',
-        parameterConfigs: {
-          [CharacterStat.CRITICAL_DAMAGE]: {
-            scale: {
-              resolveWith: 'self',
-              parameterConfigs: {
-                [CharacterStat.CRITICAL_RATE]: {
-                  scale: 2,
-                  minimum: 1.5,
-                  maximum: 1.75,
+        type: 'product',
+        operands: [
+          {
+            type: 'clamp',
+            operand: {
+              type: 'sum',
+              operands: [
+                {
+                  type: 'statParameterizedNumber',
+                  stat: CharacterStat.CRITICAL_RATE,
+                  resolveWith: 'self',
                 },
-              },
+                -1.5,
+              ],
             },
             minimum: 0,
-            maximum: 0.5,
+            maximum: 0.25,
           },
-        },
+          2,
+        ],
       };
 
-      const result = DatabaseDynamicNumberSchema.safeParse(input);
+      const result = DatabaseNumberNodeSchema.safeParse(input);
       expect(result.success).toBe(true);
     });
 
-    it('parses a RotationRuntimeResolvable whose scale is a UserParameterized number', () => {
+    it('parses a stat-based expression whose clamp bounds are user-parameterized', () => {
       const input = {
-        resolveWith: 'self',
-        parameterConfigs: {
-          [CharacterStat.ATTACK_FLAT]: {
-            scale: {
-              parameterConfigs: {
-                '0': { scale: 0.5 },
-              },
-            },
-            minimum: 0,
-          },
+        type: 'clamp',
+        operand: {
+          type: 'statParameterizedNumber',
+          stat: CharacterStat.ATTACK_FLAT,
+          resolveWith: 'self',
+        },
+        minimum: {
+          type: 'userParameterizedNumber',
+          parameterId: '0',
+          minimum: 0,
+        },
+        maximum: {
+          type: 'userParameterizedNumber',
+          parameterId: '1',
+          maximum: 0.5,
         },
       };
 
-      const result = DatabaseDynamicNumberSchema.safeParse(input);
+      const result = DatabaseNumberNodeSchema.safeParse(input);
       expect(result.success).toBe(true);
     });
 
-    it('parses a UserParameterized whose scale is a RotationRuntimeResolvable', () => {
+    it('parses a conditional expression with a user-parameterized threshold', () => {
       const input = {
-        parameterConfigs: {
-          '0': {
-            scale: {
-              resolveWith: 'self',
-              parameterConfigs: {
-                [CharacterStat.CRITICAL_RATE]: {
-                  scale: 3,
-                },
-              },
-            },
-          },
+        type: 'conditional',
+        operand: 1.75,
+        operator: '>=',
+        threshold: {
+          type: 'userParameterizedNumber',
+          parameterId: '2',
+          minimum: 1.5,
+          maximum: 1.75,
         },
+        valueIfTrue: {
+          type: 'sum',
+          operands: [0.5, 2],
+        },
+        valueIfFalse: 0,
       };
 
-      const result = DatabaseDynamicNumberSchema.safeParse(input);
+      const result = DatabaseNumberNodeSchema.safeParse(input);
       expect(result.success).toBe(true);
     });
 
-    it('rejects an object with an invalid nested scale', () => {
+    it('rejects an object with an invalid nested node', () => {
       const input = {
-        resolveWith: 'self',
-        parameterConfigs: {
-          [CharacterStat.CRITICAL_DAMAGE]: {
-            scale: { notAValidShape: true },
+        type: 'sum',
+        operands: [
+          2,
+          {
+            type: 'product',
+            operands: [{ notAValidShape: true }],
           },
-        },
+        ],
       };
 
-      const result = DatabaseDynamicNumberSchema.safeParse(input);
+      const result = DatabaseNumberNodeSchema.safeParse(input);
       expect(result.success).toBe(false);
     });
   });

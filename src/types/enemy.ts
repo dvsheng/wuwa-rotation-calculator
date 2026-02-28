@@ -1,5 +1,4 @@
 import { NegativeStatus } from './negative-status';
-import type { RotationRuntimeResolvableNumber } from './parameterized-number';
 import type { TaggedStatValue } from './tag';
 
 export const EnemyStat = {
@@ -15,10 +14,7 @@ export type EnemyStat = (typeof EnemyStat)[keyof typeof EnemyStat];
 /**
  * Defines the stats of an enemy, primarily focusing on resistances and reductions.
  */
-export type EnemyStats<T = RotationRuntimeResolvableNumber | number> = Record<
-  EnemyStat,
-  Array<TaggedStatValue<T>>
->;
+export type EnemyStats = Record<EnemyStat, Array<TaggedStatValue>>;
 
 /**
  * Represents an enemy target in the simulation.

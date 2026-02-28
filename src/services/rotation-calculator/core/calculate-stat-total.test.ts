@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import { AttackScalingProperty, CharacterStat } from '@/types';
-import type { CharacterStats } from '@/types';
 
 import {
   calculateAttackScalingPropertyValue,
@@ -18,29 +17,29 @@ const createMockStats = (
   hpFlat: number,
   hpScalingBonus: number,
   hpFlatBonus: number,
-): CharacterStats<number> => ({
-  [CharacterStat.ATTACK_FLAT]: [{ tags: [], value: attackFlat }],
-  [CharacterStat.ATTACK_SCALING_BONUS]: [{ tags: [], value: attackScalingBonus }],
-  [CharacterStat.ATTACK_FLAT_BONUS]: [{ tags: [], value: attackFlatBonus }],
-  [CharacterStat.DEFENSE_FLAT]: [{ tags: [], value: defenseFlat }],
-  [CharacterStat.DEFENSE_SCALING_BONUS]: [{ tags: [], value: defenseScalingBonus }],
-  [CharacterStat.DEFENSE_FLAT_BONUS]: [{ tags: [], value: defenseFlatBonus }],
-  [CharacterStat.HP_FLAT]: [{ tags: [], value: hpFlat }],
-  [CharacterStat.HP_SCALING_BONUS]: [{ tags: [], value: hpScalingBonus }],
-  [CharacterStat.HP_FLAT_BONUS]: [{ tags: [], value: hpFlatBonus }],
-  [CharacterStat.DAMAGE_BONUS]: [],
-  [CharacterStat.CRITICAL_RATE]: [],
-  [CharacterStat.CRITICAL_DAMAGE]: [],
-  [CharacterStat.DEFENSE_IGNORE]: [],
-  [CharacterStat.RESISTANCE_PENETRATION]: [],
-  [CharacterStat.DAMAGE_AMPLIFICATION]: [],
-  [CharacterStat.DAMAGE_MULTIPLIER_BONUS]: [],
-  [CharacterStat.FINAL_DAMAGE_BONUS]: [],
-  [CharacterStat.OFF_TUNE_BUILDUP_RATE]: [],
-  [CharacterStat.TUNE_BREAK_BOOST]: [],
-  [CharacterStat.TUNE_STRAIN_DAMAGE_BONUS]: [],
-  [CharacterStat.ENERGY_REGEN]: [],
-  [CharacterStat.HEALING_BONUS]: [],
+): Record<CharacterStat, number> => ({
+  [CharacterStat.ATTACK_FLAT]: attackFlat,
+  [CharacterStat.ATTACK_SCALING_BONUS]: attackScalingBonus,
+  [CharacterStat.ATTACK_FLAT_BONUS]: attackFlatBonus,
+  [CharacterStat.DEFENSE_FLAT]: defenseFlat,
+  [CharacterStat.DEFENSE_SCALING_BONUS]: defenseScalingBonus,
+  [CharacterStat.DEFENSE_FLAT_BONUS]: defenseFlatBonus,
+  [CharacterStat.HP_FLAT]: hpFlat,
+  [CharacterStat.HP_SCALING_BONUS]: hpScalingBonus,
+  [CharacterStat.HP_FLAT_BONUS]: hpFlatBonus,
+  [CharacterStat.DAMAGE_BONUS]: 0,
+  [CharacterStat.CRITICAL_RATE]: 0,
+  [CharacterStat.CRITICAL_DAMAGE]: 0,
+  [CharacterStat.DEFENSE_IGNORE]: 0,
+  [CharacterStat.RESISTANCE_PENETRATION]: 0,
+  [CharacterStat.DAMAGE_AMPLIFICATION]: 0,
+  [CharacterStat.DAMAGE_MULTIPLIER_BONUS]: 0,
+  [CharacterStat.FINAL_DAMAGE_BONUS]: 0,
+  [CharacterStat.OFF_TUNE_BUILDUP_RATE]: 0,
+  [CharacterStat.TUNE_BREAK_BOOST]: 0,
+  [CharacterStat.TUNE_STRAIN_DAMAGE_BONUS]: 0,
+  [CharacterStat.ENERGY_REGEN]: 0,
+  [CharacterStat.HEALING_BONUS]: 0,
 });
 
 describe('sumStatValues', () => {

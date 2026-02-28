@@ -6,7 +6,8 @@ import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import type { Team as ClientTeam } from '@/schemas/team';
 import type {
   Attack,
-  Modifier as GameDataModifier,
+  GameDataNumberNode,
+  Modifier,
   PermanentStatBase,
 } from '@/services/game-data';
 import { getEchoStats } from '@/services/game-data';
@@ -15,13 +16,12 @@ import { TUNE_STRAIN_BUFF_ID } from '@/services/rotation-calculator/tune-strain'
 import { CharacterStat, EnemyStat, Tag } from '@/types';
 import type {
   CharacterAttack,
-  CharacterSlotNumber,
   CharacterStats,
   Modifier as RotationModifier,
-  RotationRuntimeResolvableNumber,
   TaggedStatValue,
 } from '@/types';
 
+import type { NumberNode } from '../core/resolve-runtime-number';
 import type { Rotation } from '../core/types';
 
 import { createGameDataEnricher } from './enrich-rotation-data';
@@ -89,31 +89,53 @@ export const CHARACTER_BASE_STATS: CharacterStats = {
   [CharacterStat.HEALING_BONUS]: [],
 };
 
+const isStatParameterizedNode = (
+  value: unknown,
+): value is { type: 'statParameterizedNumber' } =>
+  typeof value === 'object' &&
+  value !== null &&
+  'type' in value &&
+  value.type === 'statParameterizedNumber';
+
+/**
+ * Walks a GameDataNumberNode tree, replacing statParameterizedNumber nodes:
+ * - resolveWith: 'self'  → characterIndex: selfIndex
+ * - resolveWith: 'enemy' → characterIndex: undefined
+ *
+ * Clamp/conditional bounds (GameDataUserNumber positions) are cast to number —
+ * they are plain numbers after resolveUserParameterizedValues has already run.
+ */
+const resolveStatReferences = (
+  node: ResolveUserParameterizedType<GameDataNumberNode>,
+  index: number,
+): NumberNode => {
+  // Handle userParameterizedNumber node - resolve to plain number
+  if (isStatParameterizedNode(node)) {
+    return {
+      ...node,
+      characterIndex: node.resolveWith === 'self' ? index : undefined,
+    };
+  }
+  return node;
+};
+
 /**
  * Converts a client-side modifier instance to a rotation modifier.
  * Resolves modifier targets and maps stats from 'self' to the character's slot number.
  */
 export const toRotationModifier = (
-  modifier: ModifierInstance & ResolveUserParameterizedType<GameDataModifier>,
+  modifier: ModifierInstance & ResolveUserParameterizedType<Modifier>,
   attack: Pick<AttackInstance, 'characterId'>,
-  characterIdToSlotNumberMap: Record<number, CharacterSlotNumber>,
+  characterIdToSlotNumberMap: Record<number, number>,
 ): RotationModifier => {
-  // Map resolveWith from 'self' to character index for each stat value
   const characterSlotNumber = characterIdToSlotNumberMap[modifier.characterId];
-  const statsWithResolvedIndex = modifier.modifiedStats.map((stat) => {
-    return typeof stat.value === 'number'
-      ? stat
-      : {
-          ...stat,
-          value: {
-            ...stat.value,
-            resolveWith: characterSlotNumber,
-          } satisfies RotationRuntimeResolvableNumber,
-        };
-  }) as Array<TaggedStatValue & { stat: CharacterStat | EnemyStat }>;
+  const statsWithResolvedIndex = modifier.modifiedStats.map((stat) => ({
+    ...stat,
+    value: resolveStatReferences(stat.value, characterSlotNumber),
+  }));
   const modifiedStats = Object.groupBy(statsWithResolvedIndex, (_stat) => _stat.stat);
 
-  let modifierTargets: Array<0 | 1 | 2 | 'enemy'>;
+  let modifierTargets: Array<number | 'enemy'>;
   switch (modifier.target) {
     case 'self': {
       modifierTargets = [characterSlotNumber];
@@ -142,19 +164,12 @@ export const toRotationModifier = (
  * Converts a permanent stat to include the character's slot number for runtime resolution.
  */
 export const toRotationPermanentStat = (
-  stat: PermanentStatBase,
+  stat: ResolveUserParameterizedType<PermanentStatBase>,
   characterIndex: number,
 ): TaggedStatValue & { stat: CharacterStat | EnemyStat } => {
-  const value =
-    typeof stat.value === 'object'
-      ? ({
-          ...stat.value,
-          resolveWith: characterIndex as CharacterSlotNumber,
-        } satisfies RotationRuntimeResolvableNumber)
-      : stat.value;
   return {
     ...stat,
-    value,
+    value: resolveStatReferences(stat.value, characterIndex),
   };
 };
 
@@ -164,7 +179,7 @@ export const toRotationPermanentStat = (
 export const toRotationAttack = (
   instance: AttackInstance &
     ResolveUserParameterizedType<Attack> & { modifiers: Array<RotationModifier> },
-  characterIdToSlotNumberMap: Record<number, CharacterSlotNumber>,
+  characterIdToSlotNumberMap: Record<number, number>,
 ): CharacterAttack => {
   return {
     characterIndex: characterIdToSlotNumberMap[instance.characterId],
@@ -284,7 +299,7 @@ export const adaptClientInputToRotation = async (
   // 4. Map Attacks and Buffs to Damage Instances
   const characterIdToSlotNumberMap = Object.fromEntries(
     clientTeam.map((c, index) => [c.id, index]),
-  ) as Record<number, CharacterSlotNumber>;
+  ) as Record<number, number>;
 
   const expandedBuffs = buffs.flatMap((buff) =>
     expandModifiersByValueConfiguration(buff),

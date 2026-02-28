@@ -1,7 +1,8 @@
+import type { NumberNode } from '@/services/rotation-calculator/core/resolve-runtime-number';
+
 import { Attribute } from './attribute';
 import { DamageType } from './damage-instance';
 import { NegativeStatus } from './negative-status';
-import type { RotationRuntimeResolvableNumber } from './parameterized-number';
 
 /**
  * A collection of commonly used strings in tags used for filtering and categorization during calculations.
@@ -35,14 +36,12 @@ export interface Tagged {
 /**
  * A stat value can either be a static number or a dynamically resolved value in the rotation.
  */
-export type StatValue = number | RotationRuntimeResolvableNumber;
+export type StatValue = NumberNode;
 
 /**
  * Combines a value with classification tags to allow for conditional logic.
  */
-export interface TaggedStatValue<
-  T = number | RotationRuntimeResolvableNumber,
-> extends Tagged {
+export interface TaggedStatValue extends Tagged {
   /** The magnitude of the stat, possibly dependent on character stats. */
-  value: T;
+  value: NumberNode;
 }

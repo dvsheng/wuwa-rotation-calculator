@@ -1,7 +1,7 @@
 import { sumBy } from 'es-toolkit/math';
 
 import { AttackScalingProperty } from '@/types';
-import type { CharacterStats } from '@/types';
+import type { CharacterStat } from '@/types';
 
 export const isAttackScalingProperty = (key: string): key is AttackScalingProperty => {
   return Object.values(AttackScalingProperty).includes(key as AttackScalingProperty);
@@ -20,29 +20,29 @@ export const sumStatValues = (statValues: Array<{ value: number }>) => {
 };
 
 export const calculateAttackScalingPropertyValue = (
-  stats: CharacterStats<number>,
+  stats: Record<CharacterStat, number>,
   attribute: AttackScalingProperty,
 ) => {
   switch (attribute) {
     case AttackScalingProperty.ATK: {
       return calculateAttackScalingPropertyTotal(
-        sumStatValues(stats.attackFlat),
-        sumStatValues(stats.attackScalingBonus),
-        sumStatValues(stats.attackFlatBonus),
+        stats.attackFlat,
+        stats.attackScalingBonus,
+        stats.attackFlatBonus,
       );
     }
     case AttackScalingProperty.DEF: {
       return calculateAttackScalingPropertyTotal(
-        sumStatValues(stats.defenseFlat),
-        sumStatValues(stats.defenseScalingBonus),
-        sumStatValues(stats.defenseFlatBonus),
+        stats.defenseFlat,
+        stats.defenseScalingBonus,
+        stats.defenseFlatBonus,
       );
     }
     case AttackScalingProperty.HP: {
       return calculateAttackScalingPropertyTotal(
-        sumStatValues(stats.hpFlat),
-        sumStatValues(stats.hpScalingBonus),
-        sumStatValues(stats.hpFlatBonus),
+        stats.hpFlat,
+        stats.hpScalingBonus,
+        stats.hpFlatBonus,
       );
     }
     default: {

@@ -1,17 +1,17 @@
 import { clamp } from 'es-toolkit/math';
-import { mapValues } from 'es-toolkit/object';
 
 import { AttackScalingProperty } from '@/types';
-import type { CharacterDamageInstance, Enemy, NegativeStatus, Team } from '@/types';
+import type {
+  CharacterDamageInstance,
+  CharacterStat,
+  EnemyStat,
+  NegativeStatus,
+} from '@/types';
 
 import { calculateDamage } from '../damage-calculator';
 import { getNegativeStatusBaseDamage } from '../damage-calculator/calculate-negative-status-damage';
 
-import {
-  calculateAttackScalingPropertyValue,
-  sumStatValues,
-} from './calculate-stat-total';
-import type { ResolveRuntimeStatType } from './resolve-runtime-stat-values';
+import { calculateAttackScalingPropertyValue } from './calculate-stat-total';
 import { getAttackScalingType } from './type-converters';
 import { AttackScalingType } from './types';
 
@@ -36,15 +36,13 @@ const getBaseScalingStat = (scalingStat: CharacterDamageInstance['scalingStat'])
 
 export const calculateAttackDamage = (
   damageInstance: CharacterDamageInstance,
-  characterIndex: number,
-  team: ResolveRuntimeStatType<Team>,
-  enemy: ResolveRuntimeStatType<Enemy>,
+  characterStats: Record<CharacterStat | 'level', number>,
+  enemyStats: Record<EnemyStat | 'level', number>,
 ) => {
   const damageCalculationStats = convertResolvedStatsToCalculateDamageProperties({
     damageInstance,
-    characterIndex,
-    team,
-    enemy,
+    characterStats,
+    enemyStats,
   });
 
   const _calculateDamage = getDamageCalculationStrategy(damageInstance);
@@ -155,31 +153,26 @@ const getDamageCalculationStrategy = (instance: CharacterDamageInstance) => {
 
 const convertResolvedStatsToCalculateDamageProperties = ({
   damageInstance,
-  characterIndex,
-  team,
-  enemy: enemy_,
+  characterStats,
+  enemyStats,
 }: {
   damageInstance: CharacterDamageInstance;
-  characterIndex: number;
-  team: ResolveRuntimeStatType<Team>;
-  enemy: ResolveRuntimeStatType<Enemy>;
+  characterStats: Record<CharacterStat | 'level', number>;
+  enemyStats: Record<EnemyStat | 'level', number>;
 }) => {
-  const { stats, level } = team[characterIndex];
   const character = {
-    ...mapValues(stats, sumStatValues),
-    level: level,
-    criticalRate: clamp(sumStatValues(stats.criticalRate), 1),
+    ...characterStats,
+    criticalRate: clamp(characterStats.criticalRate, 1),
     attackScalingPropertyValue: calculateAttackScalingPropertyValue(
-      stats,
+      characterStats,
       getBaseScalingStat(damageInstance.scalingStat),
     ),
   };
   const enemy = {
-    ...mapValues(enemy_.stats, sumStatValues),
-    level: enemy_.level,
+    ...enemyStats,
     defenseReduction:
-      sumStatValues(enemy_.stats.defenseReduction) +
-      sumStatValues(enemy_.stats.havocBane) * HAVOC_BANE_DEFENSE_REDUCTION_PER_STACK,
+      enemyStats.defenseReduction +
+      enemyStats.havocBane * HAVOC_BANE_DEFENSE_REDUCTION_PER_STACK,
   };
   return {
     character,

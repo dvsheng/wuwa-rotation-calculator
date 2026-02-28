@@ -1,4 +1,3 @@
-import type { RotationRuntimeResolvableNumber } from './parameterized-number';
 import type { TaggedStatValue } from './tag';
 
 export const CharacterStat = {
@@ -32,17 +31,12 @@ export type CharacterStat = (typeof CharacterStat)[keyof typeof CharacterStat];
  * A comprehensive record of a character's stats, where each value is an array of tagged instances
  * to allow for conditional application during damage calculations.
  */
-export type CharacterStats<T = RotationRuntimeResolvableNumber | number> = Record<
-  CharacterStat,
-  Array<TaggedStatValue<T>>
->;
+export type CharacterStats = Record<CharacterStat, Array<TaggedStatValue>>;
 
 /**
  * Represents a character in the simulation context.
  */
 export interface Character {
-  /** Unique identifier for the character, corresponding to its position in the team array. */
-  id: number;
   /** Progression level. */
   level: number;
   /** Current calculated stats. */

@@ -1,60 +1,21 @@
 import type { DatabaseFullCapability } from '@/db/schema';
 import type {
-  DatabasePureRotationRuntimeResolvableNumber,
-  DatabasePureUserParameterizedResolvableNumber,
+  DatabaseLeafNumber,
   DatabaseRefineScalableNumber,
-  DatabaseRotationRuntimeResolvableNumber,
-  DatabaseUserParameterizedResolvableNumber,
 } from '@/schemas/database';
-import type { UserParameterizedNumber } from '@/types/parameterized-number';
 
-import type { GameDataRotationRuntimeResolvableNumber } from './types';
 import { Sequence } from './types';
 
-/**
- * Converts Store number types to runtime number types.
- * Works with union types, arrays, and objects (recursively).
- *
- * - StoreNumber (number | RefineScalableNumber) → number
- * - StoreParameterizedNumber → UserParameterizedNumber
- * - StoreRotationRuntimeResolvableNumber → RotationRuntimeResolvableNumber
- * - Array<Store types> → Array<runtime types>
- * - Objects with Store types → Objects with runtime types (recursive)
- * - number → number (passthrough)
- *
- * @example
- * type Input = StoreNumber | StoreParameterizedNumber;
- * type Output = ResolveStoreNumberType<Input>;
- * // Output: number | UserParameterizedNumber
- *
- * @example
- * type ArrayInput = Array<StoreNumber | StoreParameterizedNumber>;
- * type ArrayOutput = ResolveStoreNumberType<ArrayInput>;
- * // Output: Array<number | UserParameterizedNumber>
- *
- * @example
- * type ObjectInput = { min: StoreNumber; max: StoreNumber };
- * type ObjectOutput = ResolveStoreNumberType<ObjectInput>;
- * // Output: { min: number; max: number }
- */
-export type ResolveStoreNumberType<T> =
-  T extends DatabasePureRotationRuntimeResolvableNumber
-    ? GameDataRotationRuntimeResolvableNumber
-    : T extends DatabasePureUserParameterizedResolvableNumber
-      ? UserParameterizedNumber
-      : T extends DatabaseRotationRuntimeResolvableNumber
-        ? GameDataRotationRuntimeResolvableNumber
-        : T extends DatabaseUserParameterizedResolvableNumber
-          ? UserParameterizedNumber
-          : T extends DatabaseRefineScalableNumber
-            ? number
-            : T extends number
-              ? number
-              : T extends object
-                ? { [K in keyof T]: ResolveStoreNumberType<T[K]> }
-                : T extends Array<infer U>
-                  ? Array<ResolveStoreNumberType<U>>
-                  : T;
+export type ResolveRefineScalableNumber<T> =
+  T extends Array<infer U>
+    ? Array<ResolveRefineScalableNumber<U>>
+    : T extends object
+      ? { [K in keyof T]: ResolveRefineScalableNumber<T[K]> }
+      : T extends DatabaseLeafNumber
+        ? number
+        : T extends number
+          ? number
+          : T;
 
 /**
  * Runtime type guard to check if a value is a RefineScalableNumber.
@@ -102,36 +63,36 @@ export const isRefineScalableNumber = (
  * const resolved = resolveStoreNumberType(motionValues, 5);
  * // Result: [18, 100]
  */
-export function resolveStoreNumberType<T>(
+
+export const resolveStoreNumberType = <T>(
   value: T,
   refineLevel = 1,
-): ResolveStoreNumberType<T> {
+): ResolveRefineScalableNumber<T> => {
   // Handle RefineScalableNumber - resolve to plain number
   if (isRefineScalableNumber(value)) {
-    const resolved = value.base + (refineLevel - 1) * value.increment;
-    return resolved as ResolveStoreNumberType<T>;
+    return (value.base +
+      (refineLevel - 1) * value.increment) as ResolveRefineScalableNumber<T>;
   }
 
   // Handle arrays recursively
   if (Array.isArray(value)) {
-    const resolvedArray = value.map((item) =>
+    return value.map((item) =>
       resolveStoreNumberType(item, refineLevel),
-    );
-    return resolvedArray as ResolveStoreNumberType<T>;
+    ) as ResolveRefineScalableNumber<T>;
   }
 
-  // Handle objects recursively (parameterized numbers, modifiers, etc.)
+  // Handle objects recursively
   if (typeof value === 'object' && value !== null) {
     const resolved: Record<string, unknown> = {};
     for (const [key, nestedValue] of Object.entries(value)) {
       resolved[key] = resolveStoreNumberType(nestedValue, refineLevel);
     }
-    return resolved as ResolveStoreNumberType<T>;
+    return resolved as ResolveRefineScalableNumber<T>;
   }
 
   // Pass through primitives (numbers, strings, booleans, null, undefined)
-  return value as ResolveStoreNumberType<T>;
-}
+  return value as ResolveRefineScalableNumber<T>;
+};
 
 export type RecursivelyReplaceNullWithUndefined<T> = T extends null
   ? undefined

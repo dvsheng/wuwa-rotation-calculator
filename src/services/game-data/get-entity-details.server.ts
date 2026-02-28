@@ -2,16 +2,10 @@ import { eq } from 'drizzle-orm';
 import { compact } from 'es-toolkit/array';
 
 import { database } from '@/db/client';
-import type { DatabaseFullCapabilityByType } from '@/db/schema';
 import { fullCapabilities } from '@/db/schema';
 import type { GetEntityDetailsRequest } from '@/schemas/game-data-service';
 
 import { toClientAttack, toClientBuff } from './client-type-adapters';
-import type {
-  RecursivelyReplaceNullWithUndefined,
-  ResolveAlternativeDefinitions,
-  ResolveStoreNumberType,
-} from './database-type-adapters';
 import {
   replaceNullsWithUndefined,
   resolveAlternativeDefinitions,
@@ -57,13 +51,7 @@ const isCapabilityActive = (
 /**
  * Convert fullCapabilities record to Attack format (flattening capabilityJson)
  */
-const toAttack = (
-  attack: ResolveStoreNumberType<
-    RecursivelyReplaceNullWithUndefined<
-      ResolveAlternativeDefinitions<DatabaseFullCapabilityByType<'attack'>>
-    >
-  >,
-): Attack => {
+const toAttack = (attack: any): Attack => {
   const json = attack.capabilityJson;
   return {
     id: attack.capabilityId,
@@ -72,7 +60,7 @@ const toAttack = (
     originType: attack.skillOriginType,
     parentName: attack.skillName,
     attribute: json.attribute,
-    damageInstances: json.damageInstances.map((di) => ({
+    damageInstances: json.damageInstances.map((di: any) => ({
       ...di,
       tags: compact([...di.tags, attack.capabilityName, json.attribute]),
     })),
@@ -82,13 +70,7 @@ const toAttack = (
 /**
  * Convert fullCapabilities record to Modifier format (flattening capabilityJson)
  */
-const toModifier = (
-  modifier: ResolveStoreNumberType<
-    RecursivelyReplaceNullWithUndefined<
-      ResolveAlternativeDefinitions<DatabaseFullCapabilityByType<'modifier'>>
-    >
-  >,
-): Modifier => {
+const toModifier = (modifier: any): Modifier => {
   const json = modifier.capabilityJson;
   return {
     id: modifier.capabilityId,
@@ -104,13 +86,7 @@ const toModifier = (
 /**
  * Convert fullCapabilities record to PermanentStat format (flattening capabilityJson)
  */
-const toPermanentStat = (
-  permanentStat: ResolveStoreNumberType<
-    RecursivelyReplaceNullWithUndefined<
-      ResolveAlternativeDefinitions<DatabaseFullCapabilityByType<'permanent_stat'>>
-    >
-  >,
-): PermanentStat => {
+const toPermanentStat = (permanentStat: any): PermanentStat => {
   const json = permanentStat.capabilityJson;
   return {
     id: permanentStat.capabilityId,
@@ -161,7 +137,7 @@ export const getEntityByIdHandler = async (
 
   const attacks = capabilities
     .filter((capability) => capability.capabilityType === CapabilityType.ATTACK)
-    .map((capability) => toAttack(capability as Parameters<typeof toAttack>[0]));
+    .map((capability) => toAttack(capability));
   if (options.entityType === EntityType.CHARACTER) {
     attacks.push(
       ...createNegativeStatusAttacks(firstCapability.attribute ?? undefined),
@@ -169,7 +145,7 @@ export const getEntityByIdHandler = async (
   }
   const modifiers = capabilities
     .filter((capability) => capability.capabilityType === CapabilityType.MODIFIER)
-    .map((modifier) => toModifier(modifier as Parameters<typeof toModifier>[0]));
+    .map((modifier) => toModifier(modifier));
   if (options.entityType === EntityType.CHARACTER) {
     modifiers.push(
       ...createNegativeStatusModifiers(firstCapability.attribute ?? undefined),
@@ -177,7 +153,7 @@ export const getEntityByIdHandler = async (
   }
   const permanentStats = capabilities
     .filter((capability) => capability.capabilityType === CapabilityType.PERMANENT_STAT)
-    .map((stat) => toPermanentStat(stat as Parameters<typeof toPermanentStat>[0]));
+    .map((stat) => toPermanentStat(stat));
   return {
     id: firstCapability.entityId,
     gameId: firstCapability.entityId,

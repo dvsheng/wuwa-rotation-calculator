@@ -1,7 +1,9 @@
+import { mapValues } from 'es-toolkit/object';
+
 import { applyModifiers } from './apply-modifiers';
 import { calculateAttackDamage } from './calculate-attack-damage';
 import { getStatFilterer } from './filter-stats';
-import { resolveStats } from './resolve-runtime-stat-values';
+import { resolveStats } from './resolve-runtime-number';
 import type { Rotation, RotationResult } from './types';
 
 export const calculateRotationDamage = (rotation: Rotation): RotationResult => {
@@ -30,15 +32,19 @@ export const calculateRotationDamage = (rotation: Rotation): RotationResult => {
         teamWithModifiers,
         enemyWithModifiers,
       );
-      const { team: resolvedTeam, enemy: resolvedEnemy } = resolveStats(
-        filteredTeam,
-        filteredEnemy,
+      const { team: teamStats, enemy: enemyStats } = resolveStats(
+        filteredTeam.map((character) =>
+          mapValues(character.stats, (values) => values.map((value) => value.value)),
+        ),
+        mapValues(filteredEnemy.stats, (values) => values.map((value) => value.value)),
       );
       const { result, inputs } = calculateAttackDamage(
         instance,
-        instance.characterIndex,
-        resolvedTeam,
-        resolvedEnemy,
+        {
+          ...teamStats[instance.characterIndex],
+          level: filteredTeam[instance.characterIndex].level,
+        },
+        { ...enemyStats, level: filteredEnemy.level },
       );
       return {
         totalDamage: reducer.totalDamage + result,

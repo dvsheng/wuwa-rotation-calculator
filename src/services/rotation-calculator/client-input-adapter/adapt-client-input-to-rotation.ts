@@ -11,12 +11,12 @@ import type {
 } from '@/services/game-data';
 import { getEchoStats } from '@/services/game-data';
 import { TUNE_BREAK_ATTACK_ID } from '@/services/rotation-calculator/tune-break';
-import { CharacterStat, Tag } from '@/types';
+import { TUNE_STRAIN_BUFF_ID } from '@/services/rotation-calculator/tune-strain';
+import { CharacterStat, EnemyStat, Tag } from '@/types';
 import type {
   CharacterAttack,
   CharacterSlotNumber,
   CharacterStats,
-  EnemyStat,
   Modifier as RotationModifier,
   RotationRuntimeResolvableNumber,
   TaggedStatValue,
@@ -290,18 +290,33 @@ export const adaptClientInputToRotation = async (
     expandModifiersByValueConfiguration(buff),
   );
 
-  const buildModifiers = (storedIndex: number, activeCharacterId: number) =>
+  const buildModifiers = (
+    storedIndex: number,
+    activeCharacterId: number,
+  ): Array<RotationModifier> =>
     expandedBuffs
       .filter((modifier) => shouldModifierApplyToAttack(storedIndex, modifier))
-      .map((modifier) => enricher.enrichModifier(modifier))
-      .map((modifier) => resolveUserParameterizedValues(modifier))
-      .map((modifier) =>
-        toRotationModifier(
-          modifier,
-          { characterId: activeCharacterId },
-          characterIdToSlotNumberMap,
-        ),
-      );
+      .flatMap((modifier): Array<RotationModifier> => {
+        if (modifier.id === TUNE_STRAIN_BUFF_ID) {
+          const stacks =
+            modifier.parameterValues?.find((p) => p.id === '0')?.value ?? 0;
+          return [
+            {
+              targets: ['enemy'],
+              modifiedStats: {
+                [EnemyStat.TUNE_STRAIN_STACKS]: [{ tags: [Tag.ALL], value: stacks }],
+              },
+            },
+          ];
+        }
+        return [
+          toRotationModifier(
+            resolveUserParameterizedValues(enricher.enrichModifier(modifier)),
+            { characterId: activeCharacterId },
+            characterIdToSlotNumberMap,
+          ),
+        ];
+      });
 
   const rotationAttacks = attacks.flatMap((attack, storedIndex) => {
     if (attack.id === TUNE_BREAK_ATTACK_ID) {

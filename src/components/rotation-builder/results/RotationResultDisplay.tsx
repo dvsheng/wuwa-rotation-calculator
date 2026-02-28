@@ -139,9 +139,9 @@ export const RotationResultDisplay = ({
                 </TooltipTrigger>
                 <TooltipContent
                   side="bottom"
-                  className="w-96 border-white/10 bg-zinc-900 p-0 text-zinc-100 shadow-xl"
+                  className="flex h-96 w-96 flex-col border-white/10 bg-zinc-900 p-0 text-zinc-100 shadow-xl"
                 >
-                  <div className="border-b border-white/10 bg-zinc-800/50 p-3">
+                  <div className="shrink-0 border-b border-white/10 bg-zinc-800/50 p-3">
                     <Text
                       variant="tiny"
                       className="font-semibold tracking-wider text-zinc-300 uppercase"
@@ -150,7 +150,7 @@ export const RotationResultDisplay = ({
                     </Text>
                   </div>
 
-                  <ScrollArea className="max-h-96 p-3">
+                  <ScrollArea className="min-h-0 flex-1 p-3">
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <Text

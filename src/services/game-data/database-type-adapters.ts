@@ -1,5 +1,7 @@
 import type { DatabaseFullCapability } from '@/db/schema';
 import type {
+  DatabasePureRotationRuntimeResolvableNumber,
+  DatabasePureUserParameterizedResolvableNumber,
   DatabaseRefineScalableNumber,
   DatabaseRotationRuntimeResolvableNumber,
   DatabaseUserParameterizedResolvableNumber,
@@ -36,19 +38,23 @@ import { Sequence } from './types';
  * // Output: { min: number; max: number }
  */
 export type ResolveStoreNumberType<T> =
-  T extends DatabaseRotationRuntimeResolvableNumber
+  T extends DatabasePureRotationRuntimeResolvableNumber
     ? GameDataRotationRuntimeResolvableNumber
-    : T extends DatabaseUserParameterizedResolvableNumber
+    : T extends DatabasePureUserParameterizedResolvableNumber
       ? UserParameterizedNumber
-      : T extends DatabaseRefineScalableNumber
-        ? number
-        : T extends number
-          ? number
-          : T extends object
-            ? { [K in keyof T]: ResolveStoreNumberType<T[K]> }
-            : T extends Array<infer U>
-              ? Array<ResolveStoreNumberType<U>>
-              : T;
+      : T extends DatabaseRotationRuntimeResolvableNumber
+        ? GameDataRotationRuntimeResolvableNumber
+        : T extends DatabaseUserParameterizedResolvableNumber
+          ? UserParameterizedNumber
+          : T extends DatabaseRefineScalableNumber
+            ? number
+            : T extends number
+              ? number
+              : T extends object
+                ? { [K in keyof T]: ResolveStoreNumberType<T[K]> }
+                : T extends Array<infer U>
+                  ? Array<ResolveStoreNumberType<U>>
+                  : T;
 
 /**
  * Runtime type guard to check if a value is a RefineScalableNumber.

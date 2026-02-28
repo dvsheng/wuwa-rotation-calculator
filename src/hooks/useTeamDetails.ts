@@ -18,6 +18,7 @@ export type DetailedModifier = ClientCharacterDetails & ClientModifier;
 export interface UseTeamDetailsResult {
   attacks: Array<DetailedAttack>;
   buffs: Array<DetailedModifier>;
+  hasTuneStrain: boolean;
   isLoading: boolean;
   isError: boolean;
 }
@@ -143,9 +144,12 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
         }));
       });
 
+      const hasTuneStrain = results.some((r) => r.data?.hasTuneStrainDamageBonus);
+
       return {
         attacks,
         buffs,
+        hasTuneStrain,
         isLoading: results.some((r) => r.isLoading),
         isError: results.some((r) => r.isError),
       };

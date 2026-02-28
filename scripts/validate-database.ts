@@ -243,12 +243,9 @@ const validateRecords = <T>(
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
-        issues.push(
-          ...error.issues.map((issue) => {
-            const pathString = issue.path.join('.');
-            return `${pathString}: ${issue.message}`;
-          }),
-        );
+        issues.push(z.prettifyError(error));
+      } else {
+        throw error;
       }
     }
 

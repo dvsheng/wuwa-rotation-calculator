@@ -4,10 +4,12 @@ import {
   PaletteItem,
   PaletteLegend,
 } from '@/components/common/Palette';
+import type { DetailedModifier } from '@/hooks/useTeamDetails';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
 import type { Capability } from '@/schemas/rotation';
 import type { OriginType } from '@/services/game-data';
 import { Target } from '@/services/game-data';
+import { TUNE_STRAIN_BUFF_ID } from '@/services/rotation-calculator/tune-strain';
 
 export interface BuffPaletteProperties {
   onClickBuff?: (buff: Capability) => void;
@@ -36,12 +38,23 @@ const TARGET_ORDER: Array<Target> = [
   Target.ENEMY,
 ];
 
+const TUNE_STRAIN_CAPABILITY: DetailedModifier = {
+  id: TUNE_STRAIN_BUFF_ID,
+  characterId: 0,
+  characterName: 'All Characters',
+  name: 'Tune Strain',
+  parentName: 'Other',
+  originType: 'Tune Break',
+  target: Target.ENEMY,
+  parameters: [{ id: '0', minimum: 0, maximum: 4 }],
+};
+
 export const BuffPalette = ({
   onClickBuff,
   onDragBuff,
   className,
 }: BuffPaletteProperties) => {
-  const { buffs } = useTeamDetails();
+  const { buffs, hasTuneStrain } = useTeamDetails();
   const byCharacter = Object.groupBy(buffs, (b) => b.characterName);
 
   const legend = Object.entries(TARGET_LABELS).map(([target, label]) => ({
@@ -87,6 +100,25 @@ export const BuffPalette = ({
           </PaletteGroup>
         );
       })}
+
+      {hasTuneStrain && (
+        <PaletteGroup name="Other">
+          <PaletteItem
+            text="Tune Strain"
+            capability={TUNE_STRAIN_CAPABILITY}
+            legendLabel={TARGET_LABELS[Target.ENEMY]}
+            onDragStart={
+              onDragBuff
+                ? (event) => onDragBuff(TUNE_STRAIN_CAPABILITY, event)
+                : undefined
+            }
+            onClick={
+              onClickBuff ? () => onClickBuff(TUNE_STRAIN_CAPABILITY) : undefined
+            }
+            className={TARGET_COLORS[Target.ENEMY]}
+          />
+        </PaletteGroup>
+      )}
     </Palette>
   );
 };

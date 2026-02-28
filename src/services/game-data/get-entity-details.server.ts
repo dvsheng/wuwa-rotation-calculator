@@ -194,10 +194,14 @@ export const getClientEntityByIdHandler = async (
   options: GetEntityDetailsRequest,
 ): Promise<GetClientEntityDetailsResponse> => {
   const entity = await getEntityByIdHandler(options);
+  const hasTuneStrainDamageBonus = entity.capabilities.permanentStats.some(
+    (stat) => stat.stat === 'tuneStrainDamageBonus',
+  );
   return {
     id: entity.id,
     name: entity.name,
     attacks: entity.capabilities.attacks.map((attack) => toClientAttack(attack)),
     modifiers: entity.capabilities.modifiers.map((modifier) => toClientBuff(modifier)),
+    hasTuneStrainDamageBonus: hasTuneStrainDamageBonus || undefined,
   };
 };

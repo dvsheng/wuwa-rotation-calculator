@@ -5,4 +5,4 @@
  * When the server encounters this ID in the rotation, it expands it into one
  * CharacterAttack per team member that has Tune Break capabilities.
  */
-export const TUNE_BREAK_ATTACK_ID = 0;
+export const TUNE_BREAK_ATTACK_ID = -2000;

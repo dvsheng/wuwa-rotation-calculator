@@ -6,6 +6,7 @@ import type { Enemy } from '@/schemas/enemy';
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import type { Team } from '@/schemas/team';
 import { calculateRotationHandler } from '@/services/rotation-calculator/calculate-client-rotation-damage';
+import { TUNE_BREAK_ATTACK_ID } from '@/services/rotation-calculator/tune-break';
 import {
   AttackScalingProperty,
   Attribute,
@@ -609,7 +610,7 @@ describe('calculateRotation', () => {
 
       const tuneBreakAttack: AttackInstance = {
         instanceId: 'tune-break-1',
-        id: 0, // TUNE_BREAK_ATTACK_ID
+        id: TUNE_BREAK_ATTACK_ID,
         characterId: 0,
       };
 
@@ -642,7 +643,7 @@ describe('calculateRotation', () => {
 
       const tuneBreakAttack: AttackInstance = {
         instanceId: 'tune-break-1',
-        id: 0,
+        id: TUNE_BREAK_ATTACK_ID,
         characterId: 0,
       };
 

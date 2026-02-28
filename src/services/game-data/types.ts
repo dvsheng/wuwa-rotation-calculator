@@ -120,7 +120,7 @@ export interface GameDataRotationRuntimeResolvableNumber extends LinearParameter
   /**
    * The reference to the character whose stats are used to resolve the value at rotation runtime.
    */
-  resolveWith: 'self';
+  resolveWith: 'self' | 'enemy';
 }
 
 /**

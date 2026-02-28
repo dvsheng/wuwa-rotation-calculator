@@ -49,12 +49,18 @@ export type ResolveRuntimeStatType<T> =
 export const isRotationRuntimeResolvableNumber = (
   value: unknown,
 ): value is RotationRuntimeResolvableNumber => {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'resolveWith' in value &&
-    'parameterConfigs' in value &&
-    typeof (value as RotationRuntimeResolvableNumber).resolveWith === 'number'
+  if (
+    typeof value !== 'object' ||
+    value === null ||
+    !('resolveWith' in value) ||
+    !('parameterConfigs' in value)
+  ) {
+    return false;
+  }
+
+  const { parameterConfigs } = value as RotationRuntimeResolvableNumber;
+  return Object.values(parameterConfigs).every(
+    (config) => typeof config.scale === 'number',
   );
 };
 
@@ -113,7 +119,7 @@ export function createRuntimeStatResolver(team: Team, enemy: Enemy) {
       return resolvedArray as ResolveRuntimeStatType<T>;
     }
 
-    // Handle objects recursively
+    // Handle objects recursively.
     if (typeof value === 'object' && value !== null) {
       const resolved: Record<string, unknown> = {};
       for (const [key, nestedValue] of Object.entries(value)) {
@@ -135,7 +141,7 @@ export const resolveStats = (
   enemy: ResolveRuntimeStatType<Enemy>;
 } => {
   const resolve = createRuntimeStatResolver(team, enemy);
-  const resolvedTeam = resolve(team);
+  const resolvedTeam = resolve(resolve(team));
   const resolvedEnemy = resolve(enemy);
   return {
     team: resolvedTeam,

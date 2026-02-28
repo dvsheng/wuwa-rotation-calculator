@@ -21,6 +21,7 @@ beforeAll(() => {
 
 const baseMockReturn = {
   buffs: [],
+  hasTuneStrain: false,
   isLoading: false,
   isError: false,
 };

@@ -39,6 +39,7 @@ describe('useTeamAttackInstances', () => {
         },
       ],
       buffs: [],
+      hasTuneStrain: false,
       isLoading: false,
       isError: false,
     });

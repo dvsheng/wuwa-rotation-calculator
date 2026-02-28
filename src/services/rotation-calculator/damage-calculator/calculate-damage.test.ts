@@ -10,6 +10,7 @@ describe('calculateDamage', () => {
       damageBonus: 0,
       damageMultiplierBonus: 0,
       damageAmplification: 0,
+      tuneStrainDamageBonus: 0,
       finalDamageBonus: 0,
       criticalRate: 0,
       criticalDamage: 0.5,

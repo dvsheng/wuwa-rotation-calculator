@@ -40,6 +40,8 @@ export interface GetClientEntityDetailsResponse {
   attacks: Array<ClientAttack>;
   /** Active modifiers for the entity */
   modifiers: Array<ClientModifier>;
+  /** Whether the entity has a tuneStrainDamageBonus permanent stat */
+  hasTuneStrainDamageBonus?: boolean;
 }
 
 export type GetEntityDetailsResponse = BaseEntity;

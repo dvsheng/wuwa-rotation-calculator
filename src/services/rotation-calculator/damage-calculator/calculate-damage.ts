@@ -23,6 +23,7 @@ export const calculateDamage = (properties: CalculateDamageProperties) => {
     damageBonusMultiplier *
     damageAmplifyMultiplier *
     (1 + properties.character.finalDamageBonus) *
+    (1 + properties.character.tuneStrainDamageBonus) *
     criticalMultiplier *
     defenseMultiplier *
     resistanceMultiplier;

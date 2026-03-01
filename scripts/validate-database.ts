@@ -243,7 +243,11 @@ function validateAttackDamageTypeTags(capability: DatabaseCapability): Array<str
         MUTUALLY_EXCLUSIVE_DAMAGE_TYPE_TAGS.has(tag),
       );
 
-      if (matchingTags.length > 1) {
+      if (matchingTags.length === 0) {
+        issues.push(
+          `${context} damageInstances[${index}] has no mutually exclusive damage type tag (exactly one required)`,
+        );
+      } else if (matchingTags.length > 1) {
         issues.push(
           `${context} damageInstances[${index}] has multiple mutually exclusive damage type tags: ${matchingTags.join(', ')}`,
         );

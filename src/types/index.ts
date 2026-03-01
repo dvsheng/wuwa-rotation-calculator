@@ -4,6 +4,5 @@ export * from './character';
 export * from './damage-instance';
 export * from './modifier';
 export * from './negative-status';
-export * from './parameterized-number';
 export * from './tag';
 export * from './enemy';

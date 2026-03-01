@@ -1,3 +1,4 @@
+import type { DatabaseUserParameterizedNumberNode } from '@/schemas/database';
 import type { ParameterInstance } from '@/schemas/rotation';
 import type { GameDataUserNumber } from '@/services/game-data';
 
@@ -44,7 +45,7 @@ export type ResolveUserParameterizedType<T> =
  */
 const isUserParameterizedNode = (
   value: unknown,
-): value is { type: 'userParameterizedNumber'; parameterId: string } =>
+): value is DatabaseUserParameterizedNumberNode =>
   typeof value === 'object' &&
   value !== null &&
   'type' in value &&
@@ -76,8 +77,8 @@ export function resolveUserParameterizedValues<T>(
         'Encountered userParameterizedNumber without parameterValues in any parent object',
       );
     }
-    return (currentParameterValues[value.parameterId] ??
-      0) as ResolveUserParameterizedType<T>;
+    return (currentParameterValues[value.parameterId] *
+      (value.scale ?? 1)) as ResolveUserParameterizedType<T>;
   }
 
   // Handle arrays recursively

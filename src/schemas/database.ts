@@ -54,6 +54,7 @@ export const DatabaseUserParameterizedNumberNodeSchema = z
   .object({
     type: z.literal('userParameterizedNumber'),
     parameterId: z.enum(USER_PARAMETER_KEYS),
+    scale: z.number().optional(),
     minimum: DatabaseLeafNumberSchema.optional(),
     maximum: DatabaseLeafNumberSchema.optional(),
   })

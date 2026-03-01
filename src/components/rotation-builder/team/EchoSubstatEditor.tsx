@@ -1,4 +1,3 @@
-import { FormGrid } from '@/components/ui/layout';
 import {
   Select,
   SelectContent,
@@ -6,6 +5,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { TableCell, TableRow } from '@/components/ui/table';
 import type { EchoSubstat, EchoSubstatOptionType } from '@/schemas/echo';
 import { ECHO_SUBSTAT_VALUES } from '@/schemas/echo';
 
@@ -28,48 +28,58 @@ export const EchoSubstatEditor = ({
   );
 
   return (
-    <FormGrid>
-      <Select
-        value={substat.stat}
-        onValueChange={(value) =>
-          onUpdate((draft) => {
-            const newStat = value as EchoSubstatOptionType;
-            draft.stat = newStat;
-            const newValues = ECHO_SUBSTAT_VALUES[newStat];
-            draft.value = newValues.length === 4 ? newValues[2] : newValues[3];
-          })
-        }
-      >
-        <SelectTrigger size="sm" className="w-full">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {availableOptions.map((opt) => (
-            <SelectItem key={opt} value={opt}>
-              {STAT_LABELS[opt] || opt}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select
-        value={String(substat.value)}
-        onValueChange={(value) =>
-          onUpdate((draft) => {
-            draft.value = Number.parseFloat(value) || 0;
-          })
-        }
-      >
-        <SelectTrigger size="sm" className="w-full text-right">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {possibleValues.map((value) => (
-            <SelectItem key={value} value={String(value)}>
-              {value}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </FormGrid>
+    <TableRow>
+      <TableCell className="p-1">
+        <Select
+          value={substat.stat}
+          onValueChange={(value) =>
+            onUpdate((draft) => {
+              const newStat = value as EchoSubstatOptionType;
+              draft.stat = newStat;
+              const newValues = ECHO_SUBSTAT_VALUES[newStat];
+              draft.value = newValues.length === 4 ? newValues[2] : newValues[3];
+            })
+          }
+        >
+          <SelectTrigger
+            size="sm"
+            className="w-full border-transparent shadow-none focus-visible:ring-0"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent position="item-aligned" align="start" sideOffset={4}>
+            {availableOptions.map((opt) => (
+              <SelectItem key={opt} value={opt}>
+                {STAT_LABELS[opt] || opt}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </TableCell>
+      <TableCell className="p-1">
+        <Select
+          value={String(substat.value)}
+          onValueChange={(value) =>
+            onUpdate((draft) => {
+              draft.value = Number.parseFloat(value) || 0;
+            })
+          }
+        >
+          <SelectTrigger
+            size="sm"
+            className="w-full border-transparent text-right shadow-none focus-visible:ring-0"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent position="item-aligned" align="start" sideOffset={4}>
+            {possibleValues.map((value) => (
+              <SelectItem key={value} value={String(value)}>
+                {value}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </TableCell>
+    </TableRow>
   );
 };

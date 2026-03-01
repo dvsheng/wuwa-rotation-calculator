@@ -1,4 +1,4 @@
-import { Box, FormGrid, Row, Stack } from '@/components/ui/layout';
+import { Box } from '@/components/ui/layout';
 import {
   Select,
   SelectContent,
@@ -6,7 +6,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { LabelText } from '@/components/ui/typography';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+} from '@/components/ui/table';
 import { EchoCost, VALID_MAIN_STATS } from '@/schemas/echo';
 import { useStore } from '@/store';
 
@@ -40,27 +46,32 @@ export const EchoPieceEditor = ({
 
   return (
     <Box className="bg-muted/5">
-      <Row className="items-start gap-2">
-        <Stack spacing="sm" className="flex-1">
-          <FormGrid>
-            <Stack spacing="xs">
-              <LabelText className="px-1">Cost</LabelText>
+      <Table>
+        <TableBody>
+          <TableRow>
+            <TableHead>Cost</TableHead>
+            <TableCell className="p-1">
               <Select value={String(echo.cost)} onValueChange={handleCostChange}>
-                <SelectTrigger size="sm" className="w-full">
+                <SelectTrigger
+                  size="sm"
+                  className="w-full border-transparent shadow-none focus-visible:ring-0"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.values(EchoCost).map((c) => (
                     <SelectItem key={c} value={String(c)}>
-                      Cost {c}
+                      {c}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </Stack>
+            </TableCell>
+          </TableRow>
 
-            <Stack spacing="xs">
-              <LabelText className="px-1">Main Stat</LabelText>
+          <TableRow>
+            <TableHead>Main Stat</TableHead>
+            <TableCell className="p-1">
               <Select
                 value={echo.mainStatType}
                 onValueChange={(value) =>
@@ -70,7 +81,10 @@ export const EchoPieceEditor = ({
                   })
                 }
               >
-                <SelectTrigger size="sm" className="w-full">
+                <SelectTrigger
+                  size="sm"
+                  className="w-full border-transparent shadow-none focus-visible:ring-0"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -81,33 +95,30 @@ export const EchoPieceEditor = ({
                   ))}
                 </SelectContent>
               </Select>
-            </Stack>
-          </FormGrid>
+            </TableCell>
+          </TableRow>
 
-          <Stack spacing="xs">
-            <Row className="justify-between px-1">
-              <LabelText>Sub Stats</LabelText>
-            </Row>
+          <TableRow className="border-t-2">
+            <TableHead>Substats</TableHead>
+            <TableHead className="w-24">Value</TableHead>
+          </TableRow>
 
-            <Stack spacing="xs">
-              {echo.substats.map((substat, substatIndex) => (
-                <EchoSubstatEditor
-                  key={substatIndex}
-                  substat={substat}
-                  usedStats={echo.substats
-                    .filter((_, index) => index !== substatIndex)
-                    .map((s) => s.stat)}
-                  onUpdate={(updater) =>
-                    updateEchoPiece(characterIndex, echoIndex, (draft) => {
-                      updater(draft.substats[substatIndex]);
-                    })
-                  }
-                />
-              ))}
-            </Stack>
-          </Stack>
-        </Stack>
-      </Row>
+          {echo.substats.map((substat, substatIndex) => (
+            <EchoSubstatEditor
+              key={substatIndex}
+              substat={substat}
+              usedStats={echo.substats
+                .filter((_, index) => index !== substatIndex)
+                .map((s) => s.stat)}
+              onUpdate={(updater) =>
+                updateEchoPiece(characterIndex, echoIndex, (draft) => {
+                  updater(draft.substats[substatIndex]);
+                })
+              }
+            />
+          ))}
+        </TableBody>
+      </Table>
     </Box>
   );
 };

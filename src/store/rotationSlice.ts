@@ -58,16 +58,35 @@ export const createRotationSlice: StateCreator<
         ...attack,
         instanceId: crypto.randomUUID(),
       };
+      const insertIndex =
+        atIndex !== undefined && atIndex !== -1 ? atIndex : state.attacks.length;
       if (atIndex !== undefined && atIndex !== -1) {
         state.attacks.splice(atIndex, 0, newAttack);
       } else {
         state.attacks.push(newAttack);
       }
+      for (const buff of state.buffs) {
+        if (insertIndex < buff.x) {
+          buff.x += 1;
+        } else if (insertIndex >= buff.x && insertIndex <= buff.x + buff.w) {
+          buff.w += 1;
+        }
+      }
     }),
 
   removeAttack: (instanceId) =>
     set((state) => {
-      state.attacks = state.attacks.filter((a) => a.instanceId !== instanceId);
+      const removeIndex = state.attacks.findIndex((a) => a.instanceId === instanceId);
+      if (removeIndex === -1) return;
+      state.attacks.splice(removeIndex, 1);
+      for (const buff of state.buffs) {
+        if (removeIndex < buff.x) {
+          buff.x -= 1;
+        } else if (removeIndex >= buff.x && removeIndex <= buff.x + buff.w - 1) {
+          buff.w -= 1;
+        }
+      }
+      state.buffs = state.buffs.filter((b) => b.w > 0);
     }),
 
   reorderAttacks: (oldIndex, newIndex) =>

@@ -4,6 +4,24 @@ import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 
 import { useStore } from './index';
 
+const makeAttack = (instanceId: string): AttackInstance => ({
+  id: 1,
+  characterId: 1,
+  instanceId,
+  parameterValues: [],
+});
+
+const makeBuff = (instanceId: string, x: number, w: number): ModifierInstance => ({
+  id: 1,
+  characterId: 1,
+  instanceId,
+  parameterValues: [],
+  x,
+  y: 0,
+  w,
+  h: 1,
+});
+
 describe('useStore - rotation slice', () => {
   // Store is automatically reset after each test via vitest.setup.ts
 
@@ -157,6 +175,199 @@ describe('useStore - rotation slice', () => {
       useStore.getState().clearBuffsForCharacter(9999);
 
       expect(useStore.getState().buffs).toHaveLength(2);
+    });
+  });
+
+  describe('addAttack - buff adjustment', () => {
+    it('shifts buff right when inserting before it', () => {
+      // attacks: [a0, a1, a2, a3, a4], buff covers [1,3] (x=1, w=3)
+      useStore.setState({
+        attacks: ['a0', 'a1', 'a2', 'a3', 'a4'].map((id) => makeAttack(id)),
+        buffs: [makeBuff('buff-1', 1, 3)],
+      });
+
+      useStore.getState().addAttack({ id: 1, characterId: 1, parameterValues: [] }, 0);
+
+      const buff = useStore.getState().buffs[0];
+      expect(buff.x).toBe(2);
+      expect(buff.w).toBe(3);
+    });
+
+    it('expands buff when inserting within it', () => {
+      // attacks: [a0, a1, a2, a3, a4], buff covers [1,3] (x=1, w=3)
+      useStore.setState({
+        attacks: ['a0', 'a1', 'a2', 'a3', 'a4'].map((id) => makeAttack(id)),
+        buffs: [makeBuff('buff-1', 1, 3)],
+      });
+
+      useStore.getState().addAttack({ id: 1, characterId: 1, parameterValues: [] }, 2);
+
+      const buff = useStore.getState().buffs[0];
+      expect(buff.x).toBe(1);
+      expect(buff.w).toBe(4);
+    });
+
+    it('expands buff when inserting at its start position', () => {
+      // attacks: [a0, a1, a2], buff covers [1,2] (x=1, w=2)
+      useStore.setState({
+        attacks: ['a0', 'a1', 'a2'].map((id) => makeAttack(id)),
+        buffs: [makeBuff('buff-1', 1, 2)],
+      });
+
+      useStore.getState().addAttack({ id: 1, characterId: 1, parameterValues: [] }, 1);
+
+      const buff = useStore.getState().buffs[0];
+      expect(buff.x).toBe(1);
+      expect(buff.w).toBe(3);
+    });
+
+    it('expands buff when inserting one past its end', () => {
+      // attacks: [a0, a1, a2, a3], buff covers [0,1] (x=0, w=2)
+      useStore.setState({
+        attacks: ['a0', 'a1', 'a2', 'a3'].map((id) => makeAttack(id)),
+        buffs: [makeBuff('buff-1', 0, 2)],
+      });
+
+      // insertIndex=2 == buff.x + buff.w, immediately adjacent to the right
+      useStore.getState().addAttack({ id: 1, characterId: 1, parameterValues: [] }, 2);
+
+      const buff = useStore.getState().buffs[0];
+      expect(buff.x).toBe(0);
+      expect(buff.w).toBe(3);
+    });
+
+    it('does not change buff when appending to end', () => {
+      // attacks: [a0, a1, a2], buff covers [0,1] (x=0, w=2)
+      useStore.setState({
+        attacks: ['a0', 'a1', 'a2'].map((id) => makeAttack(id)),
+        buffs: [makeBuff('buff-1', 0, 2)],
+      });
+
+      useStore.getState().addAttack({ id: 1, characterId: 1, parameterValues: [] });
+
+      const buff = useStore.getState().buffs[0];
+      expect(buff.x).toBe(0);
+      expect(buff.w).toBe(2);
+    });
+
+    it('does not change buff when inserting after it', () => {
+      // attacks: [a0, a1, a2, a3], buff covers [0,1] (x=0, w=2)
+      useStore.setState({
+        attacks: ['a0', 'a1', 'a2', 'a3'].map((id) => makeAttack(id)),
+        buffs: [makeBuff('buff-1', 0, 2)],
+      });
+
+      useStore.getState().addAttack({ id: 1, characterId: 1, parameterValues: [] }, 3);
+
+      const buff = useStore.getState().buffs[0];
+      expect(buff.x).toBe(0);
+      expect(buff.w).toBe(2);
+    });
+
+    it('adjusts multiple buffs independently', () => {
+      // attacks: [a0, a1, a2, a3, a4]
+      // buff-1 covers [0,1] (x=0, w=2), buff-2 covers [2,4] (x=2, w=3)
+      useStore.setState({
+        attacks: ['a0', 'a1', 'a2', 'a3', 'a4'].map((id) => makeAttack(id)),
+        buffs: [makeBuff('buff-1', 0, 2), makeBuff('buff-2', 2, 3)],
+      });
+
+      // Insert at index 1: within buff-1, before buff-2
+      useStore.getState().addAttack({ id: 1, characterId: 1, parameterValues: [] }, 1);
+
+      const [b1, b2] = useStore.getState().buffs;
+      expect(b1.x).toBe(0);
+      expect(b1.w).toBe(3); // expanded
+      expect(b2.x).toBe(3); // shifted right
+      expect(b2.w).toBe(3); // unchanged
+    });
+  });
+
+  describe('removeAttack - buff adjustment', () => {
+    it('shifts buff left when removing an attack before it', () => {
+      // attacks: [a0, a1, a2, a3], buff covers [1,3] (x=1, w=3)
+      useStore.setState({
+        attacks: ['a0', 'a1', 'a2', 'a3'].map((id) => makeAttack(id)),
+        buffs: [makeBuff('buff-1', 1, 3)],
+      });
+
+      useStore.getState().removeAttack('a0');
+
+      const buff = useStore.getState().buffs[0];
+      expect(buff.x).toBe(0);
+      expect(buff.w).toBe(3);
+    });
+
+    it('shrinks buff when removing an attack within it', () => {
+      // attacks: [a0, a1, a2, a3, a4], buff covers [1,3] (x=1, w=3)
+      useStore.setState({
+        attacks: ['a0', 'a1', 'a2', 'a3', 'a4'].map((id) => makeAttack(id)),
+        buffs: [makeBuff('buff-1', 1, 3)],
+      });
+
+      useStore.getState().removeAttack('a2');
+
+      const buff = useStore.getState().buffs[0];
+      expect(buff.x).toBe(1);
+      expect(buff.w).toBe(2);
+    });
+
+    it('removes buff entirely when its last covered attack is removed', () => {
+      // attacks: [a0, a1], buff covers [1,1] (x=1, w=1)
+      useStore.setState({
+        attacks: ['a0', 'a1'].map((id) => makeAttack(id)),
+        buffs: [makeBuff('buff-1', 1, 1)],
+      });
+
+      useStore.getState().removeAttack('a1');
+
+      expect(useStore.getState().buffs).toHaveLength(0);
+    });
+
+    it('does not change buff when removing an attack after it', () => {
+      // attacks: [a0, a1, a2, a3], buff covers [0,2] (x=0, w=3)
+      useStore.setState({
+        attacks: ['a0', 'a1', 'a2', 'a3'].map((id) => makeAttack(id)),
+        buffs: [makeBuff('buff-1', 0, 3)],
+      });
+
+      useStore.getState().removeAttack('a3');
+
+      const buff = useStore.getState().buffs[0];
+      expect(buff.x).toBe(0);
+      expect(buff.w).toBe(3);
+    });
+
+    it('does nothing when the instanceId does not exist', () => {
+      useStore.setState({
+        attacks: ['a0', 'a1'].map((id) => makeAttack(id)),
+        buffs: [makeBuff('buff-1', 0, 2)],
+      });
+
+      useStore.getState().removeAttack('nonexistent');
+
+      expect(useStore.getState().attacks).toHaveLength(2);
+      const buff = useStore.getState().buffs[0];
+      expect(buff.x).toBe(0);
+      expect(buff.w).toBe(2);
+    });
+
+    it('adjusts multiple buffs independently', () => {
+      // attacks: [a0, a1, a2, a3, a4]
+      // buff-1 covers [0,1] (x=0, w=2), buff-2 covers [2,4] (x=2, w=3)
+      useStore.setState({
+        attacks: ['a0', 'a1', 'a2', 'a3', 'a4'].map((id) => makeAttack(id)),
+        buffs: [makeBuff('buff-1', 0, 2), makeBuff('buff-2', 2, 3)],
+      });
+
+      // Remove a1: last attack of buff-1 (shrinks it), before buff-2 (shifts it)
+      useStore.getState().removeAttack('a1');
+
+      const [b1, b2] = useStore.getState().buffs;
+      expect(b1.x).toBe(0);
+      expect(b1.w).toBe(1); // shrunk
+      expect(b2.x).toBe(1); // shifted left
+      expect(b2.w).toBe(3); // unchanged
     });
   });
 

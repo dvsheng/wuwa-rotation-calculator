@@ -70,6 +70,20 @@ describe('calculateDamage', () => {
     expect(result).toBeCloseTo(496.31, 2);
   });
 
+  it('applies damageMultiplierBonus correctly', () => {
+    const properties = {
+      ...baseProperties,
+      character: {
+        ...baseProperties.character,
+        damageMultiplierBonus: 0.2, // 20% multiplier bonus
+      },
+    };
+    // defense/res = 0.50131926 * 0.9 = 0.451187334
+    // expected = 1000 * 1.2 * 0.451187334 = 541.42
+    const result = calculateDamage(properties);
+    expect(result).toBeCloseTo(541.42, 2);
+  });
+
   it('combines multiple multipliers correctly', () => {
     const properties = {
       ...baseProperties,

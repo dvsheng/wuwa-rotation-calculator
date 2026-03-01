@@ -1,12 +1,12 @@
 import { isNil } from 'es-toolkit/predicate';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Maximize2 } from 'lucide-react';
 import { useState } from 'react';
 
-import { ActivatableDialog } from '@/components/common/ActivatableDialog';
 import { CapabilityTooltip } from '@/components/common/CapabilityTooltip';
 import { ParameterConfigurationForm } from '@/components/common/ParameterConfigurationForm';
 import { TrashButton } from '@/components/common/TrashButton';
-import { DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Text } from '@/components/ui/typography';
 import { useCapabilityIcon, useEntityIcon } from '@/hooks/useIcons';
 import {
@@ -42,6 +42,7 @@ export const BuffCanvasItem = ({
   onOpenChange,
 }: BuffCanvasItemProperties) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const updateBuffLayout = useStore((state) => state.updateBuffLayout);
   const updateBuffParameters = useStore((state) => state.updateBuffParameters);
   const { attacks } = useTeamAttackInstances();
   const alignment = useSelfBuffAlignment(buff);
@@ -86,18 +87,25 @@ export const BuffCanvasItem = ({
   const isBuffConfigurable = buff.parameters && buff.parameters.length > 0;
   const buffedAttacks = attacks.slice(buff.x, buff.x + buff.w);
   const shouldShowWarning =
-    buff.parameters?.some(
-      (parameter) =>
-        (Number.isNaN(parameter.value) || isNil(parameter.value)) &&
-        parameter.valueConfiguration?.some((v) => Number.isNaN(v) || isNil(v)),
-    ) ?? false;
+    buff.parameters?.some((parameter) => {
+      const valueMissing = isNil(parameter.value) || Number.isNaN(parameter.value);
+      const configMissing =
+        !parameter.valueConfiguration ||
+        parameter.valueConfiguration.some(
+          (v) => v === 0 || isNil(v) || Number.isNaN(v),
+        );
+      return valueMissing && configMissing;
+    }) ?? false;
+  const isDialogDisabled = !isBuffConfigurable || !isDialogClickable;
 
   return (
-    <ActivatableDialog
-      isOpen={isDialogOpen}
-      setIsOpen={setIsDialogOpen}
-      isDialogClickable={isBuffConfigurable && isDialogClickable}
-      onOpenChange={onOpenChange}
+    <Dialog
+      open={isDialogOpen}
+      onOpenChange={(next) => {
+        if (isDialogDisabled) return;
+        onOpenChange?.(next);
+        setIsDialogOpen(next);
+      }}
     >
       <CapabilityTooltip capability={buff}>
         <DialogTrigger asChild>
@@ -111,7 +119,7 @@ export const BuffCanvasItem = ({
             {segments.map((segment, index) => (
               <div
                 key={index}
-                className="pointer-events-none absolute inset-y-0 z-0 rounded-md bg-blue-100"
+                className="pointer-events-none absolute inset-y-0 -z-10 rounded-md bg-blue-100"
                 style={{
                   left: `${segment.start}%`,
                   width: `${segment.width}%`,
@@ -121,7 +129,7 @@ export const BuffCanvasItem = ({
 
             {/* Character icon */}
             {characterIconUrl && (
-              <div className="border-border relative z-10 flex aspect-square h-8 shrink-0 items-center justify-center overflow-hidden rounded-full border bg-zinc-800">
+              <div className="border-border flex aspect-square h-8 shrink-0 items-center justify-center overflow-hidden rounded-full border bg-zinc-800">
                 <img
                   src={characterIconUrl}
                   alt={buff.characterName}
@@ -132,7 +140,7 @@ export const BuffCanvasItem = ({
 
             {/* Capability icon */}
             {iconUrl && (
-              <div className="border-border relative z-10 flex aspect-square h-8 shrink-0 items-center justify-center rounded-md border bg-zinc-700">
+              <div className="border-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-md border bg-zinc-700">
                 <img
                   src={iconUrl}
                   alt={buff.name}
@@ -142,7 +150,7 @@ export const BuffCanvasItem = ({
             )}
 
             {/* Buff name */}
-            <Text className="relative z-10 line-clamp-2 min-w-0 flex-1 text-left text-xs leading-tight">
+            <Text className="min-w-0 flex-1 truncate text-left text-xs leading-tight">
               {buff.name}
             </Text>
 
@@ -150,13 +158,27 @@ export const BuffCanvasItem = ({
             {shouldShowWarning && (
               <AlertTriangle
                 data-testid="alert-triangle"
-                className="relative z-10 h-5 w-5 shrink-0 text-amber-500"
+                className="h-5 w-5 shrink-0 text-amber-500"
               />
             )}
 
+            {/* Expand button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground h-6 w-6 shrink-0"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+                updateBuffLayout(buff.instanceId, { x: 0, w: attacks.length });
+              }}
+            >
+              <Maximize2 className="h-3.5 w-3.5" />
+            </Button>
+
             {/* Delete button */}
             <TrashButton
-              className="relative z-10 shrink-0"
+              className="shrink-0"
               onRemove={() => onRemove(buff.instanceId)}
             />
           </div>
@@ -176,6 +198,6 @@ export const BuffCanvasItem = ({
           }}
         />
       </DialogContent>
-    </ActivatableDialog>
+    </Dialog>
   );
 };

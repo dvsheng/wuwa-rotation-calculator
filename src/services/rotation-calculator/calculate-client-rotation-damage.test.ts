@@ -5,8 +5,8 @@ import { EchoMainStatOption, EchoSubstatOption } from '@/schemas/echo';
 import type { Enemy } from '@/schemas/enemy';
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import type { Team } from '@/schemas/team';
+import { TUNE_BREAK_ATTACK_ID } from '@/services/game-data/tune-break';
 import { calculateRotationHandler } from '@/services/rotation-calculator/calculate-client-rotation-damage';
-import { TUNE_BREAK_ATTACK_ID } from '@/services/rotation-calculator/tune-break';
 import {
   AttackScalingProperty,
   Attribute,

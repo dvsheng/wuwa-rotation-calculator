@@ -13,8 +13,8 @@ import type { useRotationCalculation } from '@/hooks/useRotationCalculation';
 import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
 import { useTeamAttackInstances } from '@/hooks/useTeamAttackInstances';
 import type { RotationResult } from '@/services/rotation-calculator/core/types';
-import { TUNE_BREAK_ATTACK_ID } from '@/services/rotation-calculator/tune-break';
 import { useStore } from '@/store';
+import { NegativeStatus } from '@/types';
 
 interface RotationResultDisplayProperties {
   result: NonNullable<ReturnType<typeof useRotationCalculation>['data']>;
@@ -60,7 +60,7 @@ export const RotationResultDisplay = ({
 
     return result.damageDetails.map((detail, index) => {
       const attack = attackMap.get(storedAttacks[detail.attackIndex]?.instanceId);
-      const isTuneBreak = attack?.id === TUNE_BREAK_ATTACK_ID;
+      const isTuneBreak = attack?.isTuneBreakAttack ?? false;
       const characterName = isTuneBreak
         ? (characterIndexToName[detail.characterIndex] ?? 'Unknown')
         : (attack?.characterName ?? 'Unknown');
@@ -100,7 +100,7 @@ export const RotationResultDisplay = ({
           const { attack } = row.original;
           if (!attack)
             return <div className="text-muted-foreground italic">Removed</div>;
-          const isTuneBreak = attack.id === TUNE_BREAK_ATTACK_ID;
+          const isTuneBreak = attack.isTuneBreakAttack;
           return (
             <div className="max-w-72 truncate pr-2">
               <Text variant="small">
@@ -184,7 +184,14 @@ export const RotationResultDisplay = ({
                                 {[
                                   'level',
                                   'attackScalingPropertyValue',
-                                  'flatDamage',
+                                  'attackFlat',
+                                  'attackFlatBonus',
+                                  'hpFlat',
+                                  'hpFlatBonus',
+                                  'defenseFlat',
+                                  'defenseFlatBonus',
+                                  'tuneBreakBoost',
+                                  ...Object.values(NegativeStatus),
                                 ].includes(key)
                                   ? Math.round(value).toLocaleString()
                                   : `${(value * 100).toFixed(1)}%`}

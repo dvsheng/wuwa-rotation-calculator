@@ -25,7 +25,9 @@ const CapabilityInstanceSchema = CapabilitySchema.extend({
  * Contains only client-side data: instance identifier, capability ID, and user parameter values.
  * Full capability metadata is resolved via useTeamAttackInstances hook.
  */
-export const AttackInstanceSchema = CapabilityInstanceSchema;
+export const AttackInstanceSchema = CapabilityInstanceSchema.extend({
+  isTuneBreakAttack: z.boolean().optional(),
+});
 
 export type AttackInstance = z.infer<typeof AttackInstanceSchema>;
 

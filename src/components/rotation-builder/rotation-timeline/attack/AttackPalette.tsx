@@ -13,7 +13,7 @@ import { useTeamDetails } from '@/hooks/useTeamDetails';
 import type { Capability } from '@/schemas/rotation';
 import { OriginType } from '@/services/game-data';
 import type { AttackOriginType } from '@/services/game-data';
-import { TUNE_BREAK_ATTACK_ID } from '@/services/rotation-calculator/tune-break';
+import { TUNE_BREAK_ATTACK_ID } from '@/services/game-data/tune-break';
 
 export interface AttackPaletteProperties {
   onClickAttack?: (attack: Capability) => void;
@@ -23,6 +23,7 @@ export interface AttackPaletteProperties {
 
 const TUNE_BREAK_CAPABILITY: DetailedAttack = {
   id: TUNE_BREAK_ATTACK_ID,
+  isTuneBreakAttack: true,
   characterId: 0,
   characterName: 'All Characters',
   name: 'Tune Break',
@@ -36,10 +37,8 @@ export const AttackPalette = ({
   className,
 }: AttackPaletteProperties) => {
   const { attacks } = useTeamDetails();
-  const hasTuneBreak = attacks.some((a) => a.originType === OriginType.TUNE_BREAK);
-  const nonTuneBreakAttacks = attacks.filter(
-    (a) => a.originType !== OriginType.TUNE_BREAK,
-  );
+  const hasTuneBreak = attacks.some((a) => a.isTuneBreakAttack);
+  const nonTuneBreakAttacks = attacks.filter((a) => !a.isTuneBreakAttack);
   const byCharacter = Object.groupBy(nonTuneBreakAttacks, (a) => a.characterName);
 
   const legend = ATTACK_SKILL_ORDER.map((skill) => ({

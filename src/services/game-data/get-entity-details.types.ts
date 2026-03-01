@@ -23,6 +23,7 @@ export interface ClientCapability extends BaseCapability {
 
 export interface ClientAttack extends ClientCapability {
   originType: AttackOriginType;
+  isTuneBreakAttack: boolean;
 }
 
 export interface ClientModifier extends ClientCapability {

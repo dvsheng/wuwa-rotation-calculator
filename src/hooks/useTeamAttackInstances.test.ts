@@ -25,6 +25,7 @@ describe('useTeamAttackInstances', () => {
           parentName: 'Echo',
           description: '',
           originType: OriginType.ECHO,
+          isTuneBreakAttack: false,
           parameters: [],
         },
         {
@@ -35,6 +36,7 @@ describe('useTeamAttackInstances', () => {
           parentName: 'Echo',
           description: '',
           originType: OriginType.ECHO,
+          isTuneBreakAttack: false,
           parameters: [],
         },
       ],

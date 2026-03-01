@@ -38,6 +38,7 @@ describe('AttackPalette — Tune Break deduplication', () => {
           name: 'Spectral Analysis',
           parentName: 'Spectral Analysis',
           originType: OriginType.TUNE_BREAK,
+          isTuneBreakAttack: true,
           parameters: [],
         },
         {
@@ -47,6 +48,7 @@ describe('AttackPalette — Tune Break deduplication', () => {
           name: 'Void Rift',
           parentName: 'Void Rift',
           originType: OriginType.TUNE_BREAK,
+          isTuneBreakAttack: true,
           parameters: [],
         },
         {
@@ -56,6 +58,7 @@ describe('AttackPalette — Tune Break deduplication', () => {
           name: 'Basic Attack Stage 1',
           parentName: 'Chroma Drift',
           originType: OriginType.NORMAL_ATTACK,
+          isTuneBreakAttack: false,
           parameters: [],
         },
       ],
@@ -91,6 +94,7 @@ describe('AttackPalette — Tune Break deduplication', () => {
           name: 'Basic Attack Stage 1',
           parentName: 'Chroma Drift',
           originType: OriginType.NORMAL_ATTACK,
+          isTuneBreakAttack: false,
           parameters: [],
         },
       ],

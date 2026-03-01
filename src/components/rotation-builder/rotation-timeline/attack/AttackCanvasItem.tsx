@@ -11,8 +11,6 @@ import { Text } from '@/components/ui/typography';
 import { useCapabilityIcon, useEntityIcon } from '@/hooks/useIcons';
 import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
-import { OriginType } from '@/services/game-data';
-import { TUNE_BREAK_ATTACK_ID } from '@/services/rotation-calculator/tune-break';
 import { useStore } from '@/store';
 
 interface AttackCanvasItemProperties {
@@ -50,7 +48,7 @@ const TuneBreakCharacterStack = () => {
   const contributors = useMemo(() => {
     const seen = new Set<number>();
     return attacks.filter((a) => {
-      if (a.originType !== OriginType.TUNE_BREAK) return false;
+      if (!a.isTuneBreakAttack) return false;
       if (seen.has(a.characterId)) return false;
       seen.add(a.characterId);
       return true;
@@ -83,7 +81,7 @@ export const AttackCanvasItem = ({
   const { data: iconUrl } = useCapabilityIcon(attack.id);
   const { data: characterIconUrl } = useEntityIcon(attack.characterId);
 
-  const isTuneBreak = attack.id === TUNE_BREAK_ATTACK_ID;
+  const isTuneBreak = attack.isTuneBreakAttack;
   const isAttackConfigurable = (attack.parameters?.length ?? 0) > 0;
   const shouldShowWarning =
     isAttackConfigurable &&

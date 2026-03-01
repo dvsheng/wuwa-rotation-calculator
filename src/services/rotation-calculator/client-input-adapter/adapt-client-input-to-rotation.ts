@@ -11,8 +11,8 @@ import type {
   PermanentStatBase,
 } from '@/services/game-data';
 import { getEchoStats } from '@/services/game-data';
-import { TUNE_BREAK_ATTACK_ID } from '@/services/rotation-calculator/tune-break';
-import { TUNE_STRAIN_BUFF_ID } from '@/services/rotation-calculator/tune-strain';
+import { TUNE_BREAK_ATTACK_ID } from '@/services/game-data/tune-break';
+import { TUNE_STRAIN_BUFF_ID } from '@/services/game-data/tune-strain';
 import { CharacterStat, EnemyStat, Tag } from '@/types';
 import type {
   CharacterAttack,
@@ -246,6 +246,7 @@ export const adaptClientInputToRotation = async (
         const [subName, subTags] = ECHO_STAT_MAP[substat.stat];
         return {
           stat: subName,
+          // TODO: Don't divide by 100 for flat stats
           value: substat.value / 100,
           tags: subTags,
         };
@@ -334,7 +335,7 @@ export const adaptClientInputToRotation = async (
       });
 
   const rotationAttacks = attacks.flatMap((attack, storedIndex) => {
-    if (attack.id === TUNE_BREAK_ATTACK_ID) {
+    if (attack.isTuneBreakAttack ?? attack.id === TUNE_BREAK_ATTACK_ID) {
       const tuneBreakAttacks = enricher.getTuneBreakAttacks();
       return tuneBreakAttacks.map(({ attack: tbAttack, characterIndex }) => {
         const resolved = resolveUserParameterizedValues(tbAttack);

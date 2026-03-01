@@ -1,7 +1,7 @@
 import { compact } from 'es-toolkit/array';
 
 import { OriginType } from '@/services/game-data';
-import { TUNE_BREAK_ATTACK_ID } from '@/services/rotation-calculator/tune-break';
+import { TUNE_BREAK_ATTACK_ID } from '@/services/game-data/tune-break';
 import { useStore } from '@/store';
 
 import { useTeamDetails } from './useTeamDetails';
@@ -26,10 +26,11 @@ export const useTeamAttackInstances = () => {
   const fullAttacks = compact(
     storedAttacks.map((stored) => {
       // Virtual tune break attack: not backed by a single game-data capability
-      if (stored.id === TUNE_BREAK_ATTACK_ID) {
+      if (stored.isTuneBreakAttack ?? stored.id === TUNE_BREAK_ATTACK_ID) {
         return {
           instanceId: stored.instanceId,
           id: TUNE_BREAK_ATTACK_ID,
+          isTuneBreakAttack: true,
           name: 'Tune Break',
           parentName: 'Other',
           description:
@@ -52,6 +53,7 @@ export const useTeamAttackInstances = () => {
       return {
         instanceId: stored.instanceId,
         id: gameData.id,
+        isTuneBreakAttack: gameData.isTuneBreakAttack,
         name: gameData.name,
         parentName: gameData.parentName,
         description: gameData.description,

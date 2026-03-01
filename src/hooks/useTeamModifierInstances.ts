@@ -1,7 +1,7 @@
 import { compact } from 'es-toolkit/array';
 
 import { Target } from '@/services/game-data';
-import { TUNE_STRAIN_BUFF_ID } from '@/services/rotation-calculator/tune-strain';
+import { TUNE_STRAIN_BUFF_ID } from '@/services/game-data/tune-strain';
 import { useStore } from '@/store';
 
 import { useTeamDetails } from './useTeamDetails';

@@ -9,7 +9,7 @@ import { useTeamDetails } from '@/hooks/useTeamDetails';
 import type { Capability } from '@/schemas/rotation';
 import type { OriginType } from '@/services/game-data';
 import { Target } from '@/services/game-data';
-import { TUNE_STRAIN_BUFF_ID } from '@/services/rotation-calculator/tune-strain';
+import { TUNE_STRAIN_BUFF_ID } from '@/services/game-data/tune-strain';
 
 export interface BuffPaletteProperties {
   onClickBuff?: (buff: Capability) => void;

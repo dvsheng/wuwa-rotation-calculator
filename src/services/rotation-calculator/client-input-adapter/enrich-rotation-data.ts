@@ -8,7 +8,8 @@ import type {
   BaseEntity,
   Modifier as GameDataModifier,
 } from '@/services/game-data';
-import { OriginType, getEntityByHakushinId } from '@/services/game-data';
+import { getEntityByHakushinId } from '@/services/game-data';
+import { isTuneBreakAttack } from '@/services/game-data/tune-break';
 
 /**
  * Error thrown when game data is not found.
@@ -76,7 +77,7 @@ export const createGameDataEnricher = async (clientTeam: ClientTeam) => {
       return entityDetailsByCharacterIndex.flatMap((entities, charIndex) =>
         entities.flatMap((entity) =>
           entity.capabilities.attacks
-            .filter((a) => a.originType === OriginType.TUNE_BREAK)
+            .filter((attack) => isTuneBreakAttack(attack))
             .map((attack) => ({
               attack,
               characterIndex: charIndex,

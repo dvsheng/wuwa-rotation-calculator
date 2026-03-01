@@ -26,6 +26,7 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
   const setEchoSet = useStore((state) => state.setEchoSet);
   const setEchoSetRequirement = useStore((state) => state.setEchoSetRequirement);
   const updateCharacter = useStore((state) => state.updateCharacter);
+  const clearForEntity = useStore((state) => state.clearForEntity);
 
   const handleAddSet = () => {
     if (selectedEchoSets.length < 2) {
@@ -37,6 +38,8 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
 
   const handleRemoveSet = (setIndex: number) => {
     if (selectedEchoSets.length > 1) {
+      const oldId = selectedEchoSets[setIndex].id;
+      if (oldId) clearForEntity(oldId);
       updateCharacter(index, (draft) => {
         const newSets = [...draft.echoSets];
         newSets.splice(setIndex, 1);
@@ -46,6 +49,8 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
   };
 
   const handleUpdateSet = (setIndex: number, id: number) => {
+    const oldId = selectedEchoSets[setIndex].id;
+    if (oldId && oldId !== id) clearForEntity(oldId);
     const selectedSetConfig = echoSetList.find((set) => set.id === id);
     const availableTiers = selectedSetConfig?.tiers || [2, 5];
     setEchoSet(index, setIndex, id);

@@ -11,6 +11,7 @@ export type ParameterInstance = z.infer<typeof ParameterInstanceSchema>;
 export const CapabilitySchema = z.object({
   id: z.number(),
   characterId: z.number(),
+  entityId: z.number().optional(),
   parameterValues: z.array(ParameterInstanceSchema).optional(),
 });
 

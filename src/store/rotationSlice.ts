@@ -41,6 +41,7 @@ export interface RotationSlice {
 
   clearAll: () => void;
   clearAllForCharacter: (characterId: number) => void;
+  clearForEntity: (entityId: number) => void;
 }
 
 export const createRotationSlice: StateCreator<
@@ -174,5 +175,11 @@ export const createRotationSlice: StateCreator<
     set((state) => {
       state.attacks = state.attacks.filter((a) => a.characterId !== characterId);
       state.buffs = state.buffs.filter((b) => b.characterId !== characterId);
+    }),
+
+  clearForEntity: (entityId) =>
+    set((state) => {
+      state.attacks = state.attacks.filter((a) => a.entityId !== entityId);
+      state.buffs = state.buffs.filter((b) => b.entityId !== entityId);
     }),
 });

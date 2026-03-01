@@ -41,6 +41,7 @@ const TARGET_ORDER: Array<Target> = [
 const TUNE_STRAIN_CAPABILITY: DetailedModifier = {
   id: TUNE_STRAIN_BUFF_ID,
   characterId: 0,
+  entityId: 0,
   characterName: 'All Characters',
   name: 'Tune Strain',
   parentName: 'Other',

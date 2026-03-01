@@ -25,6 +25,7 @@ export const WeaponSelector = ({ index }: WeaponSelectorProperties) => {
   const characterId = useStore((state) => state.team[index].id);
   const weapon = useStore((state) => state.team[index].weapon);
   const setWeapon = useStore((state) => state.setWeapon);
+  const clearForEntity = useStore((state) => state.clearForEntity);
   const setRefine = useStore((state) => state.setRefine);
   const { data: characterList = [] } = useEntityList({
     entityType: EntityType.CHARACTER,
@@ -52,7 +53,10 @@ export const WeaponSelector = ({ index }: WeaponSelectorProperties) => {
           key={characterId}
           items={weaponList}
           value={weapon.id}
-          onValueChange={(id) => setWeapon(index, id)}
+          onValueChange={(id) => {
+            if (id !== weapon.id) clearForEntity(weapon.id);
+            setWeapon(index, id);
+          }}
           title="Select Weapon"
           placeholder="Select weapon"
           searchPlaceholder="Search weapons..."

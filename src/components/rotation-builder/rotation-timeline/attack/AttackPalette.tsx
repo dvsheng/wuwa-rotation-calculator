@@ -25,6 +25,7 @@ const TUNE_BREAK_CAPABILITY: DetailedAttack = {
   id: TUNE_BREAK_ATTACK_ID,
   isTuneBreakAttack: true,
   characterId: 0,
+  entityId: 0,
   characterName: 'All Characters',
   name: 'Tune Break',
   parentName: 'Other',

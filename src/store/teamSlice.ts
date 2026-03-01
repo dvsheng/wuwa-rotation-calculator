@@ -143,14 +143,7 @@ export const createTeamSlice: StateCreator<
     }),
   setCharacter: (index, id) =>
     set((state) => {
-      const previousId = state.team[index].id;
       state.team[index].id = id;
-
-      // Clear attacks and buffs for the old character when character changes
-      if (previousId !== id) {
-        state.attacks = state.attacks.filter((a) => a.characterId !== previousId);
-        state.buffs = state.buffs.filter((b) => b.characterId !== previousId);
-      }
     }),
   setSequence: (index, sequence) =>
     set((state) => {

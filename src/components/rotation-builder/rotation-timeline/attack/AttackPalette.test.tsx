@@ -34,6 +34,7 @@ describe('AttackPalette — Tune Break deduplication', () => {
         {
           id: 100,
           characterId: 1001,
+          entityId: 1001,
           characterName: 'Lynae',
           name: 'Spectral Analysis',
           parentName: 'Spectral Analysis',
@@ -44,6 +45,7 @@ describe('AttackPalette — Tune Break deduplication', () => {
         {
           id: 200,
           characterId: 1002,
+          entityId: 1002,
           characterName: 'Rover',
           name: 'Void Rift',
           parentName: 'Void Rift',
@@ -54,6 +56,7 @@ describe('AttackPalette — Tune Break deduplication', () => {
         {
           id: 300,
           characterId: 1001,
+          entityId: 1001,
           characterName: 'Lynae',
           name: 'Basic Attack Stage 1',
           parentName: 'Chroma Drift',
@@ -90,6 +93,7 @@ describe('AttackPalette — Tune Break deduplication', () => {
         {
           id: 300,
           characterId: 1001,
+          entityId: 1001,
           characterName: 'Lynae',
           name: 'Basic Attack Stage 1',
           parentName: 'Chroma Drift',

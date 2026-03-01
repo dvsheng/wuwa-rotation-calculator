@@ -21,6 +21,7 @@ describe('useTeamModifierInstances', () => {
         {
           id: 20,
           characterId: 1001,
+          entityId: 601,
           characterName: 'Rover',
           name: 'Shared Passive',
           parentName: 'Weapon',
@@ -32,6 +33,7 @@ describe('useTeamModifierInstances', () => {
         {
           id: 20,
           characterId: 1002,
+          entityId: 601,
           characterName: 'Calcharo',
           name: 'Shared Passive',
           parentName: 'Weapon',

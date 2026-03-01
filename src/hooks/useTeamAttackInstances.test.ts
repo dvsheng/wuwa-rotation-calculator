@@ -20,6 +20,7 @@ describe('useTeamAttackInstances', () => {
         {
           id: 10,
           characterId: 1001,
+          entityId: 501,
           characterName: 'Rover',
           name: 'Echo Skill',
           parentName: 'Echo',
@@ -31,6 +32,7 @@ describe('useTeamAttackInstances', () => {
         {
           id: 10,
           characterId: 1002,
+          entityId: 501,
           characterName: 'Calcharo',
           name: 'Echo Skill',
           parentName: 'Echo',

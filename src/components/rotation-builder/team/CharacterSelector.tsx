@@ -25,6 +25,7 @@ export const CharacterSelector = ({ index }: CharacterSelectorProperties) => {
     ),
   );
   const setCharacter = useStore((state) => state.setCharacter);
+  const clearAllForCharacter = useStore((state) => state.clearAllForCharacter);
   const setSequence = useStore((state) => state.setSequence);
 
   return (
@@ -33,7 +34,10 @@ export const CharacterSelector = ({ index }: CharacterSelectorProperties) => {
       <div className="selector-main">
         <CharacterSelectionDialog
           value={character.id}
-          onValueChange={(id) => setCharacter(index, id)}
+          onValueChange={(id) => {
+            if (id !== character.id) clearAllForCharacter(character.id);
+            setCharacter(index, id);
+          }}
           excludeIds={otherSelectedCharacterIds}
         />
       </div>

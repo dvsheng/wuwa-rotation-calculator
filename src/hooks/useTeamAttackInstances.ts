@@ -36,6 +36,7 @@ export const useTeamAttackInstances = () => {
           description:
             'Combined Tune Break damage from all characters with Tune Break capabilities.',
           characterId: 0,
+          entityId: 0,
           characterName: 'All Characters',
           originType: OriginType.TUNE_BREAK,
           parameters: [] as Array<never>,
@@ -58,6 +59,7 @@ export const useTeamAttackInstances = () => {
         parentName: gameData.parentName,
         description: gameData.description,
         characterId: gameData.characterId,
+        entityId: gameData.entityId,
         characterName: gameData.characterName,
         originType: gameData.originType,
         parameters,

@@ -17,6 +17,7 @@ export const PrimaryEchoSelector = ({ index }: PrimaryEchoSelectorProperties) =>
   const echo = useStore((state) => state.team[index].primarySlotEcho);
   const selectedEchoSets = useStore((state) => state.team[index].echoSets);
   const setEcho = useStore((state) => state.setPrimaryEcho);
+  const clearForEntity = useStore((state) => state.clearForEntity);
   const { data: echoList = [] } = useEntityList({ entityType: EntityType.ECHO });
   const { data: echoSetList = [] } = useEntityList({ entityType: EntityType.ECHO_SET });
 
@@ -42,7 +43,10 @@ export const PrimaryEchoSelector = ({ index }: PrimaryEchoSelectorProperties) =>
         <SelectionDialog
           items={primaryEchoOptions}
           value={echo.id}
-          onValueChange={(id) => setEcho(index, id)}
+          onValueChange={(id) => {
+            if (id !== echo.id) clearForEntity(echo.id);
+            setEcho(index, id);
+          }}
           title="Select Primary Echo"
           placeholder="Select primary echo"
           searchPlaceholder="Search echoes..."

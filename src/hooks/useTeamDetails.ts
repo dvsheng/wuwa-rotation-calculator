@@ -8,6 +8,7 @@ import { useStore } from '@/store';
 
 interface ClientCharacterDetails {
   characterId: number;
+  entityId: number;
   characterName: string;
 }
 
@@ -29,14 +30,17 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
     const items = [
       {
         characterId: character.id,
+        entityId: character.id,
         queryType: 'character',
       },
       {
         characterId: character.id,
+        entityId: character.weapon.id,
         queryType: 'weapon',
       },
       {
         characterId: character.id,
+        entityId: character.primarySlotEcho.id,
         queryType: 'echo',
       },
     ];
@@ -45,6 +49,7 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
       if (set.id) {
         items.push({
           characterId: character.id,
+          entityId: set.id,
           queryType: 'echo-set',
         });
       }
@@ -116,12 +121,13 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
         const data = queryResult.data;
         if (!data || !('attacks' in data)) return [];
 
-        const { characterId } = queryMetadata[index];
+        const { characterId, entityId } = queryMetadata[index];
         const characterName = characterNameMap.get(characterId) ?? 'Unknown';
 
         return data.attacks.map((attack) => ({
           ...attack,
           characterId,
+          entityId,
           characterName,
         }));
       });
@@ -130,12 +136,13 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
         const data = queryResult.data;
         if (!data || !('modifiers' in data)) return [];
 
-        const { characterId } = queryMetadata[index];
+        const { characterId, entityId } = queryMetadata[index];
         const characterName = characterNameMap.get(characterId) ?? 'Unknown';
 
         return data.modifiers.map((modifier) => ({
           ...modifier,
           characterId,
+          entityId,
           characterName,
         }));
       });

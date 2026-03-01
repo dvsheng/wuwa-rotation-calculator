@@ -132,7 +132,7 @@ sqlite3 .local/data/game-data.db "SELECT id, name, type FROM entities WHERE type
 
 Valid for both `permanent_stat.stat` and `modifier.modifiedStats[].stat`:
 
-`hpFlat`, `attackFlat`, `defenseFlat`, `damageBonus`, `attackScalingBonus`, `hpScalingBonus`, `healingBonus`, `criticalRate`, `criticalDamage`, `damageMultiplierBonus`, `defenseIgnore`, `attackFlatBonus`, `finalDamageBonus`, `defenseScalingBonus`, `energyRegen`, `resistancePenetration`, `damageAmplification`, `offTuneBuildupRate`, `resistanceReduction`, `flatDamage`
+See the enums in `/Users/david/Code/wuwa-rotation-builder/src/types/character.ts` and `/Users/david/Code/wuwa-rotation-builder/src/types/enemy.ts`
 
 ---
 
@@ -140,11 +140,13 @@ Valid for both `permanent_stat.stat` and `modifier.modifiedStats[].stat`:
 
 - **Skill types:** `basicAttack`, `resonanceSkill`, `resonanceLiberation`, `introSkill`, `outroSkill`, `forteCircuit`, `coordinatedAttack`
 - **Scope:** `all` (applies to all damage)
-- Arbitrary strings from skill descriptions are also valid tags (e.g. `"Ice Burst (Ice Prism)"`)
+- Arbitrary strings from attack capability names are also valid tags (e.g. `"Ice Burst (Ice Prism)"`)
 
 ---
 
 ## Insert Examples
+
+You should only ever need to update capabilities. Entities and skills are fully generated through data pipelines.
 
 ### New permanent_stat capability
 

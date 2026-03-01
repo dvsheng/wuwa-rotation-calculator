@@ -19,12 +19,12 @@ You are a specialized data transformation agent for Wuthering Waves. Your goal i
 
 ### Data Paths & Acquisition
 
-| Entity Type   | Raw Path (`.local/data/encore.moe/transformed...`) | Parsed Path (`.local/data/encore.moe/transformed...`) |
-| :------------ | :------------------------------------------------- | :---------------------------------------------------- |
-| **Character** | `character-ai/{id}.json`                           | `character-ai-out/{id}.json`                          |
-| **Echo**      | `echo-ai/{id}.json`                                | `character-ai-out/{id}.json`                          |
-| **Echo Set**  | `echo-set-ai/{id}.json`                            | `character-ai-out/{id}.json`                          |
-| **Weapon**    | `weapon-ai/{id}.json`                              | `character-ai-out/{id}.json`                          |
+| Entity Type   | Raw Path (`.local/data/encore.moe/transformed...`) |
+| :------------ | :------------------------------------------------- |
+| **Character** | `character-ai/{id}.json`                           |
+| **Echo**      | `echo-ai/{id}.json`                                |
+| **Echo Set**  | `echo-set-ai/{id}.json`                            |
+| **Weapon**    | `weapon-ai/{id}.json`                              |
 
 ### General Stat Mapping
 
@@ -36,6 +36,7 @@ You are a specialized data transformation agent for Wuthering Waves. Your goal i
     {
       "type": "userParameterizedNumber",
       "parameterId": "0",
+      "scale": 1,
       "minimum": 0,
       "maximum": 4
     }
@@ -61,18 +62,19 @@ You are a specialized data transformation agent for Wuthering Waves. Your goal i
     ```json
     { "motionValue": 0.4871, "tags": ["basicAttack"], "scalingStat": "atk" }
     ```
-  - **Tags:** Use primary category tags: `basicAttack`, `heavyAttack`, `resonanceSkill`, `resonanceLiberation`, `intro`, `outro`.
+  - **Tags:** Use primary category tags: `basicAttack`, `heavyAttack`, `resonanceSkill`, `resonanceLiberation`, `intro`, `outro`, except when the description states damage is "considered as [Type] DMG", use `[Type]` for the primary tag (e.g., `basicAttack`) instead of the origin type (e.g., `resonanceSkill`), as these primary damage-type tags are mutually exclusive.
+  - **Non-exclusive tags:** `coordinatedAttack` and `aerial` are supplemental tags and are not mutually exclusive with the primary damage-type tag. Add them alongside the primary tag when the attack is a coordinated attack or an aerial attack.
   - **Restriction:** NEVER tag an attack with its own name. The service handles skill-specific logic automatically.
-  - **Damage Type Overrides:** If the description states damage is "considered as [Type] DMG", use `[Type]` for the primary tag (e.g., `basicAttack`) instead of the origin type (e.g., `resonanceSkill`), as these tags are mutually exclusive.
   - **Scaling:** Map `attackScalingProperty` to `atk`, `def`, `hp`, `fixed`, `tuneRuptureAtk`, `tuneRuptureHp`, or `tuneRuptureDef` as needed.
   - **Upgrades:** If a Sequence (S1-S6) replaces or significantly changes an attack's `damageInstances` or a modifier's stats, use the `alternativeDefinitions` field in the base capability entry. Key each alternative by the sequence level (e.g., `"s1"`, `"s6"`).
 - **Modifiers & Permanent Stats:**
   - **Description:** ALWAYS include a `description` field, using a relevant subset of the skill description that explains the effect.
-  - **Targeting:** `self` (default), `activeCharacter` (on-field only), `team`, or `enemy`. Note: `defenseIgnore` is a character stat and should target `self`.
+  - **Modifier vs Permanent Stat** A permanent stat can not be configured by a user. It generally represents a buff or debuff that is ALWAYS active, regardless of user configuration. A modifier is configurable by a user for when it is active. Modifiers descriptions will include descriptions on when they are active.
+  - **Targeting:** `self` (default), `activeCharacter` (on-field only), `team`, or `enemy`. Note: `defenseIgnore` is a character stat and should target `self`, `activeCharacter`, or `team` while `defenseReduction` is an enemy stat that should target `enemy`.
   - **Tags:** `modifiedStats[].tags` should represent the tags an attack must have for the modifier to affect that attack during damage calculation.
     - Use `["all"]` for broad buffs that should apply to any qualifying attack once the modifier is active (for example a general team buff).
     - Use category tags like `["basicAttack"]`, `["resonanceSkill"]`, or element tags when the effect is restricted to those attack classes.
-    - Use specific skill-name tags only when the effect truly applies only to that named attack or sub-attack.
+    - Use specific names of attack capabilities only when the effect truly applies only to that attack
   - **Versioning & alternativeDefinitions:** Use `alternativeDefinitions` to handle Sequence upgrades (S1-S6) that modify or replace existing effects.
     - **Replacement:** If a sequence _upgrades_ an existing effect (e.g., S3 increases a percentage or adds a new stat to the same trigger), add an entry to `alternativeDefinitions` keyed by the sequence.
     - **Cumulative Behavior:** Each entry in `alternativeDefinitions` MUST contain the _full_ set of fields (e.g., the complete `modifiedStats` array) for that sequence level, ensuring the rotation calculator sees the correct total values when that sequence is unlocked.
@@ -102,7 +104,7 @@ You are a specialized data transformation agent for Wuthering Waves. Your goal i
         ]
       }
       ```
-  - **Stat-Scaled Buffs:** If an effect scales with a tracked stat (for example Energy Regen or Crit Rate), use a `statParameterizedNumber` inside a `DatabaseNumberNode` expression tree rather than the removed `parameterConfigs` format.
+  - **Stat-Scaled Buffs:** If an effect scales with a tracked stat (for example Energy Regen or Crit Rate), use a `statParameterizedNumber` inside a `DatabaseNumberNode` expression tree
   - **Exclusions:** Omit modifiers that only restore flat energy or affect mechanics not tracked in stats (like hit counts, dodge refreshes, character-specific mechanics, healing).
 
 ### B. Echo Logic

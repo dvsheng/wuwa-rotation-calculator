@@ -10,8 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { and, eq } from 'drizzle-orm';
 
 import { database as database } from '../src/db/client';
-// @ts-expect-error
-import { entities, permanentStatsV2, skills } from '../src/db/schema';
+import { capabilities, entities, skills } from '../src/db/schema';
 import { EntityType, OriginType } from '../src/services/game-data';
 
 import type { TransformedCharacter } from './transform-character-jsons';
@@ -37,6 +36,8 @@ const CHARACTER_DATA_DIR = path.join(
   __dirname,
   '../.local/data/encore.moe/transformed/character',
 );
+
+const insertedCounts = { entities: 0, skills: 0, capabilities: 0 };
 
 // ============================================================================
 // Utility Functions
@@ -104,6 +105,7 @@ const upsertEchoEntity = async (echo: TransformedEcho): Promise<void> => {
       cost,
       echoSetIds,
     });
+    insertedCounts.entities++;
     console.log(`Inserted echo: ${name} (ID: ${gameId})`);
   }
 };
@@ -175,6 +177,7 @@ const upsertEchoSkill = async (echo: TransformedEcho): Promise<number> => {
       iconUrl,
       originType,
     });
+    insertedCounts.skills++;
     console.log(`  Inserted echo skill: ${name} (ID: ${skillGameId})`);
   }
 
@@ -243,6 +246,7 @@ const upsertEchoSetSkills = async (echoSet: TransformedEchoSet): Promise<number>
         })
         .returning({ id: skills.id });
       skillId = result[0].id;
+      insertedCounts.skills++;
       console.log(`  Inserted echo set skill: ${skill.name}`);
     }
 
@@ -251,35 +255,39 @@ const upsertEchoSetSkills = async (echoSet: TransformedEchoSet): Promise<number>
       const statName = `${skill.name} Stat`;
       const existingStat = await database
         .select()
-        .from(permanentStatsV2)
-        .where(
-          and(
-            eq(permanentStatsV2.skillId, skillId),
-            eq(permanentStatsV2.name, statName),
-          ),
-        )
+        .from(capabilities)
+        .where(and(eq(capabilities.skillId, skillId), eq(capabilities.name, statName)))
         .limit(1);
 
       if (existingStat.length > 0) {
         await database
-          .update(permanentStatsV2)
+          .update(capabilities)
           .set({
             description: skill.description ?? '',
-            stat: skill.stat as any,
-            value: skill.value,
-            tags: skill.tags as any,
+            capabilityType: 'permanent_stat',
+            capabilityJson: {
+              type: 'permanent_stat',
+              stat: skill.stat,
+              value: skill.value,
+              tags: skill.tags,
+            },
           })
-          .where(eq(permanentStatsV2.id, existingStat[0].id));
+          .where(eq(capabilities.id, existingStat[0].id));
         console.log(`    Updated echo set stat: ${statName}`);
       } else {
-        await database.insert(permanentStatsV2).values({
+        await database.insert(capabilities).values({
           skillId,
           name: statName,
           description: skill.description ?? '',
-          stat: skill.stat as any,
-          value: skill.value,
-          tags: skill.tags as any,
+          capabilityType: 'permanent_stat',
+          capabilityJson: {
+            type: 'permanent_stat',
+            stat: skill.stat as any,
+            value: skill.value,
+            tags: skill.tags as any,
+          },
         });
+        insertedCounts.capabilities++;
         console.log(`    Inserted echo set stat: ${statName}`);
       }
     }
@@ -340,6 +348,7 @@ const upsertWeaponEntity = async (weapon: TransformedWeaponData): Promise<void> 
       rank,
       weaponType,
     });
+    insertedCounts.entities++;
     console.log(`Inserted weapon: ${name} (ID: ${gameId})`);
   }
 };
@@ -394,6 +403,7 @@ const upsertWeaponSkill = async (weapon: TransformedWeaponData): Promise<number>
       iconUrl: undefined,
       originType,
     });
+    insertedCounts.skills++;
     console.log(`  Inserted weapon skill: ${name}`);
   }
 
@@ -441,34 +451,41 @@ const upsertWeaponProperties = async (
     // Check if permanent stat already exists
     const existing = await database
       .select()
-      .from(permanentStatsV2)
-      .where(
-        and(eq(permanentStatsV2.skillId, skillId), eq(permanentStatsV2.name, name)),
-      )
+      .from(capabilities)
+      .where(and(eq(capabilities.skillId, skillId), eq(capabilities.name, name)))
       .limit(1);
 
     if (existing.length > 0) {
       // Update existing
       await database
-        .update(permanentStatsV2)
+        .update(capabilities)
         .set({
           description,
-          stat: stat as any,
-          value,
-          tags: tags as any,
+          capabilityType: 'permanent_stat',
+          capabilityJson: {
+            type: 'permanent_stat',
+            stat: stat,
+            value,
+            tags: tags,
+          },
         })
-        .where(eq(permanentStatsV2.id, existing[0].id));
+        .where(eq(capabilities.id, existing[0].id));
       console.log(`  Updated weapon property: ${name}`);
     } else {
       // Insert new
-      await database.insert(permanentStatsV2).values({
+      await database.insert(capabilities).values({
         skillId,
         name,
         description,
-        stat: stat as any,
-        value,
-        tags: tags as any,
+        capabilityType: 'permanent_stat',
+        capabilityJson: {
+          type: 'permanent_stat',
+          stat: stat,
+          value,
+          tags: tags,
+        },
       });
+      insertedCounts.capabilities++;
       console.log(`  Inserted weapon property: ${name}`);
     }
     statsProcessed++;
@@ -533,6 +550,7 @@ const upsertCharacterEntity = async (
       weaponType,
       attribute,
     });
+    insertedCounts.entities++;
     console.log(`Inserted character: ${name} (ID: ${gameId})`);
   }
 };
@@ -597,6 +615,7 @@ const upsertCharacterSkills = async (characterId: number): Promise<number> => {
         iconUrl,
         originType,
       });
+      insertedCounts.skills++;
       console.log(`  Inserted character skill: ${name} (${originType})`);
     }
 
@@ -667,6 +686,7 @@ const upsertResonantChainSkills = async (
         iconUrl,
         originType,
       });
+      insertedCounts.skills++;
       console.log(`  Inserted resonant chain: ${name} (${originType})`);
     }
 
@@ -731,6 +751,7 @@ const upsertCharacterBaseStatsRow = async (
       iconUrl: undefined,
       originType,
     });
+    insertedCounts.skills++;
     console.log(`  Inserted base stats skill: ${name}`);
   }
 
@@ -779,37 +800,44 @@ const upsertCharacterProperties = async (
     const value = property.value;
     const tags = property.tags;
 
-    // Check if permanent stat already exists (by entity ID, skill ID, and name)
+    // Check if permanent stat already exists (by skill ID and name)
     const existing = await database
       .select()
-      .from(permanentStatsV2)
-      .where(
-        and(eq(permanentStatsV2.skillId, skillId), eq(permanentStatsV2.name, name)),
-      )
+      .from(capabilities)
+      .where(and(eq(capabilities.skillId, skillId), eq(capabilities.name, name)))
       .limit(1);
 
     if (existing.length > 0) {
       // Update existing permanent stat
       await database
-        .update(permanentStatsV2)
+        .update(capabilities)
         .set({
           description,
-          stat: stat as any,
-          value: value as any,
-          tags: tags as any,
+          capabilityType: 'permanent_stat',
+          capabilityJson: {
+            type: 'permanent_stat',
+            stat: stat as any,
+            value,
+            tags: tags as any,
+          },
         })
-        .where(eq(permanentStatsV2.id, existing[0].id));
+        .where(eq(capabilities.id, existing[0].id));
       console.log(`  Updated property: ${name}`);
     } else {
       // Insert new permanent stat
-      await database.insert(permanentStatsV2).values({
+      await database.insert(capabilities).values({
         skillId,
         name,
         description,
-        stat: stat as any,
-        value: value as any,
-        tags: tags as any,
+        capabilityType: 'permanent_stat',
+        capabilityJson: {
+          type: 'permanent_stat',
+          stat: stat as any,
+          value,
+          tags: tags as any,
+        },
       });
+      insertedCounts.capabilities++;
       console.log(`  Inserted property: ${name}`);
     }
 
@@ -855,46 +883,50 @@ const upsertCharacterSkillTreeNodes = async (
   let statsProcessed = 0;
 
   for (const node of characterData.skillTree ?? []) {
-    const gameId = node.id;
     const name = node.name;
     const description = node.description;
     const stat = node.stat;
     const value = node.value;
     const tags = node.tags;
 
-    // Check if permanent stat already exists (by gameId if it exists, otherwise by name)
+    // Check if permanent stat already exists (by skill ID and name)
     const existing = await database
       .select()
-      .from(permanentStatsV2)
-      .where(eq(permanentStatsV2.gameId, gameId))
+      .from(capabilities)
+      .where(and(eq(capabilities.skillId, skillId), eq(capabilities.name, name)))
       .limit(1);
 
     if (existing.length > 0) {
       // Update existing permanent stat
       await database
-        .update(permanentStatsV2)
+        .update(capabilities)
         .set({
-          skillId,
-          name,
           description,
-          stat: stat as any,
-          value: value as any,
-          tags: tags as any,
-          updatedAt: new Date(),
+          capabilityType: 'permanent_stat',
+          capabilityJson: {
+            type: 'permanent_stat',
+            stat: stat,
+            value,
+            tags: tags,
+          },
         })
-        .where(eq(permanentStatsV2.gameId, existing[0].gameId));
+        .where(eq(capabilities.id, existing[0].id));
       console.log(`  Updated skill tree node: ${name}`);
     } else {
       // Insert new permanent stat
-      await database.insert(permanentStatsV2).values({
-        gameId,
+      await database.insert(capabilities).values({
         skillId,
         name,
         description,
-        stat: stat as any,
-        value: value as any,
-        tags: tags as any,
+        capabilityType: 'permanent_stat',
+        capabilityJson: {
+          type: 'permanent_stat',
+          stat: stat,
+          value,
+          tags: tags,
+        },
       });
+      insertedCounts.capabilities++;
       console.log(`  Inserted skill tree node: ${name}`);
     }
 
@@ -939,6 +971,7 @@ const upsertEchoSetEntity = async (echoSet: TransformedEchoSet): Promise<void> =
       iconUrl,
       setBonusThresholds,
     });
+    insertedCounts.entities++;
     console.log(`Inserted echo set: ${name} (ID: ${gameId})`);
   }
 };
@@ -1137,6 +1170,10 @@ const main = async () => {
     // FINAL SUMMARY
     // ========================================================================
     console.log('\n🎉 All entity migrations completed!');
+    console.log(`📊 Inserted (new records only):`);
+    console.log(`   - Entities:      ${insertedCounts.entities}`);
+    console.log(`   - Skills:        ${insertedCounts.skills}`);
+    console.log(`   - Capabilities:  ${insertedCounts.capabilities}`);
     console.log(`📊 Total Summary:`);
     console.log(`   - Echoes: ${echoProcessed} processed, ${echoErrors} errors`);
     console.log(`   - Weapons: ${weaponProcessed} processed, ${weaponErrors} errors`);

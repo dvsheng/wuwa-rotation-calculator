@@ -181,6 +181,23 @@ const ATTRIBUTE_MAP: Record<number, Attribute> = {
   6: Attribute.HAVOC,
 };
 
+const STRIPPED_ATTRIBUTE_NAME_SUFFIXES = [
+  'STA Cost',
+  'Duration',
+  'Shield',
+  'Healing',
+  'Concerto Energy',
+  'Duration Per Stack',
+] as const;
+
+const STRIPPED_ATTRIBUTE_NAME_SUBSTRINGS = [
+  'Cooldown',
+  'Concerto Regen',
+  'Resonance Cost',
+  'STA Cost Per Second',
+  'STA Cost (per sec)',
+] as const;
+
 // ============================================================================
 // Utility Functions
 // ============================================================================
@@ -361,18 +378,16 @@ const transformCharacterJSON = async (
           // Process icon path
           iconUrl: processIconPath(skill.Icon),
           // Transform attributes to only include the 10th value (values[9])
-          // Filter out attributes whose name ends with "STA Cost", "Duration", "Shield", or "Healing", or includes "Cooldown", "Concerto Regen", or "Resonance Cost"
           attributes:
             skill.SkillAttributes !== undefined && Array.isArray(skill.SkillAttributes)
               ? skill.SkillAttributes.filter(
                   (attribute: SkillAttribute) =>
-                    !attribute.attributeName.endsWith('STA Cost') &&
-                    !attribute.attributeName.endsWith('Duration') &&
-                    !attribute.attributeName.endsWith('Shield') &&
-                    !attribute.attributeName.endsWith('Healing') &&
-                    !attribute.attributeName.includes('Cooldown') &&
-                    !attribute.attributeName.includes('Concerto Regen') &&
-                    !attribute.attributeName.includes('Resonance Cost'),
+                    !STRIPPED_ATTRIBUTE_NAME_SUFFIXES.some((suffix) =>
+                      attribute.attributeName.endsWith(suffix),
+                    ) &&
+                    !STRIPPED_ATTRIBUTE_NAME_SUBSTRINGS.some((substring) =>
+                      attribute.attributeName.includes(substring),
+                    ),
                 ).map((attribute: SkillAttribute) => ({
                   id: attribute.attributeId,
                   name: attribute.attributeName,
@@ -385,6 +400,7 @@ const transformCharacterJSON = async (
 
     // Transform SkillTree to exclude Consume field and process icon
     if (fullData.SkillTree !== undefined && Array.isArray(fullData.SkillTree)) {
+      const skillTreeNameCounts: Record<string, number> = {};
       transformed.skillTree = fullData.SkillTree.map((node: SkillTreeNode) => {
         const parsed = parseSkillTreeNode(node.PropertyNodeDescribe);
 
@@ -393,10 +409,16 @@ const transformCharacterJSON = async (
           return;
         }
 
+        const baseName = node.PropertyNodeTitle;
+        skillTreeNameCounts[baseName] = (skillTreeNameCounts[baseName] ?? 0) + 1;
+        const name = `${baseName} (${skillTreeNameCounts[baseName]})`;
+
         const transformedNode: TransformedSkillTreeNode = {
           id: node.Id,
-          name: node.PropertyNodeTitle,
-          description: node.PropertyNodeDescribe,
+          name,
+          description: node.PropertyNodeDescribe
+            ? `${transformed.name}'s ${node.PropertyNodeDescribe}`
+            : undefined,
           iconUrl: processIconPath(node.PropertyNodeIcon),
           stat: parsed.stat,
           value: parsed.value,

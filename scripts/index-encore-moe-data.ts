@@ -128,6 +128,22 @@ const indexEntityType = async (
   const indexPath = path.join(OUTPUT_DIR, 'api', 'en', entityType, 'index.json');
   await saveJSON(response, indexPath);
 
+  // Fetch and save individual entity JSON files
+  await Promise.all(
+    list.map(async (item) => {
+      const itemUrl = `${listUrl}/${item.Id}`;
+      const itemData = await fetchJSON<unknown>(itemUrl);
+      const itemPath = path.join(
+        OUTPUT_DIR,
+        'api',
+        'en',
+        entityType,
+        `${item.Id}.json`,
+      );
+      await saveJSON(itemData, itemPath);
+    }),
+  );
+
   console.log(`Completed indexing ${list.length} ${entityType}s`);
 };
 

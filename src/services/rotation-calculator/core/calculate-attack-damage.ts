@@ -17,6 +17,21 @@ import { AttackScalingType } from './types';
 
 const HAVOC_BANE_DEFENSE_REDUCTION_PER_STACK = 0.02;
 
+export const calculateAttackDamage = (
+  damageInstance: CharacterDamageInstance,
+  characterStats: Record<CharacterStat | 'level', number>,
+  enemyStats: Record<EnemyStat | 'level', number>,
+) => {
+  const damageCalculationStats = convertResolvedStatsToCalculateDamageProperties({
+    damageInstance,
+    characterStats,
+    enemyStats,
+  });
+
+  const _calculateDamage = getDamageCalculationStrategy(damageInstance);
+  return _calculateDamage(damageCalculationStats, damageInstance);
+};
+
 const getBaseScalingStat = (scalingStat: CharacterDamageInstance['scalingStat']) => {
   switch (scalingStat) {
     case AttackScalingProperty.TUNE_RUPTURE_ATK: {
@@ -32,21 +47,6 @@ const getBaseScalingStat = (scalingStat: CharacterDamageInstance['scalingStat'])
       return scalingStat;
     }
   }
-};
-
-export const calculateAttackDamage = (
-  damageInstance: CharacterDamageInstance,
-  characterStats: Record<CharacterStat | 'level', number>,
-  enemyStats: Record<EnemyStat | 'level', number>,
-) => {
-  const damageCalculationStats = convertResolvedStatsToCalculateDamageProperties({
-    damageInstance,
-    characterStats,
-    enemyStats,
-  });
-
-  const _calculateDamage = getDamageCalculationStrategy(damageInstance);
-  return _calculateDamage(damageCalculationStats, damageInstance);
 };
 
 const _calculateNegativeStatusDamage = (

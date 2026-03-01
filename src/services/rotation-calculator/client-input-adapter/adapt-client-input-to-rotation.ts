@@ -280,8 +280,7 @@ export const adaptClientInputToRotation = async (
         const [subName, subTags] = ECHO_STAT_MAP[substat.stat];
         return {
           stat: subName,
-          // TODO: Don't divide by 100 for flat stats
-          value: substat.value / 100,
+          value: Number.isInteger(substat.value) ? substat.value : substat.value / 100,
           tags: subTags,
         };
       });

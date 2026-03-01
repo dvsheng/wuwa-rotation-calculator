@@ -6,23 +6,6 @@ import type { GetIconsRequest } from '@/schemas/game-data-service';
 
 import type { GetIconsResponse } from './get-icons.types';
 
-const ENCORE_MOE_IMAGE_ASSETS_URL = 'https://api-v2.encore.moe/resource/Data/';
-
-/**
- * Converts an icon path to a full encore.moe API URL with .png extension.
- */
-const processIconPath = (iconUrl?: string | null): string | undefined => {
-  if (!iconUrl) return undefined;
-
-  // Remove file extension and add .png
-  const pathWithPng = iconUrl.replace(/\.[^.]*$/, '.png');
-
-  // Remove leading slash to ensure proper URL concatenation
-  const relativePath = pathWithPng.startsWith('/') ? pathWithPng.slice(1) : pathWithPng;
-
-  return new URL(relativePath, ENCORE_MOE_IMAGE_ASSETS_URL).href;
-};
-
 /**
  * Get icon URLs for multiple items by their IDs and types.
  * Supports attacks, modifiers, and entities.
@@ -74,7 +57,7 @@ export const getIconsHandler = async (
 
     return {
       ...request,
-      iconUrl: processIconPath(result?.iconUrl),
+      iconUrl: result?.iconUrl ?? undefined,
     };
   });
 };

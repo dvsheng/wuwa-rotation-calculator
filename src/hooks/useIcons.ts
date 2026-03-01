@@ -17,7 +17,6 @@ export const useIcons = (requests: Array<IconRequest>) => {
   return useQuery({
     queryKey: ['icons', sortedRequests],
     queryFn: () => getIcons({ data: requests }),
-    staleTime: Number.POSITIVE_INFINITY, // Icons don't change
     enabled: requests.length > 0,
   });
 };

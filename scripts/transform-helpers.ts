@@ -202,16 +202,18 @@ export const collapseArrayValues = (values: Array<number>): Array<number> => {
 // ============================================================================
 
 /**
- * Converts an icon path to a full encore.moe API URL with .png extension.
+ * Converts an icon path to a full encore.moe API URL with .webp extension.
  */
 export const processIconPath = (iconUrl?: string | null): string | undefined => {
   if (!iconUrl) return undefined;
 
-  // Remove file extension and add .png
-  const pathWithPng = iconUrl.replace(/\.[^.]*$/, '.png');
+  // Remove file extension and add .webp
+  const pathWithWebp = iconUrl.replace(/\.[^.]*$/, '.webp');
 
   // Remove leading slash to ensure proper URL concatenation
-  const relativePath = pathWithPng.startsWith('/') ? pathWithPng.slice(1) : pathWithPng;
+  const relativePath = pathWithWebp.startsWith('/')
+    ? pathWithWebp.slice(1)
+    : pathWithWebp;
 
   return new URL(relativePath, ENCORE_MOE_IMAGE_ASSETS_URL).href;
 };

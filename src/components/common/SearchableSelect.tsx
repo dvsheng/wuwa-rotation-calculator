@@ -1,3 +1,5 @@
+import * as React from 'react';
+
 import {
   Combobox,
   ComboboxContent,
@@ -19,6 +21,7 @@ interface SearchableSelectProperties {
   value?: number;
   placeholder?: string;
   className?: string;
+  renderItem?: (item: Item) => React.ReactNode;
 }
 
 export const SearchableSelect = ({
@@ -27,6 +30,7 @@ export const SearchableSelect = ({
   value,
   placeholder = 'Select...',
   className,
+  renderItem,
 }: SearchableSelectProperties) => {
   const selectedItem = items.find((item) => item.id === value);
 
@@ -45,7 +49,7 @@ export const SearchableSelect = ({
         <ComboboxList>
           {(item) => (
             <ComboboxItem key={item.id} value={item} onClick={() => onItemClick(item)}>
-              {item.name}
+              {renderItem ? renderItem(item) : item.name}
             </ComboboxItem>
           )}
         </ComboboxList>

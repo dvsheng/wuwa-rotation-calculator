@@ -1,4 +1,3 @@
-export type EntityType = 'character' | 'weapon' | 'echo' | 'attribute';
 export type ImageType = 'icon' | 'background' | 'phantom';
 export type UiIconName = 'role' | 'weapon' | 'gourd';
 
@@ -7,7 +6,7 @@ export type UiIconName = 'role' | 'weapon' | 'gourd';
  * Assets are stored in src/assets/{entity}/{type}/{id}.webp
  */
 export const resolveImagePath = (
-  entity: EntityType,
+  entity: string,
   type: ImageType,
   id: string | number,
 ): string => {

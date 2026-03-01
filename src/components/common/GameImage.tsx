@@ -1,13 +1,14 @@
 import { useIcons } from '@/hooks/useIcons';
 import { cn } from '@/lib/utils';
-import type { EntityType, ImageType } from '@/services/image-service';
+import { EntityType } from '@/services/game-data';
+import type { ImageType } from '@/services/image-service';
 import { resolveImagePath } from '@/services/image-service';
 
 interface GameImageProperties extends Omit<
   React.ImgHTMLAttributes<HTMLImageElement>,
   'id'
 > {
-  entity: EntityType;
+  entity: EntityType | 'attribute';
   type: ImageType;
   id: string | number;
 }
@@ -27,7 +28,7 @@ export const GameImage = ({
 }: GameImageProperties) => {
   // Use icon service for entity icons (character, weapon, echo)
   const shouldUseIconService =
-    type === 'icon' && ['character', 'weapon', 'echo'].includes(entity);
+    type === 'icon' && Object.values(EntityType).includes(entity as EntityType);
 
   const { data: iconData } = useIcons(
     shouldUseIconService ? [{ id: Number(id), type: 'entity' }] : [],

@@ -1,3 +1,4 @@
+import { keyBy } from 'es-toolkit/array';
 import { Plus } from 'lucide-react';
 
 import { AssetIcon } from '@/components/common/AssetIcon';
@@ -13,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useEntityList } from '@/hooks/useEntityList';
+import { useIcons } from '@/hooks/useIcons';
 import { EntityType } from '@/services/game-data';
 import { useStore } from '@/store';
 
@@ -27,7 +29,11 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
   const setEchoSetRequirement = useStore((state) => state.setEchoSetRequirement);
   const updateCharacter = useStore((state) => state.updateCharacter);
   const clearForEntity = useStore((state) => state.clearForEntity);
+  const { data: echoSetIcons } = useIcons(
+    echoSetList.map((s) => ({ id: s.id, type: 'entity' as const })),
+  );
 
+  const iconUrlById = keyBy(echoSetIcons ?? [], (item) => item.id);
   const handleAddSet = () => {
     if (selectedEchoSets.length < 2) {
       updateCharacter(index, (draft) => {
@@ -71,6 +77,16 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
                 value={selectedSetConfig?.id}
                 onItemClick={(item) => handleUpdateSet(setIndex, item.id)}
                 placeholder="Select echo set"
+                renderItem={(item) => (
+                  <>
+                    <img
+                      src={iconUrlById[item.id].iconUrl}
+                      className="size-5 shrink-0 object-contain"
+                      alt=""
+                    />
+                    {item.name}
+                  </>
+                )}
               />
             </div>
 

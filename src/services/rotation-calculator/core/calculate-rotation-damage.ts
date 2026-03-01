@@ -54,6 +54,8 @@ export const calculateRotationDamage = (rotation: Rotation): RotationResult => {
             ...inputs,
             attackIndex,
             characterIndex: instance.characterIndex,
+            scalingStat: instance.scalingStat,
+            motionValue: instance.motionValue,
             damage: result,
           },
         ],

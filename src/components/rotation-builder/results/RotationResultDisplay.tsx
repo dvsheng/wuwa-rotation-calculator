@@ -1,30 +1,32 @@
 import type { ColumnDef } from '@tanstack/react-table';
-import { AlertCircle, Info } from 'lucide-react';
-import { Fragment, useMemo } from 'react';
+import { AlertCircle } from 'lucide-react';
+import { useMemo } from 'react';
 
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
 import { Stack } from '@/components/ui/layout';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Heading, Text } from '@/components/ui/typography';
 import type { useRotationCalculation } from '@/hooks/useRotationCalculation';
 import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
 import { useTeamAttackInstances } from '@/hooks/useTeamAttackInstances';
-import type { RotationResult } from '@/services/rotation-calculator/core/types';
+import type { ClientRotationResult } from '@/services/rotation-calculator/client-output-adapter/adapt-rotation-result-to-client-output';
 import { useStore } from '@/store';
-import { NegativeStatus } from '@/types';
+
+import { RotationResultRowHoverCard } from './RotationResultRowHoverCard';
 
 interface RotationResultDisplayProperties {
   result: NonNullable<ReturnType<typeof useRotationCalculation>['data']>;
   isStale?: boolean;
 }
 
-type DamageDetail = RotationResult['damageDetails'][number];
+type DamageDetail = ClientRotationResult['damageDetails'][number];
 
 interface DamageRow {
   index: number;
+  /** 0-based index into the stored attacks array. */
+  attackIndex: number;
+  /** 0-based hit number within the stored attack (for multi-hit attacks). */
+  hitIndex: number;
   attack: DetailedAttackInstance | undefined;
   /** Resolved display name for the character that dealt this damage. */
   characterName: string;
@@ -57,6 +59,7 @@ export const RotationResultDisplay = ({
 
   const data: Array<DamageRow> = useMemo(() => {
     const attackMap = new Map(resolvedAttacks.map((a) => [a.instanceId, a]));
+    const hitCountPerAttack = new Map<number, number>();
 
     return result.damageDetails.map((detail, index) => {
       const attack = attackMap.get(storedAttacks[detail.attackIndex]?.instanceId);
@@ -65,8 +68,13 @@ export const RotationResultDisplay = ({
         ? (characterIndexToName[detail.characterIndex] ?? 'Unknown')
         : (attack?.characterName ?? 'Unknown');
 
+      const hitIndex = hitCountPerAttack.get(detail.attackIndex) ?? 0;
+      hitCountPerAttack.set(detail.attackIndex, hitIndex + 1);
+
       return {
         index,
+        attackIndex: detail.attackIndex,
+        hitIndex,
         attack,
         characterName,
         detail,
@@ -79,12 +87,16 @@ export const RotationResultDisplay = ({
     () => [
       {
         accessorKey: 'index',
-        header: () => <div className="w-10 text-center">#</div>,
-        cell: ({ row }) => (
-          <div className="text-muted-foreground w-10 text-center text-xs">
-            {row.original.index + 1}
-          </div>
-        ),
+        header: () => <div className="w-16 text-center">#</div>,
+        cell: ({ row }) => {
+          const { attackIndex, hitIndex } = row.original;
+          return (
+            <div className="text-muted-foreground w-16 text-center text-xs">
+              {attackIndex + 1}
+              <span className="text-muted-foreground/50"> ({hitIndex + 1})</span>
+            </div>
+          );
+        },
       },
       {
         accessorKey: 'characterName',
@@ -127,109 +139,11 @@ export const RotationResultDisplay = ({
       {
         id: 'details',
         header: () => <div className="text-center">Details</div>,
-        cell: ({ row }) => {
-          const { detail } = row.original;
-          return (
-            <div className="flex justify-center">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon-sm" aria-label="View details">
-                    <Info className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent
-                  side="bottom"
-                  className="flex h-96 w-96 flex-col border-white/10 bg-zinc-900 p-0 text-zinc-100 shadow-xl"
-                >
-                  <div className="shrink-0 border-b border-white/10 bg-zinc-800/50 p-3">
-                    <Text
-                      variant="tiny"
-                      className="font-semibold tracking-wider text-zinc-300 uppercase"
-                    >
-                      Calculation Snapshot
-                    </Text>
-                  </div>
-
-                  <ScrollArea className="min-h-0 flex-1 p-3">
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Text
-                          variant="tiny"
-                          className="font-semibold text-amber-500 uppercase"
-                        >
-                          Skill
-                        </Text>
-                        <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
-                          <span className="text-zinc-400">Base Damage</span>
-                          <span className="text-right font-mono text-zinc-100">
-                            {`${detail.baseDamage}`}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Text
-                          variant="tiny"
-                          className="font-semibold text-blue-400 uppercase"
-                        >
-                          Character Stats
-                        </Text>
-                        <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
-                          {Object.entries(detail.character).map(([key, value]) => (
-                            <Fragment key={key}>
-                              <span className="text-zinc-400 capitalize">
-                                {key.replaceAll(/([A-Z])/g, ' $1').trim()}
-                              </span>
-                              <span className="text-right font-mono text-zinc-100">
-                                {[
-                                  'level',
-                                  'attackScalingPropertyValue',
-                                  'attackFlat',
-                                  'attackFlatBonus',
-                                  'hpFlat',
-                                  'hpFlatBonus',
-                                  'defenseFlat',
-                                  'defenseFlatBonus',
-                                  'tuneBreakBoost',
-                                  ...Object.values(NegativeStatus),
-                                ].includes(key)
-                                  ? Math.round(value).toLocaleString()
-                                  : `${(value * 100).toFixed(1)}%`}
-                              </span>
-                            </Fragment>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Text
-                          variant="tiny"
-                          className="font-semibold text-red-400 uppercase"
-                        >
-                          Enemy Stats
-                        </Text>
-                        <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
-                          {Object.entries(detail.enemy).map(([key, value]) => (
-                            <Fragment key={key}>
-                              <span className="text-zinc-400 capitalize">
-                                {key.replaceAll(/([A-Z])/g, ' $1').trim()}
-                              </span>
-                              <span className="text-right font-mono text-zinc-100">
-                                {key === 'level'
-                                  ? Math.round(value).toLocaleString()
-                                  : `${(value * 100).toFixed(1)}%`}
-                              </span>
-                            </Fragment>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </ScrollArea>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          );
-        },
+        cell: ({ row }) => (
+          <div className="flex justify-center">
+            <RotationResultRowHoverCard detail={row.original.detail} />
+          </div>
+        ),
       },
     ],
     [],

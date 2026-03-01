@@ -66,7 +66,6 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
             },
           }),
         enabled: !!character.id,
-        staleTime: Infinity,
       },
       {
         queryKey: ['team-details', 'weapon', character.id, character.weapon.id],
@@ -79,7 +78,6 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
             },
           }),
         enabled: !!character.weapon.id,
-        staleTime: Infinity,
       },
       {
         queryKey: ['team-details', 'echo', character.id, character.primarySlotEcho.id],
@@ -91,7 +89,6 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
             },
           }),
         enabled: !!character.primarySlotEcho.id,
-        staleTime: Infinity,
       },
       ...character.echoSets.map((set) => ({
         queryKey: ['team-details', 'echo-set', character.id, set.id, set.requirement],
@@ -104,7 +101,6 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
             },
           }),
         enabled: !!set.id,
-        staleTime: Infinity,
       })),
     ]),
     combine: (results) => {

@@ -1,4 +1,10 @@
-import type { CharacterAttack, Enemy, Modifier, Team } from '@/types';
+import type {
+  AttackScalingProperty,
+  CharacterAttack,
+  Enemy,
+  Modifier,
+  Team,
+} from '@/types';
 
 import type { CalculateDamageProperties } from '../damage-calculator/calculate-damage.types';
 
@@ -26,6 +32,8 @@ export interface RotationResult {
       attackIndex: number;
       /** Index of the character in the team (0–2) that dealt this damage. */
       characterIndex: number;
+      scalingStat: AttackScalingProperty;
+      motionValue: number;
       damage: number;
     }
   >;

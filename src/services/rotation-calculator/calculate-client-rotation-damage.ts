@@ -7,8 +7,9 @@ import type { Team as ClientTeam } from '@/schemas/team';
 
 import { adaptClientInputToRotation } from './client-input-adapter/adapt-client-input-to-rotation';
 import { GameDataNotFoundError } from './client-input-adapter/enrich-rotation-data';
+import type { ClientRotationResult } from './client-output-adapter/adapt-rotation-result-to-client-output';
+import { adaptRotationResultToClientOutput } from './client-output-adapter/adapt-rotation-result-to-client-output';
 import { calculateRotationDamage } from './core/calculate-rotation-damage';
-import type { RotationResult } from './core/types';
 
 /**
  * Orchestrates the rotation damage calculation by adapting client inputs
@@ -19,14 +20,14 @@ export const calculateRotationHandler = async (
   clientEnemy: ClientEnemy,
   attacks: Array<AttackInstance>,
   buffs: Array<ModifierInstance>,
-): Promise<RotationResult> => {
+): Promise<ClientRotationResult> => {
   const rotation = await adaptClientInputToRotation(
     clientTeam,
     clientEnemy,
     attacks,
     buffs,
   );
-  return calculateRotationDamage(rotation);
+  return adaptRotationResultToClientOutput(calculateRotationDamage(rotation));
 };
 
 export const calculateRotation = createServerFn({

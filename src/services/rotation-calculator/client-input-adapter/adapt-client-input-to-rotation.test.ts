@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
-import type { Attack, Modifier as GameDataModifier } from '@/services/game-data';
+import type {
+  Attack,
+  Modifier as GameDataModifier,
+  GameDataNumberNode,
+} from '@/services/game-data';
 import { AttackScalingProperty, Attribute, CharacterStat, Tag } from '@/types';
 
 import {
@@ -104,6 +108,78 @@ describe('toRotationPermanentStat', () => {
     }
     expect(result.value.stat).toBe(CharacterStat.ENERGY_REGEN);
     expect(result.value.characterIndex).toBe(2);
+  });
+
+  it('recursively maps nested stat references while preserving tree shape', () => {
+    const stat = {
+      stat: CharacterStat.DAMAGE_BONUS,
+      tags: [Tag.ELECTRO],
+      value: {
+        type: 'sum',
+        operands: [
+          0.5,
+          {
+            type: 'product',
+            operands: [
+              statReference(),
+              {
+                type: 'sum',
+                operands: [
+                  1.5,
+                  {
+                    type: 'statParameterizedNumber',
+                    stat: CharacterStat.ENERGY_REGEN,
+                    resolveWith: 'enemy',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      } satisfies GameDataNumberNode<number>,
+    };
+
+    const result = toRotationPermanentStat(stat, 2);
+
+    expect(typeof result.value).toBe('object');
+    if (typeof result.value === 'number') {
+      throw new TypeError('expected sum node');
+    }
+    expect(result.value.type).toBe('sum');
+    if (result.value.type !== 'sum') {
+      throw new TypeError('expected sum node');
+    }
+
+    const nestedProduct = result.value.operands[1];
+    expect(typeof nestedProduct).toBe('object');
+    if (typeof nestedProduct === 'number' || nestedProduct.type !== 'product') {
+      throw new TypeError('expected product node');
+    }
+
+    const selfReference = nestedProduct.operands[0];
+    expect(typeof selfReference).toBe('object');
+    if (
+      typeof selfReference === 'number' ||
+      selfReference.type !== 'statParameterizedNumber'
+    ) {
+      throw new TypeError('expected statParameterizedNumber');
+    }
+    expect(selfReference.characterIndex).toBe(2);
+
+    const enemySum = nestedProduct.operands[1];
+    expect(typeof enemySum).toBe('object');
+    if (typeof enemySum === 'number' || enemySum.type !== 'sum') {
+      throw new TypeError('expected sum node');
+    }
+
+    expect(typeof enemySum.operands[1]).toBe('object');
+    if (
+      typeof enemySum.operands[1] === 'number' ||
+      enemySum.operands[1].type !== 'statParameterizedNumber'
+    ) {
+      throw new TypeError('expected statParameterizedNumber');
+    }
+    expect(enemySum.operands[1].characterIndex).toBeUndefined();
   });
 });
 

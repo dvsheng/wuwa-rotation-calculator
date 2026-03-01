@@ -69,7 +69,10 @@ You are a specialized data transformation agent for Wuthering Waves. Your goal i
 - **Modifiers & Permanent Stats:**
   - **Description:** ALWAYS include a `description` field, using a relevant subset of the skill description that explains the effect.
   - **Targeting:** `self` (default), `activeCharacter` (on-field only), `team`, or `enemy`. Note: `defenseIgnore` is a character stat and should target `self`.
-  - **Tags:** ALWAYS tag with specific skill names (e.g., `["Art of Violence"]`) if the effect applies only to those skills (common for `damageMultiplierBonus`).
+  - **Tags:** `modifiedStats[].tags` should represent the tags an attack must have for the modifier to affect that attack during damage calculation.
+    - Use `["all"]` for broad buffs that should apply to any qualifying attack once the modifier is active (for example a general team buff).
+    - Use category tags like `["basicAttack"]`, `["resonanceSkill"]`, or element tags when the effect is restricted to those attack classes.
+    - Use specific skill-name tags only when the effect truly applies only to that named attack or sub-attack.
   - **Versioning & alternativeDefinitions:** Use `alternativeDefinitions` to handle Sequence upgrades (S1-S6) that modify or replace existing effects.
     - **Replacement:** If a sequence _upgrades_ an existing effect (e.g., S3 increases a percentage or adds a new stat to the same trigger), add an entry to `alternativeDefinitions` keyed by the sequence.
     - **Cumulative Behavior:** Each entry in `alternativeDefinitions` MUST contain the _full_ set of fields (e.g., the complete `modifiedStats` array) for that sequence level, ensuring the rotation calculator sees the correct total values when that sequence is unlocked.

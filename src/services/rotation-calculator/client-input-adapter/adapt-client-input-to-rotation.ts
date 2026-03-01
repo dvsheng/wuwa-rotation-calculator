@@ -6,7 +6,7 @@ import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import type { Team as ClientTeam } from '@/schemas/team';
 import type {
   Attack,
-  GameDataNumberNode,
+  GameDataStatParameterizedNumber,
   Modifier,
   PermanentStatBase,
 } from '@/services/game-data';
@@ -21,7 +21,7 @@ import type {
   TaggedStatValue,
 } from '@/types';
 
-import type { NumberNode } from '../core/resolve-runtime-number';
+import type { StatParameterizedNumber } from '../core/resolve-runtime-number';
 import type { Rotation } from '../core/types';
 
 import { createGameDataEnricher } from './enrich-rotation-data';
@@ -91,33 +91,67 @@ export const CHARACTER_BASE_STATS: CharacterStats = {
 
 const isStatParameterizedNode = (
   value: unknown,
-): value is { type: 'statParameterizedNumber' } =>
+): value is GameDataStatParameterizedNumber =>
   typeof value === 'object' &&
   value !== null &&
   'type' in value &&
-  value.type === 'statParameterizedNumber';
+  (value as Record<string, unknown>).type === 'statParameterizedNumber' &&
+  'resolveWith' in value;
 
 /**
- * Walks a GameDataNumberNode tree, replacing statParameterizedNumber nodes:
+ * Converts game-data statParameterizedNumber nodes into runtime stat references.
+ * Works with union types, arrays, and objects (recursively).
+ *
+ * - GameDataStatParameterizedNumber → StatParameterizedNumber
+ * - Array<GameDataStatParameterizedNumber> → Array<StatParameterizedNumber>
+ * - Objects with GameDataStatParameterizedNumber → Objects with StatParameterizedNumber (recursive)
+ * - number → number (passthrough)
+ */
+export type ResolveStatParameterizedType<T> = T extends GameDataStatParameterizedNumber
+  ? StatParameterizedNumber
+  : T extends Array<infer U>
+    ? Array<ResolveStatParameterizedType<U>>
+    : T extends object
+      ? { [K in keyof T]: ResolveStatParameterizedType<T[K]> }
+      : T;
+
+/**
+ * Resolves statParameterizedNumber nodes in a value tree to runtime stat references.
+ *
  * - resolveWith: 'self'  → characterIndex: selfIndex
  * - resolveWith: 'enemy' → characterIndex: undefined
  *
- * Clamp/conditional bounds (GameDataUserNumber positions) are cast to number —
- * they are plain numbers after resolveUserParameterizedValues has already run.
+ * - Recursively processes arrays and objects
+ * - Preserves all other values
  */
-const resolveStatReferences = (
-  node: ResolveUserParameterizedType<GameDataNumberNode>,
+export function resolveStatReferences<T>(
+  value: T,
   index: number,
-): NumberNode => {
-  // Handle userParameterizedNumber node - resolve to plain number
-  if (isStatParameterizedNode(node)) {
+): ResolveStatParameterizedType<T> {
+  if (isStatParameterizedNode(value)) {
     return {
-      ...node,
-      characterIndex: node.resolveWith === 'self' ? index : undefined,
-    };
+      type: 'statParameterizedNumber',
+      stat: value.stat,
+      characterIndex: value.resolveWith === 'self' ? index : undefined,
+    } as ResolveStatParameterizedType<T>;
   }
-  return node;
-};
+
+  if (Array.isArray(value)) {
+    return value.map((item) =>
+      resolveStatReferences(item, index),
+    ) as ResolveStatParameterizedType<T>;
+  }
+
+  if (typeof value === 'object' && value !== null) {
+    const resolved: Record<string, unknown> = {};
+    for (const [key, nestedValue] of Object.entries(value as Record<string, unknown>)) {
+      resolved[key] = resolveStatReferences(nestedValue, index);
+    }
+    return resolved as ResolveStatParameterizedType<T>;
+  }
+
+  return value as ResolveStatParameterizedType<T>;
+}
 
 /**
  * Converts a client-side modifier instance to a rotation modifier.

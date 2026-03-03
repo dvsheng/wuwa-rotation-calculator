@@ -20,7 +20,12 @@ import { cn } from '@/lib/utils';
 import { Target } from '@/services/game-data';
 import { useStore } from '@/store';
 
-import { TARGET_COLORS } from './BuffPalette';
+const TARGET_COLORS: Record<Target, string> = {
+  [Target.SELF]: 'border-blue-400 bg-blue-100 text-foreground',
+  [Target.TEAM]: 'border-green-400 bg-green-100 text-foreground',
+  [Target.ACTIVE_CHARACTER]: 'border-amber-400 bg-amber-100 text-foreground',
+  [Target.ENEMY]: 'border-red-400 bg-red-100 text-foreground',
+};
 
 /** Classes for self buffs with segments (border + text, background handled by segments) */
 const SELF_BASE_CLASSES = 'border-blue-400 text-foreground bg-transparent';
@@ -140,7 +145,7 @@ export const BuffCanvasItem = ({
 
             {/* Capability icon */}
             {iconUrl && (
-              <div className="border-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-md border bg-zinc-700">
+              <div className="border-border bg-capability-icon-bg flex aspect-square h-8 shrink-0 items-center justify-center rounded-md border">
                 <img
                   src={iconUrl}
                   alt={buff.name}

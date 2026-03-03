@@ -1,110 +1,57 @@
-import { Loader2, Shield, Sword, User } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Suspense, useState } from 'react';
 
-import { SaveRotationButton } from '@/components/builds/SaveRotationButton';
 import { EnemyContainer } from '@/components/rotation-builder/enemy/EnemyContainer';
-import { CalculateRotationButton } from '@/components/rotation-builder/results/CalculateRotationButton';
 import { RotationResultDisplay } from '@/components/rotation-builder/results/RotationResultDisplay';
 import { TeamContainer } from '@/components/rotation-builder/team/TeamContainer';
-import { ButtonGroup } from '@/components/ui/button-group';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useRotationCalculation } from '@/hooks/useRotationCalculation';
-import { useStore } from '@/store';
 
 import { RotationBuilder } from './rotation-timeline/RotationTimelineBuilder';
+import { RotationBuilderToolbar } from './RotationBuilderToolbar';
 
 export const RotationBuilderContainer = () => {
   const [selectedTab, setSelectedTab] = useState('team');
-  const [showResult, setShowResult] = useState(false);
+
   const { data: result, isPlaceholderData } = useRotationCalculation();
-  const isCalculateButtonVisible = useStore((state) => state.attacks.length > 0);
 
   return (
-    <Tabs
-      defaultValue="team"
-      value={selectedTab}
-      onValueChange={setSelectedTab}
-      className="h-full min-h-0 w-full flex-1 space-y-6 overflow-y-auto pr-1"
-    >
-      <div className="mx-auto flex w-full max-w-6xl flex-nowrap items-center gap-3">
-        <div className="min-w-0 flex-1 space-y-2">
-          <ToggleGroup
-            type="single"
-            value={selectedTab}
-            onValueChange={(value) => {
-              if (value) setSelectedTab(value);
-            }}
-            className="bg-muted/60 border-border grid h-auto w-full grid-cols-3 items-stretch gap-1 rounded-lg border p-1"
-          >
-            <ToggleGroupItem
-              value="team"
-              className="text-muted-foreground data-[state=on]:bg-background data-[state=on]:text-foreground flex h-10 w-full items-center justify-start gap-2 rounded-md border border-transparent px-4 font-medium transition data-[state=on]:shadow-sm"
-            >
-              <User size={16} /> Team
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="enemy"
-              className="text-muted-foreground data-[state=on]:bg-background data-[state=on]:text-foreground flex h-10 w-full items-center justify-start gap-2 rounded-md border border-transparent px-4 font-medium transition data-[state=on]:shadow-sm"
-            >
-              <Shield size={16} /> Enemy
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="rotation"
-              className="text-muted-foreground data-[state=on]:bg-background data-[state=on]:text-foreground flex h-10 w-full items-center justify-start gap-2 rounded-md border border-transparent px-4 font-medium transition data-[state=on]:shadow-sm"
-            >
-              <Sword size={16} /> Rotation
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
-
-        {isCalculateButtonVisible && (
-          <div className="ml-auto flex shrink-0 items-center gap-2">
-            <ButtonGroup>
-              <SaveRotationButton />
-              <CalculateRotationButton onCalculated={() => setShowResult(true)} />
-            </ButtonGroup>
-          </div>
-        )}
-      </div>
-
-      {showResult && result && (
-        <div className="animate-in fade-in slide-in-from-top-4 mx-auto mb-8 w-full max-w-6xl duration-500">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+      <RotationBuilderToolbar
+        selectedTab={selectedTab}
+        setSelectedTab={setSelectedTab}
+      />
+      {result && (
+        <div className="animate-in fade-in slide-in-from-top-4 shrink-0 duration-500">
           <RotationResultDisplay result={result} isStale={isPlaceholderData} />
         </div>
       )}
 
-      <TabsContent
-        value="team"
-        className="m-0 mx-auto w-full max-w-screen-2xl focus-visible:outline-none"
-      >
-        <Suspense
-          fallback={
-            <div className="text-muted-foreground animate-in fade-in flex flex-col items-center justify-center p-20 duration-500">
-              <Loader2 className="text-primary mb-4 h-10 w-10 animate-spin" />
-              <p className="text-lg">Loading character data...</p>
-            </div>
-          }
-        >
-          <TeamContainer />
-        </Suspense>
-      </TabsContent>
-
-      <TabsContent
-        value="enemy"
-        className="m-0 mx-auto w-full max-w-6xl focus-visible:outline-none"
-      >
-        <EnemyContainer />
-      </TabsContent>
-
-      <TabsContent
-        value="rotation"
-        className="m-0 flex min-h-0 w-full flex-col focus-visible:outline-none"
-      >
-        <div className="flex h-full min-h-0 w-full flex-1 flex-col">
-          <RotationBuilder />
-        </div>
-      </TabsContent>
-    </Tabs>
+      <div className="min-h-0 flex-1 overflow-hidden">
+        {selectedTab === 'team' && (
+          <div className="h-full overflow-y-auto">
+            <Suspense
+              fallback={
+                <div className="text-muted-foreground animate-in fade-in flex flex-col items-center justify-center p-20 duration-500">
+                  <Loader2 className="text-primary mb-4 h-10 w-10 animate-spin" />
+                  <p className="text-lg">Loading character data...</p>
+                </div>
+              }
+            >
+              <TeamContainer />
+            </Suspense>
+          </div>
+        )}
+        {selectedTab === 'enemy' && (
+          <div className="h-full overflow-y-auto">
+            <EnemyContainer />
+          </div>
+        )}
+        {selectedTab === 'rotation' && (
+          <div className="h-full min-h-0 overflow-hidden">
+            <RotationBuilder />
+          </div>
+        )}
+      </div>
+    </div>
   );
 };

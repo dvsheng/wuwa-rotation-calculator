@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run db:validate)",
+      "Bash(sqlite3 /Users/david/Code/wuwa-rotation-builder/.local/data/game-data.db \"SELECT id, capability_json FROM capabilities WHERE skill_id = 1197;\")",
+      "Bash(sqlite3 /Users/david/Code/wuwa-rotation-builder/.local/data/game-data.db \"UPDATE capabilities SET capability_json = json_set\\(capability_json, ''$.damageInstances[0].motionValue'', 18.8075\\), updated_at = strftime\\(''%s'', ''now''\\) WHERE id = 2318;\")",
+      "Bash(npx vitest run src/schemas/database.test.ts)",
+      "Bash(pnpm vitest run src/services/rotation-calculator/core/resolve-runtime-number.test.ts)",
+      "Bash(sqlite3 /Users/david/Code/wuwa-rotation-builder/.local/data/game-data.db \"SELECT capability_json FROM capabilities WHERE capability_json LIKE ''%resolveWith%'' LIMIT 3\")",
+      "Bash(sqlite3 /Users/david/Code/wuwa-rotation-builder/.local/data/game-data.db \"SELECT capability_json FROM capabilities WHERE capability_json LIKE ''%parameterConfigs%'' LIMIT 3\")",
+      "Bash(sqlite3 /Users/david/Code/wuwa-rotation-builder/.local/data/game-data.db \"SELECT COUNT\\(*\\) as total, SUM\\(CASE WHEN capability_json LIKE ''%resolveWith%'' THEN 1 ELSE 0 END\\) as has_resolveWith, SUM\\(CASE WHEN capability_json LIKE ''%parameterConfigs%'' THEN 1 ELSE 0 END\\) as has_parameterConfigs FROM capabilities\")",
+      "Bash(sqlite3 /Users/david/Code/wuwa-rotation-builder/.local/data/game-data.db \"SELECT c.id, c.name, e.name as entity_name FROM capabilities c JOIN skills s ON c.skill_id = s.id JOIN entities e ON s.entity_id = e.id WHERE c.name IN \\(''Base HP'', ''Base ATK'', ''Base DEF''\\) AND e.type = ''character'';\")",
+      "Bash(sqlite3 /Users/david/Code/wuwa-rotation-builder/.local/data/game-data.db \"DELETE FROM capabilities WHERE name IN \\(''Base HP'', ''Base ATK'', ''Base DEF''\\) AND skill_id IN \\(SELECT s.id FROM skills s JOIN entities e ON s.entity_id = e.id WHERE e.type = ''character''\\); SELECT changes\\(\\) || '' rows deleted'';\")",
+      "Bash(sqlite3 /Users/david/Code/wuwa-rotation-builder/.local/data/game-data.db \"SELECT c.id, c.name, c.capability_json FROM capabilities c JOIN skills s ON c.skill_id = s.id JOIN entities e ON s.entity_id = e.id WHERE e.name = ''Shorekeeper'' AND s.origin_type = ''Base Stats'' ORDER BY c.id;\")",
+      "Bash(sqlite3 /Users/david/Code/wuwa-rotation-builder/.local/data/game-data.db \":*)",
+      "Bash(npx shadcn@latest add hover-card --yes)",
+      "Bash(pnpm test -- rotationSlice)",
+      "Bash(npx vitest run src/services/rotation-calculator/damage-calculator/calculate-damage.test.ts)",
+      "WebFetch(domain:unpkg.com)"
+    ],
+    "additionalDirectories": [
+      "/Users/david/.claude/projects/-Users-david-Code-wuwa-rotation-builder/memory"
+    ]
+  }
+}

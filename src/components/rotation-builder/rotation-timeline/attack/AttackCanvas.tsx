@@ -60,10 +60,10 @@ export const AttackCanvas = ({ onDropAttack }: AttackCanvasProperties) => {
     <div className="canvas-section">
       <div className="canvas-header">
         <Text className="text-sm font-semibold tracking-wider uppercase">
-          Attack Sequence
-        </Text>
-        <Text variant="tiny" className="text-muted-foreground bg-card sticky right-4">
-          {attacks.length} {attacks.length === 1 ? 'Attack' : 'Attacks'}
+          Attack Sequence{' '}
+          <span className="text-muted-foreground">
+            ({attacks.length} {attacks.length === 1 ? 'Attack' : 'Attacks'})
+          </span>
         </Text>
       </div>
 

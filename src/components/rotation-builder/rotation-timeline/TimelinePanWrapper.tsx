@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch';
 
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
 interface TimelinePanWrapperProperties {
@@ -146,7 +147,9 @@ export const TimelinePanWrapper = ({
         };
 
         return (
-          <div className={cn('relative h-full min-h-0 w-full', className)}>
+          <div
+            className={cn('relative flex h-full min-h-0 w-full flex-col', className)}
+          >
             <Button
               type="button"
               variant="outline"
@@ -174,24 +177,26 @@ export const TimelinePanWrapper = ({
               disabled={!canPanRight}
               aria-label="Pan timeline right"
             >
-              <ChevronRight />ß
+              <ChevronRight />
             </Button>
 
-            <div
-              ref={scrollReference}
-              className="h-full w-full overflow-x-auto overflow-y-hidden"
+            <ScrollArea
+              className="h-full min-h-0 w-full flex-1"
+              orientation="horizontal"
+              viewportRef={scrollReference}
+              viewportClassName="flex h-full min-h-0 w-full flex-col overflow-x-auto overflow-y-hidden"
             >
               <TransformComponent
-                wrapperClass="w-max"
-                contentClass="w-max"
-                wrapperStyle={{ height: '100%' }}
-                contentStyle={{ height: '100%' }}
+                wrapperClass="min-h-0 min-w-0 w-full flex-1"
+                contentClass="min-w-full w-max"
+                wrapperStyle={{ height: '100%', minHeight: 0, flex: 1, width: '100%' }}
+                contentStyle={{ height: '100%', minWidth: '100%' }}
               >
-                <div className="flex h-full min-h-0 min-w-full flex-col">
+                <div className="flex h-full min-h-0 min-w-full flex-1 flex-col">
                   {children}
                 </div>
               </TransformComponent>
-            </div>
+            </ScrollArea>
           </div>
         );
       }}

@@ -49,10 +49,10 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
     <div className="canvas-section">
       <div className="canvas-header">
         <Text className="text-sm font-semibold tracking-wider uppercase">
-          Buff Timeline
-        </Text>
-        <Text variant="tiny" className="text-muted-foreground bg-card sticky right-4">
-          {buffs.length} {buffs.length === 1 ? 'Buff' : 'Buffs'}
+          Buff Timeline{' '}
+          <span className="text-muted-foreground">
+            ({buffs.length} {buffs.length === 1 ? 'Buff' : 'Buffs'})
+          </span>
         </Text>
       </div>
 

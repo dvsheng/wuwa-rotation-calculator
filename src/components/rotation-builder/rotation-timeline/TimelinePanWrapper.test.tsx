@@ -73,7 +73,9 @@ describe('TimelinePanWrapper', () => {
         <div>Timeline Content</div>
       </TimelinePanWrapper>,
     );
-    const scrollElement = container.querySelector('.overflow-x-auto') as HTMLDivElement;
+    const scrollElement = container.querySelector(
+      '[data-slot="scroll-area-viewport"]',
+    ) as HTMLDivElement;
     configureScrollElement(scrollElement);
 
     const scrollByMock = vi.fn(
@@ -112,7 +114,9 @@ describe('TimelinePanWrapper', () => {
         <div>Timeline Content</div>
       </TimelinePanWrapper>,
     );
-    const scrollElement = container.querySelector('.overflow-x-auto') as HTMLDivElement;
+    const scrollElement = container.querySelector(
+      '[data-slot="scroll-area-viewport"]',
+    ) as HTMLDivElement;
     configureScrollElement(scrollElement);
 
     const scrollByMock = vi.fn(

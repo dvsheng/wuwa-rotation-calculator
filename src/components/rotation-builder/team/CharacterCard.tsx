@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Stack } from '@/components/ui/layout';
 import { ECHO_PIECE_COUNT } from '@/schemas/echo';
 
@@ -15,16 +15,12 @@ interface CharacterCardProperties {
 export const CharacterCard = ({ index }: CharacterCardProperties) => {
   return (
     <Card>
-      <CardHeader>
+      <CardContent>
         <Stack>
           <CharacterSelector index={index} />
           <WeaponSelector index={index} />
           <EchoSetSelector index={index} />
           <PrimaryEchoSelector index={index} />
-        </Stack>
-      </CardHeader>
-      <CardContent>
-        <Stack>
           {Array.from({ length: ECHO_PIECE_COUNT }, (_, echoIndex) => (
             <EchoPieceEditor
               key={echoIndex}

@@ -1,3 +1,4 @@
+import { OriginType } from './types';
 import type { Attack } from './types';
 
 /**
@@ -10,7 +11,5 @@ import type { Attack } from './types';
 export const TUNE_BREAK_ATTACK_ID = -2000;
 
 export const isTuneBreakAttack = (attack: Attack) => {
-  return attack.damageInstances.every((instance) =>
-    instance.scalingStat.startsWith('tuneRupture'),
-  );
+  return attack.originType === OriginType.TUNE_BREAK;
 };

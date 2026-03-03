@@ -174,7 +174,7 @@ export const TimelinePanWrapper = ({
               disabled={!canPanRight}
               aria-label="Pan timeline right"
             >
-              <ChevronRight />
+              <ChevronRight />ß
             </Button>
 
             <div
@@ -182,10 +182,14 @@ export const TimelinePanWrapper = ({
               className="h-full w-full overflow-x-auto overflow-y-hidden"
             >
               <TransformComponent
-                wrapperClass="h-full w-max"
-                contentClass="h-full w-max"
+                wrapperClass="w-max"
+                contentClass="w-max"
+                wrapperStyle={{ height: '100%' }}
+                contentStyle={{ height: '100%' }}
               >
-                <div className="h-full min-w-full">{children}</div>
+                <div className="flex h-full min-h-0 min-w-full flex-col">
+                  {children}
+                </div>
               </TransformComponent>
             </div>
           </div>

@@ -30,19 +30,54 @@ const flatIntegerKeys = new Set([
   ...Object.values(NegativeStatus),
 ]);
 
-const levelFirst = ([a]: [string, number], [b]: [string, number]) =>
-  a === 'level' ? -1 : b === 'level' ? 1 : 0;
+const CHARACTER_KEY_ORDER = [
+  'level',
+  'attackFlat',
+  'attackScalingBonus',
+  'attackFlatBonus',
+  'hpFlat',
+  'hpScalingBonus',
+  'hpFlatBonus',
+  'defenseFlat',
+  'defenseScalingBonus',
+  'defenseFlatBonus',
+  'criticalRate',
+  'criticalDamage',
+  'damageBonus',
+  'damageAmplification',
+  'damageMultiplierBonus',
+  'tuneStrainDamageBonus',
+  'finalDamageBonus',
+  'defenseIgnore',
+  'resistancePenetration',
+  'tuneBreakBoost',
+];
+
+const ENEMY_KEY_ORDER = [
+  'level',
+  'defenseReduction',
+  'baseResistance',
+  'resistanceReduction',
+];
+
+const byKeyOrder =
+  (order: Array<string>) =>
+  ([a]: [string, number], [b]: [string, number]) => {
+    const ai = order.indexOf(a);
+    const bi = order.indexOf(b);
+    return (ai === -1 ? order.length : ai) - (bi === -1 ? order.length : bi);
+  };
 
 export const RotationResultRowHoverCard = ({
   detail,
 }: RotationResultRowHoverCardProperties) => {
   const characterEntries = Object.entries(detail.character)
     .filter(([key, value]) => key !== 'attackScalingPropertyValue' && value !== 0)
-    .toSorted(levelFirst);
+    .toSorted(byKeyOrder(CHARACTER_KEY_ORDER));
 
   const enemyEntries = Object.entries(detail.enemy)
     .filter(([, value]) => value !== 0)
-    .toSorted(levelFirst);
+    .toSorted(byKeyOrder(ENEMY_KEY_ORDER));
 
   return (
     <HoverCard openDelay={0} closeDelay={0}>

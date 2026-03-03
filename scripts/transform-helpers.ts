@@ -85,11 +85,11 @@ export const mapWeaponType = (weaponTypeId: number): WeaponType => {
  * Strip HTML tags from a string
  *
  * For character descriptions, this reformats tags at the beginning of sentences
- * by adding ": " after their content.
+ * by adding ": " after their content, and uses newlines between sections.
  *
  * Examples:
  * - "<span>Heavy Attack</span>Deals damage" => "Heavy Attack: Deals damage"
- * - "Text<br><br><span>Section</span>More text" => "Text. Section: More text"
+ * - "Text<br><br><span>Section</span>More text" => "Text\nSection: More text"
  */
 export const stripHtmlTags = (
   html: string | undefined,
@@ -112,27 +112,29 @@ export const stripHtmlTags = (
 
     // Step 3: Handle section headers after content
     // Pattern: <br><br><span...>Header Text</span></span><br><br>
-    // Replace with ". Header Text: "
+    // Replace with newline + "Header Text: "
     result = result.replaceAll(
       /(?:<br\s*\/?>)+(?:<[^>]*>)+([^<>]+?)(?:<\/[^>]+>)+(?:<br\s*\/?>)+/gi,
       (_match, content) => {
         const trimmedContent = content.trim();
         if (trimmedContent) {
-          return ` ${trimmedContent}: `;
+          return `\n${trimmedContent}: `;
         }
-        return ' ';
+        return '\n';
       },
     );
   }
 
-  // Step 4: Replace remaining <br> tags with spaces
-  result = result.replaceAll(/<br\s*\/?>/gi, ' ');
+  // Step 4: Replace remaining <br> tags with newlines
+  result = result.replaceAll(/<br\s*\/?>/gi, '\n');
 
   // Step 5: Strip all remaining HTML tags
   result = result.replaceAll(/<[^>]*>/g, '');
 
-  // Step 6: Clean up multiple spaces
-  result = result.replaceAll(/[\s]+/g, ' ');
+  // Step 6: Clean up whitespace
+  result = result.replaceAll(/ +/g, ' '); // collapse multiple spaces
+  result = result.replaceAll(/ *\n */g, '\n'); // trim spaces around newlines
+  result = result.replaceAll(/\n{3,}/g, '\n\n'); // max two consecutive newlines
 
   return result.trim();
 };

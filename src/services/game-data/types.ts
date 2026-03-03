@@ -111,6 +111,7 @@ export interface BaseCapability {
   parentName?: string;
   /** Description of the capability */
   description?: string;
+  capabilityType: CapabilityType;
 }
 
 // ============================================================================

@@ -55,6 +55,7 @@ const toAttack = (attack: any): Attack => {
   const json = attack.capabilityJson;
   return {
     id: attack.capabilityId,
+    capabilityType: attack.capabilityType,
     name: attack.capabilityName ?? attack.skillName,
     description: attack.capabilityDescription ?? attack.skillDescription,
     originType: attack.skillOriginType,
@@ -74,6 +75,7 @@ const toModifier = (modifier: any): Modifier => {
   const json = modifier.capabilityJson;
   return {
     id: modifier.capabilityId,
+    capabilityType: modifier.capabilityType,
     name: modifier.capabilityName ?? modifier.skillName,
     description: modifier.capabilityDescription ?? modifier.skillDescription,
     originType: modifier.skillOriginType,
@@ -90,6 +92,7 @@ const toPermanentStat = (permanentStat: any): PermanentStat => {
   const json = permanentStat.capabilityJson;
   return {
     id: permanentStat.capabilityId,
+    capabilityType: permanentStat.capabilityType,
     name: permanentStat.capabilityName ?? permanentStat.skillName,
     description: permanentStat.capabilityDescription ?? permanentStat.skillDescription,
     originType: permanentStat.skillOriginType,

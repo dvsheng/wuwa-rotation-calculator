@@ -12,7 +12,7 @@ import type { DetailedAttack, DetailedModifier } from '@/hooks/useTeamDetails';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
 import { cn } from '@/lib/utils';
 import type { Capability } from '@/schemas/rotation';
-import { OriginType, Target } from '@/services/game-data';
+import { CapabilityType, OriginType, Target } from '@/services/game-data';
 import type {
   AttackOriginType,
   OriginType as CapabilityOriginType,
@@ -76,6 +76,7 @@ const TUNE_BREAK_CAPABILITY: DetailedAttack = {
   name: 'Tune Break',
   parentName: 'Other',
   originType: OriginType.TUNE_BREAK,
+  capabilityType: CapabilityType.ATTACK,
 };
 
 const TUNE_STRAIN_CAPABILITY: DetailedModifier = {
@@ -88,6 +89,7 @@ const TUNE_STRAIN_CAPABILITY: DetailedModifier = {
   originType: 'Tune Break',
   target: Target.ENEMY,
   parameters: [{ id: '0', minimum: 0, maximum: 4 }],
+  capabilityType: CapabilityType.MODIFIER,
 };
 
 interface CapabilitySidebarProperties {

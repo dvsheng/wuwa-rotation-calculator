@@ -71,6 +71,7 @@ export const toClientAttack = (attack: Attack): ClientAttack => {
     isTuneBreakAttack: isTuneBreakAttack(attack),
     description: attack.description,
     parameters: parameters.length > 0 ? parameters : undefined,
+    capabilityType: attack.capabilityType,
   };
 };
 
@@ -93,5 +94,6 @@ export const toClientBuff = (modifier: Modifier): ClientModifier => {
     originType: modifier.originType,
     description: modifier.description,
     parameters: parameters.length > 0 ? parameters : undefined,
+    capabilityType: modifier.capabilityType,
   };
 };

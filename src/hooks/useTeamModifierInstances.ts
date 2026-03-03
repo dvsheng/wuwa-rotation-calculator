@@ -1,6 +1,6 @@
 import { compact } from 'es-toolkit/array';
 
-import { Target } from '@/services/game-data';
+import { CapabilityType, Target } from '@/services/game-data';
 import { TUNE_STRAIN_BUFF_ID } from '@/services/game-data/tune-strain';
 import { useStore } from '@/store';
 
@@ -38,6 +38,7 @@ export const useTeamModifierInstances = () => {
           characterName: 'All Characters',
           originType: 'Tune Break' as const,
           target: Target.ENEMY,
+          capabilityType: CapabilityType.MODIFIER,
           parameters: [
             {
               id: '0',
@@ -71,6 +72,7 @@ export const useTeamModifierInstances = () => {
         entityId: gameData.entityId,
         originType: gameData.originType,
         target: gameData.target,
+        capabilityType: gameData.capabilityType,
         parameters,
       };
     }),

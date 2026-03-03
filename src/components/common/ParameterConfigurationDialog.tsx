@@ -1,26 +1,36 @@
 import { useForm } from '@tanstack/react-form';
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
+  Dialog,
+  DialogClose,
+  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import type { ParameterInstance } from '@/schemas/rotation';
+import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
+import type { DetailedModifierInstance } from '@/hooks/useTeamModifierInstances';
+import { CapabilityType } from '@/services/game-data';
 import type { Parameter } from '@/services/game-data';
+import { useStore } from '@/store';
 
 interface ParameterConfigurationFormProperties {
-  title: string;
-  description?: string;
-  parameters: Array<Parameter & ParameterInstance>;
-  /** Attacks covered by the buff. When length > 1, per-stack configuration is offered. */
-  buffedAttacks?: Array<{ name: string }>;
-  onSubmit: (values: Array<ParameterInstance>) => void;
+  capability: DetailedAttackInstance | DetailedModifierInstance;
+  buffedAttacks?: Array<DetailedAttackInstance>;
+}
+
+interface ParameterConfigurationDialogProperties extends ParameterConfigurationFormProperties {
+  children: ReactNode;
+  onOpenChange?: (isOpen: boolean) => void;
+  isDialogClickable?: boolean;
 }
 
 const validateValue = (value: number | undefined, parameter: Parameter) => {
@@ -51,17 +61,24 @@ const ParameterInputHint = ({
   );
 };
 
-export const ParameterConfigurationForm = ({
-  title,
-  description,
-  parameters = [],
+const ParameterConfigurationForm = ({
+  capability,
   buffedAttacks = [],
-  onSubmit,
 }: ParameterConfigurationFormProperties) => {
+  const { description, name: title, parameters = [] } = capability;
   const stackCount = buffedAttacks.length;
   const canToggleView = stackCount > 1;
-
   const [isPerAttack, setIsPerAttack] = useState(canToggleView);
+  const updateBuffParameters = useStore((state) => state.updateBuffParameters);
+  const updateAttackParameters = useStore((state) => state.updateAttackParameters);
+
+  const updateParameters =
+    capability.capabilityType === CapabilityType.ATTACK
+      ? updateAttackParameters
+      : updateBuffParameters;
+  const onSubmit = (parameters_: Array<Parameter>) => {
+    updateParameters(capability.instanceId, parameters_);
+  };
 
   const form = useForm({
     defaultValues: {
@@ -111,13 +128,13 @@ export const ParameterConfigurationForm = ({
         event.stopPropagation();
         form.handleSubmit();
       }}
-      className="flex min-h-0 flex-1 flex-col"
+      className="flex max-h-1/2 min-h-0 flex-1 flex-col"
     >
       <DialogHeader>
         <DialogTitle>Configure {title}</DialogTitle>
-        <DialogDescription>{description}</DialogDescription>
+        {description && <DialogDescription>{description}</DialogDescription>}
       </DialogHeader>
-      <div className="grid gap-6 overflow-y-auto py-4 pr-1">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
         {canToggleView && (
           <div className="flex items-center justify-between gap-3 border-b pb-2">
             <Label className="font-medium">Configuration mode</Label>
@@ -211,8 +228,37 @@ export const ParameterConfigurationForm = ({
         ))}
       </div>
       <DialogFooter className="pt-4">
-        <Button type="submit">Save changes</Button>
+        <DialogClose asChild>
+          <Button type="submit">Save changes</Button>
+        </DialogClose>
       </DialogFooter>
     </form>
+  );
+};
+
+export const ParameterConfigurationDialog = ({
+  capability,
+  buffedAttacks,
+  children,
+  onOpenChange,
+  isDialogClickable = true,
+}: ParameterConfigurationDialogProperties) => {
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isDialogClickable) return;
+    onOpenChange?.(isOpen);
+  };
+
+  return (
+    <Dialog onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>
+        <div>{children}</div>
+      </DialogTrigger>
+      <DialogContent className="flex max-h-screen flex-col sm:max-w-lg">
+        <ParameterConfigurationForm
+          capability={capability}
+          buffedAttacks={buffedAttacks}
+        />
+      </DialogContent>
+    </Dialog>
   );
 };

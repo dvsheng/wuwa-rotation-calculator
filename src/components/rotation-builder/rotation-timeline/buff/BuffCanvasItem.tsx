@@ -1,15 +1,13 @@
 import { isNil } from 'es-toolkit/predicate';
 import { AlertTriangle, Maximize2 } from 'lucide-react';
-import { useState } from 'react';
 
 import { CapabilityIcon } from '@/components/common/CapabilityIcon';
 import { CapabilityTooltip } from '@/components/common/CapabilityTooltip';
 import { CharacterIcon } from '@/components/common/CharacterIcon';
-import { ParameterConfigurationForm } from '@/components/common/ParameterConfigurationForm';
+import { ParameterConfigurationDialog } from '@/components/common/ParameterConfigurationDialog';
 import { TrashButton } from '@/components/common/TrashButton';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import { Text } from '@/components/ui/typography';
+import { Item, ItemActions, ItemContent, ItemMedia } from '@/components/ui/item';
 import {
   getAlignmentSegments,
   useSelfBuffAlignment,
@@ -47,9 +45,7 @@ export const BuffCanvasItem = ({
   onRemove,
   onOpenChange,
 }: BuffCanvasItemProperties) => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const updateBuffLayout = useStore((state) => state.updateBuffLayout);
-  const updateBuffParameters = useStore((state) => state.updateBuffParameters);
   const { attacks } = useTeamAttackInstances();
   const alignment = useSelfBuffAlignment(buff);
 
@@ -103,54 +99,45 @@ export const BuffCanvasItem = ({
   const isDialogDisabled = !isBuffConfigurable || !isDialogClickable;
 
   return (
-    <Dialog
-      open={isDialogOpen}
-      onOpenChange={(next) => {
-        if (isDialogDisabled) return;
-        onOpenChange?.(next);
-        setIsDialogOpen(next);
-      }}
+    <ParameterConfigurationDialog
+      capability={buff}
+      onOpenChange={onOpenChange}
+      isDialogClickable={!isDialogDisabled}
+      buffedAttacks={buffedAttacks}
     >
       <CapabilityTooltip capability={buff}>
-        <DialogTrigger asChild>
-          <div
-            className={cn(
-              'relative flex h-full flex-row items-center gap-2 overflow-hidden rounded-lg border px-2 py-1 transition-colors',
-              itemClassName,
-            )}
-          >
-            {/* Background overlay segments */}
-            {segments.map((segment, index) => (
-              <div
-                key={index}
-                className="pointer-events-none absolute inset-y-0 -z-10 rounded-md bg-blue-100"
-                style={{
-                  left: `${segment.start}%`,
-                  width: `${segment.width}%`,
-                }}
-              />
-            ))}
-
-            {/* Character icon */}
-            <CharacterIcon characterEntityId={buff.characterId} size="large" />
-
-            {/* Capability icon */}
+        <Item
+          className={cn(
+            'relative flex h-12 items-center justify-center py-0',
+            itemClassName,
+          )}
+        >
+          {/* Background overlay segments */}
+          {segments.map((segment, index) => (
+            <div
+              key={index}
+              className="pointer-events-none absolute inset-y-0 -z-10 rounded-md bg-blue-100"
+              style={{
+                left: `${segment.start}%`,
+                width: `${segment.width}%`,
+              }}
+            />
+          ))}
+          <ItemMedia>
+            <CharacterIcon characterEntityId={buff.characterId} size="medium" />
+          </ItemMedia>
+          <ItemMedia>
             <CapabilityIcon capabilityId={buff.id} size="medium" />
-
-            {/* Buff name */}
-            <Text className="min-w-0 flex-1 truncate text-left text-xs leading-tight">
-              {buff.name}
-            </Text>
-
-            {/* Warning indicator */}
-            {shouldShowWarning && (
-              <AlertTriangle
-                data-testid="alert-triangle"
-                className="h-5 w-5 shrink-0 text-amber-500"
-              />
-            )}
-
-            {/* Expand button */}
+          </ItemMedia>
+          <ItemContent>{buff.name}</ItemContent>
+          {/* Warning indicator */}
+          {shouldShowWarning && (
+            <AlertTriangle
+              data-testid="alert-triangle"
+              className="h-5 w-5 shrink-0 text-amber-500"
+            />
+          )}
+          <ItemActions>
             <Button
               variant="ghost"
               size="icon"
@@ -163,29 +150,13 @@ export const BuffCanvasItem = ({
             >
               <Maximize2 className="h-3.5 w-3.5" />
             </Button>
-
-            {/* Delete button */}
             <TrashButton
               className="shrink-0"
               onRemove={() => onRemove(buff.instanceId)}
             />
-          </div>
-        </DialogTrigger>
+          </ItemActions>
+        </Item>
       </CapabilityTooltip>
-
-      <DialogContent className="flex max-h-screen flex-col sm:max-w-lg">
-        <ParameterConfigurationForm
-          title={buff.name}
-          description={buff.description}
-          parameters={buff.parameters ?? []}
-          buffedAttacks={buffedAttacks}
-          onSubmit={(values) => {
-            updateBuffParameters(buff.instanceId, values);
-            setIsDialogOpen(false);
-            onOpenChange?.(false);
-          }}
-        />
-      </DialogContent>
-    </Dialog>
+    </ParameterConfigurationDialog>
   );
 };

@@ -25,7 +25,7 @@ export const CharacterIcon = ({
   return (
     <div
       className={cn(
-        'bg-muted flex items-center justify-center overflow-hidden rounded-full',
+        'flex items-center justify-center overflow-hidden rounded-full bg-transparent',
         SIZE_CLASSES[size],
       )}
     >

@@ -1,6 +1,6 @@
 import { compact } from 'es-toolkit/array';
 
-import { OriginType } from '@/services/game-data';
+import { CapabilityType, OriginType } from '@/services/game-data';
 import { TUNE_BREAK_ATTACK_ID } from '@/services/game-data/tune-break';
 import { useStore } from '@/store';
 
@@ -28,6 +28,7 @@ export const useTeamAttackInstances = () => {
       // Virtual tune break attack: not backed by a single game-data capability
       if (stored.isTuneBreakAttack ?? stored.id === TUNE_BREAK_ATTACK_ID) {
         return {
+          capabilityType: CapabilityType.ATTACK,
           instanceId: stored.instanceId,
           id: TUNE_BREAK_ATTACK_ID,
           isTuneBreakAttack: true,
@@ -49,6 +50,8 @@ export const useTeamAttackInstances = () => {
       const parameters = gameData.parameters?.map((parameter) => ({
         ...parameter,
         value: stored.parameterValues?.find((p) => p.id === parameter.id)?.value,
+        valueConfiguration: stored.parameterValues?.find((p) => p.id === parameter.id)
+          ?.valueConfiguration,
       }));
 
       return {
@@ -62,6 +65,7 @@ export const useTeamAttackInstances = () => {
         entityId: gameData.entityId,
         characterName: gameData.characterName,
         originType: gameData.originType,
+        capabilityType: gameData.capabilityType,
         parameters,
       };
     }),

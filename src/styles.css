@@ -173,6 +173,10 @@ code {
   }
 }
 
+@utility grid-cols-auto-fit-24 {
+  grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr)); /* 6rem = 96px = h-24 */
+}
+
 /* Canvas component styles for rotation builder sections */
 @layer components {
   .canvas-section {
@@ -180,11 +184,11 @@ code {
   }
 
   .canvas-header {
-    @apply bg-card left-0 flex min-w-fit items-center justify-between px-4 py-2;
+    @apply bg-card left-0 flex min-w-fit items-center justify-between px-2 py-2;
   }
 
   .canvas-content {
-    @apply min-w-fit px-4 pb-4;
+    @apply min-w-fit px-2;
   }
 
   .canvas-drop-zone {

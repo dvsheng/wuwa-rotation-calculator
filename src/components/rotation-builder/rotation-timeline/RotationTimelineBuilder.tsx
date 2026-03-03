@@ -1,3 +1,8 @@
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from '@/components/ui/resizable';
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
 import type { Capability } from '@/schemas/rotation';
 import { useStore } from '@/store';
@@ -43,19 +48,22 @@ export const RotationBuilder = () => {
   };
 
   return (
-    <div className="border-border flex h-full min-h-0 w-full overflow-hidden">
-      <CapabilitySidebar
-        onClickAttack={handleAddAttack}
-        onDragAttack={handleDragAttack}
-        onClickBuff={handleAddBuff}
-        onDragBuff={handleDragBuff}
-      />
-
-      {/* Canvas Area */}
-      <TimelinePanWrapper className="min-h-0 min-w-0 flex-1">
-        <AttackCanvas onDropAttack={handleDropAttack} />
-        <BuffCanvas onDropBuff={handleDropBuff} />
-      </TimelinePanWrapper>
-    </div>
+    <ResizablePanelGroup orientation="horizontal">
+      <ResizablePanel defaultSize="25%">
+        <CapabilitySidebar
+          onClickAttack={handleAddAttack}
+          onDragAttack={handleDragAttack}
+          onClickBuff={handleAddBuff}
+          onDragBuff={handleDragBuff}
+        />
+      </ResizablePanel>
+      <ResizableHandle withHandle />
+      <ResizablePanel defaultSize="75%">
+        <TimelinePanWrapper className="min-h-0 min-w-0 flex-1">
+          <AttackCanvas onDropAttack={handleDropAttack} />
+          <BuffCanvas onDropBuff={handleDropBuff} />
+        </TimelinePanWrapper>
+      </ResizablePanel>
+    </ResizablePanelGroup>
   );
 };

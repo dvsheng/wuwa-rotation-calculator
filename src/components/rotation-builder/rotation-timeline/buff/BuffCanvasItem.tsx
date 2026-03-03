@@ -132,7 +132,7 @@ export const BuffCanvasItem = ({
             ))}
 
             {/* Character icon */}
-            <CharacterIcon characterEntityId={buff.characterId} size="small" />
+            <CharacterIcon characterEntityId={buff.characterId} size="large" />
 
             {/* Capability icon */}
             <CapabilityIcon capabilityId={buff.id} size="medium" />

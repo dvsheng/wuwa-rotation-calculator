@@ -14,11 +14,13 @@ const SIZE_CLASSES: Record<IconSize, string> = {
 interface CapabilityIconProperties {
   capabilityId: number;
   size?: IconSize;
+  className?: string;
 }
 
 export const CapabilityIcon = ({
   capabilityId,
   size = 'medium',
+  className,
 }: CapabilityIconProperties) => {
   const { data: iconUrl } = useCapabilityIcon(capabilityId);
 
@@ -27,6 +29,7 @@ export const CapabilityIcon = ({
       className={cn(
         'bg-capability-icon-bg flex items-center justify-center rounded-md',
         SIZE_CLASSES[size],
+        className,
       )}
     >
       {iconUrl ? (

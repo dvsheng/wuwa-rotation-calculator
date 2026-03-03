@@ -16,9 +16,9 @@ export const useCanvasLayout = (
   const columnCount = Math.max(rotationAttackCount, 5);
 
   // Calculate grid width based on column count for scrolling
-  // Each column is approximately 120px wide with 10px margin
-  const COLUMN_WIDTH = 120;
-  const MARGIN = 10;
+  // Each column is approximately 96px wide with 10px margin
+  const COLUMN_WIDTH = 96;
+  const MARGIN = 4;
   const calculatedWidth = columnCount * (COLUMN_WIDTH + MARGIN);
 
   // Use calculated width directly to avoid gradual resize animations
@@ -62,10 +62,10 @@ export const useCanvasLayout = (
     width,
     gridConfig: {
       cols: columnCount,
-      rowHeight: 280,
+      rowHeight: 208,
     },
     style: {
-      minHeight: 280,
+      minHeight: 208,
     },
     dropConfig: { enabled: true },
     dragConfig: { enabled: true },

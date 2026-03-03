@@ -1,15 +1,12 @@
-import { Info } from 'lucide-react';
+import { useState } from 'react';
 
 import { CapabilityIcon } from '@/components/common/CapabilityIcon';
+import { CapabilityTooltip } from '@/components/common/CapabilityTooltip';
 import { sortAttackOrigins } from '@/components/rotation-builder/constants';
-import { Badge } from '@/components/ui/badge';
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from '@/components/ui/hover-card';
-import { Separator } from '@/components/ui/separator';
-import { Sidebar, SidebarContent } from '@/components/ui/sidebar';
+import { Input } from '@/components/ui/input';
+import { Item } from '@/components/ui/item';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Text } from '@/components/ui/typography';
 import type { DetailedAttack, DetailedModifier } from '@/hooks/useTeamDetails';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
@@ -130,6 +127,24 @@ const toLeftBorderAccent = (className?: string) => {
   return borderClass.replace(/^border-/, 'border-l-');
 };
 
+const matchesSearchText = (
+  capability: DetailedAttack | DetailedModifier,
+  searchText: string,
+) => {
+  if (!searchText) return true;
+
+  const normalizedSearchText = searchText.trim().toLowerCase();
+  const searchableValues = [
+    capability.name,
+    capability.parentName,
+    capability.description,
+  ].filter((value): value is string => typeof value === 'string');
+
+  return searchableValues.some((value) =>
+    value.toLowerCase().includes(normalizedSearchText),
+  );
+};
+
 const CapabilitySection = ({
   title,
   emptyMessage,
@@ -170,13 +185,13 @@ const CapabilityGroup = ({ name, children }: CapabilityGroupProperties) => {
 
   return (
     <div className="px-3 py-3">
-      <div className="mb-2.5 flex items-center gap-2">
+      <div className="mb-2.5 flex items-center gap-1">
         <span className="text-muted-foreground shrink-0 text-xs font-bold tracking-widest uppercase">
           {name}
         </span>
         <div className="bg-border h-px flex-1" />
       </div>
-      <div className="grid grid-cols-4 gap-2">{children}</div>
+      <div className="grid-cols-auto-fit-24 grid gap-1">{children}</div>
     </div>
   );
 };
@@ -189,18 +204,14 @@ const CapabilityCard = ({
 }: CapabilityCardProperties) => {
   const isDraggable = onDragStart !== undefined;
   const accentClass = toLeftBorderAccent(colorClassName);
-  const isParameterized = (capability.parameters?.length ?? 0) > 0;
-  const hasDetails =
-    !!capability.description || !!capability.parentName || isParameterized;
-
   return (
-    <div className="group relative">
-      <button
+    <CapabilityTooltip capability={capability}>
+      <Item
         draggable={isDraggable}
         onDragStart={onDragStart}
         onClick={onClick}
         className={cn(
-          'bg-card hover:bg-accent/30 border-border flex aspect-square w-full min-w-0 flex-col items-center justify-center gap-1.5 rounded-lg border p-2 shadow-sm transition-colors',
+          'hover:bg-accent/30 border-border relative flex aspect-square h-24 w-24 flex-col gap-1 rounded-lg border p-2 shadow-sm transition-colors',
           isDraggable
             ? 'cursor-grab active:cursor-grabbing'
             : onClick
@@ -211,52 +222,17 @@ const CapabilityCard = ({
           accentClass,
         )}
       >
-        <CapabilityIcon capabilityId={capability.id} size="large" />
+        <CapabilityIcon
+          capabilityId={capability.id}
+          size="medium"
+          className="absolute top-2"
+        />
 
-        <span className="text-foreground line-clamp-2 w-full text-center text-xs leading-tight">
+        <div className="mt-auto line-clamp-2 w-full text-center text-xs">
           {capability.name}
-        </span>
-      </button>
-
-      {hasDetails && (
-        <HoverCard openDelay={300} closeDelay={100}>
-          <HoverCardTrigger asChild>
-            <button
-              className="absolute top-1 right-1 z-10 flex h-4 w-4 items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-50 hover:opacity-100!"
-              onDragStart={(event) => event.preventDefault()}
-              onClick={(event) => event.stopPropagation()}
-              tabIndex={-1}
-              aria-label={`Info for ${capability.name}`}
-            >
-              <Info className="text-muted-foreground h-3 w-3" />
-            </button>
-          </HoverCardTrigger>
-          <HoverCardContent side="right" align="start" className="w-72 p-3">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-start justify-between gap-2">
-                <span className="text-sm font-semibold">{capability.name}</span>
-                {isParameterized && (
-                  <Badge className="bg-background/15 shrink-0 rounded-sm px-1.5 py-0.5 text-xs font-semibold tracking-wide uppercase">
-                    Parameterized
-                  </Badge>
-                )}
-              </div>
-              {capability.parentName && (
-                <span className="text-muted-foreground text-xs">
-                  {capability.parentName}
-                </span>
-              )}
-              {capability.description && (capability.parentName || isParameterized) && (
-                <Separator />
-              )}
-              {capability.description && (
-                <span className="text-xs">{capability.description}</span>
-              )}
-            </div>
-          </HoverCardContent>
-        </HoverCard>
-      )}
-    </div>
+        </div>
+      </Item>
+    </CapabilityTooltip>
   );
 };
 
@@ -266,88 +242,176 @@ export const CapabilitySidebar = ({
   onClickBuff,
   onDragBuff,
 }: CapabilitySidebarProperties) => {
+  const [selectedCharacters, setSelectedCharacters] = useState<Array<string>>([]);
+  const [selectedOrigins, setSelectedOrigins] = useState<Array<CapabilityOriginType>>(
+    [],
+  );
+  const [searchText, setSearchText] = useState('');
   const { attacks, buffs, hasTuneStrain } = useTeamDetails();
   const hasTuneBreak = attacks.some((attack) => attack.isTuneBreakAttack);
   const nonTuneBreakAttacks = attacks.filter((attack) => !attack.isTuneBreakAttack);
+  const characterNames = [
+    ...new Set([
+      ...nonTuneBreakAttacks.map((attack) => attack.characterName),
+      ...buffs.map((buff) => buff.characterName),
+    ]),
+  ].toSorted((left, right) => left.localeCompare(right));
+  const availableOrigins = [
+    ...new Set<CapabilityOriginType>([
+      ...nonTuneBreakAttacks.map((attack) => attack.originType),
+      ...buffs.map((buff) => buff.originType),
+    ]),
+  ];
+  const orderedOrigins = [
+    ...BUFF_SKILL_ORDER.filter((origin) => availableOrigins.includes(origin)),
+    ...availableOrigins
+      .filter((origin) => !BUFF_SKILL_ORDER.includes(origin))
+      .toSorted((left, right) => left.localeCompare(right)),
+  ];
+
+  const matchesCharacterFilter = (characterName: string) =>
+    selectedCharacters.length === 0 || selectedCharacters.includes(characterName);
+  const matchesOriginFilter = (originType: CapabilityOriginType) =>
+    selectedOrigins.length === 0 || selectedOrigins.includes(originType);
+  const matchesCapabilityFilters = (
+    capability: DetailedAttack | DetailedModifier,
+    originType: CapabilityOriginType,
+  ) =>
+    matchesCharacterFilter(capability.characterName) &&
+    matchesOriginFilter(originType) &&
+    matchesSearchText(capability, searchText);
+
+  const filteredAttacks = nonTuneBreakAttacks.filter((attack) =>
+    matchesCapabilityFilters(attack, attack.originType),
+  );
+  const filteredBuffs = buffs.filter((buff) =>
+    matchesCapabilityFilters(buff, buff.originType),
+  );
   const attacksByCharacter = Object.groupBy(
-    nonTuneBreakAttacks,
+    filteredAttacks,
     (attack) => attack.characterName,
   );
-  const buffsByCharacter = Object.groupBy(buffs, (buff) => buff.characterName);
+  const filteredBuffsByCharacter = Object.groupBy(
+    filteredBuffs,
+    (buff) => buff.characterName,
+  );
+  const showTuneBreakCapability =
+    hasTuneBreak &&
+    matchesCapabilityFilters(TUNE_BREAK_CAPABILITY, TUNE_BREAK_CAPABILITY.originType);
+  const showTuneStrainCapability =
+    hasTuneStrain &&
+    matchesCapabilityFilters(TUNE_STRAIN_CAPABILITY, TUNE_STRAIN_CAPABILITY.originType);
 
   return (
-    <Sidebar open={true} className="h-full min-h-0 w-130">
-      <SidebarContent className="flex h-0 min-h-0 flex-1 flex-col">
-        <div className="h-0 min-h-0 flex-1 overflow-y-auto">
-          <CapabilitySection title="Attacks" emptyMessage="No attacks available">
-            {Object.entries(attacksByCharacter).map(
-              ([characterName, characterAttacks]) => {
-                const attacksByOrigin = Object.groupBy(
-                  characterAttacks ?? [],
-                  (attack) => attack.originType,
-                );
-                const orderedOrigins = (
-                  Object.keys(attacksByOrigin) as Array<AttackOriginType>
-                ).toSorted(sortAttackOrigins);
-                const orderedAttacks = orderedOrigins.flatMap(
-                  (origin) => attacksByOrigin[origin] ?? [],
-                );
+    <>
+      <div className="border-border flex flex-col gap-y-1 border-b p-2">
+        <Text className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+          Search
+        </Text>
+        <Input
+          value={searchText}
+          onChange={(event) => setSearchText(event.target.value)}
+          placeholder="Search capabilities"
+        />
+        <ToggleGroup
+          type="multiple"
+          value={selectedCharacters}
+          onValueChange={setSelectedCharacters}
+          size="sm"
+        >
+          {characterNames.map((characterName) => (
+            <ToggleGroupItem key={characterName} value={characterName} size={'sm'}>
+              {characterName}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+        <ToggleGroup
+          type="multiple"
+          value={selectedOrigins}
+          onValueChange={(values) =>
+            setSelectedOrigins(values as Array<CapabilityOriginType>)
+          }
+          size="sm"
+        >
+          {orderedOrigins.map((origin) => (
+            <ToggleGroupItem
+              key={origin}
+              value={origin}
+              size={'sm'}
+              className="line-clamp-2 truncate"
+            >
+              {origin}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      </div>
+      <ScrollArea orientation="vertical" className="h-screen flex-1">
+        <CapabilitySection title="Attacks" emptyMessage="No attacks available">
+          {Object.entries(attacksByCharacter).map(
+            ([characterName, characterAttacks]) => {
+              const attacksByOrigin = Object.groupBy(
+                characterAttacks ?? [],
+                (attack) => attack.originType,
+              );
+              const orderedAttackOrigins = (
+                Object.keys(attacksByOrigin) as Array<AttackOriginType>
+              ).toSorted(sortAttackOrigins);
+              const orderedAttacks = orderedAttackOrigins.flatMap(
+                (origin) => attacksByOrigin[origin] ?? [],
+              );
 
-                return (
-                  <CapabilityGroup key={`attack-${characterName}`} name={characterName}>
-                    {orderedAttacks.map((attack) => (
-                      <CapabilityCard
-                        key={attack.id}
-                        capability={attack}
-                        colorClassName={ATTACK_COLORS[attack.originType]}
-                        onDragStart={
-                          onDragAttack
-                            ? (event) => onDragAttack(attack, event)
-                            : undefined
-                        }
-                        onClick={
-                          onClickAttack ? () => onClickAttack(attack) : undefined
-                        }
-                      />
-                    ))}
-                  </CapabilityGroup>
-                );
-              },
-            )}
+              return (
+                <CapabilityGroup key={`attack-${characterName}`} name={characterName}>
+                  {orderedAttacks.map((attack) => (
+                    <CapabilityCard
+                      key={attack.id}
+                      capability={attack}
+                      colorClassName={ATTACK_COLORS[attack.originType]}
+                      onDragStart={
+                        onDragAttack
+                          ? (event) => onDragAttack(attack, event)
+                          : undefined
+                      }
+                      onClick={onClickAttack ? () => onClickAttack(attack) : undefined}
+                    />
+                  ))}
+                </CapabilityGroup>
+              );
+            },
+          )}
 
-            {hasTuneBreak && (
-              <CapabilityGroup name="Other">
-                <CapabilityCard
-                  capability={TUNE_BREAK_CAPABILITY}
-                  colorClassName={ATTACK_COLORS[OriginType.TUNE_BREAK]}
-                  onDragStart={
-                    onDragAttack
-                      ? (event) => onDragAttack(TUNE_BREAK_CAPABILITY, event)
-                      : undefined
-                  }
-                  onClick={
-                    onClickAttack
-                      ? () => onClickAttack(TUNE_BREAK_CAPABILITY)
-                      : undefined
-                  }
-                />
-              </CapabilityGroup>
-            )}
-          </CapabilitySection>
+          {showTuneBreakCapability && (
+            <CapabilityGroup name="Other">
+              <CapabilityCard
+                capability={TUNE_BREAK_CAPABILITY}
+                colorClassName={ATTACK_COLORS[OriginType.TUNE_BREAK]}
+                onDragStart={
+                  onDragAttack
+                    ? (event) => onDragAttack(TUNE_BREAK_CAPABILITY, event)
+                    : undefined
+                }
+                onClick={
+                  onClickAttack ? () => onClickAttack(TUNE_BREAK_CAPABILITY) : undefined
+                }
+              />
+            </CapabilityGroup>
+          )}
+        </CapabilitySection>
 
-          <CapabilitySection title="Buffs" emptyMessage="No buffs available">
-            {Object.entries(buffsByCharacter).map(([characterName, characterBuffs]) => {
+        <CapabilitySection title="Buffs" emptyMessage="No buffs available">
+          {Object.entries(filteredBuffsByCharacter).map(
+            ([characterName, characterBuffs]) => {
               const buffsByOrigin = Object.groupBy(
                 characterBuffs ?? [],
                 (buff) => buff.originType,
               );
-              const orderedOrigins = BUFF_SKILL_ORDER.filter(
+              const orderedBuffOrigins = BUFF_SKILL_ORDER.filter(
                 (origin) => buffsByOrigin[origin]?.length,
               );
               const remainingOrigins = (
                 Object.keys(buffsByOrigin) as Array<CapabilityOriginType>
               ).filter((origin) => !BUFF_SKILL_ORDER.includes(origin));
-              const orderedBuffs = [...orderedOrigins, ...remainingOrigins]
+              const orderedBuffs = [...orderedBuffOrigins, ...remainingOrigins]
                 .flatMap((origin) => buffsByOrigin[origin] ?? [])
                 .toSorted(
                   (left, right) =>
@@ -370,27 +434,27 @@ export const CapabilitySidebar = ({
                   ))}
                 </CapabilityGroup>
               );
-            })}
+            },
+          )}
 
-            {hasTuneStrain && (
-              <CapabilityGroup name="Other">
-                <CapabilityCard
-                  capability={TUNE_STRAIN_CAPABILITY}
-                  colorClassName={TARGET_COLORS[Target.ENEMY]}
-                  onDragStart={
-                    onDragBuff
-                      ? (event) => onDragBuff(TUNE_STRAIN_CAPABILITY, event)
-                      : undefined
-                  }
-                  onClick={
-                    onClickBuff ? () => onClickBuff(TUNE_STRAIN_CAPABILITY) : undefined
-                  }
-                />
-              </CapabilityGroup>
-            )}
-          </CapabilitySection>
-        </div>
-      </SidebarContent>
-    </Sidebar>
+          {showTuneStrainCapability && (
+            <CapabilityGroup name="Other">
+              <CapabilityCard
+                capability={TUNE_STRAIN_CAPABILITY}
+                colorClassName={TARGET_COLORS[Target.ENEMY]}
+                onDragStart={
+                  onDragBuff
+                    ? (event) => onDragBuff(TUNE_STRAIN_CAPABILITY, event)
+                    : undefined
+                }
+                onClick={
+                  onClickBuff ? () => onClickBuff(TUNE_STRAIN_CAPABILITY) : undefined
+                }
+              />
+            </CapabilityGroup>
+          )}
+        </CapabilitySection>
+      </ScrollArea>
+    </>
   );
 };

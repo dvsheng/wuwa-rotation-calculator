@@ -75,11 +75,11 @@ export const AttackCanvasItem = ({
     >
       <CapabilityTooltip capability={attack}>
         <DialogTrigger asChild>
-          <div className="bg-card hover:bg-accent/50 relative flex h-full flex-col items-center overflow-hidden rounded-lg border px-4 pt-6 pb-3">
+          <div className="bg-card hover:bg-accent/50 relative flex h-full flex-col items-center overflow-hidden rounded-lg border p-2">
             {/* Index at top-left */}
             <Text
               variant="small"
-              className="text-muted-foreground absolute top-1 left-1.5"
+              className="text-muted-foreground absolute top-1 left-1"
             >
               {index + 1}
             </Text>
@@ -91,27 +91,22 @@ export const AttackCanvasItem = ({
                 className="absolute top-1 right-1 h-5 w-5 text-amber-500"
               />
             )}
-
             {/* Character icon(s) */}
             {isTuneBreak ? (
               <TuneBreakCharacterStack />
             ) : (
               characterIconUrl && (
-                <img
-                  src={characterIconUrl}
-                  alt={attack.characterName}
-                  className="border-border max-w-20 items-center justify-center"
-                />
+                <CharacterIcon characterEntityId={attack.characterId} size="large" />
               )
             )}
 
             {/* Capability icon */}
-            <div className="mt-4">
-              <CapabilityIcon capabilityId={attack.id} size="large" />
+            <div className="mt-2">
+              <CapabilityIcon capabilityId={attack.id} size="medium" />
             </div>
 
             {/* Attack name */}
-            <Text className="mt-4 line-clamp-3 w-full text-center text-xs leading-tight">
+            <Text className="mt-2 line-clamp-4 w-full text-center text-xs leading-tight">
               {attack.name}
             </Text>
 

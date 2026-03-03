@@ -4,6 +4,7 @@ import { Play, Save } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import { CharacterIcon } from '@/components/common/CharacterIcon';
 import { GameImage } from '@/components/common/GameImage';
 import { TrashButton } from '@/components/common/TrashButton';
 import { Badge } from '@/components/ui/badge';
@@ -133,14 +134,10 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
             {configuredCharacters.length > 0 ? (
               <div className="flex flex-wrap items-center gap-2">
                 {configuredCharacters.map((character) => (
-                  <GameImage
+                  <CharacterIcon
                     key={character.id}
-                    entity="character"
-                    type="icon"
-                    id={character.id}
-                    alt={`Character ${character.id}`}
-                    title={`Character ID: ${character.id}`}
-                    className="h-16 w-16 rounded-full border object-cover"
+                    characterEntityId={character.id}
+                    size="large"
                   />
                 ))}
               </div>

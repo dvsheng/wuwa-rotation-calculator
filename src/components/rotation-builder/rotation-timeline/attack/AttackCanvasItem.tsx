@@ -3,12 +3,14 @@ import { AlertTriangle } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { ActivatableDialog } from '@/components/common/ActivatableDialog';
+import { CapabilityIcon } from '@/components/common/CapabilityIcon';
 import { CapabilityTooltip } from '@/components/common/CapabilityTooltip';
+import { CharacterIcon } from '@/components/common/CharacterIcon';
 import { ParameterConfigurationForm } from '@/components/common/ParameterConfigurationForm';
 import { TrashButton } from '@/components/common/TrashButton';
 import { DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Text } from '@/components/ui/typography';
-import { useCapabilityIcon, useEntityIcon } from '@/hooks/useIcons';
+import { useEntityIcon } from '@/hooks/useIcons';
 import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
 import { useStore } from '@/store';
@@ -19,27 +21,6 @@ interface AttackCanvasItemProperties {
   onRemove: (instanceId: string) => void;
   isDialogClickable: boolean;
 }
-
-/** A single character portrait used inside the Tune Break stacked icon view. */
-const CharacterIcon = ({
-  characterId,
-  characterName,
-  overlap,
-}: {
-  characterId: number;
-  characterName: string;
-  overlap: boolean;
-}) => {
-  const { data: iconUrl } = useEntityIcon(characterId);
-  if (!iconUrl) return;
-  return (
-    <img
-      src={iconUrl}
-      alt={characterName}
-      className={`border-background h-10 w-10 rounded-full border-2 object-contain${overlap ? '-ml-3' : ''}`}
-    />
-  );
-};
 
 /** Stacked row of character icons for all team members contributing Tune Break damage. */
 const TuneBreakCharacterStack = () => {
@@ -58,12 +39,9 @@ const TuneBreakCharacterStack = () => {
   return (
     <div className="flex items-center justify-center">
       {contributors.map((c, index) => (
-        <CharacterIcon
-          key={c.characterId}
-          characterId={c.characterId}
-          characterName={c.characterName}
-          overlap={index > 0}
-        />
+        <div key={c.characterId} className={index > 0 ? '-ml-3' : undefined}>
+          <CharacterIcon characterEntityId={c.characterId} size="medium" />
+        </div>
       ))}
     </div>
   );
@@ -78,7 +56,6 @@ export const AttackCanvasItem = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const updateAttackParameters = useStore((state) => state.updateAttackParameters);
 
-  const { data: iconUrl } = useCapabilityIcon(attack.id);
   const { data: characterIconUrl } = useEntityIcon(attack.characterId);
 
   const isTuneBreak = attack.isTuneBreakAttack;
@@ -129,15 +106,9 @@ export const AttackCanvasItem = ({
             )}
 
             {/* Capability icon */}
-            {iconUrl && (
-              <div className="border-border bg-capability-icon-bg mt-4 flex aspect-square w-full max-w-16 items-center justify-center rounded-md border">
-                <img
-                  src={iconUrl}
-                  alt={attack.name}
-                  className="h-full w-full object-contain p-0.5"
-                />
-              </div>
-            )}
+            <div className="mt-4">
+              <CapabilityIcon capabilityId={attack.id} size="large" />
+            </div>
 
             {/* Attack name */}
             <Text className="mt-4 line-clamp-3 w-full text-center text-xs leading-tight">

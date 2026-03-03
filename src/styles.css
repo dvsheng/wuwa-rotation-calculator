@@ -129,6 +129,10 @@ code {
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-capability-icon-bg: var(--capability-icon-bg);
+
+  --spacing-icon-sm: 2rem;
+  --spacing-icon-md: 2.5rem;
+  --spacing-icon-lg: 3rem;
 }
 
 @layer base {

@@ -1,5 +1,6 @@
 import { Info } from 'lucide-react';
 
+import { CapabilityIcon } from '@/components/common/CapabilityIcon';
 import { sortAttackOrigins } from '@/components/rotation-builder/constants';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -10,7 +11,6 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Sidebar, SidebarContent } from '@/components/ui/sidebar';
 import { Text } from '@/components/ui/typography';
-import { useCapabilityIcon } from '@/hooks/useIcons';
 import type { DetailedAttack, DetailedModifier } from '@/hooks/useTeamDetails';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
 import { cn } from '@/lib/utils';
@@ -187,7 +187,6 @@ const CapabilityCard = ({
   onClick,
   onDragStart,
 }: CapabilityCardProperties) => {
-  const { data: iconUrl } = useCapabilityIcon(capability.id);
   const isDraggable = onDragStart !== undefined;
   const accentClass = toLeftBorderAccent(colorClassName);
   const isParameterized = (capability.parameters?.length ?? 0) > 0;
@@ -212,18 +211,7 @@ const CapabilityCard = ({
           accentClass,
         )}
       >
-        {iconUrl ? (
-          <div className="bg-capability-icon-bg flex h-9 w-9 items-center justify-center rounded-md">
-            <img
-              src={iconUrl}
-              alt={capability.name}
-              className="h-7 w-7 object-contain"
-              draggable={false}
-            />
-          </div>
-        ) : (
-          <div className="bg-capability-icon-bg h-9 w-9 rounded-md opacity-30" />
-        )}
+        <CapabilityIcon capabilityId={capability.id} size="large" />
 
         <span className="text-foreground line-clamp-2 w-full text-center text-xs leading-tight">
           {capability.name}

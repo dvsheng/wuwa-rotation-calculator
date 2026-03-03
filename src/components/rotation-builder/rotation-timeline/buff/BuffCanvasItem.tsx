@@ -2,13 +2,14 @@ import { isNil } from 'es-toolkit/predicate';
 import { AlertTriangle, Maximize2 } from 'lucide-react';
 import { useState } from 'react';
 
+import { CapabilityIcon } from '@/components/common/CapabilityIcon';
 import { CapabilityTooltip } from '@/components/common/CapabilityTooltip';
+import { CharacterIcon } from '@/components/common/CharacterIcon';
 import { ParameterConfigurationForm } from '@/components/common/ParameterConfigurationForm';
 import { TrashButton } from '@/components/common/TrashButton';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Text } from '@/components/ui/typography';
-import { useCapabilityIcon, useEntityIcon } from '@/hooks/useIcons';
 import {
   getAlignmentSegments,
   useSelfBuffAlignment,
@@ -51,8 +52,6 @@ export const BuffCanvasItem = ({
   const updateBuffParameters = useStore((state) => state.updateBuffParameters);
   const { attacks } = useTeamAttackInstances();
   const alignment = useSelfBuffAlignment(buff);
-  const { data: iconUrl } = useCapabilityIcon(buff.id);
-  const { data: characterIconUrl } = useEntityIcon(buff.characterId);
 
   // Generate styling and segments based on target and alignment
   const getItemClassNameAndSegments = (): {
@@ -133,26 +132,10 @@ export const BuffCanvasItem = ({
             ))}
 
             {/* Character icon */}
-            {characterIconUrl && (
-              <div className="border-border flex aspect-square h-8 shrink-0 items-center justify-center overflow-hidden rounded-full border bg-zinc-800">
-                <img
-                  src={characterIconUrl}
-                  alt={buff.characterName}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            )}
+            <CharacterIcon characterEntityId={buff.characterId} size="small" />
 
             {/* Capability icon */}
-            {iconUrl && (
-              <div className="border-border bg-capability-icon-bg flex aspect-square h-8 shrink-0 items-center justify-center rounded-md border">
-                <img
-                  src={iconUrl}
-                  alt={buff.name}
-                  className="h-full w-full object-contain p-0.5"
-                />
-              </div>
-            )}
+            <CapabilityIcon capabilityId={buff.id} size="medium" />
 
             {/* Buff name */}
             <Text className="min-w-0 flex-1 truncate text-left text-xs leading-tight">

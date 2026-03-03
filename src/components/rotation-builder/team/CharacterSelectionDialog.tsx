@@ -1,4 +1,4 @@
-import { GameImage } from '@/components/common/GameImage';
+import { CharacterIcon } from '@/components/common/CharacterIcon';
 import { SelectionDialog } from '@/components/common/SelectionDialog';
 import type { FilterConfig } from '@/components/common/SelectionDialog';
 import { useEntityList } from '@/hooks/useEntityList';
@@ -70,15 +70,7 @@ export const CharacterSelectionDialog = ({
       filters={[attributeFilter, rarityFilter]}
       renderItem={(char) => (
         <>
-          <div className="group-hover:bg-background bg-muted relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-full transition-colors">
-            <GameImage
-              entity="character"
-              type="icon"
-              id={char.id}
-              alt={char.name}
-              className="h-full w-full object-cover"
-            />
-          </div>
+          <CharacterIcon characterEntityId={char.id} size="large" />
           <div className="space-y-1">
             <div className="max-w-30 truncate text-sm">{char.name}</div>
             <div className="flex items-center justify-center gap-1">

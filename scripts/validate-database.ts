@@ -8,7 +8,7 @@ import {
   DatabasePermanentStatSchema,
 } from '@/schemas/database';
 import { CapabilityType, EntityType } from '@/services/game-data';
-import { Attribute, Tag, WeaponType } from '@/types';
+import { Attribute, NegativeStatus, Tag, WeaponType } from '@/types';
 
 /**
  * Validates database data for the new unified schema.
@@ -222,6 +222,8 @@ const MUTUALLY_EXCLUSIVE_DAMAGE_TYPE_TAGS = new Set<string>([
   Tag.OUTRO,
 ]);
 
+const NEGATIVE_STATUS_SCALING_STATS = new Set<string>(Object.values(NegativeStatus));
+
 function validateAttackDamageTypeTags(capability: DatabaseCapability): Array<string> {
   if (capability.capabilityType !== CapabilityType.ATTACK) {
     return [];
@@ -231,7 +233,12 @@ function validateAttackDamageTypeTags(capability: DatabaseCapability): Array<str
   const json = capability.capabilityJson as any;
 
   const validateDamageInstances = (
-    damageInstances: Array<{ tags?: Array<string> }> | undefined,
+    damageInstances:
+      | Array<{
+          scalingStat?: string;
+          tags?: Array<string>;
+        }>
+      | undefined,
     context: string,
   ) => {
     if (!Array.isArray(damageInstances)) {
@@ -244,6 +251,9 @@ function validateAttackDamageTypeTags(capability: DatabaseCapability): Array<str
       );
 
       if (matchingTags.length === 0) {
+        if (NEGATIVE_STATUS_SCALING_STATS.has(damageInstance.scalingStat ?? '')) {
+          continue;
+        }
         issues.push(
           `${context} damageInstances[${index}] has no mutually exclusive damage type tag (exactly one required)`,
         );

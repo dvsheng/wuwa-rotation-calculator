@@ -13,8 +13,6 @@ import {
   sequenceToNumber,
 } from './database-type-adapters';
 import type { GetClientEntityDetailsResponse } from './get-entity-details.types';
-import { createNegativeStatusAttacks } from './negative-status-attacks';
-import { createNegativeStatusModifiers } from './negative-status-modifiers';
 import { CapabilityType, EntityType } from './types';
 import type { Attack, BaseEntity, Modifier, PermanentStat, RefineLevel } from './types';
 
@@ -141,19 +139,9 @@ export const getEntityByIdHandler = async (
   const attacks = capabilities
     .filter((capability) => capability.capabilityType === CapabilityType.ATTACK)
     .map((capability) => toAttack(capability));
-  if (options.entityType === EntityType.CHARACTER) {
-    attacks.push(
-      ...createNegativeStatusAttacks(firstCapability.attribute ?? undefined),
-    );
-  }
   const modifiers = capabilities
     .filter((capability) => capability.capabilityType === CapabilityType.MODIFIER)
     .map((modifier) => toModifier(modifier));
-  if (options.entityType === EntityType.CHARACTER) {
-    modifiers.push(
-      ...createNegativeStatusModifiers(firstCapability.attribute ?? undefined),
-    );
-  }
   const permanentStats = capabilities
     .filter((capability) => capability.capabilityType === CapabilityType.PERMANENT_STAT)
     .map((stat) => toPermanentStat(stat));

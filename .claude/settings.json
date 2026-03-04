@@ -16,7 +16,8 @@
       "Bash(npx shadcn@latest add hover-card --yes)",
       "Bash(pnpm test -- rotationSlice)",
       "Bash(npx vitest run src/services/rotation-calculator/damage-calculator/calculate-damage.test.ts)",
-      "WebFetch(domain:unpkg.com)"
+      "WebFetch(domain:unpkg.com)",
+      "WebFetch(domain:tanstack.com)"
     ],
     "additionalDirectories": [
       "/Users/david/.claude/projects/-Users-david-Code-wuwa-rotation-builder/memory"

@@ -14,7 +14,7 @@ interface CharacterCardProperties {
 
 export const CharacterCard = ({ index }: CharacterCardProperties) => {
   return (
-    <Card>
+    <Card className="w-120">
       <CardContent>
         <Stack>
           <CharacterSelector index={index} />

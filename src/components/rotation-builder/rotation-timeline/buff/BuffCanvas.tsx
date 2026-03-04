@@ -46,7 +46,7 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
   };
 
   return (
-    <div className="canvas-section">
+    <div className="canvas-section border-border border-b">
       <div className="canvas-header">
         <Text className="text-sm font-semibold tracking-wider uppercase">
           Buff Timeline{' '}

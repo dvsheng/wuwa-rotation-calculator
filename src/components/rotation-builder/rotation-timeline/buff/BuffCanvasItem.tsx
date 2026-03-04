@@ -129,7 +129,7 @@ export const BuffCanvasItem = ({
           <ItemMedia>
             <CapabilityIcon capabilityId={buff.id} size="medium" />
           </ItemMedia>
-          <ItemContent>{buff.name}</ItemContent>
+          <ItemContent className="text-xs">{buff.name}</ItemContent>
           {/* Warning indicator */}
           {shouldShowWarning && (
             <AlertTriangle

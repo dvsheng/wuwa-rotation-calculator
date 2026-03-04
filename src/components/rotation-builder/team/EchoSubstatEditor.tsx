@@ -47,7 +47,7 @@ export const EchoSubstatEditor = ({
           >
             <SelectValue />
           </SelectTrigger>
-          <SelectContent position="item-aligned" align="start" sideOffset={4}>
+          <SelectContent>
             {availableOptions.map((opt) => (
               <SelectItem key={opt} value={opt}>
                 {STAT_LABELS[opt] || opt}
@@ -71,7 +71,7 @@ export const EchoSubstatEditor = ({
           >
             <SelectValue />
           </SelectTrigger>
-          <SelectContent position="item-aligned" align="start" sideOffset={4}>
+          <SelectContent>
             {possibleValues.map((value) => (
               <SelectItem key={value} value={String(value)}>
                 {value}

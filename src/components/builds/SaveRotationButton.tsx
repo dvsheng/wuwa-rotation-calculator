@@ -68,24 +68,26 @@ export function SaveRotationButton() {
 
   return (
     <>
-      <div className="flex items-center">
+      <div className="flex items-stretch">
         <Button
           data-role="save-main"
           size="sm"
+          className="rounded-r-none"
           onClick={() => setIsSaveDialogOpen(true)}
         >
-          <Save className="mr-2 h-4 w-4" />
+          <Save size={14} />
           Save Rotation
         </Button>
+        <div className="bg-primary-foreground/20 w-px" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               data-role="save-menu"
               size="sm"
-              className="px-2"
+              className="rounded-l-none px-2"
               aria-label="Save rotation options"
             >
-              <ChevronDown className="h-4 w-4" />
+              <ChevronDown size={14} />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

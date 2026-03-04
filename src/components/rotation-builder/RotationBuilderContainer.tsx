@@ -1,6 +1,5 @@
 import { useState } from 'react';
 
-import { EnemyContainer } from '@/components/rotation-builder/enemy/EnemyContainer';
 import { RotationResultDisplay } from '@/components/rotation-builder/results/RotationResultDisplay';
 import { TeamContainer } from '@/components/rotation-builder/team/TeamContainer';
 import { useRotationCalculation } from '@/hooks/useRotationCalculation';
@@ -26,7 +25,6 @@ export const RotationBuilderContainer = () => {
       )}
 
       {selectedTab === 'team' && <TeamContainer />}
-      {selectedTab === 'enemy' && <EnemyContainer />}
       {selectedTab === 'rotation' && <RotationBuilder />}
     </>
   );

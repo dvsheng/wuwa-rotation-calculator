@@ -10,7 +10,7 @@ import { Stack } from '@/components/ui/layout';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { BodyText } from '@/components/ui/typography';
+import { Text } from '@/components/ui/typography';
 import type { DetailedAttack, DetailedModifier } from '@/hooks/useTeamDetails';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
 import { cn } from '@/lib/utils';
@@ -164,17 +164,21 @@ const CapabilitySection = ({
   return (
     <section className="flex flex-col">
       <div className="border-border px-panel py-compact border-t">
-        <BodyText className="text-sm font-semibold tracking-wider uppercase">
+        <Text as="h3" variant="overline" className="text-foreground">
           {title}
-        </BodyText>
+        </Text>
       </div>
       <div className="border-border border-t">
         {itemCount > 0 ? (
           <div className="flex flex-col">{children}</div>
         ) : (
-          <div className="text-muted-foreground py-page flex items-center justify-center text-sm font-medium italic">
+          <Text
+            as="div"
+            variant="small"
+            className="py-page flex items-center justify-center italic"
+          >
             {emptyMessage}
-          </div>
+          </Text>
         )}
       </div>
     </section>
@@ -193,9 +197,13 @@ const CapabilityGroup = ({ name, children }: CapabilityGroupProperties) => {
   return (
     <div className="p-component">
       <div className="gap-tight mb-2.5 flex items-center">
-        <span className="text-muted-foreground shrink-0 text-xs font-bold tracking-widest uppercase">
+        <Text
+          as="span"
+          variant="overline"
+          className="shrink-0 font-bold tracking-widest"
+        >
           {name}
-        </span>
+        </Text>
         <div className="bg-border h-px flex-1" />
       </div>
       <div className="grid-cols-auto-fit-24 gap-tight grid">{children}</div>
@@ -235,9 +243,13 @@ const CapabilityCard = ({
           className="absolute top-2"
         />
 
-        <div className="mt-auto line-clamp-2 w-full text-center text-xs">
+        <Text
+          as="div"
+          variant="caption"
+          className="text-foreground mt-auto line-clamp-2 w-full text-center"
+        >
           {capability.name}
-        </div>
+        </Text>
       </Item>
     </CapabilityTooltip>
   );
@@ -313,7 +325,9 @@ export const CapabilitySidebar = ({
     <Stack className="relative h-full min-h-0">
       <Stack className="border-border gap-y-tight h-fit border-b">
         <div className="canvas-header border-border gap-compact flex items-center border-b">
-          <span className="text-sm font-medium">Palette</span>
+          <Text as="span" variant="body" className="text-sm font-medium">
+            Palette
+          </Text>
           <Tooltip>
             <TooltipContent side="right">
               Click or drag capabilities onto the canvas to add them to your rotation
@@ -323,9 +337,9 @@ export const CapabilitySidebar = ({
             </TooltipTrigger>
           </Tooltip>
         </div>
-        <BodyText className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+        <Text as="label" variant="overline">
           Search
-        </BodyText>
+        </Text>
         <Input
           value={searchText}
           onChange={(event) => setSearchText(event.target.value)}

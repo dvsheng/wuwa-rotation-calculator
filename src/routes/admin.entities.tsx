@@ -68,7 +68,7 @@ function AdminEntitiesPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-6xl space-y-4 p-page">
+    <div className="p-page container mx-auto max-w-6xl space-y-4">
       <div className="space-y-2">
         <h2 className="gap-compact flex items-center text-2xl font-bold tracking-tight">
           <Database className="h-6 w-6" /> Entities
@@ -123,7 +123,7 @@ function AdminEntitiesPage() {
       </div>
 
       {error instanceof Error && (
-        <div className="text-destructive rounded-md border p-panel text-sm">
+        <div className="text-destructive p-panel rounded-md border text-sm">
           {error.message}
         </div>
       )}

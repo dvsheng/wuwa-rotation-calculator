@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Layout, LayoutItem } from 'react-grid-layout';
 import GridLayout from 'react-grid-layout';
 
-import { BodyText } from '@/components/ui/typography';
+import { Text } from '@/components/ui/typography';
 import { useCanvasLayout } from '@/hooks/useCanvasLayout';
 import { useTeamModifierInstances } from '@/hooks/useTeamModifierInstances';
 import { useStore } from '@/store';
@@ -54,7 +54,7 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
         >
           {buffs.length === 0 && (
             <div className="canvas-empty-state">
-              <BodyText>Drag buffs here to align with attacks</BodyText>
+              <Text variant="small">Drag buffs here to align with attacks</Text>
             </div>
           )}
 

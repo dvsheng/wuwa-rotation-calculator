@@ -6,6 +6,7 @@ import type {
   Modifier as GameDataModifier,
   GameDataNumberNode,
 } from '@/services/game-data';
+import { CapabilityType } from '@/services/game-data';
 import { AttackScalingProperty, Attribute, CharacterStat, Tag } from '@/types';
 
 import {
@@ -48,6 +49,7 @@ const createMockModifier = (
   modifiedStats,
   name: `Modifier ${id}`,
   originType: 'Echo',
+  capabilityType: CapabilityType.MODIFIER,
 });
 
 const createMockAttack = (
@@ -68,6 +70,7 @@ const createMockAttack = (
   ],
   name: `Attack ${id}`,
   originType: 'Echo',
+  capabilityType: CapabilityType.ATTACK,
 });
 
 const characterIdToSlotNumberMap = {

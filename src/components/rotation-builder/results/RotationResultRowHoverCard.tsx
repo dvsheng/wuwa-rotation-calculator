@@ -8,7 +8,7 @@ import {
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { BodyText } from '@/components/ui/typography';
+import { Text } from '@/components/ui/typography';
 import type { ClientRotationResult } from '@/services/rotation-calculator/client-output-adapter/adapt-rotation-result-to-client-output';
 import { NegativeStatus } from '@/types';
 
@@ -90,19 +90,19 @@ export const RotationResultRowHoverCard = ({
         side="right"
         className="flex h-96 w-96 flex-col border-white/10 bg-zinc-900 p-0 text-zinc-100 shadow-xl"
       >
-        <div className="shrink-0 border-b border-white/10 bg-zinc-800/50 p-component">
-          <BodyText className="font-semibold tracking-wider text-zinc-300 uppercase">
+        <div className="p-component shrink-0 border-b border-white/10 bg-zinc-800/50">
+          <Text variant="overline" className="text-zinc-300">
             Calculation Snapshot
-          </BodyText>
+          </Text>
         </div>
 
-        <ScrollArea className="min-h-0 flex-1 p-component">
+        <ScrollArea className="p-component min-h-0 flex-1">
           <div className="space-y-4">
             <div className="space-y-2">
-              <BodyText className="font-semibold text-amber-500 uppercase">
+              <Text variant="overline" className="text-amber-500">
                 Skill
-              </BodyText>
-              <div className="grid grid-cols-2 gap-x-compact gap-y-tight text-xs">
+              </Text>
+              <div className="gap-x-compact gap-y-tight grid grid-cols-2 text-xs">
                 <span className="text-zinc-400">Scaling Stat</span>
                 <span className="text-right font-mono text-zinc-100">
                   {detail.scalingStat}{' '}
@@ -126,10 +126,10 @@ export const RotationResultRowHoverCard = ({
             </div>
 
             <div className="space-y-2">
-              <BodyText className="font-semibold text-blue-400 uppercase">
+              <Text variant="overline" className="text-blue-400">
                 Character Stats
-              </BodyText>
-              <div className="grid grid-cols-2 gap-x-compact gap-y-tight text-xs">
+              </Text>
+              <div className="gap-x-compact gap-y-tight grid grid-cols-2 text-xs">
                 {characterEntries.map(([key, value]) => (
                   <Fragment key={key}>
                     <span className="text-zinc-400 capitalize">
@@ -146,10 +146,10 @@ export const RotationResultRowHoverCard = ({
             </div>
 
             <div className="space-y-2">
-              <BodyText className="font-semibold text-red-400 uppercase">
+              <Text variant="overline" className="text-red-400">
                 Enemy Stats
-              </BodyText>
-              <div className="grid grid-cols-2 gap-x-compact gap-y-tight text-xs">
+              </Text>
+              <div className="gap-x-compact gap-y-tight grid grid-cols-2 text-xs">
                 {enemyEntries.map(([key, value]) => (
                   <Fragment key={key}>
                     <span className="text-zinc-400 capitalize">

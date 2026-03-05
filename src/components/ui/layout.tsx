@@ -13,7 +13,7 @@ const Container = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...properties }, reference) => (
-  <div ref={reference} className={cn('w-full p-page', className)} {...properties} />
+  <div ref={reference} className={cn('p-page w-full', className)} {...properties} />
 ));
 Container.displayName = 'Container';
 
@@ -78,7 +78,7 @@ const Box = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
     <div
       ref={reference}
       className={cn(
-        'border-border bg-card text-card-foreground rounded-md border p-component shadow-sm',
+        'border-border bg-card text-card-foreground p-component rounded-md border shadow-sm',
         className,
       )}
       {...properties}

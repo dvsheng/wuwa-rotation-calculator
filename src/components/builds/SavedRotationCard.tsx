@@ -26,6 +26,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { Text } from '@/components/ui/typography';
 import type { SavedRotation } from '@/schemas/library';
 import { calculateRotation } from '@/services/rotation-calculator/calculate-client-rotation-damage';
 import { useStore } from '@/store';
@@ -123,14 +124,12 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-muted-foreground text-sm">
-          {rotation.description || 'No description.'}
-        </p>
+        <Text variant="small">{rotation.description || 'No description.'}</Text>
         <div className="mt-4 space-y-3">
           <div>
-            <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
+            <Text variant="overline" className="mb-2">
               Team
-            </p>
+            </Text>
             {configuredCharacters.length > 0 ? (
               <div className="gap-compact flex flex-wrap items-center">
                 {configuredCharacters.map((character) => (
@@ -142,23 +141,29 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
                 ))}
               </div>
             ) : (
-              <p className="text-muted-foreground text-sm">No characters configured.</p>
+              <Text variant="small">No characters configured.</Text>
             )}
           </div>
 
           <div>
-            <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
+            <Text variant="overline" className="mb-2">
               Enemy
-            </p>
+            </Text>
             <div className="gap-compact mb-2 flex flex-wrap items-center">
-              <span className="text-muted-foreground text-sm">
+              <Text as="span" variant="small">
                 Level: {rotation.data.enemy.level}
-              </span>
+              </Text>
             </div>
             <div className="gap-compact flex flex-wrap items-center">
-              <span className="text-muted-foreground text-sm">Resistances:</span>
+              <Text as="span" variant="small">
+                Resistances:
+              </Text>
               {resistanceEntries.map(({ attribute, value }) => (
-                <Badge key={attribute} variant="outline" className="gap-compact px-compact py-tight">
+                <Badge
+                  key={attribute}
+                  variant="outline"
+                  className="gap-compact px-compact py-tight"
+                >
                   <GameImage
                     entity="attribute"
                     type="icon"
@@ -166,7 +171,9 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
                     alt={attribute}
                     className="h-3.5 w-3.5 object-contain"
                   />
-                  <span>{value}%</span>
+                  <Text as="span" variant="caption" className="text-foreground">
+                    {value}%
+                  </Text>
                 </Badge>
               ))}
             </div>

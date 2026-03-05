@@ -7,7 +7,7 @@ import { CapabilityTooltip } from '@/components/common/CapabilityTooltip';
 import { CharacterIcon } from '@/components/common/CharacterIcon';
 import { ParameterConfigurationDialog } from '@/components/common/ParameterConfigurationDialog';
 import { TrashButton } from '@/components/common/TrashButton';
-import { BodyText } from '@/components/ui/typography';
+import { Text } from '@/components/ui/typography';
 import { useEntityIcon } from '@/hooks/useIcons';
 import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
@@ -69,9 +69,9 @@ export const AttackCanvasItem = ({
       <CapabilityTooltip capability={attack}>
         <div className="bg-card hover:bg-accent/50 p-compact relative flex h-full flex-col items-center overflow-hidden rounded-lg border">
           {/* Index at top-left */}
-          <BodyText className="text-muted-foreground absolute top-1 left-1">
+          <Text as="span" variant="caption" className="absolute top-1 left-1">
             {index + 1}
-          </BodyText>
+          </Text>
 
           {/* Warning indicator at top-right */}
           {shouldShowWarning && (
@@ -95,9 +95,13 @@ export const AttackCanvasItem = ({
           </div>
 
           {/* Attack name */}
-          <BodyText className="mt-2 line-clamp-4 w-full text-center text-xs leading-tight">
+          <Text
+            as="div"
+            variant="caption"
+            className="text-foreground mt-2 line-clamp-4 w-full text-center leading-tight"
+          >
             {attack.name}
-          </BodyText>
+          </Text>
 
           {/* Delete button at bottom-center */}
           <TrashButton

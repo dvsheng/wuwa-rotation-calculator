@@ -135,11 +135,11 @@ code {
   --spacing-icon-lg: 3rem;
 
   /* Semantic padding scale */
-  --spacing-page: 1.5rem;       /* 24px — page containers, full section areas */
-  --spacing-panel: 1rem;        /* 16px — panel headers, cards, dialog sections */
+  --spacing-page: 1.5rem; /* 24px — page containers, full section areas */
+  --spacing-panel: 1rem; /* 16px — panel headers, cards, dialog sections */
   --spacing-component: 0.75rem; /* 12px — component interiors, items, tooltips */
-  --spacing-compact: 0.5rem;    /* 8px  — compact chrome, canvas headers */
-  --spacing-tight: 0.25rem;     /* 4px  — tight elements: table cells, icon insets */
+  --spacing-compact: 0.5rem; /* 8px  — compact chrome, canvas headers */
+  --spacing-tight: 0.25rem; /* 4px  — tight elements: table cells, icon insets */
 }
 
 @layer base {
@@ -164,7 +164,7 @@ code {
 /* Team selector row styles */
 @layer components {
   .selector-row {
-    @apply h-9 shrink-0 items-center gap-2 px-tight;
+    @apply px-tight h-9 shrink-0 items-center gap-2;
   }
 
   .selector-main {
@@ -191,11 +191,11 @@ code {
   }
 
   .canvas-header {
-    @apply bg-card left-0 flex h-10 min-w-fit items-center justify-between p-compact;
+    @apply bg-card p-compact left-0 flex h-10 min-w-fit items-center justify-between;
   }
 
   .canvas-content {
-    @apply min-w-fit px-compact;
+    @apply px-compact min-w-fit;
   }
 
   .canvas-drop-zone {

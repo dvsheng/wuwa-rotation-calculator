@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
 import { Stack } from '@/components/ui/layout';
-import { BodyText, SectionHeading } from '@/components/ui/typography';
+import { Text } from '@/components/ui/typography';
 import type { useRotationCalculation } from '@/hooks/useRotationCalculation';
 import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
 import { useTeamAttackInstances } from '@/hooks/useTeamAttackInstances';
@@ -91,10 +91,10 @@ export const RotationResultDisplay = ({
         cell: ({ row }) => {
           const { attackIndex, hitIndex } = row.original;
           return (
-            <div className="text-muted-foreground w-16 text-center text-xs">
+            <Text as="div" variant="caption" className="w-16 text-center">
               {attackIndex + 1}
               <span className="text-muted-foreground/50"> ({hitIndex + 1})</span>
-            </div>
+            </Text>
           );
         },
       },
@@ -102,7 +102,9 @@ export const RotationResultDisplay = ({
         accessorKey: 'characterName',
         header: 'Character',
         cell: ({ row }) => (
-          <div className="text-foreground">{row.original.characterName}</div>
+          <Text as="div" variant="small" className="text-foreground">
+            {row.original.characterName}
+          </Text>
         ),
       },
       {
@@ -111,10 +113,14 @@ export const RotationResultDisplay = ({
         cell: ({ row }) => {
           const { attack } = row.original;
           if (!attack)
-            return <div className="text-muted-foreground italic">Removed</div>;
+            return (
+              <Text as="div" variant="small" className="italic">
+                Removed
+              </Text>
+            );
           const isTuneBreak = attack.isTuneBreakAttack;
           return (
-            <div className="max-w-72 truncate pr-compact">
+            <div className="pr-compact max-w-72 truncate">
               <Text variant="small">
                 {isTuneBreak ? 'Tune Break' : attack.parentName}
               </Text>
@@ -150,28 +156,28 @@ export const RotationResultDisplay = ({
   );
 
   return (
-    <Card className="border-primary/20 bg-primary/5 overflow-hidden p-page">
+    <Card className="border-primary/20 bg-primary/5 p-page overflow-hidden">
       <Stack className="gap-page">
         {isStale && (
-          <div className="gap-component mb-2 flex items-center rounded-lg border border-amber-500/20 bg-amber-500/10 px-panel py-component text-amber-500">
+          <div className="gap-component px-panel py-component mb-2 flex items-center rounded-lg border border-amber-500/20 bg-amber-500/10 text-amber-500">
             <AlertCircle className="h-5 w-5 shrink-0" />
             <div className="flex-1">
-              <BodyText className="text-amber-500">Outdated Result</BodyText>
-              <BodyText className="text-amber-500/80">
+              <Text variant="small" className="text-amber-500">
+                Outdated Result
+              </Text>
+              <Text variant="caption" className="text-amber-500/80">
                 The rotation has changed. Recalculate to see updated damage.
-              </BodyText>
+              </Text>
             </div>
           </div>
         )}
 
-        <div className="border-primary/10 flex items-center justify-between border-b pb-panel">
+        <div className="border-primary/10 pb-panel flex items-center justify-between border-b">
           <div>
-            <BodyText className="text-muted-foreground font-semibold tracking-wider uppercase">
-              Total Rotation Damage
-            </BodyText>
-            <SectionHeading className="text-primary text-4xl">
+            <Text variant="overline">Total Rotation Damage</Text>
+            <Text variant="display" className="text-primary">
               {Math.round(result.totalDamage).toLocaleString()}
-            </SectionHeading>
+            </Text>
           </div>
         </div>
 

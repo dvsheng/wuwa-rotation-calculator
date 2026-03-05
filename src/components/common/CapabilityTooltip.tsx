@@ -27,14 +27,14 @@ export const CapabilityTooltip = ({
     <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
       <TooltipContent
-        className={cn('max-w-80 p-component', className)}
+        className={cn('p-component max-w-80', className)}
         {...tooltipContentProperties}
       >
         <div className="gap-compact flex min-w-64 flex-col">
           <div className="gap-compact flex items-start justify-between">
             <div className="text-sm font-semibold">{capability.name}</div>
             {isParameterized && (
-              <Badge className="bg-background/15 rounded-sm px-compact py-tight text-xs font-semibold tracking-wide uppercase">
+              <Badge className="bg-background/15 px-compact py-tight rounded-sm text-xs font-semibold tracking-wide uppercase">
                 Parameterized
               </Badge>
             )}

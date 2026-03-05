@@ -2,7 +2,7 @@ import { renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { AttackInstance } from '@/schemas/rotation';
-import { OriginType } from '@/services/game-data';
+import { CapabilityType, OriginType } from '@/services/game-data';
 import { useStore } from '@/store';
 
 import { useTeamAttackInstances } from './useTeamAttackInstances';
@@ -26,6 +26,7 @@ describe('useTeamAttackInstances', () => {
           parentName: 'Echo',
           description: '',
           originType: OriginType.ECHO,
+          capabilityType: CapabilityType.ATTACK,
           isTuneBreakAttack: false,
           parameters: [],
         },
@@ -38,6 +39,7 @@ describe('useTeamAttackInstances', () => {
           parentName: 'Echo',
           description: '',
           originType: OriginType.ECHO,
+          capabilityType: CapabilityType.ATTACK,
           isTuneBreakAttack: false,
           parameters: [],
         },

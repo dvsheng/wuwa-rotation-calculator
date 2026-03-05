@@ -3,7 +3,7 @@ import { Library } from 'lucide-react';
 import { SavedRotationCard } from '@/components/builds/SavedRotationCard';
 import { SaveRotationDialog } from '@/components/builds/SaveRotationDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BodyText } from '@/components/ui/typography';
+import { Text } from '@/components/ui/typography';
 import { useLibraryStore } from '@/store/libraryStore';
 
 export function LibraryContainer() {
@@ -14,7 +14,9 @@ export function LibraryContainer() {
       <div className="flex items-center justify-between">
         <div className="gap-compact flex items-center">
           <Library className="h-6 w-6" />
-          <h2 className="text-2xl font-bold tracking-tight">Library</h2>
+          <Text as="h2" variant="heading" className="font-bold">
+            Library
+          </Text>
         </div>
       </div>
 
@@ -27,9 +29,7 @@ export function LibraryContainer() {
             <CardTitle>No saved rotations</CardTitle>
           </CardHeader>
           <CardContent className="gap-panel flex flex-col items-center text-center">
-            <BodyText className="text-muted-foreground text-sm">
-              Save your current configuration to see it here.
-            </BodyText>
+            <Text variant="small">Save your current configuration to see it here.</Text>
             <SaveRotationDialog />
           </CardContent>
         </Card>

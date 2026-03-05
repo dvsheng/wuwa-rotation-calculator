@@ -8,12 +8,15 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
+import { Text } from '@/components/ui/typography';
 
 export const AppHeader = () => {
   useRouterState({ select: (state) => state.location.pathname });
   return (
     <header className="bg-background px-panel sticky top-0 z-20 flex h-14 items-center justify-between border-b">
-      <h1 className="text-lg font-semibold">Wuthering Waves Rotation Builder</h1>
+      <Text as="h1" variant="body" className="text-lg font-semibold">
+        Wuthering Waves Rotation Builder
+      </Text>
       <div className="flex items-center">
         <NavigationMenu viewport={false}>
           <NavigationMenuList>

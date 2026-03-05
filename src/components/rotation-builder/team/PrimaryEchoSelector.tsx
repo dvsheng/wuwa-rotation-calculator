@@ -3,6 +3,7 @@ import { GameImage } from '@/components/common/GameImage';
 import type { FilterConfig } from '@/components/common/SelectionDialog';
 import { SelectionDialog } from '@/components/common/SelectionDialog';
 import { Row } from '@/components/ui/layout';
+import { Text } from '@/components/ui/typography';
 import { useEntityList } from '@/hooks/useEntityList';
 import { cn } from '@/lib/utils';
 import { EntityType } from '@/services/game-data';
@@ -63,7 +64,13 @@ export const PrimaryEchoSelector = ({ index }: PrimaryEchoSelectorProperties) =>
                 />
               </div>
               <div className="space-y-1">
-                <div className="wrap-2 max-w-30 text-sm">{_echo.name}</div>
+                <Text
+                  as="div"
+                  variant="small"
+                  className="wrap-2 text-foreground max-w-30"
+                >
+                  {_echo.name}
+                </Text>
                 <span
                   className={cn(
                     'px-compact py-tight rounded-full text-xs uppercase',

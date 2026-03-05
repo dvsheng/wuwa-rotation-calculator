@@ -165,7 +165,7 @@ function AdminEntityDetailsPage() {
 
   if (!Number.isInteger(entityId) || entityId <= 0) {
     return (
-      <div className="container mx-auto max-w-5xl p-page">
+      <div className="p-page container mx-auto max-w-5xl">
         <p className="text-destructive text-sm">Invalid entity ID.</p>
       </div>
     );
@@ -173,7 +173,7 @@ function AdminEntityDetailsPage() {
 
   if (error instanceof Error) {
     return (
-      <div className="container mx-auto max-w-5xl space-y-4 p-page">
+      <div className="p-page container mx-auto max-w-5xl space-y-4">
         <Link to="/admin/entities">
           <Button variant="outline" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -187,7 +187,7 @@ function AdminEntityDetailsPage() {
 
   if (isLoading || !data) {
     return (
-      <div className="container mx-auto max-w-5xl p-page">
+      <div className="p-page container mx-auto max-w-5xl">
         <p className="text-muted-foreground text-sm">Loading entity details...</p>
       </div>
     );
@@ -257,7 +257,7 @@ function AdminEntityDetailsPage() {
   const defaultOpenSkillValues = skills.map((skill) => `skill-${skill.id}`);
 
   return (
-    <div className="container mx-auto max-w-6xl space-y-4 p-page">
+    <div className="p-page container mx-auto max-w-6xl space-y-4">
       <Link to="/admin/entities">
         <Button variant="outline" size="sm">
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -299,7 +299,7 @@ function AdminEntityDetailsPage() {
         <Accordion
           type="multiple"
           defaultValue={defaultOpenSkillValues}
-          className="w-full rounded-md border px-panel"
+          className="px-panel w-full rounded-md border"
         >
           {skills.map((skill) => (
             <AccordionItem key={skill.id} value={`skill-${skill.id}`}>
@@ -323,7 +323,7 @@ function AdminEntityDetailsPage() {
                   defaultValue={skill.capabilities.map(
                     (capability) => `capability-${capability.capabilityId}`,
                   )}
-                  className="w-full rounded-md border px-panel"
+                  className="px-panel w-full rounded-md border"
                 >
                   {skill.capabilities.length === 0 ? (
                     <p className="text-muted-foreground py-component text-sm">

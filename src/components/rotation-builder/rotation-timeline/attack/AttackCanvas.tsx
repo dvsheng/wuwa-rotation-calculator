@@ -2,7 +2,7 @@ import { compact } from 'es-toolkit/array';
 import type { Layout, LayoutItem } from 'react-grid-layout';
 import GridLayout, { verticalCompactor } from 'react-grid-layout';
 
-import { BodyText } from '@/components/ui/typography';
+import { Text } from '@/components/ui/typography';
 import { useCanvasLayout } from '@/hooks/useCanvasLayout';
 import { useTeamAttackInstances } from '@/hooks/useTeamAttackInstances';
 import { useStore } from '@/store';
@@ -65,9 +65,7 @@ export const AttackCanvas = ({ onDropAttack }: AttackCanvasProperties) => {
         >
           {attacks.length === 0 && (
             <div className="canvas-empty-state">
-              <BodyText className="text-muted-foreground text-xs tracking-wider uppercase">
-                Drag attacks here to build your rotation
-              </BodyText>
+              <Text variant="overline">Drag attacks here to build your rotation</Text>
             </div>
           )}
 

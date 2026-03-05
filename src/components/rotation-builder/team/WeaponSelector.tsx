@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Text } from '@/components/ui/typography';
 import { useEntityList } from '@/hooks/useEntityList';
 import { cn } from '@/lib/utils';
 import { EntityType } from '@/services/game-data';
@@ -73,7 +74,13 @@ export const WeaponSelector = ({ index }: WeaponSelectorProperties) => {
                 />
               </div>
               <div className="space-y-1">
-                <div className="max-w-30 truncate text-sm">{_weapon.name}</div>
+                <Text
+                  as="div"
+                  variant="small"
+                  className="text-foreground max-w-30 truncate"
+                >
+                  {_weapon.name}
+                </Text>
                 <span
                   className={cn(
                     'px-compact py-tight rounded-full text-xs uppercase',

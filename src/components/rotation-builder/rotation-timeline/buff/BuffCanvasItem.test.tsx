@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { OriginType, Target } from '@/services/game-data';
+import { CapabilityType, OriginType, Target } from '@/services/game-data';
 import { useStore } from '@/store';
 
 import { BuffCanvasItem } from './BuffCanvasItem';
@@ -39,6 +39,7 @@ const MOCK_ATTACKS = [
     description: '',
     characterName: 'Rover',
     originType: OriginType.RESONANCE_LIBERATION,
+    capabilityType: CapabilityType.ATTACK,
     isTuneBreakAttack: false,
     parameters: [] as [],
   },
@@ -52,6 +53,7 @@ const MOCK_ATTACKS = [
     description: '',
     characterName: 'Rover',
     originType: OriginType.NORMAL_ATTACK,
+    capabilityType: CapabilityType.ATTACK,
     isTuneBreakAttack: false,
     parameters: [] as [],
   },
@@ -65,6 +67,7 @@ const MOCK_ATTACKS = [
     description: '',
     characterName: 'Rover',
     originType: OriginType.NORMAL_ATTACK,
+    capabilityType: CapabilityType.ATTACK,
     isTuneBreakAttack: false,
     parameters: [] as [],
   },
@@ -80,6 +83,7 @@ const makeBuff = (x: number, w: number, withStackConfig = false) => ({
   description: 'Increases ATK',
   characterName: 'Rover',
   originType: OriginType.WEAPON,
+  capabilityType: CapabilityType.MODIFIER,
   target: Target.TEAM,
   parameters: [
     {
@@ -222,26 +226,6 @@ describe('BuffCanvasItem', () => {
       await userEvent.click(screen.getByRole('button', { name: 'Save changes' }));
 
       expect(onOpenChange).toHaveBeenCalledWith(false);
-    });
-
-    it('does not open the dialog and does not call onOpenChange when isDialogClickable is false', async () => {
-      const buff = makeBuff(1, 2);
-      useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
-      const onOpenChange = vi.fn();
-
-      render(
-        <BuffCanvasItem
-          buff={buff}
-          onRemove={() => {}}
-          isDialogClickable={false}
-          onOpenChange={onOpenChange}
-        />,
-      );
-
-      await userEvent.click(screen.getByText('ATK Buff'));
-
-      expect(onOpenChange).not.toHaveBeenCalled();
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
 });

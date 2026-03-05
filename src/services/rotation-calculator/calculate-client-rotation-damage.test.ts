@@ -5,6 +5,7 @@ import { EchoMainStatOption, EchoSubstatOption } from '@/schemas/echo';
 import type { Enemy } from '@/schemas/enemy';
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import type { Team } from '@/schemas/team';
+import { CapabilityType } from '@/services/game-data';
 import { TUNE_BREAK_ATTACK_ID } from '@/services/game-data/tune-break';
 import { calculateRotationHandler } from '@/services/rotation-calculator/calculate-client-rotation-damage';
 import {
@@ -142,8 +143,13 @@ const createMockCharacterData = (
     attacks: attacks.map((a) => ({
       ...a,
       parentName: name,
+      capabilityType: CapabilityType.ATTACK,
     })),
-    modifiers,
+    modifiers: modifiers.map((modifier) => ({
+      ...modifier,
+      parentName: name,
+      capabilityType: CapabilityType.MODIFIER,
+    })),
     permanentStats: [
       // Base ATK for damage calculation
       { stat: CharacterStat.ATTACK_FLAT, value: 400, tags: [Tag.ALL] },
@@ -356,6 +362,7 @@ describe('calculateRotation', () => {
           name: 'Aero Erosion',
           parentName: 'Negative Status',
           originType: 'Inherent Skill',
+          capabilityType: CapabilityType.ATTACK,
           attribute: Attribute.AERO,
           damageInstances: [
             {
@@ -372,6 +379,7 @@ describe('calculateRotation', () => {
               name: 'Aero Erosion Stacks',
               originType: 'Inherent Skill',
               parentName: 'Negative Status',
+              capabilityType: CapabilityType.MODIFIER,
               target: 'enemy',
               modifiedStats: [
                 { stat: EnemyStat.AERO_EROSION, value: 9, tags: [Tag.ALL] },
@@ -384,6 +392,7 @@ describe('calculateRotation', () => {
               name: 'Aero Erosion Defense Ignore',
               originType: 'Inherent Skill',
               parentName: 'Negative Status',
+              capabilityType: CapabilityType.MODIFIER,
               target: 'team',
               modifiedStats: [
                 {
@@ -399,6 +408,7 @@ describe('calculateRotation', () => {
             name: 'Aero Erosion Damage Amplify',
             originType: 'Inherent Skill',
             parentName: 'Negative Status',
+            capabilityType: CapabilityType.MODIFIER,
             target: 'team',
             modifiedStats: [
               {
@@ -549,6 +559,7 @@ describe('calculateRotation', () => {
             name: 'Tune Rupture Response',
             parentName: 'Tune Break',
             originType: 'Tune Break',
+            capabilityType: CapabilityType.ATTACK,
             attribute: Tag.SPECTRO,
             damageInstances: [
               {

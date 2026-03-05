@@ -1,6 +1,7 @@
 import { CharacterIcon } from '@/components/common/CharacterIcon';
 import { SelectionDialog } from '@/components/common/SelectionDialog';
 import type { FilterConfig } from '@/components/common/SelectionDialog';
+import { Text } from '@/components/ui/typography';
 import { useEntityList } from '@/hooks/useEntityList';
 import { cn } from '@/lib/utils';
 import { EntityType } from '@/services/game-data';
@@ -72,7 +73,13 @@ export const CharacterSelectionDialog = ({
         <>
           <CharacterIcon characterEntityId={char.id} size="large" />
           <div className="space-y-1">
-            <div className="max-w-30 truncate text-sm">{char.name}</div>
+            <Text
+              as="div"
+              variant="small"
+              className="text-foreground max-w-30 truncate"
+            >
+              {char.name}
+            </Text>
             <div className="gap-tight flex items-center justify-center">
               <span
                 className={cn(
@@ -84,9 +91,9 @@ export const CharacterSelectionDialog = ({
               >
                 {char.rarity}★
               </span>
-              <span className="text-muted-foreground text-xs capitalize">
+              <Text as="span" variant="caption" className="capitalize">
                 {char.attribute}
-              </span>
+              </Text>
             </div>
           </div>
         </>

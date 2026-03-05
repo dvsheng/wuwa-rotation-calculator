@@ -68,9 +68,9 @@ function AdminEntitiesPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-6xl space-y-4 p-6">
+    <div className="container mx-auto max-w-6xl space-y-4 p-page">
       <div className="space-y-2">
-        <h2 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
+        <h2 className="gap-compact flex items-center text-2xl font-bold tracking-tight">
           <Database className="h-6 w-6" /> Entities
         </h2>
         <p className="text-muted-foreground text-sm">
@@ -78,7 +78,7 @@ function AdminEntitiesPage() {
         </p>
       </div>
 
-      <div className="grid gap-3">
+      <div className="gap-component grid">
         <Select
           value={searchParameters.entityType ?? 'all'}
           onValueChange={(value) => {
@@ -123,7 +123,7 @@ function AdminEntitiesPage() {
       </div>
 
       {error instanceof Error && (
-        <div className="text-destructive rounded-md border p-4 text-sm">
+        <div className="text-destructive rounded-md border p-panel text-sm">
           {error.message}
         </div>
       )}

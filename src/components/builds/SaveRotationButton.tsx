@@ -84,7 +84,7 @@ export function SaveRotationButton() {
             <Button
               data-role="save-menu"
               size="sm"
-              className="rounded-l-none px-2"
+              className="px-compact rounded-l-none"
               aria-label="Save rotation options"
             >
               <ChevronDown size={14} />
@@ -139,7 +139,7 @@ export function SaveRotationButton() {
               <Button
                 key={rotation.id}
                 variant="outline"
-                className="h-auto w-full justify-between py-3 text-left"
+                className="py-component h-auto w-full justify-between text-left"
                 disabled={isUpdatingRotationId !== undefined}
                 onClick={() => void handleUpdateRotation(rotation)}
               >

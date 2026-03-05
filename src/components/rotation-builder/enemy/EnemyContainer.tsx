@@ -37,7 +37,7 @@ export const EnemyContainer = () => {
 
   return (
     <div>
-      <Stack>
+      <Stack className="gap-panel">
         <form.Field
           name="level"
           children={(field) => (

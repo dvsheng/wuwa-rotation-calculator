@@ -10,6 +10,7 @@ import { useStore } from '@/store';
 import { AttackCanvas } from './attack/AttackCanvas';
 import { BuffCanvas } from './buff/BuffCanvas';
 import { CapabilitySidebar } from './CapabilitySidebar';
+import { RotationCanvasHeader } from './RotationCanvasHeader';
 import { TimelinePanWrapper } from './TimelinePanWrapper';
 
 export const RotationBuilder = () => {
@@ -59,6 +60,7 @@ export const RotationBuilder = () => {
       </ResizablePanel>
       <ResizableHandle withHandle />
       <ResizablePanel defaultSize="75%">
+        <RotationCanvasHeader />
         <TimelinePanWrapper className="min-h-0 min-w-0 flex-1">
           <AttackCanvas onDropAttack={handleDropAttack} />
           <BuffCanvas onDropBuff={handleDropBuff} />

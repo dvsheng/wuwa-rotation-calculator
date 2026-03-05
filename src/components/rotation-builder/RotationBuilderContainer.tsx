@@ -4,16 +4,16 @@ import { RotationResultDisplay } from '@/components/rotation-builder/results/Rot
 import { TeamContainer } from '@/components/rotation-builder/team/TeamContainer';
 import { useRotationCalculation } from '@/hooks/useRotationCalculation';
 
+import { Stack } from '../ui/layout';
+
 import { RotationBuilder } from './rotation-timeline/RotationTimelineBuilder';
 import { RotationBuilderToolbar } from './RotationBuilderToolbar';
 
 export const RotationBuilderContainer = () => {
   const [selectedTab, setSelectedTab] = useState('team');
-
   const { data: result, isPlaceholderData } = useRotationCalculation();
-
   return (
-    <>
+    <Stack className="h-full min-h-0">
       <RotationBuilderToolbar
         selectedTab={selectedTab}
         setSelectedTab={setSelectedTab}
@@ -23,9 +23,8 @@ export const RotationBuilderContainer = () => {
           <RotationResultDisplay result={result} isStale={isPlaceholderData} />
         </div>
       )}
-
       {selectedTab === 'team' && <TeamContainer />}
       {selectedTab === 'rotation' && <RotationBuilder />}
-    </>
+    </Stack>
   );
 };

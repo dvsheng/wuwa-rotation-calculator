@@ -134,9 +134,9 @@ const ParameterConfigurationForm = ({
         <DialogTitle>Configure {title}</DialogTitle>
         {description && <DialogDescription>{description}</DialogDescription>}
       </DialogHeader>
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
+      <div className="gap-panel flex min-h-0 flex-1 flex-col overflow-y-auto">
         {canToggleView && (
-          <div className="flex items-center justify-between gap-3 border-b pb-2">
+          <div className="pb-compact gap-component flex items-center justify-between border-b">
             <Label className="font-medium">Configuration mode</Label>
             <ToggleGroup
               type="single"
@@ -167,10 +167,10 @@ const ParameterConfigurationForm = ({
                     }}
                   >
                     {(field) => (
-                      <div className="grid grid-cols-4 items-start gap-x-4 gap-y-1">
+                      <div className="gap-x-panel gap-y-tight grid grid-cols-4 items-start">
                         <Label
                           htmlFor={field.name}
-                          className="col-span-2 line-clamp-2 pt-2 text-right text-xs"
+                          className="pt-compact col-span-2 line-clamp-2 text-right text-xs"
                         >
                           {attack.name}
                         </Label>
@@ -202,8 +202,8 @@ const ParameterConfigurationForm = ({
                 }}
               >
                 {(field) => (
-                  <div className="grid grid-cols-4 items-start gap-x-4 gap-y-1">
-                    <Label htmlFor={field.name} className="pt-2 text-right">
+                  <div className="gap-x-panel gap-y-tight grid grid-cols-4 items-start">
+                    <Label htmlFor={field.name} className="pt-compact text-right">
                       {parameters.length > 1 ? `Value ${index + 1}` : 'Value'}
                     </Label>
                     <div className="col-span-3 space-y-1">
@@ -227,7 +227,7 @@ const ParameterConfigurationForm = ({
           </div>
         ))}
       </div>
-      <DialogFooter className="pt-4">
+      <DialogFooter className="pt-panel">
         <DialogClose asChild>
           <Button type="submit">Save changes</Button>
         </DialogClose>

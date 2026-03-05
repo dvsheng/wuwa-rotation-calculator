@@ -36,12 +36,12 @@ export const CapabilityIcon = ({
         <img
           src={iconUrl}
           alt=""
-          className="h-full w-full object-contain p-0.5"
+          className="p-tight h-full w-full object-contain"
           draggable={false}
         />
       ) : (
         <Sword
-          className={'text-muted-foreground/40 h-full w-full object-contain p-0.5'}
+          className={'text-muted-foreground/40 p-tight h-full w-full object-contain'}
         />
       )}
     </div>

@@ -66,7 +66,7 @@ export const PrimaryEchoSelector = ({ index }: PrimaryEchoSelectorProperties) =>
                 <div className="wrap-2 max-w-30 text-sm">{_echo.name}</div>
                 <span
                   className={cn(
-                    'rounded-full px-1.5 py-0.5 text-xs uppercase',
+                    'px-compact py-tight rounded-full text-xs uppercase',
                     _echo.cost === 4
                       ? 'text-foreground bg-rarity-5/10'
                       : _echo.cost === 3

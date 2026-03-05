@@ -12,7 +12,7 @@ import {
 export const AppHeader = () => {
   useRouterState({ select: (state) => state.location.pathname });
   return (
-    <header className="bg-background sticky top-0 z-20 flex h-14 items-center justify-between border-b px-4">
+    <header className="bg-background px-panel sticky top-0 z-20 flex h-14 items-center justify-between border-b">
       <h1 className="text-lg font-semibold">Wuthering Waves Rotation Builder</h1>
       <div className="flex items-center">
         <NavigationMenu viewport={false}>
@@ -20,7 +20,7 @@ export const AppHeader = () => {
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
                 <Link to="/admin/entities" className={navigationMenuTriggerStyle()}>
-                  <div className="flex items-center gap-2">
+                  <div className="gap-compact flex items-center">
                     <Database className="h-4 w-4" />
                     Configure entities
                   </div>
@@ -30,7 +30,7 @@ export const AppHeader = () => {
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
                 <Link to="/builds" className={navigationMenuTriggerStyle()}>
-                  <div className="flex items-center gap-2">
+                  <div className="gap-compact flex items-center">
                     <Library className="h-4 w-4" />
                     Explore builds
                   </div>

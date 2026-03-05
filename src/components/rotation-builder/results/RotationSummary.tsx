@@ -42,10 +42,10 @@ export const RotationSummary = () => {
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="gap-panel flex flex-col">
       <Row className="justify-end">
         {isCalculateButtonVisible && (
-          <div className="flex items-center gap-2">
+          <div className="gap-compact flex items-center">
             <SaveRotationButton />
             <Button
               size="sm"

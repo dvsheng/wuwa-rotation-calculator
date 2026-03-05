@@ -93,8 +93,8 @@ export function SaveRotationDialog({
             Save your current team, enemy, and rotation configuration to the library.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
+        <div className="gap-panel py-panel grid">
+          <div className="gap-panel grid grid-cols-4 items-center">
             <Label htmlFor="name" className="text-right">
               Name
             </Label>
@@ -106,7 +106,7 @@ export function SaveRotationDialog({
               placeholder="My Awesome Rotation"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+          <div className="gap-panel grid grid-cols-4 items-center">
             <Label htmlFor="description" className="text-right">
               Description
             </Label>

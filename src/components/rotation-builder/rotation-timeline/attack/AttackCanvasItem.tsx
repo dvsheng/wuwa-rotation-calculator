@@ -7,7 +7,7 @@ import { CapabilityTooltip } from '@/components/common/CapabilityTooltip';
 import { CharacterIcon } from '@/components/common/CharacterIcon';
 import { ParameterConfigurationDialog } from '@/components/common/ParameterConfigurationDialog';
 import { TrashButton } from '@/components/common/TrashButton';
-import { Text } from '@/components/ui/typography';
+import { BodyText } from '@/components/ui/typography';
 import { useEntityIcon } from '@/hooks/useIcons';
 import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
@@ -67,11 +67,11 @@ export const AttackCanvasItem = ({
       isDialogClickable={isAttackConfigurable && isDialogClickable}
     >
       <CapabilityTooltip capability={attack}>
-        <div className="bg-card hover:bg-accent/50 relative flex h-full flex-col items-center overflow-hidden rounded-lg border p-2">
+        <div className="bg-card hover:bg-accent/50 p-compact relative flex h-full flex-col items-center overflow-hidden rounded-lg border">
           {/* Index at top-left */}
-          <Text variant="small" className="text-muted-foreground absolute top-1 left-1">
+          <BodyText className="text-muted-foreground absolute top-1 left-1">
             {index + 1}
-          </Text>
+          </BodyText>
 
           {/* Warning indicator at top-right */}
           {shouldShowWarning && (
@@ -95,9 +95,9 @@ export const AttackCanvasItem = ({
           </div>
 
           {/* Attack name */}
-          <Text className="mt-2 line-clamp-4 w-full text-center text-xs leading-tight">
+          <BodyText className="mt-2 line-clamp-4 w-full text-center text-xs leading-tight">
             {attack.name}
-          </Text>
+          </BodyText>
 
           {/* Delete button at bottom-center */}
           <TrashButton

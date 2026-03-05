@@ -29,7 +29,7 @@ export const EchoSubstatEditor = ({
 
   return (
     <TableRow>
-      <TableCell className="p-1">
+      <TableCell className="p-tight">
         <Select
           value={substat.stat}
           onValueChange={(value) =>
@@ -56,7 +56,7 @@ export const EchoSubstatEditor = ({
           </SelectContent>
         </Select>
       </TableCell>
-      <TableCell className="p-1">
+      <TableCell className="p-tight">
         <Select
           value={String(substat.value)}
           onValueChange={(value) =>

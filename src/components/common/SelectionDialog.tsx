@@ -146,8 +146,8 @@ export const SelectionDialog = <T extends { id: number; name: string }>({
 
         {/* Filter Bar */}
         {filters.length > 0 && (
-          <div className="flex flex-wrap items-center gap-4 border-b px-3 py-2 text-sm">
-            <div className="flex items-center gap-2">
+          <div className="px-component py-compact gap-panel flex flex-wrap items-center border-b text-sm">
+            <div className="gap-compact flex items-center">
               <Filter className="text-muted-foreground h-4 w-4" />
               <span className="font-medium">Filters:</span>
             </div>
@@ -174,7 +174,7 @@ export const SelectionDialog = <T extends { id: number; name: string }>({
                   <ToggleGroupItem
                     key={option.value}
                     value={String(option.value)}
-                    className={cn('gap-1.5', option.className)}
+                    className={cn('gap-compact', option.className)}
                   >
                     {option.icon && (
                       <img
@@ -193,7 +193,7 @@ export const SelectionDialog = <T extends { id: number; name: string }>({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 gap-1 px-2 text-xs"
+                className="px-compact gap-tight h-7 text-xs"
                 onClick={resetFilters}
               >
                 <X className="h-3 w-3" /> Clear
@@ -205,14 +205,14 @@ export const SelectionDialog = <T extends { id: number; name: string }>({
         <CommandList className="overflow-y-auto">
           <CommandEmpty>No items found matching your filters.</CommandEmpty>
           <CommandGroup>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="gap-component grid grid-cols-3">
               {sortedItems.map((item) => (
                 <CommandItem
                   key={item.id}
                   value={item.name}
                   onSelect={() => handleSelect(item)}
                   className={cn(
-                    'group hover:bg-accent hover:border-primary/50 flex flex-col items-center gap-2 rounded-lg border p-3 text-center transition-all',
+                    'group hover:bg-accent hover:border-primary/50 p-component gap-compact flex flex-col items-center rounded-lg border text-center transition-all',
                     value === item.id && 'border-primary ring-primary bg-accent ring-1',
                   )}
                   style={getItemStyle?.(item)}

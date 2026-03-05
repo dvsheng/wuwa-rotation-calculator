@@ -147,9 +147,7 @@ export const TimelinePanWrapper = ({
         };
 
         return (
-          <div
-            className={cn('relative flex h-full min-h-0 w-full flex-col', className)}
-          >
+          <div className={cn('relative flex h-fit min-h-0 w-full flex-col', className)}>
             <Button
               type="button"
               variant="outline"
@@ -181,10 +179,9 @@ export const TimelinePanWrapper = ({
             </Button>
 
             <ScrollArea
-              className="h-full min-h-0 w-full flex-1"
               orientation="horizontal"
               viewportRef={scrollReference}
-              viewportClassName="flex h-full min-h-0 w-full flex-col overflow-x-auto overflow-y-hidden"
+              viewportClassName="flex h-fit min-h-0 w-full flex-col overflow-x-auto overflow-y-hidden"
             >
               <TransformComponent
                 wrapperClass="min-h-0 min-w-0 w-full flex-1"

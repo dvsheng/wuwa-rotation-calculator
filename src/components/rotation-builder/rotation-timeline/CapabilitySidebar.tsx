@@ -1,3 +1,4 @@
+import { Info } from 'lucide-react';
 import { useState } from 'react';
 
 import { CapabilityIcon } from '@/components/common/CapabilityIcon';
@@ -5,9 +6,11 @@ import { CapabilityTooltip } from '@/components/common/CapabilityTooltip';
 import { sortAttackOrigins } from '@/components/rotation-builder/constants';
 import { Input } from '@/components/ui/input';
 import { Item } from '@/components/ui/item';
+import { Stack } from '@/components/ui/layout';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Text } from '@/components/ui/typography';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { BodyText } from '@/components/ui/typography';
 import type { DetailedAttack, DetailedModifier } from '@/hooks/useTeamDetails';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
 import { cn } from '@/lib/utils';
@@ -160,14 +163,16 @@ const CapabilitySection = ({
 
   return (
     <section className="flex flex-col">
-      <div className="border-border border-t px-4 py-2">
-        <Text className="text-sm font-semibold tracking-wider uppercase">{title}</Text>
+      <div className="border-border px-panel py-compact border-t">
+        <BodyText className="text-sm font-semibold tracking-wider uppercase">
+          {title}
+        </BodyText>
       </div>
       <div className="border-border border-t">
         {itemCount > 0 ? (
           <div className="flex flex-col">{children}</div>
         ) : (
-          <div className="text-muted-foreground flex items-center justify-center py-8 text-sm font-medium italic">
+          <div className="text-muted-foreground py-page flex items-center justify-center text-sm font-medium italic">
             {emptyMessage}
           </div>
         )}
@@ -186,14 +191,14 @@ const CapabilityGroup = ({ name, children }: CapabilityGroupProperties) => {
   if (itemCount === 0) return;
 
   return (
-    <div className="px-3 py-3">
-      <div className="mb-2.5 flex items-center gap-1">
+    <div className="p-component">
+      <div className="gap-tight mb-2.5 flex items-center">
         <span className="text-muted-foreground shrink-0 text-xs font-bold tracking-widest uppercase">
           {name}
         </span>
         <div className="bg-border h-px flex-1" />
       </div>
-      <div className="grid-cols-auto-fit-24 grid gap-1">{children}</div>
+      <div className="grid-cols-auto-fit-24 gap-tight grid">{children}</div>
     </div>
   );
 };
@@ -213,7 +218,7 @@ const CapabilityCard = ({
         onDragStart={onDragStart}
         onClick={onClick}
         className={cn(
-          'hover:bg-accent/30 border-border relative flex aspect-square h-24 w-24 flex-col gap-1 rounded-lg border p-2 shadow-sm transition-colors',
+          'hover:bg-accent/30 border-border gap-tight p-compact relative flex aspect-square h-24 w-24 flex-col rounded-lg border shadow-sm transition-colors',
           isDraggable
             ? 'cursor-grab active:cursor-grabbing'
             : onClick
@@ -305,11 +310,22 @@ export const CapabilitySidebar = ({
     matchesCapabilityFilters(TUNE_STRAIN_CAPABILITY, TUNE_STRAIN_CAPABILITY.originType);
 
   return (
-    <>
-      <div className="border-border flex flex-col gap-y-1 border-b p-2">
-        <Text className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+    <Stack className="relative h-full min-h-0">
+      <Stack className="border-border gap-y-tight h-fit border-b">
+        <div className="canvas-header border-border gap-compact flex items-center border-b">
+          <span className="text-sm font-medium">Palette</span>
+          <Tooltip>
+            <TooltipContent side="right">
+              Click or drag capabilities onto the canvas to add them to your rotation
+            </TooltipContent>
+            <TooltipTrigger asChild>
+              <Info className="text-muted-foreground size-3.5 shrink-0" />
+            </TooltipTrigger>
+          </Tooltip>
+        </div>
+        <BodyText className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
           Search
-        </Text>
+        </BodyText>
         <Input
           value={searchText}
           onChange={(event) => setSearchText(event.target.value)}
@@ -346,8 +362,8 @@ export const CapabilitySidebar = ({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
-      </div>
-      <ScrollArea orientation="vertical" className="h-screen flex-1">
+      </Stack>
+      <ScrollArea className="min-h-0 flex-1">
         <CapabilitySection title="Attacks" emptyMessage="No attacks available">
           {Object.entries(attacksByCharacter).map(
             ([characterName, characterAttacks]) => {
@@ -457,6 +473,6 @@ export const CapabilitySidebar = ({
           )}
         </CapabilitySection>
       </ScrollArea>
-    </>
+    </Stack>
   );
 };

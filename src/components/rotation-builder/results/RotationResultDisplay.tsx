@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
 import { Stack } from '@/components/ui/layout';
-import { Heading, Text } from '@/components/ui/typography';
+import { BodyText, SectionHeading } from '@/components/ui/typography';
 import type { useRotationCalculation } from '@/hooks/useRotationCalculation';
 import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
 import { useTeamAttackInstances } from '@/hooks/useTeamAttackInstances';
@@ -114,12 +114,12 @@ export const RotationResultDisplay = ({
             return <div className="text-muted-foreground italic">Removed</div>;
           const isTuneBreak = attack.isTuneBreakAttack;
           return (
-            <div className="max-w-72 truncate pr-2">
+            <div className="max-w-72 truncate pr-compact">
               <Text variant="small">
                 {isTuneBreak ? 'Tune Break' : attack.parentName}
               </Text>
               {!isTuneBreak && (
-                <Text variant="tiny" className="text-muted-foreground truncate">
+                <Text variant="caption" className="text-muted-foreground truncate">
                   {attack.name}
                 </Text>
               )}
@@ -150,33 +150,28 @@ export const RotationResultDisplay = ({
   );
 
   return (
-    <Card className="border-primary/20 bg-primary/5 overflow-hidden p-6">
-      <Stack spacing="lg">
+    <Card className="border-primary/20 bg-primary/5 overflow-hidden p-page">
+      <Stack className="gap-page">
         {isStale && (
-          <div className="mb-2 flex items-center gap-3 rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-amber-500">
+          <div className="gap-component mb-2 flex items-center rounded-lg border border-amber-500/20 bg-amber-500/10 px-panel py-component text-amber-500">
             <AlertCircle className="h-5 w-5 shrink-0" />
             <div className="flex-1">
-              <Text variant="small" className="text-amber-500">
-                Outdated Result
-              </Text>
-              <Text variant="tiny" className="text-amber-500/80">
+              <BodyText className="text-amber-500">Outdated Result</BodyText>
+              <BodyText className="text-amber-500/80">
                 The rotation has changed. Recalculate to see updated damage.
-              </Text>
+              </BodyText>
             </div>
           </div>
         )}
 
-        <div className="border-primary/10 flex items-center justify-between border-b pb-4">
+        <div className="border-primary/10 flex items-center justify-between border-b pb-panel">
           <div>
-            <Text
-              variant="small"
-              className="text-muted-foreground font-semibold tracking-wider uppercase"
-            >
+            <BodyText className="text-muted-foreground font-semibold tracking-wider uppercase">
               Total Rotation Damage
-            </Text>
-            <Heading level={1} className="text-primary text-4xl">
+            </BodyText>
+            <SectionHeading className="text-primary text-4xl">
               {Math.round(result.totalDamage).toLocaleString()}
-            </Heading>
+            </SectionHeading>
           </div>
         </div>
 

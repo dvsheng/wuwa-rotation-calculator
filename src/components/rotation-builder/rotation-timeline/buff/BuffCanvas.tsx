@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Layout, LayoutItem } from 'react-grid-layout';
 import GridLayout from 'react-grid-layout';
 
-import { Text } from '@/components/ui/typography';
+import { BodyText } from '@/components/ui/typography';
 import { useCanvasLayout } from '@/hooks/useCanvasLayout';
 import { useTeamModifierInstances } from '@/hooks/useTeamModifierInstances';
 import { useStore } from '@/store';
@@ -47,15 +47,6 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
 
   return (
     <div className="canvas-section border-border border-b">
-      <div className="canvas-header">
-        <Text className="text-sm font-semibold tracking-wider uppercase">
-          Buff Timeline{' '}
-          <span className="text-muted-foreground">
-            ({buffs.length} {buffs.length === 1 ? 'Buff' : 'Buffs'})
-          </span>
-        </Text>
-      </div>
-
       <div className="canvas-content">
         <div
           className="canvas-drop-zone"
@@ -63,9 +54,7 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
         >
           {buffs.length === 0 && (
             <div className="canvas-empty-state">
-              <Text className="text-muted-foreground text-xs tracking-wider uppercase">
-                Drag buffs here to align with attacks
-              </Text>
+              <BodyText>Drag buffs here to align with attacks</BodyText>
             </div>
           )}
 

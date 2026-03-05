@@ -13,7 +13,7 @@ const Container = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...properties }, reference) => (
-  <div ref={reference} className={cn('w-full p-6', className)} {...properties} />
+  <div ref={reference} className={cn('w-full p-page', className)} {...properties} />
 ));
 Container.displayName = 'Container';
 
@@ -36,11 +36,7 @@ Grid.displayName = 'Grid';
 
 const Row = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...properties }, reference) => (
-    <div
-      ref={reference}
-      className={cn('flex items-center', className)}
-      {...properties}
-    />
+    <div ref={reference} className={cn('flex', className)} {...properties} />
   ),
 );
 Row.displayName = 'Row';
@@ -70,21 +66,11 @@ const FormGrid = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEl
 );
 FormGrid.displayName = 'FormGrid';
 
-const Stack = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & { spacing?: 'xs' | 'sm' | 'default' | 'lg' }
->(({ className, spacing = 'default', ...properties }, reference) => {
-  const spacingClass = {
-    xs: 'space-y-1',
-    sm: 'space-y-2',
-    default: 'space-y-4',
-    lg: 'space-y-8',
-  }[spacing];
-
-  return (
-    <div ref={reference} className={cn(spacingClass, className)} {...properties} />
-  );
-});
+const Stack = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...properties }, reference) => (
+    <div ref={reference} className={cn('flex flex-col', className)} {...properties} />
+  ),
+);
 Stack.displayName = 'Stack';
 
 const Box = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
@@ -92,7 +78,7 @@ const Box = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
     <div
       ref={reference}
       className={cn(
-        'border-border bg-card text-card-foreground rounded-md border p-3 shadow-sm',
+        'border-border bg-card text-card-foreground rounded-md border p-component shadow-sm',
         className,
       )}
       {...properties}

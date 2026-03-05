@@ -2,7 +2,7 @@ import { compact } from 'es-toolkit/array';
 import type { Layout, LayoutItem } from 'react-grid-layout';
 import GridLayout, { verticalCompactor } from 'react-grid-layout';
 
-import { Text } from '@/components/ui/typography';
+import { BodyText } from '@/components/ui/typography';
 import { useCanvasLayout } from '@/hooks/useCanvasLayout';
 import { useTeamAttackInstances } from '@/hooks/useTeamAttackInstances';
 import { useStore } from '@/store';
@@ -58,15 +58,6 @@ export const AttackCanvas = ({ onDropAttack }: AttackCanvasProperties) => {
 
   return (
     <div className="canvas-section">
-      <div className="canvas-header">
-        <Text className="text-sm font-semibold tracking-wider uppercase">
-          Attack Sequence{' '}
-          <span className="text-muted-foreground">
-            ({attacks.length} {attacks.length === 1 ? 'Attack' : 'Attacks'})
-          </span>
-        </Text>
-      </div>
-
       <div className="canvas-content">
         <div
           className="canvas-drop-zone"
@@ -74,9 +65,9 @@ export const AttackCanvas = ({ onDropAttack }: AttackCanvasProperties) => {
         >
           {attacks.length === 0 && (
             <div className="canvas-empty-state">
-              <Text className="text-muted-foreground text-xs tracking-wider uppercase">
+              <BodyText className="text-muted-foreground text-xs tracking-wider uppercase">
                 Drag attacks here to build your rotation
-              </Text>
+              </BodyText>
             </div>
           )}
 

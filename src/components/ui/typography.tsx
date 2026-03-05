@@ -1,65 +1,114 @@
-import * as React from 'react';
-
 import { cn } from '@/lib/utils';
+import { HTMLAttributes, ReactNode } from 'react';
 
-const Heading = React.forwardRef<
-  HTMLHeadingElement,
-  React.HTMLAttributes<HTMLHeadingElement> & { level?: 1 | 2 | 3 | 4 }
->(({ className, level = 1, ...properties }, reference) => {
-  const Comp = `h${level}` as any;
-  const sizeClasses = {
-    1: 'text-2xl font-bold tracking-tight',
-    2: 'text-xl font-semibold tracking-tight',
-    3: 'text-lg font-semibold',
-    4: 'text-base font-semibold',
-  };
+// ─── Shared prop types ────────────────────────────────────────────────────────
 
+type TypographyProps = HTMLAttributes<HTMLElement> & {
+  className?: string;
+  children?: ReactNode;
+};
+
+// ─── Typography Primitives ────────────────────────────────────────────────────
+
+export function DisplayHeading({ className, children, ...props }: TypographyProps) {
   return (
-    <Comp
-      ref={reference}
-      className={cn(sizeClasses[level], className)}
-      {...properties}
-    />
+    <h1
+      className={cn(
+        'text-foreground scroll-m-20 text-5xl leading-[1.05] font-black tracking-[-0.03em]',
+        className,
+      )}
+      {...(props as HTMLAttributes<HTMLHeadingElement>)}
+    >
+      {children}
+    </h1>
   );
-});
-Heading.displayName = 'Heading';
+}
 
-const Text = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement> & {
-    variant?: 'default' | 'muted' | 'small' | 'tiny';
-  }
->(({ className, variant = 'default', ...properties }, reference) => {
-  const variantClasses = {
-    default: 'text-base',
-    muted: 'text-sm text-muted-foreground',
-    small: 'text-xs',
-    tiny: 'text-[10px]',
-  };
+export function PageTitle({ className, children, ...props }: TypographyProps) {
+  return (
+    <h1
+      className={cn(
+        'text-foreground scroll-m-20 text-4xl leading-tight font-bold tracking-tight',
+        className,
+      )}
+      {...(props as HTMLAttributes<HTMLHeadingElement>)}
+    >
+      {children}
+    </h1>
+  );
+}
 
+export function SectionHeading({ className, children, ...props }: TypographyProps) {
+  return (
+    <h2
+      className={cn(
+        'text-foreground scroll-m-20 text-2xl leading-snug font-semibold tracking-tight',
+        className,
+      )}
+      {...(props as HTMLAttributes<HTMLHeadingElement>)}
+    >
+      {children}
+    </h2>
+  );
+}
+
+export function CardTitle({ className, children, ...props }: TypographyProps) {
+  return (
+    <h3
+      className={cn(
+        'text-foreground scroll-m-20 text-lg leading-snug font-semibold tracking-tight',
+        className,
+      )}
+      {...(props as HTMLAttributes<HTMLHeadingElement>)}
+    >
+      {children}
+    </h3>
+  );
+}
+
+export function BodyText({ className, children, ...props }: TypographyProps) {
   return (
     <p
-      ref={reference}
-      className={cn(variantClasses[variant], className)}
-      {...properties}
-    />
+      className={cn('text-foreground text-base leading-7 not-first:mt-4', className)}
+      {...(props as HTMLAttributes<HTMLParagraphElement>)}
+    >
+      {children}
+    </p>
   );
-});
-Text.displayName = 'Text';
+}
 
-const LabelText = React.forwardRef<
-  HTMLSpanElement,
-  React.HTMLAttributes<HTMLSpanElement>
->(({ className, ...properties }, reference) => (
-  <span
-    ref={reference}
-    className={cn(
-      'text-muted-foreground text-[10px] font-semibold uppercase',
-      className,
-    )}
-    {...properties}
-  />
-));
-LabelText.displayName = 'LabelText';
+export function SmallText({ className, children, ...props }: TypographyProps) {
+  return (
+    <p
+      className={cn('text-muted-foreground text-sm leading-6', className)}
+      {...(props as HTMLAttributes<HTMLParagraphElement>)}
+    >
+      {children}
+    </p>
+  );
+}
 
-export { Heading, LabelText, Text };
+export function Label({ className, children, ...props }: TypographyProps) {
+  return (
+    <span
+      className={cn(
+        'text-muted-foreground text-xs font-medium tracking-widest uppercase',
+        className,
+      )}
+      {...(props as HTMLAttributes<HTMLSpanElement>)}
+    >
+      {children}
+    </span>
+  );
+}
+
+export function Caption({ className, children, ...props }: TypographyProps) {
+  return (
+    <span
+      className={cn('text-muted-foreground/70 text-[11px] leading-5', className)}
+      {...(props as HTMLAttributes<HTMLSpanElement>)}
+    >
+      {children}
+    </span>
+  );
+}

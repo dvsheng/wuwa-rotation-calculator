@@ -50,7 +50,7 @@ export const EchoPieceEditor = ({
         <TableBody>
           <TableRow>
             <TableHead>Cost</TableHead>
-            <TableCell className="p-1">
+            <TableCell className="p-tight">
               <Select value={String(echo.cost)} onValueChange={handleCostChange}>
                 <SelectTrigger
                   size="sm"
@@ -71,7 +71,7 @@ export const EchoPieceEditor = ({
 
           <TableRow>
             <TableHead>Main Stat</TableHead>
-            <TableCell className="p-1">
+            <TableCell className="p-tight">
               <Select
                 value={echo.mainStatType}
                 onValueChange={(value) =>

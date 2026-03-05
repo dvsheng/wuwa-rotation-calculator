@@ -17,10 +17,16 @@
       "Bash(pnpm test -- rotationSlice)",
       "Bash(npx vitest run src/services/rotation-calculator/damage-calculator/calculate-damage.test.ts)",
       "WebFetch(domain:unpkg.com)",
-      "WebFetch(domain:tanstack.com)"
+      "WebFetch(domain:tanstack.com)",
+      "Read(//Users/david/Code/wuwa-rotation-builder/**)",
+      "Bash(cat:*)",
+      "Read(//Users/david/Code/wuwa-rotation-builder/{file=$1; gap=$\\(NF\\); if \\(match\\(gap, /gap-[x-y]*[0-9.]+/**)",
+      "Read(//Users/david/Code/wuwa-rotation-builder/{file=$1; line=$2; content=$0; gsub\\(/^[^:]*:[^:]*:/**)",
+      "Bash(sort -t: -k1,1 -k2,2n)"
     ],
     "additionalDirectories": [
-      "/Users/david/.claude/projects/-Users-david-Code-wuwa-rotation-builder/memory"
+      "/Users/david/.claude/projects/-Users-david-Code-wuwa-rotation-builder/memory",
+      "/tmp"
     ]
   }
 }

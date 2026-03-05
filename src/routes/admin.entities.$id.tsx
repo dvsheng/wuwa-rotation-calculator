@@ -92,7 +92,7 @@ function CapabilityEditor({ capability, entityId }: CapabilityEditorProperties) 
 
   return (
     <div className="space-y-3">
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="gap-component grid md:grid-cols-2">
         <div className="space-y-1">
           <Label>Name</Label>
           <Input value={name} onChange={(event) => setName(event.target.value)} />
@@ -165,7 +165,7 @@ function AdminEntityDetailsPage() {
 
   if (!Number.isInteger(entityId) || entityId <= 0) {
     return (
-      <div className="container mx-auto max-w-5xl p-6">
+      <div className="container mx-auto max-w-5xl p-page">
         <p className="text-destructive text-sm">Invalid entity ID.</p>
       </div>
     );
@@ -173,7 +173,7 @@ function AdminEntityDetailsPage() {
 
   if (error instanceof Error) {
     return (
-      <div className="container mx-auto max-w-5xl space-y-4 p-6">
+      <div className="container mx-auto max-w-5xl space-y-4 p-page">
         <Link to="/admin/entities">
           <Button variant="outline" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -187,7 +187,7 @@ function AdminEntityDetailsPage() {
 
   if (isLoading || !data) {
     return (
-      <div className="container mx-auto max-w-5xl p-6">
+      <div className="container mx-auto max-w-5xl p-page">
         <p className="text-muted-foreground text-sm">Loading entity details...</p>
       </div>
     );
@@ -257,7 +257,7 @@ function AdminEntityDetailsPage() {
   const defaultOpenSkillValues = skills.map((skill) => `skill-${skill.id}`);
 
   return (
-    <div className="container mx-auto max-w-6xl space-y-4 p-6">
+    <div className="container mx-auto max-w-6xl space-y-4 p-page">
       <Link to="/admin/entities">
         <Button variant="outline" size="sm">
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -267,7 +267,7 @@ function AdminEntityDetailsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="gap-compact flex items-center">
             {entityIconUrl ? (
               <img
                 src={entityIconUrl}
@@ -280,7 +280,7 @@ function AdminEntityDetailsPage() {
             {entityName}
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
+        <CardContent className="gap-compact flex flex-wrap">
           <Badge variant="outline">ID: {entityId}</Badge>
           {entityGameId ? (
             <Badge variant="outline">Game ID: {entityGameId}</Badge>
@@ -299,7 +299,7 @@ function AdminEntityDetailsPage() {
         <Accordion
           type="multiple"
           defaultValue={defaultOpenSkillValues}
-          className="w-full rounded-md border px-4"
+          className="w-full rounded-md border px-panel"
         >
           {skills.map((skill) => (
             <AccordionItem key={skill.id} value={`skill-${skill.id}`}>
@@ -323,10 +323,10 @@ function AdminEntityDetailsPage() {
                   defaultValue={skill.capabilities.map(
                     (capability) => `capability-${capability.capabilityId}`,
                   )}
-                  className="w-full rounded-md border px-4"
+                  className="w-full rounded-md border px-panel"
                 >
                   {skill.capabilities.length === 0 ? (
-                    <p className="text-muted-foreground py-3 text-sm">
+                    <p className="text-muted-foreground py-component text-sm">
                       No capabilities found for this skill.
                     </p>
                   ) : (
@@ -336,7 +336,7 @@ function AdminEntityDetailsPage() {
                         value={`capability-${capability.capabilityId}`}
                       >
                         <AccordionTrigger>
-                          <div className="flex flex-wrap items-center gap-2 text-left">
+                          <div className="gap-compact flex flex-wrap items-center text-left">
                             <span className="font-medium">
                               {capability.capabilityName}
                             </span>

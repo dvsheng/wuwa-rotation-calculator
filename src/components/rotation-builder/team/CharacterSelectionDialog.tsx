@@ -73,10 +73,10 @@ export const CharacterSelectionDialog = ({
           <CharacterIcon characterEntityId={char.id} size="large" />
           <div className="space-y-1">
             <div className="max-w-30 truncate text-sm">{char.name}</div>
-            <div className="flex items-center justify-center gap-1">
+            <div className="gap-tight flex items-center justify-center">
               <span
                 className={cn(
-                  'rounded-full px-1.5 py-0.5 text-xs uppercase',
+                  'px-compact py-tight rounded-full text-xs uppercase',
                   char.rarity === 5
                     ? 'text-foreground bg-rarity-5/10'
                     : 'text-foreground bg-rarity-4/10',

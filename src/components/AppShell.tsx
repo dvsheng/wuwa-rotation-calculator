@@ -3,6 +3,8 @@ import type { ReactNode } from 'react';
 
 import { AppHeader } from '@/components/AppHeader';
 
+import { Stack } from './ui/layout';
+
 interface AppShellProperties {
   children?: ReactNode;
 }
@@ -10,12 +12,10 @@ interface AppShellProperties {
 export function AppShell({ children }: AppShellProperties) {
   return (
     <TooltipProvider delayDuration={100}>
-      <div className="bg-background text-foreground flex min-h-screen flex-col font-sans">
+      <Stack className="h-screen overflow-hidden">
         <AppHeader />
-        <main>
-          <div className="min-h-0 flex-1">{children}</div>
-        </main>
-      </div>
+        <main className="h-full min-h-0 flex-1">{children}</main>
+      </Stack>
     </TooltipProvider>
   );
 }

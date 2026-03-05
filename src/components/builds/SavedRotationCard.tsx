@@ -132,7 +132,7 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
               Team
             </p>
             {configuredCharacters.length > 0 ? (
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="gap-compact flex flex-wrap items-center">
                 {configuredCharacters.map((character) => (
                   <CharacterIcon
                     key={character.id}
@@ -150,15 +150,15 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
             <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
               Enemy
             </p>
-            <div className="mb-2 flex flex-wrap items-center gap-2">
+            <div className="gap-compact mb-2 flex flex-wrap items-center">
               <span className="text-muted-foreground text-sm">
                 Level: {rotation.data.enemy.level}
               </span>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="gap-compact flex flex-wrap items-center">
               <span className="text-muted-foreground text-sm">Resistances:</span>
               {resistanceEntries.map(({ attribute, value }) => (
-                <Badge key={attribute} variant="outline" className="gap-1.5 px-2 py-1">
+                <Badge key={attribute} variant="outline" className="gap-compact px-compact py-tight">
                   <GameImage
                     entity="attribute"
                     type="icon"
@@ -172,7 +172,7 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
             </div>
           </div>
         </div>
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="gap-compact mt-4 flex flex-wrap">
           <Badge variant="outline">{rotation.data.attacks.length} Attacks</Badge>
           <Badge variant="outline">{rotation.data.buffs.length} Buffs</Badge>
           {rotation.totalDamage !== undefined && (
@@ -185,7 +185,7 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
           )}
         </div>
       </CardContent>
-      <CardFooter className="flex justify-end gap-2">
+      <CardFooter className="gap-compact flex justify-end">
         <Dialog open={isOverwriteDialogOpen} onOpenChange={setIsOverwriteDialogOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm">

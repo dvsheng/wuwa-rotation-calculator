@@ -243,13 +243,17 @@ export const ParameterConfigurationDialog = ({
   onOpenChange,
   isDialogClickable = true,
 }: ParameterConfigurationDialogProperties) => {
-  const handleOpenChange = (isOpen: boolean) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const hasParameters = !!capability.parameters;
+  const handleOpenChange = (_isOpen: boolean) => {
+    if (!hasParameters) return;
     if (!isDialogClickable) return;
-    onOpenChange?.(isOpen);
+    onOpenChange?.(_isOpen);
+    setIsOpen(_isOpen);
   };
 
   return (
-    <Dialog onOpenChange={handleOpenChange}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <div>{children}</div>
       </DialogTrigger>

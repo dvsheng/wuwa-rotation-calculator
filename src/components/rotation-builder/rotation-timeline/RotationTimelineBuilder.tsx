@@ -59,7 +59,7 @@ export const RotationBuilder = () => {
         />
       </ResizablePanel>
       <ResizableHandle withHandle />
-      <ResizablePanel defaultSize="75%">
+      <ResizablePanel defaultSize="75%" className="flex flex-col">
         <RotationCanvasHeader />
         <TimelinePanWrapper className="min-h-0 min-w-0 flex-1">
           <AttackCanvas onDropAttack={handleDropAttack} />

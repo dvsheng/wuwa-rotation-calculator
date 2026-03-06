@@ -3,6 +3,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from '@/components/ui/resizable';
+import { Separator } from '@/components/ui/separator';
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
 import type { Capability } from '@/schemas/rotation';
 import { useStore } from '@/store';
@@ -63,6 +64,7 @@ export const RotationBuilder = () => {
         <RotationCanvasHeader />
         <TimelinePanWrapper className="min-h-0 min-w-0 flex-1">
           <AttackCanvas onDropAttack={handleDropAttack} />
+          <Separator></Separator>
           <BuffCanvas onDropBuff={handleDropBuff} />
         </TimelinePanWrapper>
       </ResizablePanel>

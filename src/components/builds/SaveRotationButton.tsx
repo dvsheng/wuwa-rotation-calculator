@@ -27,6 +27,8 @@ import { calculateRotation } from '@/services/rotation-calculator/calculate-clie
 import { useStore } from '@/store';
 import { useLibraryStore } from '@/store/libraryStore';
 
+import { Row } from '../ui/layout';
+
 export function SaveRotationButton() {
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
@@ -68,7 +70,7 @@ export function SaveRotationButton() {
 
   return (
     <>
-      <div className="flex items-stretch">
+      <Row>
         <Button
           data-role="save-main"
           size="sm"
@@ -78,7 +80,7 @@ export function SaveRotationButton() {
           <Save size={14} />
           Save Rotation
         </Button>
-        <div className="bg-primary-foreground/20 w-px" />
+        <div className="bg-primary-foreground w-px" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -118,16 +120,15 @@ export function SaveRotationButton() {
             </DropdownMenuRadioGroup>
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
+      </Row>
 
       <SaveRotationDialog
         open={isSaveDialogOpen}
         onOpenChange={setIsSaveDialogOpen}
         trigger={false}
       />
-
       <Dialog open={isUpdateDialogOpen} onOpenChange={setIsUpdateDialogOpen}>
-        <DialogContent className="sm:max-w-130">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Update Existing Rotation</DialogTitle>
             <DialogDescription>

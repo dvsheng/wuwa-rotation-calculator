@@ -46,7 +46,7 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
   };
 
   return (
-    <div className="canvas-section border-border border-b">
+    <div className="canvas-section">
       <div className="canvas-content">
         <div
           className="canvas-drop-zone"
@@ -60,7 +60,7 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
 
           <GridLayout {...fullLayoutProperties}>
             {buffs.map((buff) => (
-              <div key={buff.instanceId} className="group relative">
+              <div key={buff.instanceId}>
                 <BuffCanvasItem
                   buff={buff}
                   onRemove={handleRemoveBuff}

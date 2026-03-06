@@ -16,7 +16,7 @@ export const CharacterCard = ({ index }: CharacterCardProperties) => {
   return (
     <Card className="w-120">
       <CardContent>
-        <Stack className="gap-panel">
+        <Stack gap="panel">
           <CharacterSelector index={index} />
           <WeaponSelector index={index} />
           <EchoSetSelector index={index} />

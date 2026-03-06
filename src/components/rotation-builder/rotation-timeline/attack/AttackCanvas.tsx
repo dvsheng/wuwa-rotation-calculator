@@ -71,7 +71,7 @@ export const AttackCanvas = ({ onDropAttack }: AttackCanvasProperties) => {
 
           <GridLayout {...fullLayoutProperties}>
             {attacks.map((attack, index) => (
-              <div key={attack.instanceId} className="h-full w-full">
+              <div key={attack.instanceId}>
                 <AttackCanvasItem
                   attack={attack}
                   index={index}

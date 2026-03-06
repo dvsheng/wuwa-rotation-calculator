@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch';
 
 import { Button } from '@/components/ui/button';
+import { Container } from '@/components/ui/layout';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
@@ -147,7 +148,10 @@ export const TimelinePanWrapper = ({
         };
 
         return (
-          <div className={cn('relative flex min-h-0 w-full flex-col', className)}>
+          <Container
+            padding="none"
+            className={cn('relative flex min-h-0 flex-col', className)}
+          >
             <Button
               type="button"
               variant="outline"
@@ -193,7 +197,7 @@ export const TimelinePanWrapper = ({
                 <div className="flex min-h-0 min-w-full flex-col">{children}</div>
               </TransformComponent>
             </ScrollArea>
-          </div>
+          </Container>
         );
       }}
     </TransformWrapper>

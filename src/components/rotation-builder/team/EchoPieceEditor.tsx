@@ -1,4 +1,3 @@
-import { Box } from '@/components/ui/layout';
 import {
   Select,
   SelectContent,
@@ -45,7 +44,7 @@ export const EchoPieceEditor = ({
   };
 
   return (
-    <Box className="bg-muted/5">
+    <div className="border-border bg-muted/5 text-card-foreground p-component rounded-md border shadow-sm">
       <Table>
         <TableBody>
           <TableRow>
@@ -119,6 +118,6 @@ export const EchoPieceEditor = ({
           ))}
         </TableBody>
       </Table>
-    </Box>
+    </div>
   );
 };

@@ -26,11 +26,8 @@ const TARGET_COLORS: Record<Target, string> = {
   [Target.ENEMY]: 'border-red-400 bg-red-100 text-foreground',
 };
 
-/** Classes for self buffs with segments (border + text, background handled by segments) */
-const SELF_BASE_CLASSES = 'border-blue-400 text-foreground bg-transparent';
-
-/** Classes for fully misaligned self buffs (outline only) */
-const SELF_MISALIGNED_CLASSES = 'border-blue-400 bg-transparent text-foreground';
+/** Classes for self buffs without a solid fill (border + text, background transparent) */
+const SELF_UNFILLED_CLASSES = 'border-blue-400 bg-transparent text-foreground';
 
 interface BuffCanvasItemProperties {
   buff: DetailedModifierInstance;
@@ -67,13 +64,13 @@ export const BuffCanvasItem = ({
       }
       case 'all-misaligned': {
         // Fully misaligned: outline only
-        return { itemClassName: SELF_MISALIGNED_CLASSES, segments: [] };
+        return { itemClassName: SELF_UNFILLED_CLASSES, segments: [] };
       }
       case 'mixed': {
         // Partially aligned: render individual segments with rounded corners
         const alignmentSegments = getAlignmentSegments(alignment.columnAlignments);
         return {
-          itemClassName: SELF_BASE_CLASSES,
+          itemClassName: SELF_UNFILLED_CLASSES,
           segments: alignmentSegments,
         };
       }
@@ -134,21 +131,21 @@ export const BuffCanvasItem = ({
           {shouldShowWarning && (
             <AlertTriangle
               data-testid="alert-triangle"
-              className="h-5 w-5 shrink-0 text-amber-500"
+              className="size-5 shrink-0 text-amber-500"
             />
           )}
           <ItemActions>
             <Button
               variant="ghost"
               size="icon"
-              className="text-muted-foreground h-6 w-6 shrink-0"
+              className="text-muted-foreground size-6 shrink-0"
               onPointerDown={(event) => event.stopPropagation()}
               onClick={(event) => {
                 event.stopPropagation();
                 updateBuffLayout(buff.instanceId, { x: 0, w: attacks.length });
               }}
             >
-              <Maximize2 className="h-3.5 w-3.5" />
+              <Maximize2 className="size-3.5" />
             </Button>
             <TrashButton
               className="shrink-0"

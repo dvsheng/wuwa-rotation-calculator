@@ -157,7 +157,7 @@ export const RotationResultDisplay = ({
 
   return (
     <Card className="border-primary/20 bg-primary/5 p-page overflow-hidden">
-      <Stack className="gap-page">
+      <Stack gap="page">
         {isStale && (
           <div className="gap-component px-panel py-component mb-2 flex items-center rounded-lg border border-amber-500/20 bg-amber-500/10 text-amber-500">
             <AlertCircle className="h-5 w-5 shrink-0" />

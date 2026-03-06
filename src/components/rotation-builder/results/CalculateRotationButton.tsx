@@ -39,7 +39,7 @@ export function CalculateRotationButton({
       onClick={() => void handleCalculateClick()}
       disabled={isFetching}
     >
-      <Play className="mr-2 h-4 w-4 fill-current" />
+      <Play className="size-4 fill-current" />
       {isFetching ? 'Calculating...' : 'Calculate Rotation Damage'}
     </Button>
   );

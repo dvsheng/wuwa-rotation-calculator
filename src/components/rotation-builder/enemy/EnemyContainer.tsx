@@ -1,8 +1,7 @@
 import { useForm } from '@tanstack/react-form';
 
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Stack } from '@/components/ui/layout';
+import { Container, Stack } from '@/components/ui/layout';
 import {
   Table,
   TableBody,
@@ -11,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Text } from '@/components/ui/typography';
 import { EnemySchema } from '@/schemas/enemy';
 import { useStore } from '@/store';
 import { Attribute } from '@/types';
@@ -36,73 +36,70 @@ export const EnemyContainer = () => {
   });
 
   return (
-    <div>
-      <Stack className="gap-panel">
-        <form.Field
-          name="level"
-          children={(field) => (
-            <div className="space-y-2">
-              <Label htmlFor={field.name}>Level</Label>
-              <Input
-                id={field.name}
-                type="number"
-                value={field.state.value}
-                onBlur={field.handleBlur}
-                onChange={(event) => field.handleChange(Number(event.target.value))}
+    <Stack gap="panel" className="w-96">
+      <form.Field
+        name="level"
+        children={(field) => (
+          <Stack gap="compact">
+            <Text variant="overline" as="label" htmlFor={field.name}>
+              Level
+            </Text>
+            <Input
+              id={field.name}
+              type="number"
+              value={field.state.value}
+              onBlur={field.handleBlur}
+              onChange={(event) => field.handleChange(Number(event.target.value))}
+            />
+            {field.state.meta.errors.length > 0 ? (
+              <Text as="p" variant="error">
+                {field.state.meta.errors.join(', ')}
+              </Text>
+            ) : undefined}
+          </Stack>
+        )}
+      />
+      <Text variant="overline">Attribute Resistances</Text>
+      <Container padding="none" className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Attribute</TableHead>
+              <TableHead className="w-36 text-right">Resistance (%)</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Object.values(Attribute).map((attribute) => (
+              <form.Field
+                key={attribute}
+                name={`resistances.${attribute}`}
+                children={(field) => (
+                  <TableRow>
+                    <TableCell className="capitalize">{attribute}</TableCell>
+                    <TableCell className="space-y-1 text-right">
+                      <Input
+                        id={field.name}
+                        type="number"
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(event) =>
+                          field.handleChange(Number(event.target.value))
+                        }
+                        className="ml-auto w-24 text-right"
+                      />
+                      {field.state.meta.errors.length > 0 ? (
+                        <Text as="p" variant="error">
+                          {field.state.meta.errors.join(', ')}
+                        </Text>
+                      ) : undefined}
+                    </TableCell>
+                  </TableRow>
+                )}
               />
-              {field.state.meta.errors.length > 0 ? (
-                <p className="text-destructive text-sm">
-                  {field.state.meta.errors.join(', ')}
-                </p>
-              ) : undefined}
-            </div>
-          )}
-        />
-
-        <div className="space-y-2">
-          <Label>Attribute Resistances</Label>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Attribute</TableHead>
-                  <TableHead className="w-36 text-right">Resistance (%)</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {Object.values(Attribute).map((attribute) => (
-                  <form.Field
-                    key={attribute}
-                    name={`resistances.${attribute}`}
-                    children={(field) => (
-                      <TableRow>
-                        <TableCell className="capitalize">{attribute}</TableCell>
-                        <TableCell className="space-y-1 text-right">
-                          <Input
-                            id={field.name}
-                            type="number"
-                            value={field.state.value}
-                            onBlur={field.handleBlur}
-                            onChange={(event) =>
-                              field.handleChange(Number(event.target.value))
-                            }
-                            className="ml-auto w-24 text-right"
-                          />
-                          {field.state.meta.errors.length > 0 ? (
-                            <p className="text-destructive text-xs">
-                              {field.state.meta.errors.join(', ')}
-                            </p>
-                          ) : undefined}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  />
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-      </Stack>
-    </div>
+            ))}
+          </TableBody>
+        </Table>
+      </Container>
+    </Stack>
   );
 };

@@ -18,6 +18,7 @@ export const useIcons = (requests: Array<IconRequest>) => {
     queryKey: ['icons', sortedRequests],
     queryFn: () => getIcons({ data: requests }),
     enabled: requests.length > 0,
+    staleTime: Infinity,
   });
 };
 

@@ -15,7 +15,7 @@ const textVariants = cva('', {
       /**
        * Section and page headings.
        */
-      heading: 'text-2xl font-semibold tracking-tight',
+      heading: 'text-xl font-semibold tracking-tight',
 
       /**
        * Default readable body copy.
@@ -23,9 +23,14 @@ const textVariants = cva('', {
       body: 'text-base',
 
       /**
-       * Secondary / supporting text. Muted colour at smaller size.
+       * Secondary / supporting text. Muted color at smaller size.
        */
       small: 'text-sm text-muted-foreground',
+
+      /**
+       * Text for errors. Red color at smaller size
+       */
+      error: 'text-sm text-destructive',
 
       /**
        * Fine-print details — indexes, timestamps, metadata.

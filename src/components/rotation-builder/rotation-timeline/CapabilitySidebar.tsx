@@ -15,13 +15,11 @@ import type { DetailedAttack, DetailedModifier } from '@/hooks/useTeamDetails';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
 import { cn } from '@/lib/utils';
 import type { Capability } from '@/schemas/rotation';
-import { CapabilityType, OriginType, Target } from '@/services/game-data';
+import { Target } from '@/services/game-data';
 import type {
   AttackOriginType,
   OriginType as CapabilityOriginType,
 } from '@/services/game-data';
-import { TUNE_BREAK_ATTACK_ID } from '@/services/game-data/tune-break';
-import { TUNE_STRAIN_BUFF_ID } from '@/services/game-data/tune-strain';
 
 const ATTACK_COLORS: Record<AttackOriginType, string> = {
   'Normal Attack': 'border-slate-400 bg-slate-100 text-foreground',
@@ -69,31 +67,6 @@ const TARGET_ORDER: Array<Target> = [
   Target.ACTIVE_CHARACTER,
   Target.ENEMY,
 ];
-
-const TUNE_BREAK_CAPABILITY: DetailedAttack = {
-  id: TUNE_BREAK_ATTACK_ID,
-  isTuneBreakAttack: true,
-  characterId: 0,
-  entityId: 0,
-  characterName: 'All Characters',
-  name: 'Tune Break',
-  parentName: 'Other',
-  originType: OriginType.TUNE_BREAK,
-  capabilityType: CapabilityType.ATTACK,
-};
-
-const TUNE_STRAIN_CAPABILITY: DetailedModifier = {
-  id: TUNE_STRAIN_BUFF_ID,
-  characterId: 0,
-  entityId: 0,
-  characterName: 'All Characters',
-  name: 'Tune Strain',
-  parentName: 'Other',
-  originType: 'Tune Break',
-  target: Target.ENEMY,
-  parameters: [{ id: '0', minimum: 0, maximum: 4 }],
-  capabilityType: CapabilityType.MODIFIER,
-};
 
 interface CapabilitySidebarProperties {
   onClickAttack?: (attack: Capability) => void;
@@ -266,18 +239,16 @@ export const CapabilitySidebar = ({
     [],
   );
   const [searchText, setSearchText] = useState('');
-  const { attacks, buffs, hasTuneStrain } = useTeamDetails();
-  const hasTuneBreak = attacks.some((attack) => attack.isTuneBreakAttack);
-  const nonTuneBreakAttacks = attacks.filter((attack) => !attack.isTuneBreakAttack);
+  const { attacks, buffs } = useTeamDetails();
   const characterNames = [
     ...new Set([
-      ...nonTuneBreakAttacks.map((attack) => attack.characterName),
+      ...attacks.map((attack) => attack.characterName),
       ...buffs.map((buff) => buff.characterName),
     ]),
   ].toSorted((left, right) => left.localeCompare(right));
   const availableOrigins = [
     ...new Set<CapabilityOriginType>([
-      ...nonTuneBreakAttacks.map((attack) => attack.originType),
+      ...attacks.map((attack) => attack.originType),
       ...buffs.map((buff) => buff.originType),
     ]),
   ];
@@ -300,7 +271,7 @@ export const CapabilitySidebar = ({
     matchesOriginFilter(originType) &&
     matchesSearchText(capability, searchText);
 
-  const filteredAttacks = nonTuneBreakAttacks.filter((attack) =>
+  const filteredAttacks = attacks.filter((attack) =>
     matchesCapabilityFilters(attack, attack.originType),
   );
   const filteredBuffs = buffs.filter((buff) =>
@@ -314,12 +285,6 @@ export const CapabilitySidebar = ({
     filteredBuffs,
     (buff) => buff.characterName,
   );
-  const showTuneBreakCapability =
-    hasTuneBreak &&
-    matchesCapabilityFilters(TUNE_BREAK_CAPABILITY, TUNE_BREAK_CAPABILITY.originType);
-  const showTuneStrainCapability =
-    hasTuneStrain &&
-    matchesCapabilityFilters(TUNE_STRAIN_CAPABILITY, TUNE_STRAIN_CAPABILITY.originType);
 
   return (
     <Stack className="relative h-full min-h-0">
@@ -417,23 +382,6 @@ export const CapabilitySidebar = ({
               );
             },
           )}
-
-          {showTuneBreakCapability && (
-            <CapabilityGroup name="Other">
-              <CapabilityCard
-                capability={TUNE_BREAK_CAPABILITY}
-                colorClassName={ATTACK_COLORS[OriginType.TUNE_BREAK]}
-                onDragStart={
-                  onDragAttack
-                    ? (event) => onDragAttack(TUNE_BREAK_CAPABILITY, event)
-                    : undefined
-                }
-                onClick={
-                  onClickAttack ? () => onClickAttack(TUNE_BREAK_CAPABILITY) : undefined
-                }
-              />
-            </CapabilityGroup>
-          )}
         </CapabilitySection>
 
         <CapabilitySection title="Buffs" emptyMessage="No buffs available">
@@ -473,23 +421,6 @@ export const CapabilitySidebar = ({
                 </CapabilityGroup>
               );
             },
-          )}
-
-          {showTuneStrainCapability && (
-            <CapabilityGroup name="Other">
-              <CapabilityCard
-                capability={TUNE_STRAIN_CAPABILITY}
-                colorClassName={TARGET_COLORS[Target.ENEMY]}
-                onDragStart={
-                  onDragBuff
-                    ? (event) => onDragBuff(TUNE_STRAIN_CAPABILITY, event)
-                    : undefined
-                }
-                onClick={
-                  onClickBuff ? () => onClickBuff(TUNE_STRAIN_CAPABILITY) : undefined
-                }
-              />
-            </CapabilityGroup>
           )}
         </CapabilitySection>
       </ScrollArea>

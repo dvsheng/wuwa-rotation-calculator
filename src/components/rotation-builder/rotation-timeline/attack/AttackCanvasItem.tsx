@@ -1,6 +1,5 @@
 import { isNil } from 'es-toolkit/predicate';
 import { AlertTriangle } from 'lucide-react';
-import { useMemo } from 'react';
 
 import { CapabilityIcon } from '@/components/common/CapabilityIcon';
 import { CapabilityTooltip } from '@/components/common/CapabilityTooltip';
@@ -10,7 +9,6 @@ import { TrashButton } from '@/components/common/TrashButton';
 import { Text } from '@/components/ui/typography';
 import { useEntityIcon } from '@/hooks/useIcons';
 import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
-import { useTeamDetails } from '@/hooks/useTeamDetails';
 
 interface AttackCanvasItemProperties {
   attack: DetailedAttackInstance;
@@ -18,31 +16,6 @@ interface AttackCanvasItemProperties {
   onRemove: (instanceId: string) => void;
   isDialogClickable: boolean;
 }
-
-/** Stacked row of character icons for all team members contributing Tune Break damage. */
-const TuneBreakCharacterStack = () => {
-  const { attacks } = useTeamDetails();
-
-  const contributors = useMemo(() => {
-    const seen = new Set<number>();
-    return attacks.filter((a) => {
-      if (!a.isTuneBreakAttack) return false;
-      if (seen.has(a.characterId)) return false;
-      seen.add(a.characterId);
-      return true;
-    });
-  }, [attacks]);
-
-  return (
-    <div className="flex items-center justify-center">
-      {contributors.map((c, index) => (
-        <div key={c.characterId} className={index > 0 ? '-ml-3' : undefined}>
-          <CharacterIcon characterEntityId={c.characterId} size="medium" />
-        </div>
-      ))}
-    </div>
-  );
-};
 
 export const AttackCanvasItem = ({
   attack,
@@ -52,7 +25,6 @@ export const AttackCanvasItem = ({
 }: AttackCanvasItemProperties) => {
   const { data: characterIconUrl } = useEntityIcon(attack.characterId);
 
-  const isTuneBreak = attack.isTuneBreakAttack;
   const isAttackConfigurable = (attack.parameters?.length ?? 0) > 0;
   const shouldShowWarning =
     isAttackConfigurable &&
@@ -81,12 +53,8 @@ export const AttackCanvasItem = ({
             />
           )}
           {/* Character icon(s) */}
-          {isTuneBreak ? (
-            <TuneBreakCharacterStack />
-          ) : (
-            characterIconUrl && (
-              <CharacterIcon characterEntityId={attack.characterId} size="large" />
-            )
+          {characterIconUrl && (
+            <CharacterIcon characterEntityId={attack.characterId} size="large" />
           )}
 
           {/* Capability icon */}

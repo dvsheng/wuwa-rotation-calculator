@@ -1,7 +1,5 @@
 import { compact } from 'es-toolkit/array';
 
-import { CapabilityType, OriginType } from '@/services/game-data';
-import { TUNE_BREAK_ATTACK_ID } from '@/services/game-data/tune-break';
 import { useStore } from '@/store';
 
 import { useTeamDetails } from './useTeamDetails';
@@ -25,25 +23,6 @@ export const useTeamAttackInstances = () => {
   );
   const fullAttacks = compact(
     storedAttacks.map((stored) => {
-      // Virtual tune break attack: not backed by a single game-data capability
-      if (stored.isTuneBreakAttack ?? stored.id === TUNE_BREAK_ATTACK_ID) {
-        return {
-          capabilityType: CapabilityType.ATTACK,
-          instanceId: stored.instanceId,
-          id: TUNE_BREAK_ATTACK_ID,
-          isTuneBreakAttack: true,
-          name: 'Tune Break',
-          parentName: 'Other',
-          description:
-            'Combined Tune Break damage from all characters with Tune Break capabilities.',
-          characterId: 0,
-          entityId: 0,
-          characterName: 'All Characters',
-          originType: OriginType.TUNE_BREAK,
-          parameters: [] as Array<never>,
-        };
-      }
-
       const gameData = attackMap.get(`${stored.characterId}:${stored.id}`);
       if (!gameData) return;
 
@@ -57,7 +36,6 @@ export const useTeamAttackInstances = () => {
       return {
         instanceId: stored.instanceId,
         id: gameData.id,
-        isTuneBreakAttack: gameData.isTuneBreakAttack,
         name: gameData.name,
         parentName: gameData.parentName,
         description: gameData.description,

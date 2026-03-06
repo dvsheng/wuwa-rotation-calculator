@@ -19,7 +19,6 @@ export type DetailedModifier = ClientCharacterDetails & ClientModifier;
 export interface UseTeamDetailsResult {
   attacks: Array<DetailedAttack>;
   buffs: Array<DetailedModifier>;
-  hasTuneStrain: boolean;
   isLoading: boolean;
   isError: boolean;
 }

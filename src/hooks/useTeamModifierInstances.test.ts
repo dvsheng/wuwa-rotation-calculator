@@ -45,7 +45,6 @@ describe('useTeamModifierInstances', () => {
           parameters: [],
         },
       ],
-      hasTuneStrain: false,
       isLoading: false,
       isError: false,
     });

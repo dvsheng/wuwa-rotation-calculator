@@ -40,7 +40,6 @@ const MOCK_ATTACKS = [
     characterName: 'Rover',
     originType: OriginType.RESONANCE_LIBERATION,
     capabilityType: CapabilityType.ATTACK,
-    isTuneBreakAttack: false,
     parameters: [] as [],
   },
   {
@@ -54,7 +53,6 @@ const MOCK_ATTACKS = [
     characterName: 'Rover',
     originType: OriginType.NORMAL_ATTACK,
     capabilityType: CapabilityType.ATTACK,
-    isTuneBreakAttack: false,
     parameters: [] as [],
   },
   {
@@ -68,7 +66,6 @@ const MOCK_ATTACKS = [
     characterName: 'Rover',
     originType: OriginType.NORMAL_ATTACK,
     capabilityType: CapabilityType.ATTACK,
-    isTuneBreakAttack: false,
     parameters: [] as [],
   },
 ];

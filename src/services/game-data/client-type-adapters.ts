@@ -1,7 +1,6 @@
 import { uniqBy } from 'es-toolkit/array';
 
 import type { ClientAttack, ClientModifier } from './get-entity-details.types';
-import { isTuneBreakAttack } from './tune-break';
 import type {
   Attack,
   AttackOriginType,
@@ -68,7 +67,6 @@ export const toClientAttack = (attack: Attack): ClientAttack => {
     name: attack.name,
     parentName: attack.parentName ?? '',
     originType: attack.originType as AttackOriginType,
-    isTuneBreakAttack: isTuneBreakAttack(attack),
     description: attack.description,
     parameters: parameters.length > 0 ? parameters : undefined,
     capabilityType: attack.capabilityType,

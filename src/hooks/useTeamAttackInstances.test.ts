@@ -27,7 +27,6 @@ describe('useTeamAttackInstances', () => {
           description: '',
           originType: OriginType.ECHO,
           capabilityType: CapabilityType.ATTACK,
-          isTuneBreakAttack: false,
           parameters: [],
         },
         {
@@ -40,12 +39,10 @@ describe('useTeamAttackInstances', () => {
           description: '',
           originType: OriginType.ECHO,
           capabilityType: CapabilityType.ATTACK,
-          isTuneBreakAttack: false,
           parameters: [],
         },
       ],
       buffs: [],
-      hasTuneStrain: false,
       isLoading: false,
       isError: false,
     });

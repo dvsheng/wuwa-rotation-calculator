@@ -11,12 +11,11 @@ import type {
   PermanentStatBase,
 } from '@/services/game-data';
 import { getEchoStats } from '@/services/game-data';
-import { TUNE_BREAK_ATTACK_ID } from '@/services/game-data/tune-break';
-import { TUNE_STRAIN_BUFF_ID } from '@/services/game-data/tune-strain';
-import { CharacterStat, EnemyStat, Tag } from '@/types';
+import { CharacterStat, Tag } from '@/types';
 import type {
   CharacterAttack,
   CharacterStats,
+  EnemyStat,
   Modifier as RotationModifier,
   TaggedStatValue,
 } from '@/types';
@@ -346,18 +345,6 @@ export const adaptClientInputToRotation = async (
     expandedBuffs
       .filter((modifier) => shouldModifierApplyToAttack(storedIndex, modifier))
       .flatMap((modifier): Array<RotationModifier> => {
-        if (modifier.id === TUNE_STRAIN_BUFF_ID) {
-          const stacks =
-            modifier.parameterValues?.find((p) => p.id === '0')?.value ?? 0;
-          return [
-            {
-              targets: ['enemy'],
-              modifiedStats: {
-                [EnemyStat.TUNE_STRAIN_STACKS]: [{ tags: [Tag.ALL], value: stacks }],
-              },
-            },
-          ];
-        }
         return [
           toRotationModifier(
             resolveUserParameterizedValues(enricher.enrichModifier(modifier)),
@@ -368,25 +355,6 @@ export const adaptClientInputToRotation = async (
       });
 
   const rotationAttacks = attacks.flatMap((attack, storedIndex) => {
-    if (attack.isTuneBreakAttack ?? attack.id === TUNE_BREAK_ATTACK_ID) {
-      const tuneBreakAttacks = enricher.getTuneBreakAttacks();
-      return tuneBreakAttacks.map(({ attack: tbAttack, characterIndex }) => {
-        const resolved = resolveUserParameterizedValues(tbAttack);
-        return {
-          attack: {
-            characterIndex,
-            damageInstances: resolved.damageInstances.map((di) => ({
-              scalingStat: di.scalingStat,
-              tags: di.tags,
-              motionValue: di.motionValue,
-            })),
-          },
-          modifiers: buildModifiers(storedIndex, clientTeam[characterIndex].id),
-          storedAttackIndex: storedIndex,
-        };
-      });
-    }
-
     const enriched = enricher.enrichAttack(attack);
     const resolved = resolveUserParameterizedValues(enriched);
     const modifiers = buildModifiers(storedIndex, attack.characterId);

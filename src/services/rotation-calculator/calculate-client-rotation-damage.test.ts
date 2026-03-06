@@ -6,7 +6,6 @@ import type { Enemy } from '@/schemas/enemy';
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import type { Team } from '@/schemas/team';
 import { CapabilityType } from '@/services/game-data';
-import { TUNE_BREAK_ATTACK_ID } from '@/services/game-data/tune-break';
 import { calculateRotationHandler } from '@/services/rotation-calculator/calculate-client-rotation-damage';
 import {
   AttackScalingProperty,
@@ -420,7 +419,6 @@ describe('calculateRotation', () => {
           };
         },
         getPermanentStatsForCharacter: () => [],
-        getTuneBreakAttacks: () => [],
       });
     });
 
@@ -542,126 +540,6 @@ describe('calculateRotation', () => {
 
     afterEach(() => {
       vi.restoreAllMocks();
-    });
-  });
-
-  describe('Tune Break virtual attack expansion', () => {
-    const CHAR_A_ID = 1601;
-    const CHAR_B_ID = 1602;
-    const TUNE_BREAK_ATK_ID_A = 8_800_001;
-    const TUNE_BREAK_ATK_ID_B = 8_800_002;
-
-    beforeEach(() => {
-      mockGetEntityByHakushinId.mockImplementation(({ data }) => {
-        if (data.entityType === 'character') {
-          const tuneBreakAttack = (id: number) => ({
-            id,
-            name: 'Tune Rupture Response',
-            parentName: 'Tune Break',
-            originType: 'Tune Break',
-            capabilityType: CapabilityType.ATTACK,
-            attribute: Tag.SPECTRO,
-            damageInstances: [
-              {
-                motionValue: 1,
-                tags: [Tag.ALL],
-                scalingStat: AttackScalingProperty.TUNE_RUPTURE_ATK,
-              },
-            ],
-          });
-          switch (data.id) {
-            case CHAR_A_ID: {
-              return Promise.resolve(
-                createMockCharacterData(CHAR_A_ID, 'CharA', Tag.SPECTRO, [
-                  tuneBreakAttack(TUNE_BREAK_ATK_ID_A),
-                ]),
-              );
-            }
-            case CHAR_B_ID: {
-              return Promise.resolve(
-                createMockCharacterData(CHAR_B_ID, 'CharB', Tag.SPECTRO, [
-                  tuneBreakAttack(TUNE_BREAK_ATK_ID_B),
-                ]),
-              );
-            }
-            case 1505: {
-              return Promise.resolve(
-                createMockCharacterData(1505, 'Filler', Tag.SPECTRO),
-              );
-            }
-            default: {
-              return Promise.reject(new Error(`Unknown character ID: ${data.id}`));
-            }
-          }
-        }
-        switch (data.entityType) {
-          case 'echo': {
-            return Promise.resolve(createMockEchoData());
-          }
-          case 'weapon': {
-            return Promise.resolve(createMockWeaponData());
-          }
-          case 'echo_set': {
-            return Promise.resolve(createMockEchoSetData());
-          }
-          default: {
-            return Promise.reject(new Error(`Unknown entity type: ${data.entityType}`));
-          }
-        }
-      });
-    });
-
-    it('expands a single virtual Tune Break attack into one damage entry per character', async () => {
-      const team: Team = [
-        createTestCharacter(CHAR_A_ID),
-        createTestCharacter(CHAR_B_ID),
-        createTestCharacter(1505),
-      ];
-      const enemy = createTestEnemy();
-
-      const tuneBreakAttack: AttackInstance = {
-        instanceId: 'tune-break-1',
-        id: TUNE_BREAK_ATTACK_ID,
-        characterId: 0,
-      };
-
-      const result = await calculateRotationHandler(team, enemy, [tuneBreakAttack], []);
-
-      // Two characters each contribute one damage entry
-      expect(result.damageDetails).toHaveLength(2);
-
-      // Both entries trace back to stored attack index 0 (the single Tune Break instance)
-      expect(result.damageDetails[0].attackIndex).toBe(0);
-      expect(result.damageDetails[1].attackIndex).toBe(0);
-
-      // Each entry is attributed to a different character slot
-      expect(result.damageDetails[0].characterIndex).toBe(0);
-      expect(result.damageDetails[1].characterIndex).toBe(1);
-
-      // Total damage is the sum of both characters' contributions
-      const sum = result.damageDetails[0].damage + result.damageDetails[1].damage;
-      expect(result.totalDamage).toBeCloseTo(sum, 5);
-      expect(result.totalDamage).toBeGreaterThan(0);
-    });
-
-    it('produces no damage entries when no characters have tune break attacks', async () => {
-      const team: Team = [
-        createTestCharacter(1505), // filler with no tune break
-        createTestCharacter(1505),
-        createTestCharacter(1505),
-      ];
-      const enemy = createTestEnemy();
-
-      const tuneBreakAttack: AttackInstance = {
-        instanceId: 'tune-break-1',
-        id: TUNE_BREAK_ATTACK_ID,
-        characterId: 0,
-      };
-
-      const result = await calculateRotationHandler(team, enemy, [tuneBreakAttack], []);
-
-      expect(result.damageDetails).toHaveLength(0);
-      expect(result.totalDamage).toBe(0);
     });
   });
 

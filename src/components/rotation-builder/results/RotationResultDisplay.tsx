@@ -42,20 +42,7 @@ export const RotationResultDisplay = ({
   isStale,
 }: RotationResultDisplayProperties) => {
   const storedAttacks = useStore((state) => state.attacks);
-  const teamSlots = useStore((state) => state.team);
   const { attacks: resolvedAttacks } = useTeamAttackInstances();
-
-  // Map characterId → characterName for per-character tune break row labelling
-  const characterIdToName = useMemo(
-    () => new Map(resolvedAttacks.map((a) => [a.characterId, a.characterName])),
-    [resolvedAttacks],
-  );
-
-  // Ordered by team slot so detail.characterIndex maps directly to a name
-  const characterIndexToName = useMemo(
-    () => teamSlots.map((c) => characterIdToName.get(c.id) ?? 'Unknown'),
-    [teamSlots, characterIdToName],
-  );
 
   const data: Array<DamageRow> = useMemo(() => {
     const attackMap = new Map(resolvedAttacks.map((a) => [a.instanceId, a]));
@@ -63,10 +50,7 @@ export const RotationResultDisplay = ({
 
     return result.damageDetails.map((detail, index) => {
       const attack = attackMap.get(storedAttacks[detail.attackIndex]?.instanceId);
-      const isTuneBreak = attack?.isTuneBreakAttack ?? false;
-      const characterName = isTuneBreak
-        ? (characterIndexToName[detail.characterIndex] ?? 'Unknown')
-        : (attack?.characterName ?? 'Unknown');
+      const characterName = attack?.characterName ?? 'Unknown';
 
       const hitIndex = hitCountPerAttack.get(detail.attackIndex) ?? 0;
       hitCountPerAttack.set(detail.attackIndex, hitIndex + 1);
@@ -81,7 +65,7 @@ export const RotationResultDisplay = ({
         damage: detail.damage,
       };
     });
-  }, [result, storedAttacks, resolvedAttacks, characterIndexToName]);
+  }, [result, storedAttacks, resolvedAttacks]);
 
   const columns = useMemo<Array<ColumnDef<DamageRow>>>(
     () => [
@@ -118,17 +102,12 @@ export const RotationResultDisplay = ({
                 Removed
               </Text>
             );
-          const isTuneBreak = attack.isTuneBreakAttack;
           return (
             <div className="pr-compact max-w-72 truncate">
-              <Text variant="small">
-                {isTuneBreak ? 'Tune Break' : attack.parentName}
+              <Text variant="small">{attack.parentName}</Text>
+              <Text variant="caption" className="text-muted-foreground truncate">
+                {attack.name}
               </Text>
-              {!isTuneBreak && (
-                <Text variant="caption" className="text-muted-foreground truncate">
-                  {attack.name}
-                </Text>
-              )}
             </div>
           );
         },

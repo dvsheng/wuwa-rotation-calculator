@@ -1,5 +1,5 @@
 import { relations, sql } from 'drizzle-orm';
-import { integer, sqliteTable, sqliteView, text } from 'drizzle-orm/sqlite-core';
+import { integer, real, sqliteTable, sqliteView, text } from 'drizzle-orm/sqlite-core';
 
 import type {
   DatabaseAttackData,
@@ -7,6 +7,7 @@ import type {
   DatabaseModifierData,
   DatabasePermanentStatData,
 } from '@/schemas/database';
+import type { SavedRotationData } from '@/schemas/library';
 import type {
   CapabilityType,
   EntityType,
@@ -98,6 +99,18 @@ export const capabilities = sqliteTable('capabilities', {
   capabilityJson: text('capability_json', { mode: 'json' })
     .notNull()
     .$type<DatabaseCapabilityType>(),
+});
+
+/**
+ * Saved rotations table - stores user-created rotation configurations.
+ */
+export const rotations = sqliteTable('rotations', {
+  ...baseTableFields,
+  ownerId: text('owner_id').notNull(),
+  name: text('name').notNull(),
+  description: text('description'),
+  totalDamage: real('total_damage'),
+  data: text('data', { mode: 'json' }).notNull().$type<SavedRotationData>(),
 });
 
 // ============================================================================
@@ -202,6 +215,8 @@ export type DatabaseCapability = typeof capabilities.$inferSelect;
 export type NewDatabaseCapability = typeof capabilities.$inferInsert;
 
 export type DatabaseFullCapability = typeof fullCapabilities.$inferSelect;
+export type DatabaseRotation = typeof rotations.$inferSelect;
+export type NewDatabaseRotation = typeof rotations.$inferInsert;
 
 export type DatabaseFullCapabilityByType<T extends CapabilityType> = Omit<
   DatabaseFullCapability,

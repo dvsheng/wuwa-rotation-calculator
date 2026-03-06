@@ -3,14 +3,13 @@ import { Shield, Users } from 'lucide-react';
 import { Row, Stack } from '@/components/ui/layout';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Text } from '@/components/ui/typography';
-import { TeamSchema } from '@/schemas/team';
+import { TEAM_SIZE } from '@/schemas/team';
 
 import { EnemyContainer } from '../enemy/EnemyContainer';
 
 import { CharacterCard } from './CharacterCard';
 
 export const TeamContainer = () => {
-  const teamSize = TeamSchema.def.items.length;
   return (
     <Row justify="center" className="min-h-0 min-w-0 flex-1">
       <Stack className="border-border flex h-full w-fit overflow-hidden border-r">
@@ -27,7 +26,7 @@ export const TeamContainer = () => {
         </Row>
         <ScrollArea className="min-h-0 flex-1">
           <Row gap="component" className="p-component w-fit">
-            {Array.from({ length: teamSize }).map((_, index) => (
+            {Array.from({ length: TEAM_SIZE }).map((_, index) => (
               <CharacterCard key={index} index={index} />
             ))}
           </Row>

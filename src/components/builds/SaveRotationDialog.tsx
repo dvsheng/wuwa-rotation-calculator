@@ -15,9 +15,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useRotationLibrary } from '@/hooks/useRotationLibrary';
 import { calculateRotation } from '@/services/rotation-calculator/calculate-client-rotation-damage';
 import { useStore } from '@/store';
-import { useLibraryStore } from '@/store/libraryStore';
 
 interface SaveRotationDialogProperties {
   open?: boolean;
@@ -37,7 +37,7 @@ export function SaveRotationDialog({
   const setOpen = onOpenChange ?? setInternalOpen;
 
   const { team, enemy, attacks, buffs } = useStore();
-  const addRotation = useLibraryStore((state) => state.addRotation);
+  const { createRotation, isCreating } = useRotationLibrary();
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -56,7 +56,12 @@ export function SaveRotationDialog({
         // calculation is best-effort; save without it if it fails
       }
 
-      addRotation(name, { team, enemy, attacks, buffs }, description, totalDamage);
+      await createRotation({
+        name,
+        data: { team, enemy, attacks, buffs },
+        description: description || undefined,
+        totalDamage,
+      });
       toast.success('Rotation saved successfully!');
       setOpen(false);
       setName('');
@@ -120,8 +125,8 @@ export function SaveRotationDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button type="submit" onClick={handleSave}>
-            Save
+          <Button type="submit" onClick={handleSave} disabled={isCreating}>
+            {isCreating ? 'Saving...' : 'Save'}
           </Button>
         </DialogFooter>
       </DialogContent>

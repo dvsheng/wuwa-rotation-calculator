@@ -27,10 +27,10 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Text } from '@/components/ui/typography';
+import { useRotationLibrary } from '@/hooks/useRotationLibrary';
 import type { SavedRotation } from '@/schemas/library';
 import { calculateRotation } from '@/services/rotation-calculator/calculate-client-rotation-damage';
 import { useStore } from '@/store';
-import { useLibraryStore } from '@/store/libraryStore';
 import { Attribute } from '@/types';
 
 interface SavedRotationCardProperties {
@@ -40,8 +40,8 @@ interface SavedRotationCardProperties {
 export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
   const navigate = useNavigate();
   const { setTeam, setEnemy, setAttacks, setBuffs } = useStore();
-  const deleteRotation = useLibraryStore((state) => state.deleteRotation);
-  const updateRotation = useLibraryStore((state) => state.updateRotation);
+  const { deleteRotation, updateRotation, isDeleting, isUpdating } =
+    useRotationLibrary();
   const { team, enemy, attacks, buffs } = useStore();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isOverwriteDialogOpen, setIsOverwriteDialogOpen] = useState(false);
@@ -67,10 +67,15 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
     }
   };
 
-  const handleDelete = () => {
-    deleteRotation(rotation.id);
-    toast.success('Rotation deleted.');
-    setIsDeleteDialogOpen(false);
+  const handleDelete = async () => {
+    try {
+      await deleteRotation({ id: rotation.id });
+      toast.success('Rotation deleted.');
+      setIsDeleteDialogOpen(false);
+    } catch (error) {
+      console.error('Failed to delete rotation:', error);
+      toast.error('Failed to delete rotation.');
+    }
   };
 
   const handleOverwrite = async () => {
@@ -81,9 +86,18 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
     } catch {
       // best-effort
     }
-    updateRotation(rotation.id, { data: { team, enemy, attacks, buffs }, totalDamage });
-    toast.success(`Overwrote rotation: ${rotation.name}`);
-    setIsOverwriteDialogOpen(false);
+    try {
+      await updateRotation({
+        id: rotation.id,
+        data: { team, enemy, attacks, buffs },
+        totalDamage,
+      });
+      toast.success(`Overwrote rotation: ${rotation.name}`);
+      setIsOverwriteDialogOpen(false);
+    } catch (error) {
+      console.error('Failed to overwrite rotation:', error);
+      toast.error('Failed to overwrite rotation.');
+    }
   };
 
   return (
@@ -115,7 +129,11 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
                 <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button variant="destructive" onClick={handleDelete}>
+                <Button
+                  variant="destructive"
+                  onClick={() => void handleDelete()}
+                  disabled={isDeleting}
+                >
                   Delete
                 </Button>
               </DialogFooter>
@@ -212,7 +230,9 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
               <Button variant="outline" onClick={() => setIsOverwriteDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleOverwrite}>Overwrite</Button>
+              <Button onClick={() => void handleOverwrite()} disabled={isUpdating}>
+                Overwrite
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

@@ -14,11 +14,11 @@ export const SavedRotationDataSchema = z.object({
 export type SavedRotationData = z.infer<typeof SavedRotationDataSchema>;
 
 export const SavedRotationSchema = z.object({
-  id: z.string(),
+  id: z.number(),
   name: z.string(),
   description: z.string().optional(),
-  createdAt: z.number(),
-  updatedAt: z.number(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
   totalDamage: z.number().optional(),
   data: SavedRotationDataSchema,
 });

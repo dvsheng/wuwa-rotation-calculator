@@ -22,7 +22,13 @@
       "Bash(cat:*)",
       "Read(//Users/david/Code/wuwa-rotation-builder/{file=$1; gap=$\\(NF\\); if \\(match\\(gap, /gap-[x-y]*[0-9.]+/**)",
       "Read(//Users/david/Code/wuwa-rotation-builder/{file=$1; line=$2; content=$0; gsub\\(/^[^:]*:[^:]*:/**)",
-      "Bash(sort -t: -k1,1 -k2,2n)"
+      "Bash(sort -t: -k1,1 -k2,2n)",
+      "Bash(sqlite3 /Users/david/Code/wuwa-rotation-builder/.local/data/game-data.db \"SELECT * FROM full_capabilities WHERE capability_json LIKE ''%tuneStrain%'';\")",
+      "Bash(sqlite3 /Users/david/Code/wuwa-rotation-builder/.local/data/game-data.db \"SELECT id, name, capability_type, capability_json FROM capabilities WHERE capability_json LIKE ''%tuneStrain%'';\")",
+      "Bash(sqlite3 /Users/david/Code/wuwa-rotation-builder/.local/data/game-data.db \"SELECT * FROM full_capabilities WHERE capability_json LIKE ''%tuneStrainStacks%'' AND capability_type = ''permanent_stat'';\")",
+      "Bash(sqlite3 /Users/david/Code/wuwa-rotation-builder/.local/data/game-data.db \"SELECT id, name, capability_type, capability_json FROM capabilities WHERE capability_json LIKE ''%tuneStrain%'' AND capability_type = ''modifier'';\")",
+      "Bash(sqlite3 /Users/david/Code/wuwa-rotation-builder/.local/data/game-data.db \"SELECT * FROM full_capabilities WHERE capability_json LIKE ''%tuneStrain%'' AND capability_type = ''modifier'' AND entity_name = ''Luuk Herssen'';\")",
+      "Bash(sqlite3 /Users/david/Code/wuwa-rotation-builder/.local/data/game-data.db \"SELECT id, name, capability_type, capability_json FROM capabilities WHERE capability_json LIKE ''%tuneRupture%'' OR capability_json LIKE ''%tuneBreakBoost%'';\")"
     ],
     "additionalDirectories": [
       "/Users/david/.claude/projects/-Users-david-Code-wuwa-rotation-builder/memory",

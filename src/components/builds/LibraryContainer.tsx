@@ -4,10 +4,10 @@ import { SavedRotationCard } from '@/components/builds/SavedRotationCard';
 import { SaveRotationDialog } from '@/components/builds/SaveRotationDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Text } from '@/components/ui/typography';
-import { useLibraryStore } from '@/store/libraryStore';
+import { useRotationLibrary } from '@/hooks/useRotationLibrary';
 
 export function LibraryContainer() {
-  const rotations = useLibraryStore((state) => state.rotations);
+  const { rotations, isLoading, error } = useRotationLibrary();
 
   return (
     <div className="container mx-auto max-w-5xl space-y-6">
@@ -20,7 +20,21 @@ export function LibraryContainer() {
         </div>
       </div>
 
-      {rotations.length === 0 ? (
+      {isLoading ? (
+        <Card className="border-dashed">
+          <CardContent className="py-page text-center">
+            <Text variant="small">Loading saved rotations...</Text>
+          </CardContent>
+        </Card>
+      ) : error ? (
+        <Card className="border-dashed">
+          <CardContent className="py-page text-center">
+            <Text variant="small" className="text-destructive">
+              Failed to load saved rotations.
+            </Text>
+          </CardContent>
+        </Card>
+      ) : rotations.length === 0 ? (
         <Card className="animate-in fade-in-50 border-dashed">
           <CardHeader className="items-center text-center">
             <div className="bg-muted/50 mx-auto flex h-20 w-20 items-center justify-center rounded-full">
@@ -36,7 +50,7 @@ export function LibraryContainer() {
       ) : (
         <div className="gap-page grid lg:grid-cols-2">
           {rotations
-            .toSorted((a, b) => b.updatedAt - a.updatedAt)
+            .toSorted((a, b) => b.updatedAt.getDate() - a.updatedAt.getDate())
             .map((rotation) => (
               <SavedRotationCard key={rotation.id} rotation={rotation} />
             ))}

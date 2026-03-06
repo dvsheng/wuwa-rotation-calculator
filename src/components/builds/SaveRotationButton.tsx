@@ -22,10 +22,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useRotationLibrary } from '@/hooks/useRotationLibrary';
 import type { SavedRotation } from '@/schemas/library';
 import { calculateRotation } from '@/services/rotation-calculator/calculate-client-rotation-damage';
 import { useStore } from '@/store';
-import { useLibraryStore } from '@/store/libraryStore';
 
 import { Row } from '../ui/layout';
 
@@ -33,16 +33,14 @@ export function SaveRotationButton() {
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const [saveAction, setSaveAction] = useState<'save' | 'update'>('save');
-  const [isUpdatingRotationId, setIsUpdatingRotationId] = useState<string>();
-  const rotations = useLibraryStore((state) => state.rotations);
-  const updateRotation = useLibraryStore((state) => state.updateRotation);
+  const { rotations, updateRotation, isUpdating } = useRotationLibrary();
   const { team, enemy, attacks, buffs } = useStore();
 
-  const sortedRotations = rotations.toSorted((a, b) => b.updatedAt - a.updatedAt);
+  const sortedRotations = rotations.toSorted(
+    (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
+  );
 
   const handleUpdateRotation = async (rotation: SavedRotation) => {
-    setIsUpdatingRotationId(rotation.id);
-
     try {
       let totalDamage: number | undefined;
       try {
@@ -54,7 +52,8 @@ export function SaveRotationButton() {
         // best-effort
       }
 
-      updateRotation(rotation.id, {
+      await updateRotation({
+        id: rotation.id,
         data: { team, enemy, attacks, buffs },
         totalDamage,
       });
@@ -63,8 +62,6 @@ export function SaveRotationButton() {
     } catch (error) {
       console.error('Failed to update rotation:', error);
       toast.error('Failed to update rotation.');
-    } finally {
-      setIsUpdatingRotationId(undefined);
     }
   };
 
@@ -141,7 +138,7 @@ export function SaveRotationButton() {
                 key={rotation.id}
                 variant="outline"
                 className="py-component h-auto w-full justify-between text-left"
-                disabled={isUpdatingRotationId !== undefined}
+                disabled={isUpdating}
                 onClick={() => void handleUpdateRotation(rotation)}
               >
                 <span className="truncate">{rotation.name}</span>

@@ -1,5 +1,14 @@
 import { relations, sql } from 'drizzle-orm';
-import { integer, real, sqliteTable, sqliteView, text } from 'drizzle-orm/sqlite-core';
+import {
+  integer,
+  jsonb,
+  pgTable,
+  pgView,
+  real,
+  serial,
+  text,
+  timestamp,
+} from 'drizzle-orm/pg-core';
 
 import type {
   DatabaseAttackData,
@@ -24,12 +33,14 @@ import type { Attribute, WeaponType } from '@/types';
  */
 const baseTableFields = {
   // Primary key - autoincrement integer
-  id: integer('id').primaryKey({ autoIncrement: true }),
+  id: serial('id').primaryKey(),
   // Timestamps
-  createdAt: integer('created_at', { mode: 'timestamp' })
+  createdAt: timestamp('created_at')
+    .defaultNow()
     .notNull()
     .$defaultFn(() => new Date()),
-  updatedAt: integer('updated_at', { mode: 'timestamp' })
+  updatedAt: timestamp('updated_at')
+    .defaultNow()
     .notNull()
     .$onUpdate(() => new Date()),
 } as const;
@@ -37,7 +48,7 @@ const baseTableFields = {
 /**
  * Main entities table storing characters, weapons, echoes, and echo sets
  */
-export const entities = sqliteTable('entities', {
+export const entities = pgTable('entities', {
   ...baseTableFields,
 
   // Common fields
@@ -55,19 +66,17 @@ export const entities = sqliteTable('entities', {
   attribute: text('attribute').$type<Attribute>(),
 
   // Echo-specific fields
-  echoSetIds: text('echo_set_ids', { mode: 'json' }).$type<Array<number>>(),
+  echoSetIds: jsonb('echo_set_ids').$type<Array<number>>(),
   cost: integer('cost'), // Echo cost (1, 3, or 4)
 
   // Echo Set-specific fields
-  setBonusThresholds: text('set_bonus_thresholds', { mode: 'json' }).$type<
-    Array<number>
-  >(),
+  setBonusThresholds: jsonb('set_bonus_thresholds').$type<Array<number>>(),
 });
 
 /**
  * Skills table - stores character and weapon skills
  */
-export const skills = sqliteTable('skills', {
+export const skills = pgTable('skills', {
   ...baseTableFields,
 
   // Game ID (original identifier from game data)
@@ -88,7 +97,7 @@ export const skills = sqliteTable('skills', {
 /**
  * Unified capabilities table - combines attacks, modifiers, and permanent stats
  */
-export const capabilities = sqliteTable('capabilities', {
+export const capabilities = pgTable('capabilities', {
   ...baseTableFields,
   skillId: integer('skill_id')
     .references(() => skills.id, { onDelete: 'cascade' })
@@ -96,21 +105,19 @@ export const capabilities = sqliteTable('capabilities', {
   name: text('name'),
   description: text('description'),
   capabilityType: text('capability_type').notNull().$type<CapabilityType>(),
-  capabilityJson: text('capability_json', { mode: 'json' })
-    .notNull()
-    .$type<DatabaseCapabilityType>(),
+  capabilityJson: jsonb('capability_json').notNull().$type<DatabaseCapabilityType>(),
 });
 
 /**
  * Saved rotations table - stores user-created rotation configurations.
  */
-export const rotations = sqliteTable('rotations', {
+export const rotations = pgTable('rotations', {
   ...baseTableFields,
   ownerId: text('owner_id').notNull(),
   name: text('name').notNull(),
   description: text('description'),
   totalDamage: real('total_damage'),
-  data: text('data', { mode: 'json' }).notNull().$type<SavedRotationData>(),
+  data: jsonb('data').notNull().$type<SavedRotationData>(),
 });
 
 // ============================================================================
@@ -139,15 +146,13 @@ export const capabilitiesRelations = relations(capabilities, ({ one }) => ({
 /**
  * Denormalized view of capabilities with skill and entity data
  */
-export const fullCapabilities = sqliteView('full_capabilities', {
+export const fullCapabilities = pgView('full_capabilities', {
   // Capability fields
   capabilityId: integer('capability_id').notNull(),
   capabilityName: text('capability_name'),
   capabilityDescription: text('capability_description'),
   capabilityType: text('capability_type').notNull().$type<CapabilityType>(),
-  capabilityJson: text('capability_json', { mode: 'json' })
-    .notNull()
-    .$type<DatabaseCapabilityType>(),
+  capabilityJson: jsonb('capability_json').notNull().$type<DatabaseCapabilityType>(),
 
   // Skill fields (nullable if entity has no skills)
   skillId: integer('skill_id').notNull(),
@@ -165,11 +170,9 @@ export const fullCapabilities = sqliteView('full_capabilities', {
   rank: integer('rank'),
   weaponType: text('weapon_type').$type<WeaponType>(),
   attribute: text('attribute').$type<Attribute>(),
-  echoSetIds: text('echo_set_ids', { mode: 'json' }).$type<Array<number>>(),
+  echoSetIds: jsonb('echo_set_ids').$type<Array<number>>(),
   cost: integer('cost'),
-  setBonusThresholds: text('set_bonus_thresholds', { mode: 'json' }).$type<
-    Array<number>
-  >(),
+  setBonusThresholds: jsonb('set_bonus_thresholds').$type<Array<number>>(),
 }).as(
   sql`
     SELECT

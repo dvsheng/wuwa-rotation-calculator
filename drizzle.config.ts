@@ -3,8 +3,10 @@ import type { Config } from 'drizzle-kit';
 export default {
   schema: './src/db/schema.ts',
   out: './drizzle',
-  dialect: 'sqlite',
+  dialect: 'postgresql',
   dbCredentials: {
-    url: './.local/data/game-data.db',
+    url:
+      process.env.DATABASE_URL ??
+      'postgres://localhost:5432/wuwa_rotation_builder',
   },
 } satisfies Config;

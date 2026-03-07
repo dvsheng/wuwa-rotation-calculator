@@ -1,18 +1,17 @@
-import path from 'node:path';
-
-import { createClient } from '@libsql/client';
-import { drizzle } from 'drizzle-orm/libsql';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 
 import * as schema from './schema';
 
-const DB_PATH = path.join(process.cwd(), '.local', 'data', 'game-data.db');
+if (!process.env.DATABASE_URL) {
+  console.error('DATABASE_URL environment variable not set');
+  throw new Error('DATABASE_URL environment variable not set');
+}
 
 /**
- * SQLite database instance
+ * PostgreSQL database client
  */
-const client = createClient({
-  url: `file:${DB_PATH}`,
-});
+const client = postgres(process.env.DATABASE_URL);
 
 /**
  * Drizzle database client

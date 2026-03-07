@@ -104,7 +104,6 @@ export const capabilities = pgTable('capabilities', {
     .notNull(),
   name: text('name'),
   description: text('description'),
-  capabilityType: text('capability_type').notNull().$type<CapabilityType>(),
   capabilityJson: jsonb('capability_json').notNull().$type<DatabaseCapabilityType>(),
 });
 
@@ -179,7 +178,7 @@ export const fullCapabilities = pgView('full_capabilities', {
       capabilities.id AS capability_id,
       capabilities.name AS capability_name,
       capabilities.description AS capability_description,
-      capabilities.capability_type AS capability_type,
+      capabilities.capability_json->>'type' AS capability_type,
       capabilities.capability_json AS capability_json,
       skills.id AS skill_id,
       skills.name AS skill_name,

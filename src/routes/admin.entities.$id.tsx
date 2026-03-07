@@ -70,7 +70,6 @@ function CapabilityEditor({ capability, entityId }: CapabilityEditorProperties) 
       await updateAdminCapability({
         data: {
           capabilityId: capability.capabilityId,
-          capabilityType,
           capabilityJson: parsedCapabilityJson.data,
           ...(name.trim() && { name: name.trim() }),
           ...(description.trim() && { description: description.trim() }),

@@ -20,7 +20,6 @@ export const updateAdminCapabilityHandler = async (
     .set({
       name: input.name,
       description: input.description,
-      capabilityType: input.capabilityType,
       capabilityJson: input.capabilityJson,
     })
     .where(eq(capabilities.id, input.capabilityId));

@@ -186,7 +186,7 @@ function validateCapabilityTags(
 
   // For modifiers, also check tags in modifiedStats
   if (
-    capability.capabilityType === CapabilityType.MODIFIER &&
+    capability.capabilityJson.type === CapabilityType.MODIFIER &&
     Array.isArray(json.modifiedStats)
   ) {
     for (const stat of json.modifiedStats) {
@@ -225,7 +225,7 @@ const MUTUALLY_EXCLUSIVE_DAMAGE_TYPE_TAGS = new Set<string>([
 const NEGATIVE_STATUS_SCALING_STATS = new Set<string>(Object.values(NegativeStatus));
 
 function validateAttackDamageTypeTags(capability: DatabaseCapability): Array<string> {
-  if (capability.capabilityType !== CapabilityType.ATTACK) {
+  if (capability.capabilityJson.type !== CapabilityType.ATTACK) {
     return [];
   }
 
@@ -377,7 +377,7 @@ async function validateDatabase() {
   const capabilities = await database.query.capabilities.findMany();
   const attackNames = new Set(
     capabilities
-      .filter((capability) => capability.capabilityType === CapabilityType.ATTACK)
+      .filter((capability) => capability.capabilityJson.type === CapabilityType.ATTACK)
       .map((capability) => capability.name)
       .filter((name) => name !== null),
   );

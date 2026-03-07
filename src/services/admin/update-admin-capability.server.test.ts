@@ -47,7 +47,6 @@ describe('updateAdminCapabilityHandler', () => {
       capabilityId: 1,
       name: 'Updated Name',
       description: 'Updated Description',
-      capabilityType: 'modifier',
       capabilityJson: {
         type: 'modifier',
         target: 'self',
@@ -59,7 +58,6 @@ describe('updateAdminCapabilityHandler', () => {
     expect(mocks.set).toHaveBeenCalledWith({
       name: 'Updated Name',
       description: 'Updated Description',
-      capabilityType: 'modifier',
       capabilityJson: {
         type: 'modifier',
         target: 'self',
@@ -77,7 +75,6 @@ describe('updateAdminCapabilityHandler', () => {
     await expect(
       updateAdminCapabilityHandler({
         capabilityId: 999,
-        capabilityType: 'attack',
         capabilityJson: {
           type: 'attack',
           damageInstances: [

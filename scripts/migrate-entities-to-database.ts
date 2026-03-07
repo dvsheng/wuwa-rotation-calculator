@@ -264,7 +264,6 @@ const upsertEchoSetSkills = async (echoSet: TransformedEchoSet): Promise<number>
           .update(capabilities)
           .set({
             description: skill.description ?? '',
-            capabilityType: 'permanent_stat',
             capabilityJson: {
               type: 'permanent_stat',
               stat: skill.stat,
@@ -279,7 +278,6 @@ const upsertEchoSetSkills = async (echoSet: TransformedEchoSet): Promise<number>
           skillId,
           name: statName,
           description: skill.description ?? '',
-          capabilityType: 'permanent_stat',
           capabilityJson: {
             type: 'permanent_stat',
             stat: skill.stat as any,
@@ -461,7 +459,6 @@ const upsertWeaponProperties = async (
         .update(capabilities)
         .set({
           description,
-          capabilityType: 'permanent_stat',
           capabilityJson: {
             type: 'permanent_stat',
             stat: stat,
@@ -477,7 +474,6 @@ const upsertWeaponProperties = async (
         skillId,
         name,
         description,
-        capabilityType: 'permanent_stat',
         capabilityJson: {
           type: 'permanent_stat',
           stat: stat,
@@ -813,7 +809,6 @@ const upsertCharacterProperties = async (
         .update(capabilities)
         .set({
           description,
-          capabilityType: 'permanent_stat',
           capabilityJson: {
             type: 'permanent_stat',
             stat: stat as any,
@@ -829,7 +824,6 @@ const upsertCharacterProperties = async (
         skillId,
         name,
         description,
-        capabilityType: 'permanent_stat',
         capabilityJson: {
           type: 'permanent_stat',
           stat: stat as any,
@@ -902,7 +896,6 @@ const upsertCharacterSkillTreeNodes = async (
         .update(capabilities)
         .set({
           description,
-          capabilityType: 'permanent_stat',
           capabilityJson: {
             type: 'permanent_stat',
             stat: stat,
@@ -918,7 +911,6 @@ const upsertCharacterSkillTreeNodes = async (
         skillId,
         name,
         description,
-        capabilityType: 'permanent_stat',
         capabilityJson: {
           type: 'permanent_stat',
           stat: stat,

@@ -58,6 +58,7 @@ const toAttack = (attack: any): Attack => {
     description: attack.capabilityDescription ?? attack.skillDescription,
     originType: attack.skillOriginType,
     parentName: attack.skillName,
+    iconUrl: attack.skillIconUrl ?? attack.entityIconUrl ?? undefined,
     attribute: json.attribute,
     damageInstances: json.damageInstances.map((di: any) => ({
       ...di,
@@ -78,6 +79,7 @@ const toModifier = (modifier: any): Modifier => {
     description: modifier.capabilityDescription ?? modifier.skillDescription,
     originType: modifier.skillOriginType,
     parentName: modifier.skillName,
+    iconUrl: modifier.skillIconUrl ?? modifier.entityIconUrl ?? undefined,
     target: json.target,
     modifiedStats: json.modifiedStats,
   };
@@ -149,6 +151,7 @@ export const getEntityByIdHandler = async (
     id: firstCapability.entityId,
     gameId: firstCapability.entityId,
     name: firstCapability.entityName,
+    iconUrl: firstCapability.entityIconUrl ?? undefined,
     capabilities: {
       attacks: attacks,
       modifiers: modifiers,
@@ -167,6 +170,7 @@ export const getClientEntityByIdHandler = async (
   return {
     id: entity.id,
     name: entity.name,
+    iconUrl: entity.iconUrl,
     attacks: entity.capabilities.attacks.map((attack) => toClientAttack(attack)),
     modifiers: entity.capabilities.modifiers.map((modifier) => toClientBuff(modifier)),
     hasTuneStrainDamageBonus: hasTuneStrainDamageBonus || undefined,

@@ -12,17 +12,20 @@ const SIZE_CLASSES: Record<IconSize, string> = {
 };
 
 interface CapabilityIconProperties {
-  capabilityId: number;
+  capabilityId?: number;
+  iconUrl?: string;
   size?: IconSize;
   className?: string;
 }
 
 export const CapabilityIcon = ({
   capabilityId,
+  iconUrl,
   size = 'medium',
   className,
 }: CapabilityIconProperties) => {
-  const { data: iconUrl } = useCapabilityIcon(capabilityId);
+  const { data } = useCapabilityIcon(capabilityId ?? -1, { enabled: !iconUrl });
+  const _iconUrl = iconUrl ?? data;
 
   return (
     <div
@@ -32,9 +35,9 @@ export const CapabilityIcon = ({
         className,
       )}
     >
-      {iconUrl ? (
+      {_iconUrl ? (
         <img
-          src={iconUrl}
+          src={_iconUrl}
           alt=""
           className="p-tight h-full w-full object-contain"
           draggable={false}

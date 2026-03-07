@@ -211,7 +211,7 @@ const CapabilityCard = ({
         )}
       >
         <CapabilityIcon
-          capabilityId={capability.id}
+          iconUrl={capability.iconUrl}
           size="medium"
           className="absolute top-2"
         />

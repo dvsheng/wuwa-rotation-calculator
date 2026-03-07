@@ -12,15 +12,18 @@ const SIZE_CLASSES: Record<IconSize, string> = {
 };
 
 interface CharacterIconProperties {
-  characterEntityId: number;
+  characterEntityId?: number;
+  iconUrl?: string;
   size?: IconSize;
 }
 
 export const CharacterIcon = ({
   characterEntityId,
+  iconUrl,
   size = 'medium',
 }: CharacterIconProperties) => {
-  const { data: iconUrl } = useEntityIcon(characterEntityId);
+  const { data } = useEntityIcon(characterEntityId ?? -1, { enabled: !iconUrl });
+  const _iconUrl = iconUrl ?? data;
 
   return (
     <div
@@ -29,8 +32,8 @@ export const CharacterIcon = ({
         SIZE_CLASSES[size],
       )}
     >
-      {iconUrl ? (
-        <img src={iconUrl} alt="" className="h-full w-full object-cover" />
+      {_iconUrl ? (
+        <img src={_iconUrl} alt="" className="h-full w-full object-cover" />
       ) : (
         <CircleUser className={'text-muted-foreground/40 h-full w-full object-cover'} />
       )}

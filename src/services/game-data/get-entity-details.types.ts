@@ -36,6 +36,8 @@ export interface ClientModifier extends ClientCapability {
 export interface GetClientEntityDetailsResponse {
   id: number;
   name: string;
+  /** Icon URL for this entity */
+  iconUrl?: string;
   /** Active attacks for the entity */
   attacks: Array<ClientAttack>;
   /** Active modifiers for the entity */

@@ -121,10 +121,10 @@ export const BuffCanvasItem = ({
             />
           ))}
           <ItemMedia>
-            <CharacterIcon characterEntityId={buff.characterId} size="medium" />
+            <CharacterIcon iconUrl={buff.characterIconUrl} size="medium" />
           </ItemMedia>
           <ItemMedia>
-            <CapabilityIcon capabilityId={buff.id} size="medium" />
+            <CapabilityIcon iconUrl={buff.iconUrl} size="medium" />
           </ItemMedia>
           <ItemContent className="text-xs">{buff.name}</ItemContent>
           {/* Warning indicator */}

@@ -10,6 +10,7 @@ interface ClientCharacterDetails {
   characterId: number;
   entityId: number;
   characterName: string;
+  characterIconUrl?: string;
 }
 
 export type DetailedAttack = ClientCharacterDetails & ClientAttack;
@@ -132,6 +133,7 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
           characterId,
           entityId,
           characterName,
+          characterIconUrl: data.iconUrl,
         }));
       });
 
@@ -147,6 +149,7 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
           characterId,
           entityId,
           characterName,
+          characterIconUrl: data.iconUrl,
         }));
       });
 

@@ -112,6 +112,8 @@ export interface BaseCapability {
   /** Description of the capability */
   description?: string;
   capabilityType: CapabilityType;
+  /** Icon URL for this capability (coalesced from skill icon then entity icon) */
+  iconUrl?: string;
 }
 
 // ============================================================================
@@ -271,5 +273,7 @@ export interface BaseEntity<T = {}> {
   gameId?: number;
   /** Name of the entity */
   name: string;
+  /** Icon URL for this entity */
+  iconUrl?: string;
   capabilities: Capabilities<T>;
 }

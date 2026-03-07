@@ -42,6 +42,8 @@ export const useTeamAttackInstances = () => {
         characterId: gameData.characterId,
         entityId: gameData.entityId,
         characterName: gameData.characterName,
+        characterIconUrl: gameData.characterIconUrl,
+        iconUrl: gameData.iconUrl,
         originType: gameData.originType,
         capabilityType: gameData.capabilityType,
         parameters,

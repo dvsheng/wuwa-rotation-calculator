@@ -7,7 +7,6 @@ import { CharacterIcon } from '@/components/common/CharacterIcon';
 import { ParameterConfigurationDialog } from '@/components/common/ParameterConfigurationDialog';
 import { TrashButton } from '@/components/common/TrashButton';
 import { Text } from '@/components/ui/typography';
-import { useEntityIcon } from '@/hooks/useIcons';
 import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
 
 interface AttackCanvasItemProperties {
@@ -23,8 +22,6 @@ export const AttackCanvasItem = ({
   onRemove,
   isDialogClickable,
 }: AttackCanvasItemProperties) => {
-  const { data: characterIconUrl } = useEntityIcon(attack.characterId);
-
   const isAttackConfigurable = (attack.parameters?.length ?? 0) > 0;
   const shouldShowWarning =
     isAttackConfigurable &&
@@ -53,13 +50,13 @@ export const AttackCanvasItem = ({
             />
           )}
           {/* Character icon(s) */}
-          {characterIconUrl && (
-            <CharacterIcon characterEntityId={attack.characterId} size="large" />
+          {attack.characterIconUrl && (
+            <CharacterIcon iconUrl={attack.characterIconUrl} size="large" />
           )}
 
           {/* Capability icon */}
           <div className="mt-2">
-            <CapabilityIcon capabilityId={attack.id} size="medium" />
+            <CapabilityIcon iconUrl={attack.iconUrl} size="medium" />
           </div>
 
           {/* Attack name */}

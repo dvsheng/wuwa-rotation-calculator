@@ -5,8 +5,6 @@ export default {
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {
-    url:
-      process.env.DATABASE_URL ??
-      'postgres://localhost:5432/wuwa_rotation_builder',
+    url: process.env.DATABASE_URL ?? 'postgres://localhost:5432/wuwa_rotation_builder',
   },
 } satisfies Config;

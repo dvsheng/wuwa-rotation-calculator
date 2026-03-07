@@ -8,6 +8,10 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import tailwindcss from 'eslint-plugin-tailwindcss';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 
+// Reuse the same import plugin instance tanstack registered to satisfy per-config-object
+// plugin validation without triggering "cannot redefine plugin" errors.
+const importPlugin = tanstackConfig.find((c) => c.plugins?.import)?.plugins?.import;
+
 export default [
   {
     ignores: [
@@ -17,17 +21,18 @@ export default [
       '.tanstack/**',
       'src/routeTree.gen.ts',
       'src/lib/utils.ts',
-      'scripts/seed-database.ts',
       'src/components/ui/**',
       'eslint.config.js',
       'prettier.config.js',
+      'infra/node_modules/**',
+      'infra/cdk.out',
     ],
   },
-
   ...tanstackConfig,
   eslintPluginUnicorn.configs.recommended,
   {
     plugins: {
+      import: importPlugin,
       'react-compiler': reactCompiler,
       'react-hooks': reactHooks,
       'simple-import-sort': simpleImportSort,
@@ -46,6 +51,7 @@ export default [
       'react-compiler/react-compiler': 'error',
       'tailwindcss/no-arbitrary-value': 'error',
       'tailwindcss/no-unnecessary-arbitrary-value': 'error',
+      'tailwindcss/suggest-canonical-classes': 'off',
       'import/order': [
         'error',
         {
@@ -76,6 +82,9 @@ export default [
 
   {
     files: ['**/*.ts', '**/*.tsx'],
+    plugins: {
+      import: importPlugin,
+    },
     rules: {
       'import/no-relative-parent-imports': 'error',
       'unicorn/no-array-reduce': 'off',
@@ -89,6 +98,15 @@ export default [
           },
         },
       ],
+    },
+  },
+  {
+    files: ['infra/**/*.ts'],
+    languageOptions: {
+      parserOptions: {
+        project: './infra/tsconfig.json',
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
   },
   prettier,

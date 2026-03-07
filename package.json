@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "build": "vite build",
+    "deploy": "npm run build && npm run cdk -- deploy",
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint",
@@ -15,6 +16,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:validate": "tsx --env-file=.env scripts/validate-database.ts",
+    "db:pull": "bash scripts/sync-db.sh pull",
+    "db:push": "bash scripts/sync-db.sh push",
     "index:encore": "tsx scripts/index-encore-moe-data.ts",
     "db:seed": "tsx --env-file=.env scripts/migrate-entities-to-database.ts",
     "transform:characters": "tsx scripts/transform-character-jsons.ts",
@@ -24,9 +27,11 @@
     "transform:echoes": "tsx scripts/transform-echo-jsons.ts",
     "transform:echoes-ai": "tsx scripts/transform-echo-jsons-for-ai.ts",
     "transform:echo-sets-ai": "tsx scripts/transform-echo-set-jsons-for-ai.ts",
-    "pipeline:run": "npm run index:encore && npm run transform:characters && npm run transform:weapons && npm run transform:echoes && npm run transform:characters-ai && npm run transform:weapons-ai && npm run transform:echoes-ai && npm run transform:echo-sets-ai && npm run db:seed"
+    "pipeline:run": "npm run index:encore && npm run transform:characters && npm run transform:weapons && npm run transform:echoes && npm run transform:characters-ai && npm run transform:weapons-ai && npm run transform:echoes-ai && npm run transform:echo-sets-ai && npm run db:seed",
+    "cdk": "npm --prefix infra run cdk --"
   },
   "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.1004.0",
     "@base-ui/react": "^1.1.0",
     "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-dialog": "^1.1.15",

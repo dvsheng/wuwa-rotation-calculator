@@ -6,7 +6,8 @@
     "prettier.config.js",
     "vite.config.js"
   ],
-  "exclude": ["/src/components/ui/*.tsx"],
+  "exclude": ["/src/components/ui/*.tsx", "infra", "node_modules"],
+  "references": [{ "path": "./infra" }],
   "compilerOptions": {
     "target": "esnext",
     "jsx": "react-jsx",

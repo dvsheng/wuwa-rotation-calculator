@@ -9,13 +9,18 @@ import viteTsConfigPaths from 'vite-tsconfig-paths';
 const config = defineConfig({
   plugins: [
     devtools(),
-    nitro(),
+    nitro({
+      awsLambda: { streaming: true },
+      preset: 'aws-lambda',
+    }),
     // this is the plugin that enables path aliases
     viteTsConfigPaths({
       projects: ['./tsconfig.json'],
     }),
     tailwindcss(),
-    ...(process.env.VITEST ? [] : [tanstackStart()]),
+    tanstackStart({
+      srcDirectory: 'src',
+    }),
     viteReact({
       babel: {
         plugins: [['babel-plugin-react-compiler', {}]],

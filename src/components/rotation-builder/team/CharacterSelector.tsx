@@ -9,9 +9,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useEntityList } from '@/hooks/useEntityList';
+import { EntityType } from '@/services/game-data';
 import { useStore } from '@/store';
 
-import { CharacterSelectionDialog } from './CharacterSelectionDialog';
+import { EntitySelectionDialog } from './EntitySelectionDialog';
 
 interface CharacterSelectorProperties {
   index: number;
@@ -27,20 +29,22 @@ export const CharacterSelector = ({ index }: CharacterSelectorProperties) => {
   const setCharacter = useStore((state) => state.setCharacter);
   const clearAllForCharacter = useStore((state) => state.clearAllForCharacter);
   const setSequence = useStore((state) => state.setSequence);
+  const { data: characterList = [] } = useEntityList({
+    entityType: EntityType.CHARACTER,
+  });
 
   return (
     <Row className="selector-row">
       <AssetIcon name="role" className="selector-icon" />
-      <div className="selector-main">
-        <CharacterSelectionDialog
-          value={character.id}
-          onValueChange={(id) => {
-            if (id !== character.id) clearAllForCharacter(character.id);
-            setCharacter(index, id);
-          }}
-          excludeIds={otherSelectedCharacterIds}
-        />
-      </div>
+      <EntitySelectionDialog
+        items={characterList}
+        value={character.id}
+        onValueChange={(id) => {
+          if (id !== character.id) clearAllForCharacter(character.id);
+          setCharacter(index, id);
+        }}
+        excludeIds={otherSelectedCharacterIds}
+      />
       <Select
         value={String(character.sequence)}
         onValueChange={(value) => setSequence(index, Number.parseInt(value))}

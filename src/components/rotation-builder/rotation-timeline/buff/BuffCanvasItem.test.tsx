@@ -28,45 +28,41 @@ beforeAll(() => {
   };
 });
 
+const commonAttackProperties = {
+  characterId: 1001,
+  entityId: 1001,
+  iconUrl: '',
+  characterIconUrl: '',
+  description: '',
+  characterName: 'Rover',
+  capabilityType: CapabilityType.ATTACK,
+  parameters: [] as [],
+};
+
 const MOCK_ATTACKS = [
   {
     instanceId: 'a0',
     id: 1,
-    characterId: 1001,
-    entityId: 1001,
     name: 'Resonance Liberation',
     parentName: 'Skill',
-    description: '',
-    characterName: 'Rover',
     originType: OriginType.RESONANCE_LIBERATION,
-    capabilityType: CapabilityType.ATTACK,
-    parameters: [] as [],
+    ...commonAttackProperties,
   },
   {
     instanceId: 'a1',
     id: 2,
-    characterId: 1001,
-    entityId: 1001,
     name: 'Heavy Attack',
     parentName: 'Basic',
-    description: '',
-    characterName: 'Rover',
     originType: OriginType.NORMAL_ATTACK,
-    capabilityType: CapabilityType.ATTACK,
-    parameters: [] as [],
+    ...commonAttackProperties,
   },
   {
     instanceId: 'a2',
     id: 3,
-    characterId: 1001,
-    entityId: 1001,
     name: 'Basic Attack',
     parentName: 'Basic',
-    description: '',
-    characterName: 'Rover',
     originType: OriginType.NORMAL_ATTACK,
-    capabilityType: CapabilityType.ATTACK,
-    parameters: [] as [],
+    ...commonAttackProperties,
   },
 ];
 

@@ -1,3 +1,5 @@
+import type { ComponentPropsWithRef } from 'react';
+
 import { AttributeIcon, WeaponTypeIcon } from '@/components/common/AssetIcon';
 import { EntityIconDisplay } from '@/components/common/EntityIcon';
 import { Row, Stack } from '@/components/ui/layout';
@@ -7,9 +9,10 @@ import type { ListEntitiesResponse } from '@/services/game-data';
 
 import { ATTRIBUTE_COLORS } from './constants';
 
-interface EntitySelectorTileProperties {
+interface EntitySelectorTileProperties extends ComponentPropsWithRef<'div'> {
   entity: ListEntitiesResponse[number];
   isSelected?: boolean;
+  onClick?: () => void;
 }
 
 const RARITY_CLASSES: Record<number, string> = {
@@ -21,11 +24,12 @@ const RARITY_CLASSES: Record<number, string> = {
 export const EntitySelectorTile = ({
   entity,
   isSelected,
+  onClick,
 }: EntitySelectorTileProperties) => (
   <Stack
     gap="compact"
     className={cn(
-      'hover:bg-accent hover:border-primary/50 p-component border-border size-36 items-center rounded-lg border',
+      'hover:bg-accent hover:border-primary/50 p-compact border-border size-40 items-center rounded-lg border',
       isSelected && 'border-primary ring-primary bg-accent ring-1',
     )}
     style={
@@ -33,6 +37,7 @@ export const EntitySelectorTile = ({
         ? { borderLeft: `4px solid ${ATTRIBUTE_COLORS[entity.attribute]}` }
         : undefined
     }
+    onClick={onClick}
   >
     <EntityIconDisplay url={entity.iconUrl} size="xlarge" className="shrink-0" />
     <Text as="div" variant="small" className="wrap-2 text-foreground max-w-30">

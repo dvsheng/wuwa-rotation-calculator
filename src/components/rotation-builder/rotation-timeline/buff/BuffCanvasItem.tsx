@@ -1,9 +1,9 @@
 import { isNil } from 'es-toolkit/predicate';
 import { AlertTriangle, Maximize2 } from 'lucide-react';
 
-import { CapabilityIcon } from '@/components/common/CapabilityIcon';
+import { CapabilityIconDisplay } from '@/components/common/CapabilityIcon';
 import { CapabilityTooltip } from '@/components/common/CapabilityTooltip';
-import { CharacterIcon } from '@/components/common/CharacterIcon';
+import { EntityIconDisplay } from '@/components/common/EntityIcon';
 import { ParameterConfigurationDialog } from '@/components/common/ParameterConfigurationDialog';
 import { TrashButton } from '@/components/common/TrashButton';
 import { Button } from '@/components/ui/button';
@@ -121,10 +121,10 @@ export const BuffCanvasItem = ({
             />
           ))}
           <ItemMedia>
-            <CharacterIcon iconUrl={buff.characterIconUrl} size="medium" />
+            <EntityIconDisplay url={buff.characterIconUrl} size="medium" />
           </ItemMedia>
           <ItemMedia>
-            <CapabilityIcon iconUrl={buff.iconUrl} size="medium" />
+            <CapabilityIconDisplay url={buff.iconUrl} size="medium" />
           </ItemMedia>
           <ItemContent className="text-xs">{buff.name}</ItemContent>
           {/* Warning indicator */}

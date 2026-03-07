@@ -1,9 +1,9 @@
 import { isNil } from 'es-toolkit/predicate';
 import { AlertTriangle } from 'lucide-react';
 
-import { CapabilityIcon } from '@/components/common/CapabilityIcon';
+import { CapabilityIconDisplay } from '@/components/common/CapabilityIcon';
 import { CapabilityTooltip } from '@/components/common/CapabilityTooltip';
-import { CharacterIcon } from '@/components/common/CharacterIcon';
+import { EntityIconDisplay } from '@/components/common/EntityIcon';
 import { ParameterConfigurationDialog } from '@/components/common/ParameterConfigurationDialog';
 import { TrashButton } from '@/components/common/TrashButton';
 import { Text } from '@/components/ui/typography';
@@ -49,17 +49,10 @@ export const AttackCanvasItem = ({
               className="absolute top-1 right-1 h-5 w-5 text-amber-500"
             />
           )}
-          {/* Character icon(s) */}
-          {attack.characterIconUrl && (
-            <CharacterIcon iconUrl={attack.characterIconUrl} size="large" />
-          )}
-
-          {/* Capability icon */}
+          <EntityIconDisplay url={attack.characterIconUrl} size="large" />
           <div className="mt-2">
-            <CapabilityIcon iconUrl={attack.iconUrl} size="medium" />
+            <CapabilityIconDisplay url={attack.iconUrl} size="medium" />
           </div>
-
-          {/* Attack name */}
           <Text
             as="div"
             variant="caption"
@@ -67,8 +60,6 @@ export const AttackCanvasItem = ({
           >
             {attack.name}
           </Text>
-
-          {/* Delete button at bottom-center */}
           <TrashButton
             className="absolute bottom-1 left-1/2 -translate-x-1/2"
             onRemove={() => onRemove(attack.instanceId)}

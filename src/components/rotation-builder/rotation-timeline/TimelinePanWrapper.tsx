@@ -1,6 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch';
 
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/ui/layout';
@@ -88,118 +87,93 @@ export const TimelinePanWrapper = ({
 
   useEffect(() => stopContinuousPan, []);
 
+  const pan = (direction: 'left' | 'right', smooth = true) => {
+    const scrollElement = scrollReference.current;
+    if (!scrollElement) return;
+    scrollElement.scrollBy({
+      left: direction === 'left' ? -step : step,
+      behavior: smooth ? 'smooth' : 'auto',
+    });
+  };
+
+  const startContinuousPan = (direction: 'left' | 'right') => {
+    const speed = CHEVRON_HOLD_PAN_SPEED;
+    holdDirectionReference.current = direction;
+
+    const tick = (timestamp: number) => {
+      if (holdDirectionReference.current !== direction) return;
+      const scrollElement = scrollReference.current;
+      if (!scrollElement) return;
+      const lastTimestamp = holdLastFrameTimeReference.current ?? timestamp;
+      const deltaMs = Math.min(40, timestamp - lastTimestamp);
+      holdLastFrameTimeReference.current = timestamp;
+      const distance = (speed * deltaMs) / 1000;
+      scrollElement.scrollBy({
+        left: direction === 'left' ? -distance : distance,
+        behavior: 'auto',
+      });
+      holdFrameReference.current = requestAnimationFrame(tick);
+    };
+
+    holdFrameReference.current = requestAnimationFrame(tick);
+  };
+
+  const handlePointerDown = (direction: 'left' | 'right') => {
+    stopContinuousPan();
+    holdTimeoutReference.current = setTimeout(() => {
+      startContinuousPan(direction);
+    }, 180);
+  };
+
+  const handlePointerEnd = (direction: 'left' | 'right') => {
+    const wasLongPress = holdDirectionReference.current === direction;
+    stopContinuousPan();
+    if (!wasLongPress) pan(direction);
+  };
+
   return (
-    <TransformWrapper
-      initialScale={1}
-      minScale={1}
-      maxScale={1}
-      wheel={{ disabled: true }}
-      pinch={{ disabled: true }}
-      doubleClick={{ disabled: true }}
-      panning={{ disabled: true }}
-      centerOnInit
-      centerZoomedOut={false}
-      limitToBounds={false}
-      onInit={() => requestAnimationFrame(updatePanButtons)}
+    <Container
+      padding="none"
+      className={cn('relative flex min-h-0 flex-col', className)}
     >
-      {() => {
-        const pan = (direction: 'left' | 'right', smooth = true) => {
-          const scrollElement = scrollReference.current;
-          if (!scrollElement) return;
-          scrollElement.scrollBy({
-            left: direction === 'left' ? -step : step,
-            behavior: smooth ? 'smooth' : 'auto',
-          });
-        };
+      <Button
+        type="button"
+        variant="outline"
+        size="icon-lg"
+        className="absolute top-1/2 left-2 z-20 -translate-y-1/2 shadow-sm"
+        onPointerDown={() => handlePointerDown('left')}
+        onPointerUp={() => handlePointerEnd('left')}
+        onPointerLeave={stopContinuousPan}
+        onPointerCancel={stopContinuousPan}
+        disabled={!canPanLeft}
+        aria-label="Pan timeline left"
+      >
+        <ChevronLeft />
+      </Button>
 
-        const startContinuousPan = (direction: 'left' | 'right') => {
-          const speed = CHEVRON_HOLD_PAN_SPEED;
-          holdDirectionReference.current = direction;
+      <Button
+        type="button"
+        variant="outline"
+        size="icon-lg"
+        className="absolute top-1/2 right-2 z-20 -translate-y-1/2 shadow-sm"
+        onPointerDown={() => handlePointerDown('right')}
+        onPointerUp={() => handlePointerEnd('right')}
+        onPointerLeave={stopContinuousPan}
+        onPointerCancel={stopContinuousPan}
+        disabled={!canPanRight}
+        aria-label="Pan timeline right"
+      >
+        <ChevronRight />
+      </Button>
 
-          const tick = (timestamp: number) => {
-            if (holdDirectionReference.current !== direction) return;
-            const scrollElement = scrollReference.current;
-            if (!scrollElement) return;
-            const lastTimestamp = holdLastFrameTimeReference.current ?? timestamp;
-            const deltaMs = Math.min(40, timestamp - lastTimestamp);
-            holdLastFrameTimeReference.current = timestamp;
-            const distance = (speed * deltaMs) / 1000;
-            scrollElement.scrollBy({
-              left: direction === 'left' ? -distance : distance,
-              behavior: 'auto',
-            });
-            holdFrameReference.current = requestAnimationFrame(tick);
-          };
-
-          holdFrameReference.current = requestAnimationFrame(tick);
-        };
-
-        const handlePointerDown = (direction: 'left' | 'right') => {
-          stopContinuousPan();
-          holdTimeoutReference.current = setTimeout(() => {
-            startContinuousPan(direction);
-          }, 180);
-        };
-
-        const handlePointerEnd = (direction: 'left' | 'right') => {
-          const wasLongPress = holdDirectionReference.current === direction;
-          stopContinuousPan();
-          if (!wasLongPress) pan(direction);
-        };
-
-        return (
-          <Container
-            padding="none"
-            className={cn('relative flex min-h-0 flex-col', className)}
-          >
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-lg"
-              className="absolute top-1/2 left-2 z-20 -translate-y-1/2 shadow-sm"
-              onPointerDown={() => handlePointerDown('left')}
-              onPointerUp={() => handlePointerEnd('left')}
-              onPointerLeave={stopContinuousPan}
-              onPointerCancel={stopContinuousPan}
-              disabled={!canPanLeft}
-              aria-label="Pan timeline left"
-            >
-              <ChevronLeft />
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-lg"
-              className="absolute top-1/2 right-2 z-20 -translate-y-1/2 shadow-sm"
-              onPointerDown={() => handlePointerDown('right')}
-              onPointerUp={() => handlePointerEnd('right')}
-              onPointerLeave={stopContinuousPan}
-              onPointerCancel={stopContinuousPan}
-              disabled={!canPanRight}
-              aria-label="Pan timeline right"
-            >
-              <ChevronRight />
-            </Button>
-
-            <ScrollArea
-              orientation="both"
-              viewportRef={scrollReference}
-              className="min-h-0 flex-1"
-              viewportClassName="flex min-h-0 w-full flex-col overflow-auto"
-            >
-              <TransformComponent
-                wrapperClass="min-h-0 min-w-0 w-full"
-                contentClass="min-w-full w-max"
-                wrapperStyle={{ minHeight: 0, width: '100%' }}
-                contentStyle={{ minWidth: '100%' }}
-              >
-                <div className="flex min-h-0 min-w-full flex-col">{children}</div>
-              </TransformComponent>
-            </ScrollArea>
-          </Container>
-        );
-      }}
-    </TransformWrapper>
+      <ScrollArea
+        orientation="both"
+        viewportRef={scrollReference}
+        className="min-h-0 flex-1"
+        viewportClassName="flex min-h-0 w-full flex-col overflow-auto"
+      >
+        <div className="flex min-h-0 min-w-full flex-col">{children}</div>
+      </ScrollArea>
+    </Container>
   );
 };

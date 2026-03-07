@@ -3,14 +3,6 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { TimelinePanWrapper } from './TimelinePanWrapper';
 
-vi.mock('react-zoom-pan-pinch', () => ({
-  TransformWrapper: ({ children, onInit }: any) => {
-    onInit?.();
-    return children({});
-  },
-  TransformComponent: ({ children }: any) => children,
-}));
-
 beforeAll(() => {
   globalThis.ResizeObserver = class ResizeObserver {
     observe() {}

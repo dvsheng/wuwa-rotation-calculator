@@ -3,13 +3,14 @@ import { Sword } from 'lucide-react';
 import { useCapabilityIcon } from '@/hooks/useIcons';
 import { cn } from '@/lib/utils';
 
-export type IconSize = 'small' | 'medium' | 'large';
+export type IconSize = 'small' | 'medium' | 'large' | 'xlarge';
 
-export const SIZE_CLASSES: Record<IconSize, string> = {
+export const SIZE_CLASSES = {
   small: 'size-icon-sm',
   medium: 'size-icon-md',
   large: 'size-icon-lg',
-};
+  xlarge: 'size-icon-xl',
+} as const;
 
 interface CapabilityIconDisplayProperties {
   url?: string;

@@ -20,6 +20,7 @@ export const listEntitiesHandler = async (
           weaponType: true,
           rank: true,
           attribute: true,
+          iconUrl: true,
         },
       });
 
@@ -29,6 +30,7 @@ export const listEntitiesHandler = async (
         weaponType: char.weaponType!,
         rarity: char.rank!,
         attribute: char.attribute!,
+        iconUrl: char.iconUrl ?? undefined,
       }));
 
       if (input.weaponType) {
@@ -46,6 +48,7 @@ export const listEntitiesHandler = async (
           name: true,
           weaponType: true,
           rank: true,
+          iconUrl: true,
         },
       });
 
@@ -54,6 +57,7 @@ export const listEntitiesHandler = async (
         name: weapon.name,
         weaponType: weapon.weaponType!,
         rarity: weapon.rank!,
+        iconUrl: weapon.iconUrl ?? undefined,
       }));
 
       if (input.weaponType) {
@@ -71,6 +75,7 @@ export const listEntitiesHandler = async (
           name: true,
           cost: true,
           echoSetIds: true,
+          iconUrl: true,
         },
       });
 
@@ -79,6 +84,7 @@ export const listEntitiesHandler = async (
         name: echo.name,
         cost: echo.cost!,
         sets: echo.echoSetIds!,
+        iconUrl: echo.iconUrl ?? undefined,
       }));
     }
 
@@ -90,6 +96,7 @@ export const listEntitiesHandler = async (
           gameId: true,
           name: true,
           setBonusThresholds: true,
+          iconUrl: true,
         },
       });
 
@@ -98,6 +105,7 @@ export const listEntitiesHandler = async (
         gameId: set.gameId!,
         name: set.name,
         tiers: set.setBonusThresholds!,
+        iconUrl: set.iconUrl ?? undefined,
       }));
     }
   }

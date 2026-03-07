@@ -1,5 +1,5 @@
 import { Filter, X } from 'lucide-react';
-import type { CSSProperties, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -50,7 +50,6 @@ export interface SelectionDialogProperties<
 
   // Rendering
   renderItem: (item: T, isSelected: boolean) => ReactNode;
-  getItemStyle?: (item: T) => CSSProperties;
 
   // Sorting
   sortFn?: (a: T, b: T) => number;
@@ -70,7 +69,6 @@ export const SelectionDialog = <T extends { id: number; name: string }>({
   filters = [],
   excludeIds = [],
   renderItem,
-  getItemStyle,
   sortFn,
 }: SelectionDialogProperties<T>) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -208,14 +206,10 @@ export const SelectionDialog = <T extends { id: number; name: string }>({
             <div className="gap-component grid grid-cols-3">
               {sortedItems.map((item) => (
                 <CommandItem
+                  asChild
                   key={item.id}
                   value={item.name}
                   onSelect={() => handleSelect(item)}
-                  className={cn(
-                    'group hover:bg-accent hover:border-primary/50 p-component gap-compact flex flex-col items-center rounded-lg border text-center transition-all',
-                    value === item.id && 'border-primary ring-primary bg-accent ring-1',
-                  )}
-                  style={getItemStyle?.(item)}
                 >
                   {renderItem(item, value === item.id)}
                 </CommandItem>

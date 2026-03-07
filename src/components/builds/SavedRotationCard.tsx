@@ -4,8 +4,8 @@ import { Play, Save } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { CharacterIcon } from '@/components/common/CharacterIcon';
-import { GameImage } from '@/components/common/GameImage';
+import { AttributeIcon } from '@/components/common/AssetIcon';
+import { EntityIcon } from '@/components/common/EntityIcon';
 import { TrashButton } from '@/components/common/TrashButton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -151,11 +151,7 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
             {configuredCharacters.length > 0 ? (
               <div className="gap-compact flex flex-wrap items-center">
                 {configuredCharacters.map((character) => (
-                  <CharacterIcon
-                    key={character.id}
-                    characterEntityId={character.id}
-                    size="large"
-                  />
+                  <EntityIcon key={character.id} entityId={character.id} size="large" />
                 ))}
               </div>
             ) : (
@@ -182,13 +178,9 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
                   variant="outline"
                   className="gap-compact px-compact py-tight"
                 >
-                  <GameImage
-                    entity="attribute"
-                    type="icon"
-                    id={attribute}
-                    alt={attribute}
-                    className="h-3.5 w-3.5 object-contain"
-                  />
+                  {attribute !== 'physical' && (
+                    <AttributeIcon attribute={attribute} size={14} />
+                  )}
                   <Text as="span" variant="caption" className="text-foreground">
                     {value}%
                   </Text>

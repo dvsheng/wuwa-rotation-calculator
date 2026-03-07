@@ -1,5 +1,4 @@
 import { AssetIcon } from '@/components/common/AssetIcon';
-import { GameImage } from '@/components/common/GameImage';
 import { SelectionDialog } from '@/components/common/SelectionDialog';
 import type { FilterConfig } from '@/components/common/SelectionDialog';
 import { Row } from '@/components/ui/layout';
@@ -10,13 +9,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Text } from '@/components/ui/typography';
 import { useEntityList } from '@/hooks/useEntityList';
-import { cn } from '@/lib/utils';
 import { EntityType } from '@/services/game-data';
 import type { ListWeaponsResponseItem } from '@/services/game-data';
 import { useStore } from '@/store';
 import { WeaponType } from '@/types';
+
+import { EntitySelectorTile } from './EntitySelectorTile';
 
 interface WeaponSelectorProperties {
   index: number;
@@ -62,39 +61,8 @@ export const WeaponSelector = ({ index }: WeaponSelectorProperties) => {
           placeholder="Select weapon"
           searchPlaceholder="Search weapons..."
           filters={[weaponTypeFilter, rarityFilter]}
-          renderItem={(_weapon) => (
-            <>
-              <div className="relative flex h-14 w-14 items-center justify-center">
-                <GameImage
-                  entity="weapon"
-                  type="icon"
-                  id={_weapon.id}
-                  alt={_weapon.name}
-                  className="h-full w-full object-contain"
-                />
-              </div>
-              <div className="space-y-1">
-                <Text
-                  as="div"
-                  variant="small"
-                  className="text-foreground max-w-30 truncate"
-                >
-                  {_weapon.name}
-                </Text>
-                <span
-                  className={cn(
-                    'px-compact py-tight rounded-full text-xs uppercase',
-                    _weapon.rarity === 5
-                      ? 'text-foreground bg-rarity-5/10'
-                      : _weapon.rarity === 4
-                        ? 'text-foreground bg-rarity-4/10'
-                        : 'text-foreground bg-rarity-3/10',
-                  )}
-                >
-                  {_weapon.rarity}★
-                </span>
-              </div>
-            </>
+          renderItem={(_weapon, isSelected) => (
+            <EntitySelectorTile entity={_weapon} isSelected={isSelected} />
           )}
           sortFn={(a, b) => {
             // Sort by rarity descending (5* before 4*)

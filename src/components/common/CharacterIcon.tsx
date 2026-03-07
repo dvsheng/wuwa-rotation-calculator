@@ -8,47 +8,40 @@ import { SIZE_CLASSES } from './CapabilityIcon';
 
 export type { IconSize } from './CapabilityIcon';
 
-interface EntityIconDisplayProperties {
+interface CharacterIconDisplayProperties {
   url?: string;
   size?: IconSize;
-  className?: string;
 }
 
-export const EntityIconDisplay = ({
+export const CharacterIconDisplay = ({
   url,
   size = 'medium',
-  className,
-}: EntityIconDisplayProperties) => (
+}: CharacterIconDisplayProperties) => (
   <div
     className={cn(
       'flex items-center justify-center overflow-hidden rounded-full bg-transparent',
       SIZE_CLASSES[size],
-      className,
     )}
   >
     {url ? (
       <img src={url} alt="" className="h-full w-full object-cover" />
     ) : (
-      <CircleUser
-        className={cn('text-muted-foreground/40 h-full w-full object-cover', className)}
-      />
+      <CircleUser className={'text-muted-foreground/40 h-full w-full object-cover'} />
     )}
   </div>
 );
 
-interface EntityIconProperties {
-  entityId?: number;
+interface CharacterIconProperties {
+  characterEntityId?: number;
   iconUrl?: string;
   size?: IconSize;
-  className?: string;
 }
 
-export const EntityIcon = ({
-  entityId,
+export const CharacterIcon = ({
+  characterEntityId,
   iconUrl,
   size = 'medium',
-  className,
-}: EntityIconProperties) => {
-  const { data } = useEntityIcon(entityId ?? -1, { enabled: !iconUrl });
-  return <EntityIconDisplay url={iconUrl ?? data} size={size} className={className} />;
+}: CharacterIconProperties) => {
+  const { data } = useEntityIcon(characterEntityId ?? -1, { enabled: !iconUrl });
+  return <CharacterIconDisplay url={iconUrl ?? data} size={size} />;
 };

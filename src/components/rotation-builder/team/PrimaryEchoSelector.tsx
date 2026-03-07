@@ -1,14 +1,13 @@
 import { AssetIcon } from '@/components/common/AssetIcon';
-import { GameImage } from '@/components/common/GameImage';
 import type { FilterConfig } from '@/components/common/SelectionDialog';
 import { SelectionDialog } from '@/components/common/SelectionDialog';
 import { Row } from '@/components/ui/layout';
-import { Text } from '@/components/ui/typography';
 import { useEntityList } from '@/hooks/useEntityList';
-import { cn } from '@/lib/utils';
 import { EntityType } from '@/services/game-data';
 import type { ListEchoesResponseItem } from '@/services/game-data';
 import { useStore } from '@/store';
+
+import { EntitySelectorTile } from './EntitySelectorTile';
 
 interface PrimaryEchoSelectorProperties {
   index: number;
@@ -52,39 +51,8 @@ export const PrimaryEchoSelector = ({ index }: PrimaryEchoSelectorProperties) =>
           placeholder="Select primary echo"
           searchPlaceholder="Search echoes..."
           filters={[costFilter]}
-          renderItem={(_echo) => (
-            <>
-              <div className="relative flex h-14 w-14 items-center justify-center">
-                <GameImage
-                  entity="echo"
-                  type="icon"
-                  id={_echo.id}
-                  alt={_echo.name}
-                  className="h-full w-full object-contain"
-                />
-              </div>
-              <div className="space-y-1">
-                <Text
-                  as="div"
-                  variant="small"
-                  className="wrap-2 text-foreground max-w-30"
-                >
-                  {_echo.name}
-                </Text>
-                <span
-                  className={cn(
-                    'px-compact py-tight rounded-full text-xs uppercase',
-                    _echo.cost === 4
-                      ? 'text-foreground bg-rarity-5/10'
-                      : _echo.cost === 3
-                        ? 'text-foreground bg-rarity-4/10'
-                        : 'text-foreground bg-rarity-3/10',
-                  )}
-                >
-                  Cost {_echo.cost}
-                </span>
-              </div>
-            </>
+          renderItem={(_echo, isSelected) => (
+            <EntitySelectorTile entity={_echo} isSelected={isSelected} />
           )}
           sortFn={(a, b) => {
             // Sort by cost descending (4 before 3 before 1)

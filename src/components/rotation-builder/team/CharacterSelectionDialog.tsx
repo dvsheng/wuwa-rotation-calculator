@@ -1,7 +1,5 @@
-import { CharacterIcon } from '@/components/common/CharacterIcon';
 import { SelectionDialog } from '@/components/common/SelectionDialog';
 import type { FilterConfig } from '@/components/common/SelectionDialog';
-import { Text } from '@/components/ui/typography';
 import { useEntityList } from '@/hooks/useEntityList';
 import { cn } from '@/lib/utils';
 import { EntityType } from '@/services/game-data';
@@ -9,7 +7,7 @@ import type { ListCharactersResponseItem } from '@/services/game-data';
 import { resolveImagePath } from '@/services/image-service';
 import { Attribute } from '@/types';
 
-import { ATTRIBUTE_COLORS } from './constants';
+import { EntitySelectorTile } from './EntitySelectorTile';
 
 interface CharacterSelectionDialogProperties {
   value?: number;
@@ -69,38 +67,9 @@ export const CharacterSelectionDialog = ({
       placeholder="Select character"
       searchPlaceholder="Search characters..."
       filters={[attributeFilter, rarityFilter]}
-      renderItem={(char) => (
-        <>
-          <CharacterIcon characterEntityId={char.id} size="large" />
-          <div className="space-y-1">
-            <Text
-              as="div"
-              variant="small"
-              className="text-foreground max-w-30 truncate"
-            >
-              {char.name}
-            </Text>
-            <div className="gap-tight flex items-center justify-center">
-              <span
-                className={cn(
-                  'px-compact py-tight rounded-full text-xs uppercase',
-                  char.rarity === 5
-                    ? 'text-foreground bg-rarity-5/10'
-                    : 'text-foreground bg-rarity-4/10',
-                )}
-              >
-                {char.rarity}★
-              </span>
-              <Text as="span" variant="caption" className="capitalize">
-                {char.attribute}
-              </Text>
-            </div>
-          </div>
-        </>
+      renderItem={(char, isSelected) => (
+        <EntitySelectorTile entity={char} isSelected={isSelected} />
       )}
-      getItemStyle={(char) => ({
-        borderLeft: `4px solid ${ATTRIBUTE_COLORS[char.attribute]}`,
-      })}
       sortFn={(a, b) => {
         if (a.attribute !== b.attribute) {
           return a.attribute.localeCompare(b.attribute);

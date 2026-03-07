@@ -6,6 +6,7 @@ export interface ListCharactersResponseItem {
   weaponType: WeaponType;
   rarity: number;
   attribute: Attribute;
+  iconUrl?: string;
 }
 
 export interface ListWeaponsResponseItem {
@@ -13,6 +14,7 @@ export interface ListWeaponsResponseItem {
   name: string;
   weaponType: WeaponType;
   rarity: number;
+  iconUrl?: string;
 }
 
 export interface ListEchoesResponseItem {
@@ -20,6 +22,7 @@ export interface ListEchoesResponseItem {
   name: string;
   cost: number;
   sets: Array<number>;
+  iconUrl?: string;
 }
 
 export interface ListEchoSetsResponseItem {
@@ -27,6 +30,7 @@ export interface ListEchoSetsResponseItem {
   gameId: number;
   name: string;
   tiers: Array<number>;
+  iconUrl?: string;
 }
 
 export type ListEntitiesResponse =

@@ -6,6 +6,7 @@ import { ApiGateway } from './constructs/ApiGateway';
 import { AssetBucket } from './constructs/AssetBucket';
 import { AssetDeployment } from './constructs/AssetDeployment';
 import { Bastion } from './constructs/Bastion';
+import { Cognito } from './constructs/Cognito';
 import { Database } from './constructs/Database';
 import { Distribution } from './constructs/Distribution';
 import { Server } from './constructs/Server';
@@ -26,7 +27,27 @@ export class WuwaRotationBuilderStack extends cdk.Stack {
 
     const database = new Database(this, 'Database', { vpc });
     const bastion = new Bastion(this, 'Bastion', { vpc });
-    const server = new Server(this, 'Server', { vpc, database: database.instance });
+    const cognito = new Cognito(this, 'Cognito', {
+      googleClientId: this.node.tryGetContext('googleClientId') as string,
+      googleClientSecretName: this.node.tryGetContext(
+        'googleClientSecretName',
+      ) as string,
+      domainPrefix: this.node.tryGetContext('cognitoDomainPrefix') as string,
+      callbackUrls: (this.node.tryGetContext('cognitoCallbackUrls') as
+        | Array<string>
+        | undefined) ?? ['http://localhost:3000/'],
+      logoutUrls: (this.node.tryGetContext('cognitoLogoutUrls') as
+        | Array<string>
+        | undefined) ?? ['http://localhost:3000/'],
+    });
+    const server = new Server(this, 'Server', {
+      vpc,
+      database: database.instance,
+      cognito: {
+        userPoolId: cognito.userPool.userPoolId,
+        userPoolClientId: cognito.userPoolClient.userPoolClientId,
+      },
+    });
 
     // Allow Lambda and bastion to connect to RDS
     database.instance.connections.allowFrom(server.function, ec2.Port.tcp(5432));

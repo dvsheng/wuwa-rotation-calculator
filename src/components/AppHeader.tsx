@@ -1,6 +1,7 @@
 import { Link, useRouterState } from '@tanstack/react-router';
 import { Calculator, Database, Library } from 'lucide-react';
 
+import { LoginButton } from '@/components/auth/LoginButton';
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -50,6 +51,7 @@ export const AppHeader = () => {
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
+        <LoginButton />
       </div>
     </header>
   );

@@ -49,7 +49,7 @@ describe('listRotationsHandler', () => {
       },
     ]);
 
-    const result = await listRotationsHandler({ ownerId: 'dev-local-owner' });
+    const result = await listRotationsHandler();
 
     expect(mocks.findMany).toHaveBeenCalledTimes(1);
     expect(result).toEqual([

@@ -9,15 +9,21 @@ import type {
 
 export const deleteRotationHandler = async (
   input: DeleteRotationRequest,
+  ownerId: string,
 ): Promise<DeleteRotationResponse> => {
-  const deleted = await database
-    .delete(rotations)
-    .where(eq(rotations.id, input.id))
-    .returning({ id: rotations.id });
+  const existing = await database.query.rotations.findFirst({
+    where: eq(rotations.id, input.id),
+  });
 
-  if (deleted.length === 0) {
+  if (!existing) {
     throw new Error(`Rotation not found for ID ${input.id}`);
   }
+
+  if (existing.ownerId !== ownerId) {
+    throw new Error(`Rotation ${input.id} does not belong to the current user`);
+  }
+
+  await database.delete(rotations).where(eq(rotations.id, input.id));
 
   return { success: true };
 };

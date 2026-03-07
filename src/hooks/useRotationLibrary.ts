@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type { SavedRotationData } from '@/schemas/library';
 import {
-  ROTATION_OWNER_ID,
   createRotation as createRotationRequest,
   deleteRotation as deleteRotationRequest,
   listRotations,
@@ -30,47 +29,29 @@ interface DeleteRotationInput {
 
 export const useRotationLibrary = () => {
   const queryClient = useQueryClient();
-  const queryKey = ['rotation-library', ROTATION_OWNER_ID] as const;
+  const queryKey = ['rotation-library'] as const;
 
   const rotationsQuery = useQuery({
     queryKey,
-    queryFn: () => listRotations({ data: { ownerId: ROTATION_OWNER_ID } }),
+    queryFn: () => listRotations(),
   });
 
   const createMutation = useMutation({
-    mutationFn: (input: CreateRotationInput) =>
-      createRotationRequest({
-        data: {
-          ownerId: ROTATION_OWNER_ID,
-          ...input,
-        },
-      }),
+    mutationFn: (input: CreateRotationInput) => createRotationRequest({ data: input }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey });
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: (input: UpdateRotationInput) =>
-      updateRotationRequest({
-        data: {
-          ownerId: ROTATION_OWNER_ID,
-          ...input,
-        },
-      }),
+    mutationFn: (input: UpdateRotationInput) => updateRotationRequest({ data: input }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey });
     },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (input: DeleteRotationInput) =>
-      deleteRotationRequest({
-        data: {
-          ownerId: ROTATION_OWNER_ID,
-          ...input,
-        },
-      }),
+    mutationFn: (input: DeleteRotationInput) => deleteRotationRequest({ data: input }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey });
     },

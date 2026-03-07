@@ -8,7 +8,6 @@ import type { SavedRotationData } from '@/schemas/library';
 import { useRotationLibrary } from './useRotationLibrary';
 
 vi.mock('@/services/rotation-library', () => ({
-  ROTATION_OWNER_ID: 'dev-local-owner',
   listRotations: vi.fn(),
   createRotation: vi.fn(),
   updateRotation: vi.fn(),
@@ -64,12 +63,10 @@ describe('useRotationLibrary', () => {
       expect(result.current.rotations).toHaveLength(1);
     });
 
-    expect(mockListRotations).toHaveBeenCalledWith({
-      data: { ownerId: 'dev-local-owner' },
-    });
+    expect(mockListRotations).toHaveBeenCalledWith();
   });
 
-  it('injects ownerId into create, update, and delete calls and invalidates cache', async () => {
+  it('passes input to create, update, and delete calls and invalidates cache', async () => {
     vi.mocked(mockListRotations).mockResolvedValue([]);
     vi.mocked(mockCreateRotation).mockResolvedValue({
       id: 1,
@@ -101,11 +98,7 @@ describe('useRotationLibrary', () => {
       });
     });
     expect(mockCreateRotation).toHaveBeenCalledWith({
-      data: {
-        ownerId: 'dev-local-owner',
-        name: 'Created',
-        data: mockRotationData,
-      },
+      data: { name: 'Created', data: mockRotationData },
     });
 
     await act(async () => {
@@ -115,11 +108,7 @@ describe('useRotationLibrary', () => {
       });
     });
     expect(mockUpdateRotation).toHaveBeenCalledWith({
-      data: {
-        ownerId: 'dev-local-owner',
-        id: 1,
-        name: 'Updated',
-      },
+      data: { id: 1, name: 'Updated' },
     });
 
     await act(async () => {
@@ -128,15 +117,12 @@ describe('useRotationLibrary', () => {
       });
     });
     expect(mockDeleteRotation).toHaveBeenCalledWith({
-      data: {
-        ownerId: 'dev-local-owner',
-        id: 1,
-      },
+      data: { id: 1 },
     });
 
     await waitFor(() => {
       expect(invalidateSpy).toHaveBeenCalledWith({
-        queryKey: ['rotation-library', 'dev-local-owner'],
+        queryKey: ['rotation-library'],
       });
     });
   });

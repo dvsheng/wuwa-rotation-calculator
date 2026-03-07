@@ -51,18 +51,20 @@ describe('createRotationHandler', () => {
       },
     ]);
 
-    const result = await createRotationHandler({
-      ownerId: 'dev-local-owner',
-      name: 'My Rotation',
-      description: 'desc',
-      totalDamage: 1234,
-      data: {
-        team: [],
-        enemy: {},
-        attacks: [],
-        buffs: [],
-      } as unknown as SavedRotationData,
-    });
+    const result = await createRotationHandler(
+      {
+        name: 'My Rotation',
+        description: 'desc',
+        totalDamage: 1234,
+        data: {
+          team: [],
+          enemy: {},
+          attacks: [],
+          buffs: [],
+        } as unknown as SavedRotationData,
+      },
+      'dev-local-owner',
+    );
 
     expect(mocks.insert).toHaveBeenCalledTimes(1);
     expect(mocks.values).toHaveBeenCalledTimes(1);

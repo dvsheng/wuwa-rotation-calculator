@@ -10,6 +10,6 @@ export const deleteRotation = createServerFn({
 })
   .middleware([authMiddleware])
   .inputValidator(DeleteRotationRequestSchema)
-  .handler(async ({ data }) => {
-    return deleteRotationHandler(data);
+  .handler(async ({ data, context }) => {
+    return deleteRotationHandler(data, context.user.sub);
   });

@@ -10,6 +10,6 @@ export const createRotation = createServerFn({
 })
   .middleware([authMiddleware])
   .inputValidator(CreateRotationRequestSchema)
-  .handler(async ({ data }) => {
-    return createRotationHandler(data);
+  .handler(async ({ data, context }) => {
+    return createRotationHandler(data, context.user.sub);
   });

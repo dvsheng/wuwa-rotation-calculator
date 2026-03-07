@@ -77,13 +77,10 @@ describe('updateRotationHandler', () => {
       },
     ]);
 
-    const result = await updateRotationHandler({
-      ownerId: 'dev-local-owner',
-      id: 1,
-      name: 'New Name',
-      description: 'Updated',
-      totalDamage: 5000,
-    });
+    const result = await updateRotationHandler(
+      { id: 1, name: 'New Name', description: 'Updated', totalDamage: 5000 },
+      'dev-local-owner',
+    );
 
     expect(mocks.findFirst).toHaveBeenCalledTimes(1);
     expect(mocks.update).toHaveBeenCalledTimes(1);
@@ -107,11 +104,7 @@ describe('updateRotationHandler', () => {
     mocks.findFirst.mockResolvedValue(undefined as any);
 
     await expect(
-      updateRotationHandler({
-        ownerId: 'dev-local-owner',
-        id: 999,
-        name: 'New Name',
-      }),
+      updateRotationHandler({ id: 999, name: 'New Name' }, 'dev-local-owner'),
     ).rejects.toThrow('Rotation not found for ID 999');
   });
 
@@ -151,11 +144,7 @@ describe('updateRotationHandler', () => {
       },
     ]);
 
-    await updateRotationHandler({
-      ownerId: 'dev-local-owner',
-      id: 1,
-      totalDamage: 0,
-    });
+    await updateRotationHandler({ id: 1, totalDamage: 0 }, 'dev-local-owner');
 
     expect(mocks.set).toHaveBeenCalledWith(
       expect.objectContaining({

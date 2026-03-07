@@ -7,8 +7,12 @@ import { mapDatabaseRotation } from './map-database-rotation';
 
 export const createRotationHandler = async (
   input: CreateRotationRequest,
+  ownerId: string,
 ): Promise<SavedRotation> => {
-  const [created] = await database.insert(rotations).values(input).returning();
+  const [created] = await database
+    .insert(rotations)
+    .values({ ...input, ownerId })
+    .returning();
 
   return mapDatabaseRotation(created);
 };

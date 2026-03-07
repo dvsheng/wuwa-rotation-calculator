@@ -2,16 +2,7 @@ import { z } from 'zod';
 
 import { SavedRotationDataSchema, SavedRotationSchema } from '@/schemas/library';
 
-const OwnerIdSchema = z.string().trim().min(1);
-
-export const ListRotationsRequestSchema = z.object({
-  ownerId: OwnerIdSchema.optional(),
-});
-
-export type ListRotationsRequest = z.infer<typeof ListRotationsRequestSchema>;
-
 export const CreateRotationRequestSchema = z.object({
-  ownerId: OwnerIdSchema,
   name: z.string(),
   description: z.string().optional(),
   totalDamage: z.number().optional(),
@@ -22,7 +13,6 @@ export type CreateRotationRequest = z.infer<typeof CreateRotationRequestSchema>;
 
 export const UpdateRotationRequestSchema = z
   .object({
-    ownerId: OwnerIdSchema,
     id: z.number(),
     name: z.string().trim().min(1).optional(),
     description: z.string().trim().optional(),
@@ -47,7 +37,6 @@ export const UpdateRotationRequestSchema = z
 export type UpdateRotationRequest = z.infer<typeof UpdateRotationRequestSchema>;
 
 export const DeleteRotationRequestSchema = z.object({
-  ownerId: OwnerIdSchema,
   id: z.number(),
 });
 

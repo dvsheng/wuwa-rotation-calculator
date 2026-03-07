@@ -23,7 +23,7 @@ export class Server extends Construct {
       runtime: lambda.Runtime.NODEJS_24_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset(path.join(__dirname, '../../../.output/server')),
-      memorySize: 2048,
+      memorySize: 512,
       timeout: cdk.Duration.seconds(60),
       vpc,
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },

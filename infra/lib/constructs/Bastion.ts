@@ -18,7 +18,7 @@ export class Bastion extends Construct {
     this.host = new ec2.BastionHostLinux(this, 'Host', {
       vpc: properties.vpc,
       subnetSelection: { subnetType: ec2.SubnetType.PUBLIC },
-      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.NANO),
+      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MICRO),
     });
   }
 }

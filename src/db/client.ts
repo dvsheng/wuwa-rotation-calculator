@@ -30,6 +30,7 @@ function createClient() {
     port: Number(DATABASE_PORT ?? '5432'),
     database: DATABASE_NAME ?? 'wuwa_rotation_builder',
     username: DATABASE_USERNAME ?? 'postgres',
+    ssl: 'require',
     password: async () => {
       const { SecretsManagerClient, GetSecretValueCommand } =
         await import('@aws-sdk/client-secrets-manager');

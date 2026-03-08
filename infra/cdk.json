@@ -53,11 +53,11 @@
     "cognitoDomainPrefix": "wuwa-rotation",
     "cognitoCallbackUrls": [
       "http://localhost:3000/",
-      "https://dek9jzwolqvsi.cloudfront.net"
+      "https://dek9jzwolqvsi.cloudfront.net/"
     ],
     "cognitoLogoutUrls": [
       "http://localhost:3000/",
-      "https://dek9jzwolqvsi.cloudfront.net"
+      "https://dek9jzwolqvsi.cloudfront.net/"
     ]
   }
 }

@@ -18,13 +18,13 @@ export const RotationBuilderContainer = () => {
         selectedTab={selectedTab}
         setSelectedTab={setSelectedTab}
       />
-      {result && (
-        <div className="animate-in fade-in slide-in-from-top-4 shrink-0 duration-500">
+      {selectedTab === 'team' && <TeamContainer />}
+      {selectedTab === 'rotation' && <RotationBuilder />}
+      {selectedTab === 'results' && result && (
+        <div className="min-h-0 flex-1 overflow-y-auto p-6">
           <RotationResultDisplay result={result} isStale={isPlaceholderData} />
         </div>
       )}
-      {selectedTab === 'team' && <TeamContainer />}
-      {selectedTab === 'rotation' && <RotationBuilder />}
     </Stack>
   );
 };

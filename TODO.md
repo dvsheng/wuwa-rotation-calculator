@@ -14,10 +14,8 @@ damage breakdown
 
 damage type + attribute
 
-move library to db
-
-attacks with modifiers
-
 export to sheet
 
 right click context menu on buff canvas
+
+skill templates

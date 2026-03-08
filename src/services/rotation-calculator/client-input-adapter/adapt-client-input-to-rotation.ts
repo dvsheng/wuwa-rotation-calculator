@@ -60,33 +60,10 @@ export const ECHO_STAT_MAP: Record<
   healing_bonus: [CharacterStat.HEALING_BONUS, [Tag.ALL]],
 } as const;
 
-/**
- * Base character stats with default values for crit rate (5%), crit damage (50%), and energy regen (100%).
- */
-export const CHARACTER_BASE_STATS: CharacterStats = {
-  [CharacterStat.ATTACK_FLAT]: [],
-  [CharacterStat.ATTACK_SCALING_BONUS]: [],
-  [CharacterStat.ATTACK_FLAT_BONUS]: [],
-  [CharacterStat.DEFENSE_FLAT]: [],
-  [CharacterStat.DEFENSE_SCALING_BONUS]: [],
-  [CharacterStat.DEFENSE_FLAT_BONUS]: [],
-  [CharacterStat.HP_FLAT]: [],
-  [CharacterStat.HP_SCALING_BONUS]: [],
-  [CharacterStat.HP_FLAT_BONUS]: [],
-  [CharacterStat.CRITICAL_RATE]: [],
-  [CharacterStat.CRITICAL_DAMAGE]: [],
-  [CharacterStat.DEFENSE_IGNORE]: [],
-  [CharacterStat.RESISTANCE_PENETRATION]: [],
-  [CharacterStat.DAMAGE_BONUS]: [],
-  [CharacterStat.DAMAGE_AMPLIFICATION]: [],
-  [CharacterStat.DAMAGE_MULTIPLIER_BONUS]: [],
-  [CharacterStat.FINAL_DAMAGE_BONUS]: [],
-  [CharacterStat.OFF_TUNE_BUILDUP_RATE]: [],
-  [CharacterStat.TUNE_BREAK_BOOST]: [],
-  [CharacterStat.TUNE_STRAIN_DAMAGE_BONUS]: [],
-  [CharacterStat.ENERGY_REGEN]: [{ tags: [Tag.ALL], value: 1 }],
-  [CharacterStat.HEALING_BONUS]: [],
-};
+const createEmptyCharacterStats = (): CharacterStats =>
+  Object.fromEntries(
+    Object.values(CharacterStat).map((stat) => [stat, []]),
+  ) as CharacterStats;
 
 const isStatParameterizedNode = (
   value: unknown,
@@ -295,7 +272,7 @@ export const adaptClientInputToRotation = async (
     );
 
     const finalStats = mergeWith(
-      cloneDeep(CHARACTER_BASE_STATS),
+      createEmptyCharacterStats(),
       characterInstancePermanentStats,
       (objectValue, sourceValue) => [...objectValue, ...sourceValue],
     );

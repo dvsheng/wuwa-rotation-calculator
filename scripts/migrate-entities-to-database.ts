@@ -12,6 +12,7 @@ import { and, eq } from 'drizzle-orm';
 import { database as database } from '../src/db/client';
 import { capabilities, entities, skills } from '../src/db/schema';
 import { EntityType, OriginType } from '../src/services/game-data';
+import { CharacterStat, Tag } from '../src/types';
 
 import type { TransformedCharacter } from './transform-character-jsons';
 import type { TransformedEcho, TransformedEchoSet } from './transform-echo-jsons';
@@ -928,6 +929,103 @@ const upsertCharacterSkillTreeNodes = async (
   return statsProcessed;
 };
 
+const upsertCharacterDefaultBaseStats = async (
+  characterData: TransformedCharacter,
+): Promise<number> => {
+  const entityRecord = await database
+    .select({ id: entities.id, name: entities.name })
+    .from(entities)
+    .where(eq(entities.gameId, characterData.id))
+    .limit(1);
+
+  if (entityRecord.length === 0) {
+    console.error(`Entity not found for character ID: ${characterData.id}`);
+    return 0;
+  }
+
+  const entityId = entityRecord[0].id;
+  const entityName = entityRecord[0].name;
+
+  const baseStatsSkill = await database
+    .select({ id: skills.id })
+    .from(skills)
+    .where(
+      and(eq(skills.entityId, entityId), eq(skills.originType, OriginType.BASE_STATS)),
+    )
+    .limit(1);
+
+  if (baseStatsSkill.length === 0) {
+    console.error(`Base Stats skill not found for entity: ${entityName}`);
+    return 0;
+  }
+
+  const skillId = baseStatsSkill[0].id;
+  const defaultBaseStats = [
+    {
+      label: 'Crit. Rate',
+      stat: CharacterStat.CRITICAL_RATE,
+      value: 0.05,
+    },
+    {
+      label: 'Crit. DMG',
+      stat: CharacterStat.CRITICAL_DAMAGE,
+      value: 0.5,
+    },
+    {
+      label: 'Energy Regen',
+      stat: CharacterStat.ENERGY_REGEN,
+      value: 1,
+    },
+  ] as const;
+
+  let processedCount = 0;
+
+  for (const baseStat of defaultBaseStats) {
+    const name = `${entityName} Base ${baseStat.label}`;
+    const description = `Base ${baseStat.label} for ${entityName} at level 90.`;
+
+    const existing = await database
+      .select()
+      .from(capabilities)
+      .where(and(eq(capabilities.skillId, skillId), eq(capabilities.name, name)))
+      .limit(1);
+
+    if (existing.length > 0) {
+      await database
+        .update(capabilities)
+        .set({
+          description,
+          capabilityJson: {
+            type: 'permanent_stat',
+            stat: baseStat.stat,
+            value: baseStat.value,
+            tags: [Tag.ALL],
+          },
+        })
+        .where(eq(capabilities.id, existing[0].id));
+      console.log(`  Updated default base stat: ${name}`);
+    } else {
+      await database.insert(capabilities).values({
+        skillId,
+        name,
+        description,
+        capabilityJson: {
+          type: 'permanent_stat',
+          stat: baseStat.stat,
+          value: baseStat.value,
+          tags: [Tag.ALL],
+        },
+      });
+      insertedCounts.capabilities++;
+      console.log(`  Inserted default base stat: ${name}`);
+    }
+
+    processedCount++;
+  }
+
+  return processedCount;
+};
+
 const upsertEchoSetEntity = async (echoSet: TransformedEchoSet): Promise<void> => {
   const gameId = echoSet.id;
   const name = echoSet.name;
@@ -1076,6 +1174,7 @@ const main = async () => {
     let skillTreeNodesProcessed = 0;
     let propertiesProcessed = 0;
     let skillTreePermanentStatsProcessed = 0;
+    let defaultBaseStatsProcessed = 0;
 
     for (const file of characterJsonFiles) {
       const filePath = path.join(CHARACTER_DATA_DIR, file);
@@ -1104,6 +1203,7 @@ const main = async () => {
         propertiesProcessed += await upsertCharacterProperties(character);
         skillTreePermanentStatsProcessed +=
           await upsertCharacterSkillTreeNodes(character);
+        defaultBaseStatsProcessed += await upsertCharacterDefaultBaseStats(character);
         characterProcessed++;
       } catch (error) {
         console.error(`Error processing ${character.name}:`, error, file);
@@ -1122,6 +1222,7 @@ const main = async () => {
     console.log(
       `   - Skill Tree (Permanent Stats): ${skillTreePermanentStatsProcessed}`,
     );
+    console.log(`   - Default Base Stats: ${defaultBaseStatsProcessed}`);
 
     // ========================================================================
     // ECHO SETS
@@ -1181,6 +1282,7 @@ const main = async () => {
     console.log(
       `   - Permanent Stats: ${propertiesProcessed} properties, ${skillTreePermanentStatsProcessed} skill tree nodes, ${weaponPropertiesProcessed} weapon properties`,
     );
+    console.log(`   - Default Base Stats: ${defaultBaseStatsProcessed}`);
   } catch (error) {
     console.error('\n❌ Error during migration:', error);
     process.exit(1);

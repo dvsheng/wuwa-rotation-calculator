@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { RotationResultDisplay } from '@/components/rotation-builder/results/RotationResultDisplay';
+import { RotationResultContainer } from '@/components/rotation-builder/results/RotationResultContainer';
 import { TeamContainer } from '@/components/rotation-builder/team/TeamContainer';
 import { useRotationCalculation } from '@/hooks/useRotationCalculation';
 
@@ -21,9 +21,7 @@ export const RotationBuilderContainer = () => {
       {selectedTab === 'team' && <TeamContainer />}
       {selectedTab === 'rotation' && <RotationBuilder />}
       {selectedTab === 'results' && result && (
-        <div className="min-h-0 flex-1 overflow-y-auto p-6">
-          <RotationResultDisplay result={result} isStale={isPlaceholderData} />
-        </div>
+        <RotationResultContainer result={result} isStale={isPlaceholderData} />
       )}
     </Stack>
   );

@@ -47,7 +47,7 @@ const rowVariants = cva('flex', {
       between: 'justify-between',
     },
   },
-  defaultVariants: { gap: 'none' },
+  defaultVariants: { gap: 'none', align: 'center' },
 });
 
 type RowProps = React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof rowVariants>;
@@ -64,7 +64,7 @@ const Row = React.forwardRef<HTMLDivElement, RowProps>(
 Row.displayName = 'Row';
 
 // Container — page-level wrapper
-const containerVariants = cva('w-full', {
+const containerVariants = cva('mx-auto w-full', {
   variants: {
     padding: {
       none: '',

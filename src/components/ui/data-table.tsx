@@ -12,9 +12,15 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 
+interface DataTableColumnMeta {
+  headerClassName?: string;
+  cellClassName?: string;
+}
+
 interface DataTableProperties<TData, TValue> {
   columns: Array<ColumnDef<TData, TValue>>;
   data: Array<TData>;
+  showHeader?: boolean;
   onRowClick?: (row: TData, index: number) => void;
   renderRow?: (row: Row<TData>, defaultRow: ReactNode) => ReactNode;
   classNames?: {
@@ -33,6 +39,7 @@ interface DataTableProperties<TData, TValue> {
 export function DataTable<TData, TValue>({
   columns,
   data,
+  showHeader = true,
   onRowClick,
   renderRow,
   classNames,
@@ -49,24 +56,33 @@ export function DataTable<TData, TValue>({
     <div className={cn('rounded-md border', classNames?.wrapper)}>
       <div className={cn('overflow-auto', classNames?.scrollArea)}>
         <Table>
-          <TableHeader className={classNames?.header}>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className={classNames?.headerRow}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id} className={classNames?.headerCell}>
-                      {header.isPlaceholder
-                        ? undefined
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
+          {showHeader && (
+            <TableHeader className={classNames?.header}>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id} className={classNames?.headerRow}>
+                  {headerGroup.headers.map((header) => {
+                    const meta = header.column.columnDef.meta as
+                      | DataTableColumnMeta
+                      | undefined;
+
+                    return (
+                      <TableHead
+                        key={header.id}
+                        className={cn(classNames?.headerCell, meta?.headerClassName)}
+                      >
+                        {header.isPlaceholder
+                          ? undefined
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+          )}
           <TableBody className={classNames?.body}>
             {table.getRowModel().rows.length > 0 ? (
               table.getRowModel().rows.map((row, index) => {
@@ -77,11 +93,20 @@ export function DataTable<TData, TValue>({
                     onClick={() => onRowClick?.(row.original, index)}
                     className={cn(onRowClick ? 'cursor-pointer' : '', classNames?.row)}
                   >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className={classNames?.cell}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
+                    {row.getVisibleCells().map((cell) => {
+                      const meta = cell.column.columnDef.meta as
+                        | DataTableColumnMeta
+                        | undefined;
+
+                      return (
+                        <TableCell
+                          key={cell.id}
+                          className={cn(classNames?.cell, meta?.cellClassName)}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      );
+                    })}
                   </TableRow>
                 );
 

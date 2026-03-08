@@ -43,3 +43,4 @@ and a script in package.json to run the validation.
 ## General Instructions
 
 - Run `npm run check` after any code changes to lint, format, and test your code
+- Prefer `src/components/ui/layout` and `src/components/ui/typography` primitives over raw HTML wrappers (`div`, `span`, etc.) when practical

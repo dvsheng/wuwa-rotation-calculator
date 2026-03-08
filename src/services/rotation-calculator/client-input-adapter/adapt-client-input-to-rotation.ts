@@ -265,19 +265,15 @@ export const adaptClientInputToRotation = async (
     const echoStats: Array<
       TaggedStatValue<StatMeta> & { stat: CharacterStat | EnemyStat }
     > = clientChar.echoStats.flatMap((echo) => {
-      const [mainStatName, mainTags] = ECHO_STAT_MAP[echo.mainStatType];
       const { primary, secondary } = getEchoStats(echo.cost, echo.mainStatType);
       if (!primary) throw new Error('Invalid Echo Stat Configuration Provided');
       const mainStatEntry = {
-        stat: mainStatName,
-        value: primary.value,
-        tags: mainTags,
+        ...primary,
         name: 'Echo Main Stat',
         description: echo.mainStatType,
       };
       const secondaryEntry = {
         ...secondary,
-        stat: mainStatName,
         name: 'Echo Secondary Stat',
         description: echo.mainStatType,
       };

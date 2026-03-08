@@ -6,7 +6,9 @@ import { getStatFilterer } from './filter-stats';
 import { resolveStats } from './resolve-runtime-number';
 import type { Rotation, RotationResult } from './types';
 
-export const calculateRotationDamage = (rotation: Rotation): RotationResult => {
+export const calculateRotationDamage = <T extends {} = {}>(
+  rotation: Rotation<T>,
+): RotationResult<T> => {
   const flattenedDamageInstances = rotation.attacks.flatMap(
     ({ attack, modifiers }, attackIndex) => {
       return attack.damageInstances.map((instance) => ({
@@ -56,13 +58,15 @@ export const calculateRotationDamage = (rotation: Rotation): RotationResult => {
             scalingStat: instance.scalingStat,
             motionValue: instance.motionValue,
             damage: result,
+            teamDetails: filteredTeam.map((character) => character.stats),
+            enemyDetails: filteredEnemy.stats,
           },
         ],
       };
     },
     {
       totalDamage: 0,
-      damageDetails: new Array<RotationResult['damageDetails'][number]>(),
+      damageDetails: new Array<RotationResult<T>['damageDetails'][number]>(),
     },
   );
 };

@@ -41,7 +41,6 @@ export type StatValue = NumberNode;
 /**
  * Combines a value with classification tags to allow for conditional logic.
  */
-export interface TaggedStatValue extends Tagged {
-  /** The magnitude of the stat, possibly dependent on character stats. */
+export type TaggedStatValue<T extends {} = {}> = Tagged & {
   value: NumberNode;
-}
+} & T;

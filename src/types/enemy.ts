@@ -14,14 +14,17 @@ export type EnemyStat = (typeof EnemyStat)[keyof typeof EnemyStat];
 /**
  * Defines the stats of an enemy, primarily focusing on resistances and reductions.
  */
-export type EnemyStats = Record<EnemyStat, Array<TaggedStatValue>>;
+export type EnemyStats<T extends {} = {}> = Record<
+  EnemyStat,
+  Array<TaggedStatValue<T>>
+>;
 
 /**
  * Represents an enemy target in the simulation.
  */
-export interface Enemy {
+export interface Enemy<T extends {} = {}> {
   /** Progression level of the enemy. */
   level: number;
   /** Current defensive stats. */
-  stats: EnemyStats;
+  stats: EnemyStats<T>;
 }

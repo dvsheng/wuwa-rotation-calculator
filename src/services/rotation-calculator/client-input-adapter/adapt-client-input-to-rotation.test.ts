@@ -79,9 +79,17 @@ const characterIdToSlotNumberMap = {
   5678: 2,
 } as Record<number, 0 | 1 | 2>;
 
+const permanentStatBase = {
+  id: 1,
+  name: 'Test Stat',
+  originType: 'Base Stats' as const,
+  capabilityType: CapabilityType.PERMANENT_STAT,
+};
+
 describe('toRotationPermanentStat', () => {
   it('maps literal number values unchanged', () => {
     const stat = {
+      ...permanentStatBase,
       stat: CharacterStat.ATTACK_FLAT,
       tags: [Tag.ALL],
       value: 500,
@@ -89,11 +97,16 @@ describe('toRotationPermanentStat', () => {
 
     const result = toRotationPermanentStat(stat, 0);
 
-    expect(result).toEqual(stat);
+    expect(result.stat).toBe(stat.stat);
+    expect(result.tags).toEqual(stat.tags);
+    expect(result.value).toBe(stat.value);
+    expect(result.name).toBe(stat.name);
+    expect(result.description).toBe('');
   });
 
   it('maps self stat references to the provided character index', () => {
     const stat = {
+      ...permanentStatBase,
       stat: CharacterStat.DAMAGE_BONUS,
       tags: [Tag.ELECTRO],
       value: statReference(),
@@ -115,6 +128,7 @@ describe('toRotationPermanentStat', () => {
 
   it('recursively maps nested stat references while preserving tree shape', () => {
     const stat = {
+      ...permanentStatBase,
       stat: CharacterStat.DAMAGE_BONUS,
       tags: [Tag.ELECTRO],
       value: {

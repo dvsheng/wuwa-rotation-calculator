@@ -31,19 +31,22 @@ export type CharacterStat = (typeof CharacterStat)[keyof typeof CharacterStat];
  * A comprehensive record of a character's stats, where each value is an array of tagged instances
  * to allow for conditional application during damage calculations.
  */
-export type CharacterStats = Record<CharacterStat, Array<TaggedStatValue>>;
+export type CharacterStats<T extends {} = {}> = Record<
+  CharacterStat,
+  Array<TaggedStatValue<T>>
+>;
 
 /**
  * Represents a character in the simulation context.
  */
-export interface Character {
+export interface Character<T extends {} = {}> {
   /** Progression level. */
   level: number;
   /** Current calculated stats. */
-  stats: CharacterStats;
+  stats: CharacterStats<T>;
 }
 
 /**
  * A standard three-character team composition.
  */
-export type Team = Array<Character>;
+export type Team<T extends {} = {}> = Array<Character<T>>;

@@ -3,7 +3,10 @@ import { produce } from 'immer';
 
 import type { Character, Enemy, Modifier, Team } from '@/types';
 
-const applyModifierToCharacter = (target: Character, modifier: Modifier) => {
+const applyModifierToCharacter = <T extends object>(
+  target: Character<T>,
+  modifier: Modifier<T>,
+) => {
   target.stats = mergeWith(
     target.stats,
     modifier.modifiedStats,
@@ -11,7 +14,10 @@ const applyModifierToCharacter = (target: Character, modifier: Modifier) => {
   );
 };
 
-const applyModifierToEnemy = (target: Enemy, modifier: Modifier) => {
+const applyModifierToEnemy = <T extends object>(
+  target: Enemy<T>,
+  modifier: Modifier<T>,
+) => {
   target.stats = mergeWith(
     target.stats,
     modifier.modifiedStats,
@@ -19,10 +25,10 @@ const applyModifierToEnemy = (target: Enemy, modifier: Modifier) => {
   );
 };
 
-const applyModifierToTeamAndEnemy = (
-  draftTeam: Team,
-  draftEnemy: Enemy,
-  modifier: Modifier,
+const applyModifierToTeamAndEnemy = <T extends object>(
+  draftTeam: Team<T>,
+  draftEnemy: Enemy<T>,
+  modifier: Modifier<T>,
 ) => {
   for (const targetIndex of modifier.targets) {
     if (targetIndex === 'enemy') {
@@ -34,14 +40,18 @@ const applyModifierToTeamAndEnemy = (
   }
 };
 
-export const applyModifiers = (
-  team: Team,
-  enemy: Enemy,
-  modifiers: Array<Modifier>,
-): [Team, Enemy] => {
+export const applyModifiers = <T extends object>(
+  team: Team<T>,
+  enemy: Enemy<T>,
+  modifiers: Array<Modifier<T>>,
+): [Team<T>, Enemy<T>] => {
   return produce([team, enemy], ([draftTeam, draftEnemy]) => {
     for (const modifier of modifiers) {
-      applyModifierToTeamAndEnemy(draftTeam, draftEnemy, modifier);
+      applyModifierToTeamAndEnemy(
+        draftTeam as Team<T>,
+        draftEnemy as Enemy<T>,
+        modifier,
+      );
     }
   });
 };

@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { AttackScalingProperty, Attribute, CharacterStat, Tag } from '@/types';
-import type { Character, Enemy, Modifier, Team } from '@/types';
+import {
+  AttackScalingProperty,
+  Attribute,
+  CharacterStat,
+  EnemyStat,
+  Tag,
+} from '@/types';
+import type { Character, Enemy, EnemyStats, Modifier, Team } from '@/types';
 
 import { calculateRotationDamage } from './calculate-rotation-damage';
 import type { Rotation } from './types';
@@ -63,6 +69,51 @@ const createTestEnemy = (): Enemy => ({
     electroFlare: [],
     tuneStrainStacks: [],
   },
+});
+
+/** Minimal meta type used to verify T passthrough at the core level. */
+type TestMeta = { label: string };
+
+const emptyStatsMeta = Object.fromEntries(
+  Object.values(CharacterStat).map((s) => [s, []]),
+) as Record<CharacterStat, Array<never>>;
+
+const createTestCharacterWithMeta = (
+  attackFlatLabel = 'base-atk',
+): Character<TestMeta> => ({
+  level: 90,
+  stats: {
+    ...emptyStatsMeta,
+    [CharacterStat.ATTACK_FLAT]: [
+      { tags: [Tag.ALL], value: 1000, label: attackFlatLabel },
+    ],
+    [CharacterStat.CRITICAL_RATE]: [
+      { tags: [Tag.ALL], value: 0.5, label: 'crit-rate' },
+    ],
+    [CharacterStat.CRITICAL_DAMAGE]: [{ tags: [Tag.ALL], value: 1, label: 'crit-dmg' }],
+    [CharacterStat.ENERGY_REGEN]: [
+      { tags: [Tag.ALL], value: 1, label: 'energy-regen' },
+    ],
+  },
+});
+
+const createTestEnemyWithMeta = (): Enemy<TestMeta> => ({
+  level: 90,
+  stats: {
+    baseResistance: [
+      { value: 0.1, tags: [Attribute.ELECTRO], label: 'electro-res' },
+      { value: 0.1, tags: [Attribute.GLACIO], label: 'glacio-res' },
+    ],
+    defenseReduction: [],
+    resistanceReduction: [],
+    glacioChafe: [],
+    spectroFrazzle: [],
+    fusionBurst: [],
+    havocBane: [],
+    aeroErosion: [],
+    electroFlare: [],
+    tuneStrainStacks: [],
+  } as unknown as EnemyStats<TestMeta>,
 });
 
 describe('calculateRotationDamage', () => {
@@ -174,6 +225,121 @@ describe('calculateRotationDamage', () => {
       // - Runtime-resolvable: (180% - 150%) * 2 = 60%, capped at 50%
       // Total: 150%
       expect(result.damageDetails[0].character.criticalDamage).toBe(1.5);
+    });
+  });
+
+  describe('metadata (T) passthrough', () => {
+    const baseRotation = {
+      duration: 10,
+      attacks: [
+        {
+          attack: {
+            characterIndex: 0,
+            damageInstances: [
+              {
+                scalingStat: AttackScalingProperty.ATK,
+                motionValue: 1,
+                tags: [Tag.BASIC_ATTACK, Tag.ELECTRO],
+              },
+            ],
+          },
+          modifiers: [] as Array<Modifier<TestMeta>>,
+        },
+      ],
+    };
+
+    it('preserves base stat meta in teamDetails', () => {
+      const team: Team<TestMeta> = [
+        createTestCharacterWithMeta('base-atk-char0'),
+        createTestCharacterWithMeta(),
+        createTestCharacterWithMeta(),
+      ];
+
+      const result = calculateRotationDamage<TestMeta>({
+        ...baseRotation,
+        team,
+        enemy: createTestEnemyWithMeta(),
+      });
+
+      const attackFlatStats =
+        result.damageDetails[0].teamDetails[0][CharacterStat.ATTACK_FLAT];
+      expect(attackFlatStats).toHaveLength(1);
+      expect(attackFlatStats[0].label).toBe('base-atk-char0');
+    });
+
+    it('preserves modifier stat meta in teamDetails after applyModifiers', () => {
+      const modifier: Modifier<TestMeta> = {
+        targets: [0],
+        modifiedStats: {
+          [CharacterStat.DAMAGE_BONUS]: [
+            { tags: [Tag.ELECTRO], value: 0.5, label: 'crown-of-wills' },
+          ],
+        },
+      };
+
+      const result = calculateRotationDamage<TestMeta>({
+        ...baseRotation,
+        team: [
+          createTestCharacterWithMeta(),
+          createTestCharacterWithMeta(),
+          createTestCharacterWithMeta(),
+        ],
+        enemy: createTestEnemyWithMeta(),
+        attacks: [{ ...baseRotation.attacks[0], modifiers: [modifier] }],
+      });
+
+      const damageBonusStats =
+        result.damageDetails[0].teamDetails[0][CharacterStat.DAMAGE_BONUS];
+      expect(damageBonusStats).toHaveLength(1);
+      expect(damageBonusStats[0].label).toBe('crown-of-wills');
+    });
+
+    it('preserves enemy stat meta in enemyDetails', () => {
+      const result = calculateRotationDamage<TestMeta>({
+        ...baseRotation,
+        team: [
+          createTestCharacterWithMeta(),
+          createTestCharacterWithMeta(),
+          createTestCharacterWithMeta(),
+        ],
+        enemy: createTestEnemyWithMeta(),
+      });
+
+      const baseResistance =
+        result.damageDetails[0].enemyDetails[EnemyStat.BASE_RESISTANCE];
+      const electroEntry = baseResistance.find((s) =>
+        s.tags.includes(Attribute.ELECTRO),
+      );
+      expect(electroEntry?.label).toBe('electro-res');
+    });
+
+    it('strips meta values that do not pass tag filtering but keeps those that do', () => {
+      const team: Team<TestMeta> = [
+        {
+          ...createTestCharacterWithMeta(),
+          stats: {
+            ...createTestCharacterWithMeta().stats,
+            [CharacterStat.DAMAGE_BONUS]: [
+              { tags: [Tag.ELECTRO], value: 0.3, label: 'electro-bonus' },
+              { tags: [Tag.GLACIO], value: 0.3, label: 'glacio-bonus' },
+            ],
+          },
+        },
+        createTestCharacterWithMeta(),
+        createTestCharacterWithMeta(),
+      ];
+
+      const result = calculateRotationDamage<TestMeta>({
+        ...baseRotation,
+        team,
+        enemy: createTestEnemyWithMeta(),
+      });
+
+      // Attack has [BASIC_ATTACK, ELECTRO] tags → only ELECTRO damage bonus passes filter
+      const damageBonusStats =
+        result.damageDetails[0].teamDetails[0][CharacterStat.DAMAGE_BONUS];
+      expect(damageBonusStats.map((s) => s.label)).toContain('electro-bonus');
+      expect(damageBonusStats.map((s) => s.label)).not.toContain('glacio-bonus');
     });
   });
 

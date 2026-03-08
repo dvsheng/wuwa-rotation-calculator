@@ -1,16 +1,18 @@
 import type {
   AttackScalingProperty,
   CharacterAttack,
+  CharacterStats,
   Enemy,
+  EnemyStats,
   Modifier,
   Team,
 } from '@/types';
 
 import type { CalculateDamageProperties } from '../damage-calculator/calculate-damage.types';
 
-export interface Rotation {
-  team: Team;
-  enemy: Enemy;
+export interface Rotation<T extends {} = {}> {
+  team: Team<T>;
+  enemy: Enemy<T>;
   duration: number;
   attacks: Array<{
     attack: CharacterAttack;
@@ -18,7 +20,7 @@ export interface Rotation {
   }>;
 }
 
-export interface RotationResult {
+export interface RotationResult<T extends {} = {}> {
   totalDamage: number;
   damageDetails: Array<
     CalculateDamageProperties & {
@@ -28,6 +30,8 @@ export interface RotationResult {
       scalingStat: AttackScalingProperty;
       motionValue: number;
       damage: number;
+      teamDetails: Array<CharacterStats<T>>;
+      enemyDetails: EnemyStats<T>;
     }
   >;
 }

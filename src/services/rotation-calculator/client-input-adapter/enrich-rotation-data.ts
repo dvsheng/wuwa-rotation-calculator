@@ -7,6 +7,7 @@ import type {
   BaseCapability,
   BaseEntity,
   Modifier as GameDataModifier,
+  PermanentStat,
 } from '@/services/game-data';
 import { getEntityByHakushinId } from '@/services/game-data';
 
@@ -59,7 +60,7 @@ export const createGameDataEnricher = async (clientTeam: ClientTeam) => {
      * Gets permanent stats for a character at the specified index.
      * Includes stats from the character, weapon, echo, and echo sets.
      */
-    getPermanentStatsForCharacter: (characterIndex: number) => {
+    getPermanentStatsForCharacter: (characterIndex: number): Array<PermanentStat> => {
       return entityDetailsByCharacterIndex[characterIndex].flatMap(
         (entity) => entity.capabilities.permanentStats,
       );

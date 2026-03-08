@@ -1,5 +1,7 @@
 import { AttackScalingProperty, CharacterStat, EnemyStat } from '@/types';
+import type { CharacterStats, EnemyStats } from '@/types';
 
+import type { StatMeta } from '../client-input-adapter/adapt-client-input-to-rotation';
 import { getAttackScalingType } from '../core/type-converters';
 import { AttackScalingType } from '../core/types';
 import type { RotationResult } from '../core/types';
@@ -23,6 +25,10 @@ export interface ClientDamageDetail {
   baseDamage: number;
   character: ClientCharacterStats;
   enemy: ClientEnemyStats;
+  /** Full tagged stat arrays for each team member after modifier application and tag filtering. */
+  teamDetails: Array<CharacterStats<StatMeta>>;
+  /** Full tagged stat arrays for the enemy after modifier application and tag filtering. */
+  enemyDetails: EnemyStats<StatMeta>;
 }
 
 export interface ClientRotationResult {
@@ -128,7 +134,7 @@ const filterEnemyStats = (
 // ---------------------------------------------------------------------------
 
 export const adaptRotationResultToClientOutput = (
-  result: RotationResult,
+  result: RotationResult<StatMeta>,
 ): ClientRotationResult => ({
   totalDamage: result.totalDamage,
   damageDetails: result.damageDetails.map((detail) => ({
@@ -146,5 +152,7 @@ export const adaptRotationResultToClientOutput = (
       detail.enemy as unknown as Record<string, number>,
       detail.scalingStat,
     ),
+    teamDetails: detail.teamDetails,
+    enemyDetails: detail.enemyDetails,
   })),
 });

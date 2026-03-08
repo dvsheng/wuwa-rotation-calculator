@@ -543,6 +543,185 @@ describe('calculateRotation', () => {
     });
   });
 
+  describe('stat details (name/description) in damage output', () => {
+    const DETAIL_CHARACTER_ID = 1306;
+    const DETAIL_ATTACK_ID = 1_234_565;
+    const DETAIL_MODIFIER_ID = 9_602_988;
+
+    beforeEach(() => {
+      vi.spyOn(enrichRotationData, 'createGameDataEnricher').mockResolvedValue({
+        enrichAttack: (attack) => ({
+          ...attack,
+          id: DETAIL_ATTACK_ID,
+          name: 'Basic Attack Stage 1',
+          parentName: 'Augusta',
+          originType: 'Base Stats',
+          capabilityType: CapabilityType.ATTACK,
+          attribute: Tag.ELECTRO,
+          damageInstances: [
+            {
+              motionValue: 0.5,
+              tags: [Tag.BASIC_ATTACK, Tag.ELECTRO],
+              scalingStat: AttackScalingProperty.ATK,
+            },
+          ],
+        }),
+        enrichModifier: (modifier) => ({
+          ...modifier,
+          id: DETAIL_MODIFIER_ID,
+          name: 'Crown of Wills',
+          description: 'Electro DMG Bonus from Sequence 1',
+          parentName: 'Augusta',
+          originType: 'Inherent Skill',
+          capabilityType: CapabilityType.MODIFIER,
+          target: 'self',
+          modifiedStats: [
+            {
+              stat: CharacterStat.DAMAGE_BONUS,
+              value: 0.15,
+              tags: [Tag.ELECTRO],
+            },
+          ],
+        }),
+        getPermanentStatsForCharacter: (charIndex) =>
+          charIndex === 0
+            ? [
+                {
+                  id: 1,
+                  name: 'Base ATK',
+                  description: 'Augusta base attack',
+                  parentName: 'Augusta',
+                  originType: 'Base Stats',
+                  capabilityType: CapabilityType.PERMANENT_STAT,
+                  stat: CharacterStat.ATTACK_FLAT,
+                  value: 400,
+                  tags: [Tag.ALL],
+                },
+              ]
+            : [],
+      });
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('includes name and description from permanent stat in teamDetails', async () => {
+      const team: Team = [
+        createTestCharacter(DETAIL_CHARACTER_ID),
+        createTestCharacter(1304),
+        createTestCharacter(1505),
+      ];
+      const attack: AttackInstance = {
+        instanceId: 'attack-1',
+        id: DETAIL_ATTACK_ID,
+        characterId: DETAIL_CHARACTER_ID,
+      };
+
+      const result = await calculateRotationHandler(
+        team,
+        createTestEnemy(),
+        [attack],
+        [],
+      );
+
+      const attackFlatStats =
+        result.damageDetails[0].teamDetails[0][CharacterStat.ATTACK_FLAT];
+      expect(attackFlatStats.length).toBeGreaterThan(0);
+      expect(attackFlatStats[0].name).toBe('Base ATK');
+      expect(attackFlatStats[0].description).toBe('Augusta base attack');
+    });
+
+    it('includes modifier name and description on modifier stats in teamDetails', async () => {
+      const team: Team = [
+        createTestCharacter(DETAIL_CHARACTER_ID),
+        createTestCharacter(1304),
+        createTestCharacter(1505),
+      ];
+      const attack: AttackInstance = {
+        instanceId: 'attack-1',
+        id: DETAIL_ATTACK_ID,
+        characterId: DETAIL_CHARACTER_ID,
+      };
+      const modifier: ModifierInstance = {
+        instanceId: 'modifier-1',
+        id: DETAIL_MODIFIER_ID,
+        characterId: DETAIL_CHARACTER_ID,
+        x: 0,
+        y: 0,
+        w: 1,
+        h: 1,
+      };
+
+      const result = await calculateRotationHandler(
+        team,
+        createTestEnemy(),
+        [attack],
+        [modifier],
+      );
+
+      const damageBonusStats =
+        result.damageDetails[0].teamDetails[0][CharacterStat.DAMAGE_BONUS];
+      const modifierStat = damageBonusStats.find((s) => s.name === 'Crown of Wills');
+      expect(modifierStat).toBeDefined();
+      expect(modifierStat?.description).toBe('Electro DMG Bonus from Sequence 1');
+    });
+
+    it('includes name and description on echo main stat in teamDetails', async () => {
+      const team: Team = [
+        createTestCharacter(DETAIL_CHARACTER_ID),
+        createTestCharacter(1304),
+        createTestCharacter(1505),
+      ];
+      const attack: AttackInstance = {
+        instanceId: 'attack-1',
+        id: DETAIL_ATTACK_ID,
+        characterId: DETAIL_CHARACTER_ID,
+      };
+
+      const result = await calculateRotationHandler(
+        team,
+        createTestEnemy(),
+        [attack],
+        [],
+      );
+
+      // Test character has a crit_dmg echo main stat and several atk_percent echoes
+      const critDamageStats =
+        result.damageDetails[0].teamDetails[0][CharacterStat.CRITICAL_DAMAGE];
+      const echoMainStat = critDamageStats.find((s) => s.name === 'Echo Main Stat');
+      expect(echoMainStat).toBeDefined();
+      expect(echoMainStat?.description).toBe('crit_dmg');
+    });
+
+    it('includes name and description on enemy base resistance in enemyDetails', async () => {
+      const result = await calculateRotationHandler(
+        [
+          createTestCharacter(DETAIL_CHARACTER_ID),
+          createTestCharacter(1304),
+          createTestCharacter(1505),
+        ],
+        createTestEnemy(),
+        [
+          {
+            instanceId: 'attack-1',
+            id: DETAIL_ATTACK_ID,
+            characterId: DETAIL_CHARACTER_ID,
+          },
+        ],
+        [],
+      );
+
+      const baseResistanceStats =
+        result.damageDetails[0].enemyDetails[EnemyStat.BASE_RESISTANCE];
+      expect(baseResistanceStats.length).toBeGreaterThan(0);
+      expect(baseResistanceStats.every((s) => s.name.length > 0)).toBe(true);
+      expect(
+        baseResistanceStats.every((s) => s.description === 'Base Resistance'),
+      ).toBe(true);
+    });
+  });
+
   describe('error handling', () => {
     it('throws an error when an invalid character entity ID is provided', async () => {
       const INVALID_CHARACTER_ID = 99_999;

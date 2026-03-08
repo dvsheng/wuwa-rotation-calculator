@@ -25,10 +25,10 @@ const CONDITIONAL_SCALING_PROPERTIES = [
  * @param configuration - Per-stat tag allowlist.
  * @returns A new stat record containing only entries with at least one matching tag.
  */
-const filterStats = <T extends CharacterStat | EnemyStat>(
-  stats: Record<T, Array<TaggedStatValue>>,
+const filterStats = <TStat extends CharacterStat | EnemyStat, TMeta extends object>(
+  stats: Record<TStat, Array<TaggedStatValue<TMeta>>>,
   configuration: StatFilterConfiguration,
-): Record<T, Array<TaggedStatValue>> => {
+): Record<TStat, Array<TaggedStatValue<TMeta>>> => {
   return mapValues(stats, (statValues, stat) => {
     const tags = configuration[stat];
     return statValues.filter((statValue) => {
@@ -44,7 +44,7 @@ const filterStats = <T extends CharacterStat | EnemyStat>(
  * @returns Function that filters both team and enemy stats for the same context.
  */
 const createStatFilterer = (configuration: StatFilterConfiguration) => {
-  return (team: Team, enemy: Enemy) => {
+  return <TMeta extends object>(team: Team<TMeta>, enemy: Enemy<TMeta>) => {
     const filteredTeam = team.map((character) => {
       return {
         ...character,

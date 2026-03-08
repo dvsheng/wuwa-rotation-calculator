@@ -1,4 +1,4 @@
-import { cloneDeep, mergeWith } from 'es-toolkit/object';
+import { mergeWith } from 'es-toolkit/object';
 
 import type { EchoMainStatOptionType, EchoSubstatOptionType } from '@/schemas/echo';
 import type { Enemy as ClientEnemy } from '@/schemas/enemy';
@@ -8,7 +8,7 @@ import type {
   Attack,
   GameDataStatParameterizedNumber,
   Modifier,
-  PermanentStatBase,
+  PermanentStat,
 } from '@/services/game-data';
 import { getEchoStats } from '@/services/game-data';
 import { CharacterStat, Tag } from '@/types';
@@ -27,6 +27,17 @@ import { createGameDataEnricher } from './enrich-rotation-data';
 import { expandModifiersByValueConfiguration } from './expand-modifiers-by-value-configuration';
 import type { ResolveUserParameterizedType } from './resolve-user-parameterized-values';
 import { resolveUserParameterizedValues } from './resolve-user-parameterized-values';
+
+/**
+ * Passthrough metadata attached to every TaggedStatValue in the enriched rotation.
+ * Carries human-readable provenance info through the damage calculation pipeline.
+ */
+export interface StatMeta {
+  /** Human-readable name of the stat source (e.g. "Base ATK", "Crown of Wills"). */
+  name: string;
+  /** Additional context about the stat source (e.g. "Augusta base attack"). */
+  description: string;
+}
 
 /**
  * Maps client-side echo stat types to server-side CharacterStat enums.
@@ -60,10 +71,10 @@ export const ECHO_STAT_MAP: Record<
   healing_bonus: [CharacterStat.HEALING_BONUS, [Tag.ALL]],
 } as const;
 
-const createEmptyCharacterStats = (): CharacterStats =>
+const createEmptyCharacterStats = (): CharacterStats<StatMeta> =>
   Object.fromEntries(
     Object.values(CharacterStat).map((stat) => [stat, []]),
-  ) as CharacterStats;
+  ) as unknown as CharacterStats<StatMeta>;
 
 const isStatParameterizedNode = (
   value: unknown,
@@ -132,16 +143,19 @@ export function resolveStatReferences<T>(
 /**
  * Converts a client-side modifier instance to a rotation modifier.
  * Resolves modifier targets and maps stats from 'self' to the character's slot number.
+ * Attaches the modifier's name and description to each stat value as StatMeta.
  */
 export const toRotationModifier = (
   modifier: ModifierInstance & ResolveUserParameterizedType<Modifier>,
   attack: Pick<AttackInstance, 'characterId'>,
   characterIdToSlotNumberMap: Record<number, number>,
-): RotationModifier => {
+): RotationModifier<StatMeta> => {
   const characterSlotNumber = characterIdToSlotNumberMap[modifier.characterId];
   const statsWithResolvedIndex = modifier.modifiedStats.map((stat) => ({
     ...stat,
     value: resolveStatReferences(stat.value, characterSlotNumber),
+    name: modifier.name,
+    description: modifier.description ?? '',
   }));
   const modifiedStats = Object.groupBy(statsWithResolvedIndex, (_stat) => _stat.stat);
 
@@ -172,14 +186,17 @@ export const toRotationModifier = (
 
 /**
  * Converts a permanent stat to include the character's slot number for runtime resolution.
+ * Attaches the stat's name and description as StatMeta.
  */
 export const toRotationPermanentStat = (
-  stat: ResolveUserParameterizedType<PermanentStatBase>,
+  stat: ResolveUserParameterizedType<PermanentStat>,
   characterIndex: number,
-): TaggedStatValue & { stat: CharacterStat | EnemyStat } => {
+): TaggedStatValue<StatMeta> & { stat: CharacterStat | EnemyStat } => {
   return {
     ...stat,
     value: resolveStatReferences(stat.value, characterIndex),
+    name: stat.name,
+    description: stat.description ?? '',
   };
 };
 
@@ -188,7 +205,9 @@ export const toRotationPermanentStat = (
  */
 export const toRotationAttack = (
   instance: AttackInstance &
-    ResolveUserParameterizedType<Attack> & { modifiers: Array<RotationModifier> },
+    ResolveUserParameterizedType<Attack> & {
+      modifiers: Array<RotationModifier<StatMeta>>;
+    },
   characterIdToSlotNumberMap: Record<number, number>,
 ): CharacterAttack => {
   return {
@@ -233,7 +252,7 @@ export const adaptClientInputToRotation = async (
   clientEnemy: ClientEnemy,
   attacks: Array<AttackInstance>,
   buffs: Array<ModifierInstance>,
-): Promise<Rotation> => {
+): Promise<Rotation<StatMeta>> => {
   // 1. Create game data enricher with all necessary game data
   const enricher = await createGameDataEnricher(clientTeam);
 
@@ -242,8 +261,10 @@ export const adaptClientInputToRotation = async (
     // 2a. Gather Permanent Stats from character, weapon, echo set
     const permanentStats = enricher.getPermanentStatsForCharacter(charIndex);
 
-    // 2b. Gather Echo Stats (main stat + substats)
-    const echoStats: Array<PermanentStatBase> = clientChar.echoStats.flatMap((echo) => {
+    // 2b. Gather Echo Stats (main stat + substats) with StatMeta descriptions
+    const echoStats: Array<
+      TaggedStatValue<StatMeta> & { stat: CharacterStat | EnemyStat }
+    > = clientChar.echoStats.flatMap((echo) => {
       const [mainStatName, mainTags] = ECHO_STAT_MAP[echo.mainStatType];
       const { primary, secondary } = getEchoStats(echo.cost, echo.mainStatType);
       if (!primary) throw new Error('Invalid Echo Stat Configuration Provided');
@@ -251,6 +272,14 @@ export const adaptClientInputToRotation = async (
         stat: mainStatName,
         value: primary.value,
         tags: mainTags,
+        name: 'Echo Main Stat',
+        description: echo.mainStatType,
+      };
+      const secondaryEntry = {
+        ...secondary,
+        stat: mainStatName,
+        name: 'Echo Secondary Stat',
+        description: echo.mainStatType,
       };
       const subStatEntries = echo.substats.map((substat) => {
         const [subName, subTags] = ECHO_STAT_MAP[substat.stat];
@@ -258,16 +287,19 @@ export const adaptClientInputToRotation = async (
           stat: subName,
           value: Number.isInteger(substat.value) ? substat.value : substat.value / 100,
           tags: subTags,
+          name: 'Echo Substat',
+          description: substat.stat,
         };
       });
-      return [mainStatEntry, secondary, ...subStatEntries];
+      return [mainStatEntry, secondaryEntry, ...subStatEntries];
     });
 
     // 2c. Group all stats by their stat type and merge with base stats
     const characterInstancePermanentStats = Object.groupBy(
-      [...permanentStats, ...echoStats].map((stat) =>
-        toRotationPermanentStat(stat, charIndex),
-      ),
+      [
+        ...permanentStats.map((stat) => toRotationPermanentStat(stat, charIndex)),
+        ...echoStats,
+      ],
       (item) => item.stat,
     );
 
@@ -292,17 +324,19 @@ export const adaptClientInputToRotation = async (
         ([attribute, value]) => ({
           value: value / 100,
           tags: [attribute],
+          name: attribute,
+          description: 'Base Resistance',
         }),
       ),
-      defenseReduction: [],
-      resistanceReduction: [],
-      glacioChafe: [],
-      spectroFrazzle: [],
-      fusionBurst: [],
-      havocBane: [],
-      aeroErosion: [],
-      electroFlare: [],
-      tuneStrainStacks: [],
+      defenseReduction: [] as Array<TaggedStatValue<StatMeta>>,
+      resistanceReduction: [] as Array<TaggedStatValue<StatMeta>>,
+      glacioChafe: [] as Array<TaggedStatValue<StatMeta>>,
+      spectroFrazzle: [] as Array<TaggedStatValue<StatMeta>>,
+      fusionBurst: [] as Array<TaggedStatValue<StatMeta>>,
+      havocBane: [] as Array<TaggedStatValue<StatMeta>>,
+      aeroErosion: [] as Array<TaggedStatValue<StatMeta>>,
+      electroFlare: [] as Array<TaggedStatValue<StatMeta>>,
+      tuneStrainStacks: [] as Array<TaggedStatValue<StatMeta>>,
     },
   };
 
@@ -318,10 +352,10 @@ export const adaptClientInputToRotation = async (
   const buildModifiers = (
     storedIndex: number,
     activeCharacterId: number,
-  ): Array<RotationModifier> =>
+  ): Array<RotationModifier<StatMeta>> =>
     expandedBuffs
       .filter((modifier) => shouldModifierApplyToAttack(storedIndex, modifier))
-      .flatMap((modifier): Array<RotationModifier> => {
+      .flatMap((modifier): Array<RotationModifier<StatMeta>> => {
         return [
           toRotationModifier(
             resolveUserParameterizedValues(enricher.enrichModifier(modifier)),

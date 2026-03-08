@@ -365,7 +365,6 @@ export const adaptClientInputToRotation = async (
           characterIdToSlotNumberMap,
         ),
         modifiers,
-        storedAttackIndex: storedIndex,
       },
     ];
   });

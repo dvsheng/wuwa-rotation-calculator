@@ -8,15 +8,14 @@ import type { Rotation, RotationResult } from './types';
 
 export const calculateRotationDamage = (rotation: Rotation): RotationResult => {
   const flattenedDamageInstances = rotation.attacks.flatMap(
-    ({ attack, modifiers, storedAttackIndex }, attackIndex) => {
-      const effectiveAttackIndex = storedAttackIndex ?? attackIndex;
+    ({ attack, modifiers }, attackIndex) => {
       return attack.damageInstances.map((instance) => ({
         instance: {
           ...instance,
           characterIndex: attack.characterIndex,
         },
         modifiers,
-        attackIndex: effectiveAttackIndex,
+        attackIndex: attackIndex,
       }));
     },
   );

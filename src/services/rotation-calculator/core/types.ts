@@ -14,14 +14,7 @@ export interface Rotation {
   duration: number;
   attacks: Array<{
     attack: CharacterAttack;
-    modifiers: Array<Modifier>;
-    /**
-     * Index back into the original stored attacks array. Used to map damage
-     * results back to the correct stored attack, especially when one stored
-     * attack (e.g. virtual Tune Break) expands to multiple CharacterAttacks.
-     * Falls back to the enumeration index when not set.
-     */
-    storedAttackIndex?: number;
+    modifiers: Array<Modifier<T>>;
   }>;
 }
 

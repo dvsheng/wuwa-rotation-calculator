@@ -1,12 +1,7 @@
 import { uniqBy } from 'es-toolkit/array';
 
 import type { ClientAttack, ClientModifier } from './get-entity-details.types';
-import type {
-  Attack,
-  AttackOriginType,
-  GameDataUserParameterizedNumberNode,
-  Modifier,
-} from './types';
+import type { Attack, GameDataUserParameterizedNumberNode, Modifier } from './types';
 
 /**
  * Recursively collects all userParameterizedNumber nodes from a GameDataNumberNode tree.
@@ -61,16 +56,9 @@ export const toClientAttack = (attack: Attack): ClientAttack => {
       .map((instance) => userParameterToParameter(instance)),
     (parameter) => parameter.id,
   );
-
   return {
-    id: attack.id,
-    name: attack.name,
-    parentName: attack.parentName ?? '',
-    originType: attack.originType as AttackOriginType,
-    description: attack.description,
-    iconUrl: attack.iconUrl,
+    ...attack,
     parameters: parameters.length > 0 ? parameters : undefined,
-    capabilityType: attack.capabilityType,
   };
 };
 
@@ -86,14 +74,7 @@ export const toClientBuff = (modifier: Modifier): ClientModifier => {
   );
 
   return {
-    id: modifier.id,
-    name: modifier.name,
-    target: modifier.target,
-    parentName: modifier.parentName ?? '',
-    originType: modifier.originType,
-    description: modifier.description,
-    iconUrl: modifier.iconUrl,
+    ...modifier,
     parameters: parameters.length > 0 ? parameters : undefined,
-    capabilityType: modifier.capabilityType,
   };
 };

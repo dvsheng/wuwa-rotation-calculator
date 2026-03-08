@@ -21,7 +21,7 @@ import type {
   OriginType as CapabilityOriginType,
 } from '@/services/game-data';
 
-const ATTACK_COLORS: Record<AttackOriginType, string> = {
+const ATTACK_COLORS: Record<CapabilityOriginType, string> = {
   'Normal Attack': 'border-slate-400 bg-slate-100 text-foreground',
   'Resonance Skill': 'border-sky-400 bg-sky-100 text-foreground',
   'Resonance Liberation': 'border-violet-400 bg-violet-100 text-foreground',
@@ -38,6 +38,8 @@ const ATTACK_COLORS: Record<AttackOriginType, string> = {
   s4: 'border-yellow-400 bg-yellow-100 text-foreground',
   s5: 'border-yellow-400 bg-yellow-100 text-foreground',
   s6: 'border-yellow-400 bg-yellow-100 text-foreground',
+  'Inherent Skill': 'border-yellow-400 bg-yellow-100 text-foreground',
+  'Base Stats': 'border-yellow-400 bg-yellow-100 text-foreground',
 };
 
 const TARGET_COLORS: Record<Target, string> = {

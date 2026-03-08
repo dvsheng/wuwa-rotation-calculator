@@ -2,6 +2,7 @@ import type {
   AttackScalingProperty,
   Attribute,
   CharacterStat,
+  DamageType,
   EnemyStat,
   Tagged,
 } from '@/types';
@@ -232,6 +233,9 @@ export type Modifier<T = {}> = ModifierBase & T;
 export interface AttackDamageInstance {
   /** Motion value — Tier 2 only: fixed, refine-scalable, or user-parameterized. */
   motionValue: GameDataUserNumber;
+  /** TODO: these should be non-optional fields and part of data modeling */
+  damageType?: DamageType;
+  attribute?: Attribute;
   tags: Array<string>;
   scalingStat: AttackScalingProperty;
 }

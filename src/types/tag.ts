@@ -13,10 +13,11 @@ export const Tag = {
   ...DamageType,
   ...NegativeStatus,
   ALL: 'all',
-  /** Tag for Tune Rupture specific multiplier increases. */
-  TUNE_RUPTURE: 'tuneRupture',
-  /** Tag for Tune Strain specific multiplier increases. */
-  TUNE_STRAIN: 'tuneStrain',
+  /** Attacks triggered by other characters. */
+  COORDINATED_ATTACK: 'coordinatedAttack',
+  /** Tag for mid-air/aerial attacks. */
+  AERIAL: 'aerial',
+  DODGE_COUNTER: 'dodgeCounter',
   // Character-specific tags for Echoes
   ROVER_AERO: 'Rover: Aero',
   CARTETHYIA: 'Cartethyia',

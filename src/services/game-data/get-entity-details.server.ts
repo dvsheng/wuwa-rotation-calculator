@@ -2,8 +2,11 @@ import { eq } from 'drizzle-orm';
 import { compact } from 'es-toolkit/array';
 
 import { database } from '@/db/client';
+import type { DatabaseFullCapability } from '@/db/schema';
 import { fullCapabilities } from '@/db/schema';
 import type { GetEntityDetailsRequest } from '@/schemas/game-data-service';
+import { Attribute, DamageType } from '@/types';
+import type { CharacterDamageInstance } from '@/types';
 
 import { toClientAttack, toClientBuff } from './client-type-adapters';
 import {
@@ -20,6 +23,16 @@ const refineLevelToNumber = (refineLevel?: RefineLevel): number => {
   if (!refineLevel) return 0;
   return Number.parseInt(refineLevel);
 };
+
+type ResolvedCapability = ReturnType<typeof toCapability>;
+type CapabilityWithJsonType<TType extends CapabilityType> = ResolvedCapability & {
+  capabilityJson: Extract<ResolvedCapability['capabilityJson'], { type: TType }>;
+};
+type AttackCapability = CapabilityWithJsonType<typeof CapabilityType.ATTACK>;
+type ModifierCapability = CapabilityWithJsonType<typeof CapabilityType.MODIFIER>;
+type PermanentStatCapability = CapabilityWithJsonType<
+  typeof CapabilityType.PERMANENT_STAT
+>;
 
 /**
  * Check if a capability is active at the given sequence.
@@ -49,7 +62,7 @@ const isCapabilityActive = (
 /**
  * Convert fullCapabilities record to Attack format (flattening capabilityJson)
  */
-const toAttack = (attack: any): Attack => {
+const toAttack = (attack: AttackCapability): Attack => {
   const json = attack.capabilityJson;
   return {
     id: attack.capabilityId,
@@ -60,17 +73,25 @@ const toAttack = (attack: any): Attack => {
     parentName: attack.skillName,
     iconUrl: attack.skillIconUrl ?? attack.entityIconUrl ?? undefined,
     attribute: json.attribute,
-    damageInstances: json.damageInstances.map((di: any) => ({
-      ...di,
-      tags: compact([...di.tags, attack.capabilityName, json.attribute]),
-    })),
+    damageInstances: (json.damageInstances as Array<CharacterDamageInstance>).map(
+      (di) => ({
+        ...di,
+        attribute: (di.tags.find((value) =>
+          Object.values(Attribute).includes(value as Attribute),
+        ) ?? attack.attribute) as Attribute,
+        damageType: di.tags.find((value) =>
+          Object.values(DamageType).includes(value as DamageType),
+        ) as DamageType,
+        tags: compact([...di.tags, attack.capabilityName, json.attribute]),
+      }),
+    ),
   };
 };
 
 /**
  * Convert fullCapabilities record to Modifier format (flattening capabilityJson)
  */
-const toModifier = (modifier: any): Modifier => {
+const toModifier = (modifier: ModifierCapability): Modifier => {
   const json = modifier.capabilityJson;
   return {
     id: modifier.capabilityId,
@@ -81,14 +102,14 @@ const toModifier = (modifier: any): Modifier => {
     parentName: modifier.skillName,
     iconUrl: modifier.skillIconUrl ?? modifier.entityIconUrl ?? undefined,
     target: json.target,
-    modifiedStats: json.modifiedStats,
+    modifiedStats: json.modifiedStats as Modifier['modifiedStats'],
   };
 };
 
 /**
  * Convert fullCapabilities record to PermanentStat format (flattening capabilityJson)
  */
-const toPermanentStat = (permanentStat: any): PermanentStat => {
+const toPermanentStat = (permanentStat: PermanentStatCapability): PermanentStat => {
   const json = permanentStat.capabilityJson;
   return {
     id: permanentStat.capabilityId,
@@ -97,10 +118,40 @@ const toPermanentStat = (permanentStat: any): PermanentStat => {
     description: permanentStat.capabilityDescription ?? permanentStat.skillDescription,
     originType: permanentStat.skillOriginType,
     stat: json.stat,
-    value: json.value,
+    value: json.value as PermanentStat['value'],
     tags: json.tags,
   };
 };
+
+const toCapability = (
+  databaseCapability: DatabaseFullCapability,
+  options: {
+    sequence?: number;
+    refineLevel: number;
+  },
+) => {
+  return resolveStoreNumberType(
+    replaceNullsWithUndefined(
+      resolveAlternativeDefinitions(databaseCapability, options.sequence),
+    ),
+    options.refineLevel,
+  );
+};
+
+const isAttackCapability = (
+  capability: ResolvedCapability,
+): capability is AttackCapability =>
+  capability.capabilityType === CapabilityType.ATTACK;
+
+const isModifierCapability = (
+  capability: ResolvedCapability,
+): capability is ModifierCapability =>
+  capability.capabilityType === CapabilityType.MODIFIER;
+
+const isPermanentStatCapability = (
+  capability: ResolvedCapability,
+): capability is PermanentStatCapability =>
+  capability.capabilityType === CapabilityType.PERMANENT_STAT;
 
 /**
  * Shared handler for fetching character details from database.
@@ -131,21 +182,18 @@ export const getEntityByIdHandler = async (
 
   // Filter and resolve attacks, adding attribute and tags
   const capabilities = databaseCapabilities
-    .map((capability) => resolveAlternativeDefinitions(capability, sequence))
-    .map((capability) => replaceNullsWithUndefined(capability))
-    .map((capability) => resolveStoreNumberType(capability, refineLevel))
+    .map((capability) => toCapability(capability, { sequence, refineLevel }))
     .filter((capability) =>
       isCapabilityActive(capability, sequence, activatedSetBonus),
     );
-
   const attacks = capabilities
-    .filter((capability) => capability.capabilityType === CapabilityType.ATTACK)
+    .filter((capability) => isAttackCapability(capability))
     .map((capability) => toAttack(capability));
   const modifiers = capabilities
-    .filter((capability) => capability.capabilityType === CapabilityType.MODIFIER)
+    .filter((capability) => isModifierCapability(capability))
     .map((modifier) => toModifier(modifier));
   const permanentStats = capabilities
-    .filter((capability) => capability.capabilityType === CapabilityType.PERMANENT_STAT)
+    .filter((capability) => isPermanentStatCapability(capability))
     .map((stat) => toPermanentStat(stat));
   return {
     id: firstCapability.entityId,
@@ -164,15 +212,11 @@ export const getClientEntityByIdHandler = async (
   options: GetEntityDetailsRequest,
 ): Promise<GetClientEntityDetailsResponse> => {
   const entity = await getEntityByIdHandler(options);
-  const hasTuneStrainDamageBonus = entity.capabilities.permanentStats.some(
-    (stat) => stat.stat === 'tuneStrainDamageBonus',
-  );
   return {
     id: entity.id,
     name: entity.name,
     iconUrl: entity.iconUrl,
     attacks: entity.capabilities.attacks.map((attack) => toClientAttack(attack)),
     modifiers: entity.capabilities.modifiers.map((modifier) => toClientBuff(modifier)),
-    hasTuneStrainDamageBonus: hasTuneStrainDamageBonus || undefined,
   };
 };

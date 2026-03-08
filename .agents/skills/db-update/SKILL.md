@@ -47,22 +47,22 @@ SELECT id, name, type FROM entities WHERE type = 'character';
 
 ### entities
 
-| Column               | Type                              | Notes                                                        |
-| -------------------- | --------------------------------- | ------------------------------------------------------------ |
-| id                   | serial PK                         |                                                              |
-| game_id              | integer UNIQUE                    |                                                              |
-| name                 | text NOT NULL                     |                                                              |
-| type                 | text NOT NULL                     | `character`, `weapon`, `echo`, `echo_set`                   |
-| icon_url             | text                              |                                                              |
-| rank                 | integer                           |                                                              |
-| weapon_type          | text                              |                                                              |
-| description          | text                              |                                                              |
-| attribute            | text                              | `glacio`, `fusion`, `electro`, `spectro`, `aero`, `havoc`   |
-| echo_set_ids         | jsonb                             | Array of echo set IDs                                        |
-| set_bonus_thresholds | jsonb                             | Array of set thresholds                                      |
-| cost                 | integer                           |                                                              |
-| created_at           | timestamp NOT NULL                |                                                              |
-| updated_at           | timestamp NOT NULL                |                                                              |
+| Column               | Type               | Notes                                                     |
+| -------------------- | ------------------ | --------------------------------------------------------- |
+| id                   | serial PK          |                                                           |
+| game_id              | integer UNIQUE     |                                                           |
+| name                 | text NOT NULL      |                                                           |
+| type                 | text NOT NULL      | `character`, `weapon`, `echo`, `echo_set`                 |
+| icon_url             | text               |                                                           |
+| rank                 | integer            |                                                           |
+| weapon_type          | text               |                                                           |
+| description          | text               |                                                           |
+| attribute            | text               | `glacio`, `fusion`, `electro`, `spectro`, `aero`, `havoc` |
+| echo_set_ids         | jsonb              | Array of echo set IDs                                     |
+| set_bonus_thresholds | jsonb              | Array of set thresholds                                   |
+| cost                 | integer            |                                                           |
+| created_at           | timestamp NOT NULL |                                                           |
+| updated_at           | timestamp NOT NULL |                                                           |
 
 ### skills
 
@@ -82,15 +82,15 @@ SELECT id, name, type FROM entities WHERE type = 'character';
 
 ### capabilities
 
-| Column          | Type                            | Notes                                             |
-| --------------- | ------------------------------- | ------------------------------------------------- |
-| id              | serial PK                       |                                                   |
-| skill_id        | integer NOT NULL FK → skills.id |                                                   |
-| name            | text                            | Optional label                                    |
-| description     | text                            | Relevant subset of parent skill description       |
+| Column          | Type                            | Notes                                                          |
+| --------------- | ------------------------------- | -------------------------------------------------------------- |
+| id              | serial PK                       |                                                                |
+| skill_id        | integer NOT NULL FK → skills.id |                                                                |
+| name            | text                            | Optional label                                                 |
+| description     | text                            | Relevant subset of parent skill description                    |
 | capability_json | jsonb NOT NULL                  | Discriminated by `type` (`attack`/`modifier`/`permanent_stat`) |
-| created_at      | timestamp NOT NULL              |                                                   |
-| updated_at      | timestamp NOT NULL              |                                                   |
+| created_at      | timestamp NOT NULL              |                                                                |
+| updated_at      | timestamp NOT NULL              |                                                                |
 
 Note: `capability_type` column was removed. Use `capability_json->>'type'` when querying.
 
@@ -105,7 +105,9 @@ Note: `capability_type` column was removed. Use `capability_json->>'type'` when 
   "type": "attack",
   "scalingStat": "atk",
   "attribute": "glacio",
-  "damageInstances": [{ "motionValue": 0.4871, "tags": ["basicAttack"], "scalingStat": "atk" }]
+  "damageInstances": [
+    { "motionValue": 0.4871, "tags": ["basicAttack"], "scalingStat": "atk" }
+  ]
 }
 ```
 

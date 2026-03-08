@@ -29,6 +29,7 @@ describe('useTeamModifierInstances', () => {
           originType: OriginType.WEAPON,
           capabilityType: CapabilityType.MODIFIER,
           target: Target.SELF,
+          modifiedStats: [],
           parameters: [],
         },
         {
@@ -42,6 +43,7 @@ describe('useTeamModifierInstances', () => {
           originType: OriginType.WEAPON,
           capabilityType: CapabilityType.MODIFIER,
           target: Target.SELF,
+          modifiedStats: [],
           parameters: [],
         },
       ],

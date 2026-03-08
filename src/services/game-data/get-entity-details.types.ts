@@ -1,10 +1,4 @@
-import type {
-  AttackOriginType,
-  BaseCapability,
-  BaseEntity,
-  OriginType,
-  Target,
-} from './types';
+import type { Attack, BaseEntity, Modifier } from './types';
 
 /**
  * Interfaces for client-facing entity details outputs.
@@ -15,20 +9,13 @@ export interface Parameter {
   maximum: number;
 }
 
-export interface ClientCapability extends BaseCapability {
-  name: string;
-  parentName: string;
+export interface ClientFields {
   parameters?: Array<Parameter>;
 }
 
-export interface ClientAttack extends ClientCapability {
-  originType: AttackOriginType;
-}
+export type ClientAttack = Attack & ClientFields;
 
-export interface ClientModifier extends ClientCapability {
-  originType: OriginType;
-  target: Target;
-}
+export type ClientModifier = Modifier & ClientFields;
 
 /**
  * Base output format for client-facing entity details.
@@ -42,8 +29,6 @@ export interface GetClientEntityDetailsResponse {
   attacks: Array<ClientAttack>;
   /** Active modifiers for the entity */
   modifiers: Array<ClientModifier>;
-  /** Whether the entity has a tuneStrainDamageBonus permanent stat */
-  hasTuneStrainDamageBonus?: boolean;
 }
 
 export type GetEntityDetailsResponse = BaseEntity;

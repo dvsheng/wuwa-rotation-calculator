@@ -4,6 +4,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CapabilityType, OriginType, Target } from '@/services/game-data';
 import { useStore } from '@/store';
+import { Attribute } from '@/types';
 
 import { BuffCanvasItem } from './BuffCanvasItem';
 
@@ -36,6 +37,8 @@ const commonAttackProperties = {
   description: '',
   characterName: 'Rover',
   capabilityType: CapabilityType.ATTACK,
+  attribute: Attribute.SPECTRO,
+  damageInstances: [],
   parameters: [] as [],
 };
 
@@ -78,6 +81,7 @@ const makeBuff = (x: number, w: number, withStackConfig = false) => ({
   originType: OriginType.WEAPON,
   capabilityType: CapabilityType.MODIFIER,
   target: Target.TEAM,
+  modifiedStats: [],
   parameters: [
     {
       id: '0',

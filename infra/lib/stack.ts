@@ -24,6 +24,11 @@ export class WuwaRotationBuilderStack extends cdk.Stack {
       service: ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
       subnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
     });
+    // Lambda JWT verification needs Cognito User Pools JWKS/API access without internet access
+    vpc.addInterfaceEndpoint('CognitoIdpEndpoint', {
+      service: ec2.InterfaceVpcEndpointAwsService.COGNITO_IDP,
+      subnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
+    });
 
     const database = new Database(this, 'Database', { vpc });
     const bastion = new Bastion(this, 'Bastion', { vpc });
@@ -33,12 +38,8 @@ export class WuwaRotationBuilderStack extends cdk.Stack {
         'googleClientSecretName',
       ) as string,
       domainPrefix: this.node.tryGetContext('cognitoDomainPrefix') as string,
-      callbackUrls: (this.node.tryGetContext('cognitoCallbackUrls') as
-        | Array<string>
-        | undefined) ?? ['http://localhost:3000/'],
-      logoutUrls: (this.node.tryGetContext('cognitoLogoutUrls') as
-        | Array<string>
-        | undefined) ?? ['http://localhost:3000/'],
+      callbackUrls: this.node.tryGetContext('cognitoCallbackUrls') as Array<string>,
+      logoutUrls: this.node.tryGetContext('cognitoLogoutUrls') as Array<string>,
     });
     const server = new Server(this, 'Server', {
       vpc,

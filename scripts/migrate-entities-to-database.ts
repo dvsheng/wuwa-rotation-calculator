@@ -280,9 +280,9 @@ const upsertEchoSetSkills = async (echoSet: TransformedEchoSet): Promise<number>
           description: skill.description ?? '',
           capabilityJson: {
             type: 'permanent_stat',
-            stat: skill.stat as any,
+            stat: skill.stat,
             value: skill.value,
-            tags: skill.tags as any,
+            tags: skill.tags,
           },
         });
         insertedCounts.capabilities++;

@@ -1,26 +1,26 @@
 import { createMiddleware } from '@tanstack/react-start';
 import { fetchAuthSession } from 'aws-amplify/auth';
+import { CognitoJwtVerifier } from 'aws-jwt-verify';
 
 // Singleton verifier — created once per Lambda cold start and caches JWKS in memory.
 // Note: the Lambda must be able to reach the Cognito JWKS endpoint on the internet for
 // the first invocation. Add a NAT Gateway or move the Lambda to a subnet with internet
 // access if this is a problem in production.
-async function createVerifier() {
-  const { CognitoJwtVerifier } = await import('aws-jwt-verify');
+const createVerifier = () => {
   return CognitoJwtVerifier.create({
     userPoolId: process.env['COGNITO_USER_POOL_ID']!,
     tokenUse: 'access',
     clientId: process.env['COGNITO_USER_POOL_CLIENT_ID']!,
   });
-}
+};
 
 type Verifier = Awaited<ReturnType<typeof createVerifier>>;
-let verifierPromise: Promise<Verifier> | undefined;
+let verifier: Verifier | undefined;
 
-function getVerifier(): Promise<Verifier> {
-  verifierPromise ??= createVerifier();
-  return verifierPromise;
-}
+const getVerifier = (): Verifier => {
+  verifier ??= createVerifier();
+  return verifier;
+};
 
 export interface AuthContext {
   user: { sub: string; username: string };
@@ -44,10 +44,10 @@ export const authMiddleware = createMiddleware({ type: 'function' })
       throw new Error('Unauthorized');
     }
 
-    const verifier = await getVerifier();
-    let payload: Awaited<ReturnType<typeof verifier.verify>>;
+    const _verifier = getVerifier();
+    let payload: Awaited<ReturnType<typeof _verifier.verify>>;
     try {
-      payload = await verifier.verify(authToken);
+      payload = await _verifier.verify(authToken);
     } catch {
       throw new Error('Unauthorized');
     }

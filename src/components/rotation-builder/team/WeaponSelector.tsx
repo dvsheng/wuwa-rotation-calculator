@@ -51,7 +51,6 @@ export const WeaponSelector = ({ index }: WeaponSelectorProperties) => {
         onValueChange={(id) => {
           if (id !== weapon.id) {
             clearForEntity(weapon.id);
-            console.log('hi');
             setWeapon(index, id);
           }
         }}

@@ -10,6 +10,7 @@ import { useTeamAttackInstances } from '@/hooks/useTeamAttackInstances';
 import { useStore } from '@/store';
 
 import type { AttackGroup } from './RotationAttackDataTable';
+import { RotationCharacterBreakdownChart } from './RotationCharacterBreakdownChart';
 import { RotationResultDataTable } from './RotationResultDataTable';
 import { RotationResultInspectorPanel } from './RotationResultInspectorPanel';
 import type { RotationResultInspectorSelection } from './RotationResultPopoverContext';
@@ -133,15 +134,27 @@ export const RotationResultContainer = ({
               >
                 <TabsList className="shrink-0">
                   <TabsTrigger value="data-table">Data Table</TabsTrigger>
+                  <TabsTrigger value="character-breakdown">
+                    Character Breakdown
+                  </TabsTrigger>
                 </TabsList>
                 <TabsContent
                   value="data-table"
-                  className="flex min-h-0 flex-1 overflow-hidden"
+                  className="flex min-h-0 w-full overflow-hidden"
                 >
                   <RotationResultDataTable
                     attackGroups={attackGroups}
                     expandedGroups={expandedGroups}
                     onToggleGroup={toggleGroup}
+                  />
+                </TabsContent>
+                <TabsContent
+                  value="character-breakdown"
+                  className="flex min-h-0 w-full overflow-hidden"
+                >
+                  <RotationCharacterBreakdownChart
+                    attackGroups={attackGroups}
+                    totalDamage={result.totalDamage}
                   />
                 </TabsContent>
               </Tabs>

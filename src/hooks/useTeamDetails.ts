@@ -2,7 +2,11 @@ import { useQueries } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
-import type { ClientAttack, ClientModifier } from '@/services/game-data';
+import type {
+  ClientAttack,
+  ClientModifier,
+  GetClientEntityDetailsResponse,
+} from '@/services/game-data';
 import { EntityType, getClientEntityById } from '@/services/game-data';
 import { useStore } from '@/store';
 
@@ -113,43 +117,41 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
       })),
     ]),
     combine: (results) => {
-      const characterNameMap = new Map<number, string>();
+      const characterMap = new Map<number, GetClientEntityDetailsResponse>();
       for (const [index, characterResult] of results.entries()) {
         const meta = queryMetadata[index];
         if (meta.queryType !== 'character') continue;
         if (!characterResult.data) continue;
-        characterNameMap.set(meta.characterId, characterResult.data.name);
+        characterMap.set(meta.characterId, characterResult.data);
       }
 
       const attacks = results.flatMap((queryResult, index) => {
         const data = queryResult.data;
-        if (!data || !('attacks' in data)) return [];
+        if (!data) return [];
 
         const { characterId, entityId } = queryMetadata[index];
-        const characterName = characterNameMap.get(characterId) ?? 'Unknown';
-
+        const character = characterMap.get(characterId);
         return data.attacks.map((attack) => ({
           ...attack,
-          characterId,
           entityId,
-          characterName,
-          characterIconUrl: data.iconUrl,
+          characterId,
+          characterName: character?.name ?? '',
+          characterIconUrl: character?.iconUrl,
         }));
       });
 
       const buffs = results.flatMap((queryResult, index) => {
         const data = queryResult.data;
-        if (!data || !('modifiers' in data)) return [];
+        if (!data) return [];
 
         const { characterId, entityId } = queryMetadata[index];
-        const characterName = characterNameMap.get(characterId) ?? 'Unknown';
-
+        const character = characterMap.get(characterId);
         return data.modifiers.map((modifier) => ({
           ...modifier,
-          characterId,
           entityId,
-          characterName,
-          characterIconUrl: data.iconUrl,
+          characterId,
+          characterName: character?.name ?? '',
+          characterIconUrl: character?.iconUrl,
         }));
       });
 

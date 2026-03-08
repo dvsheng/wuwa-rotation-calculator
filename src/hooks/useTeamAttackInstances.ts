@@ -34,18 +34,8 @@ export const useTeamAttackInstances = () => {
       }));
 
       return {
+        ...gameData,
         instanceId: stored.instanceId,
-        id: gameData.id,
-        name: gameData.name,
-        parentName: gameData.parentName,
-        description: gameData.description,
-        characterId: gameData.characterId,
-        entityId: gameData.entityId,
-        characterName: gameData.characterName,
-        characterIconUrl: gameData.characterIconUrl,
-        iconUrl: gameData.iconUrl,
-        originType: gameData.originType,
-        capabilityType: gameData.capabilityType,
         parameters,
       };
     }),

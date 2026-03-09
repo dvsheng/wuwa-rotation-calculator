@@ -8,7 +8,7 @@ import {
   DatabasePermanentStatSchema,
 } from '@/schemas/database';
 import { CapabilityType, EntityType } from '@/services/game-data';
-import { Attribute, DamageType, Tag, WeaponType } from '@/types';
+import { Attribute, Tag, WeaponType } from '@/types';
 
 /**
  * Validates database data for the new unified schema.
@@ -211,54 +211,6 @@ function validateCapabilityTags(
   return issues;
 }
 
-const VALID_DAMAGE_TYPES = new Set<string>(Object.values(DamageType));
-const VALID_ATTRIBUTES = new Set<string>(Object.values(Attribute));
-
-function validateAttackDamageInstanceFields(capability: DatabaseCapability): Array<string> {
-  if (capability.capabilityJson.type !== CapabilityType.ATTACK) {
-    return [];
-  }
-
-  const issues: Array<string> = [];
-  const json = capability.capabilityJson as any;
-
-  const validateDamageInstances = (
-    damageInstances: Array<{ attribute?: string; damageType?: string }> | undefined,
-    context: string,
-  ) => {
-    if (!Array.isArray(damageInstances)) {
-      return;
-    }
-
-    for (const [index, damageInstance] of damageInstances.entries()) {
-      if (!damageInstance.attribute || !VALID_ATTRIBUTES.has(damageInstance.attribute)) {
-        issues.push(
-          `${context} damageInstances[${index}] is missing a valid 'attribute' field (required on all instances)`,
-        );
-      }
-
-      if (!damageInstance.damageType || !VALID_DAMAGE_TYPES.has(damageInstance.damageType)) {
-        issues.push(
-          `${context} damageInstances[${index}] is missing a valid 'damageType' field (required on all instances)`,
-        );
-      }
-    }
-  };
-
-  validateDamageInstances(json.damageInstances, 'Base');
-
-  for (const [sequence, definition] of Object.entries(
-    json.alternativeDefinitions ?? {},
-  )) {
-    validateDamageInstances(
-      (definition as any)?.damageInstances,
-      `alternativeDefinitions.${sequence}`,
-    );
-  }
-
-  return issues;
-}
-
 // ============================================================================
 // Generic Validation Function
 // ============================================================================
@@ -374,8 +326,6 @@ async function validateDatabase() {
     (capability) => [
       // Validate skill reference
       ...validateSkillReference(capability, skillMap),
-      // Validate that each attack damage instance has required attribute and damageType fields
-      ...validateAttackDamageInstanceFields(capability),
       // Validate tags (for modifiers and permanent stats)
       ...(capability.capabilityType === CapabilityType.MODIFIER ||
       capability.capabilityType === CapabilityType.PERMANENT_STAT

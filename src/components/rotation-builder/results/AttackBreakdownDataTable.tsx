@@ -18,17 +18,19 @@ import {
   rotationResultDataTableClassNames,
   rotationResultTableColumnLayout,
 } from './data-table.style';
-import { useRotationResultPopover } from './RotationResultPopoverContext';
+
+type DamageDetail = Parameters<typeof AttackCalculationStatsBreakdown>[0]['detail'];
 
 interface AttackBreakdownDataTableProperties {
   mergedDamageDetails: Array<RotationResultMergedDamageDetail>;
+  inspectorPortalNode: HTMLDivElement | undefined;
 }
 
 export const AttackBreakdownDataTable = ({
   mergedDamageDetails,
+  inspectorPortalNode,
 }: AttackBreakdownDataTableProperties) => {
-  const { popoverSelection, setPopoverSelection, inspectorPortalNode } =
-    useRotationResultPopover();
+  const [selectedDetail, setSelectedDetail] = useState<DamageDetail | undefined>();
   const [expandedGroups, setExpandedGroups] = useState<Set<number>>(new Set());
 
   const toggleGroup = (attackIndex: number) => {
@@ -68,16 +70,6 @@ export const AttackBreakdownDataTable = ({
   }
 
   const attackGroups = [...groupMap.values()];
-
-  const groupByAttackIndex = new Map(
-    attackGroups.map((group) => [group.attackIndex, group]),
-  );
-  const selectedDetail =
-    popoverSelection === undefined
-      ? undefined
-      : groupByAttackIndex
-          .get(popoverSelection.attackIndex)
-          ?.hits.find((hit) => hit.hitIndex === popoverSelection.hitIndex)?.detail;
 
   const columns: Array<ColumnDef<AttackGroup>> = [
     {
@@ -154,15 +146,7 @@ export const AttackBreakdownDataTable = ({
               size="icon-sm"
               onClick={(event) => {
                 event.stopPropagation();
-                setPopoverSelection(
-                  popoverSelection?.attackIndex === row.original.attackIndex &&
-                    popoverSelection.hitIndex === 0
-                    ? undefined
-                    : {
-                        attackIndex: row.original.attackIndex,
-                        hitIndex: 0,
-                      },
-                );
+                setSelectedDetail(row.original.hits[0]?.detail);
               }}
               aria-label="Open damage details inspector"
             >
@@ -205,6 +189,7 @@ export const AttackBreakdownDataTable = ({
               row={row}
               columnCount={columns.length}
               isOpen={expandedGroups.has(row.original.attackIndex)}
+              onSelect={setSelectedDetail}
             />
           </Fragment>
         )}

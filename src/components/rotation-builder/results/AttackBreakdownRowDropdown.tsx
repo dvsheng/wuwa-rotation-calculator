@@ -10,7 +10,6 @@ import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
 import type { ClientRotationResult } from '@/services/rotation-calculator/client-output-adapter/adapt-rotation-result-to-client-output';
 
 import { rotationResultTableColumnLayout } from './data-table.style';
-import { useRotationResultPopover } from './RotationResultPopoverContext';
 
 type DamageDetail = ClientRotationResult['damageDetails'][number];
 
@@ -32,14 +31,15 @@ interface AttackBreakdownRowDropdownProperties {
   row: Row<AttackGroup>;
   columnCount: number;
   isOpen: boolean;
+  onSelect: (detail: DamageDetail) => void;
 }
 
 export const AttackBreakdownRowDropdown = ({
   row: parentRow,
   columnCount,
   isOpen,
+  onSelect,
 }: AttackBreakdownRowDropdownProperties) => {
-  const { popoverSelection, setPopoverSelection } = useRotationResultPopover();
   if (!isOpen) {
     return;
   }
@@ -111,17 +111,7 @@ export const AttackBreakdownRowDropdown = ({
           <Button
             variant="ghost"
             size="icon-sm"
-            onClick={() =>
-              setPopoverSelection(
-                popoverSelection?.attackIndex === parentRow.original.attackIndex &&
-                  popoverSelection.hitIndex === row.original.hitIndex
-                  ? undefined
-                  : {
-                      attackIndex: parentRow.original.attackIndex,
-                      hitIndex: row.original.hitIndex,
-                    },
-              )
-            }
+            onClick={() => onSelect(row.original.detail)}
             aria-label="Open damage details inspector"
           >
             <Info />

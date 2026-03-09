@@ -19,17 +19,20 @@ import {
   rotationResultDataTableClassNames,
   rotationResultTableColumnLayout,
 } from './data-table.style';
-import { useRotationResultPopover } from './RotationResultPopoverContext';
 
 interface CharacterBreakdownDataTableProperties {
   mergedDamageDetails: Array<RotationResultMergedDamageDetail>;
   totalDamage: number;
+  inspectorPortalNode: HTMLDivElement | undefined;
 }
 
 const buildCharacterRows = ({
   mergedDamageDetails,
   totalDamage,
-}: CharacterBreakdownDataTableProperties): Array<CharacterBreakdownRow> => {
+}: Pick<
+  CharacterBreakdownDataTableProperties,
+  'mergedDamageDetails' | 'totalDamage'
+>): Array<CharacterBreakdownRow> => {
   const hitCountPerAttack = new Map<number, number>();
   const enriched = mergedDamageDetails.map(({ detail, attack }) => {
     const hitIndex = hitCountPerAttack.get(detail.attackIndex) ?? 0;
@@ -74,8 +77,8 @@ const buildCharacterRows = ({
 export const CharacterBreakdownDataTable = ({
   mergedDamageDetails,
   totalDamage,
+  inspectorPortalNode,
 }: CharacterBreakdownDataTableProperties) => {
-  const { inspectorPortalNode } = useRotationResultPopover();
   const [expandedCharacters, setExpandedCharacters] = useState<Set<string>>(
     new Set(mergedDamageDetails.map((row) => row.attack?.characterName ?? '')),
   );

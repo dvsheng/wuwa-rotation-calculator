@@ -141,47 +141,60 @@ export function resolveStatReferences<T>(
 }
 
 /**
- * Converts a client-side modifier instance to a rotation modifier.
- * Resolves modifier targets and maps stats from 'self' to the character's slot number.
+ * Resolves a modifier target string to concrete slot indices or 'enemy'.
+ */
+const resolveModifierTarget = (
+  target: string,
+  characterSlotNumber: number,
+  activeCharacterSlotNumber: number,
+): Array<number | 'enemy'> => {
+  switch (target) {
+    case 'self': {
+      return [characterSlotNumber];
+    }
+    case 'team': {
+      return [0, 1, 2];
+    }
+    case 'activeCharacter': {
+      return [activeCharacterSlotNumber];
+    }
+    default: {
+      return ['enemy'];
+    }
+  }
+};
+
+/**
+ * Converts a client-side modifier instance to an array of rotation modifiers.
+ * Each unique target in the modifier's stats produces a separate RotationModifier.
  * Attaches the modifier's name and description to each stat value as StatMeta.
  */
 export const toRotationModifier = (
   modifier: ModifierInstance & ResolveUserParameterizedType<Modifier>,
   attack: Pick<AttackInstance, 'characterId'>,
   characterIdToSlotNumberMap: Record<number, number>,
-): RotationModifier<StatMeta> => {
+): Array<RotationModifier<StatMeta>> => {
   const characterSlotNumber = characterIdToSlotNumberMap[modifier.characterId];
-  const statsWithResolvedIndex = modifier.modifiedStats.map((stat) => ({
-    ...stat,
-    value: resolveStatReferences(stat.value, characterSlotNumber),
-    name: modifier.name,
-    description: modifier.description ?? '',
-  }));
-  const modifiedStats = Object.groupBy(statsWithResolvedIndex, (_stat) => _stat.stat);
+  const activeCharacterSlotNumber = characterIdToSlotNumberMap[attack.characterId];
 
-  let modifierTargets: Array<number | 'enemy'>;
-  switch (modifier.target) {
-    case 'self': {
-      modifierTargets = [characterSlotNumber];
-      break;
-    }
-    case 'team': {
-      modifierTargets = [0, 1, 2];
-      break;
-    }
-    case 'activeCharacter': {
-      modifierTargets = [characterIdToSlotNumberMap[attack.characterId]];
-      break;
-    }
-    default: {
-      modifierTargets = ['enemy'];
-    }
-  }
+  const statsByTarget = Object.groupBy(modifier.modifiedStats, (stat) => stat.target);
 
-  return {
-    targets: modifierTargets,
-    modifiedStats,
-  };
+  return Object.entries(statsByTarget).map(([target, statsForTarget]) => {
+    const modifiedStats = Object.groupBy(
+      (statsForTarget ?? []).map((stat) => ({
+        ...stat,
+        value: resolveStatReferences(stat.value, characterSlotNumber),
+        name: modifier.name,
+        description: modifier.description ?? '',
+      })),
+      (stat) => stat.stat,
+    );
+
+    return {
+      targets: resolveModifierTarget(target, characterSlotNumber, activeCharacterSlotNumber),
+      modifiedStats,
+    };
+  });
 };
 
 /**
@@ -348,13 +361,11 @@ export const adaptClientInputToRotation = async (
     expandedBuffs
       .filter((modifier) => shouldModifierApplyToAttack(storedIndex, modifier))
       .flatMap((modifier): Array<RotationModifier<StatMeta>> => {
-        return [
-          toRotationModifier(
-            resolveUserParameterizedValues(enricher.enrichModifier(modifier)),
-            { characterId: activeCharacterId },
-            characterIdToSlotNumberMap,
-          ),
-        ];
+        return toRotationModifier(
+          resolveUserParameterizedValues(enricher.enrichModifier(modifier)),
+          { characterId: activeCharacterId },
+          characterIdToSlotNumberMap,
+        );
       });
 
   const rotationAttacks = attacks.flatMap((attack, storedIndex) => {

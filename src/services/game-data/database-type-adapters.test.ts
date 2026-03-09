@@ -78,9 +78,9 @@ describe('resolveRefineScaling', () => {
           {
             id: 'mod-1',
             description: 'Test modifier',
-            target: 'self',
             modifiedStats: [
               {
+                target: 'self',
                 stat: 'damageBonus',
                 value: { base: 0.2, increment: 0.05 },
                 tags: ['all'],

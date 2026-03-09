@@ -2,7 +2,7 @@ import { renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { ModifierInstance } from '@/schemas/rotation';
-import { CapabilityType, OriginType, Target } from '@/services/game-data';
+import { CapabilityType, OriginType } from '@/services/game-data';
 import { useStore } from '@/store';
 
 import { useTeamModifierInstances } from './useTeamModifierInstances';
@@ -28,7 +28,6 @@ describe('useTeamModifierInstances', () => {
           description: '',
           originType: OriginType.WEAPON,
           capabilityType: CapabilityType.MODIFIER,
-          target: Target.SELF,
           modifiedStats: [],
           parameters: [],
         },
@@ -42,7 +41,6 @@ describe('useTeamModifierInstances', () => {
           description: '',
           originType: OriginType.WEAPON,
           capabilityType: CapabilityType.MODIFIER,
-          target: Target.SELF,
           modifiedStats: [],
           parameters: [],
         },

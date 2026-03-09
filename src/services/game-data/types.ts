@@ -206,9 +206,11 @@ export const Target = {
 export type Target = (typeof Target)[keyof typeof Target];
 
 /**
- * A stat and its value on a character or enemy for a modifier.
+ * A stat and its value on a character or enemy for a modifier, with its own target.
  */
 export interface ModifierStat extends Tagged {
+  /** The entity this stat applies to */
+  target: Target;
   /** The specific stat being modified */
   stat: CharacterStat | EnemyStat;
   /** The value — a full expression tree (may be stat-dependent or user-parameterized). */
@@ -219,9 +221,7 @@ export interface ModifierStat extends Tagged {
  * Internal base for modifiers.
  */
 interface ModifierBase extends BaseCapability {
-  /** The entity this modifier applies to (e.g., Self, Team, Enemy) */
-  target: Target;
-  /** The list of stats modified by this effect */
+  /** The list of stats modified by this effect, each with its own target */
   modifiedStats: Array<ModifierStat>;
 }
 

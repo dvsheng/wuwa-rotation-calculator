@@ -53,6 +53,7 @@ describe('useRotationLibrary', () => {
     vi.mocked(mockListRotations).mockResolvedValue([
       {
         id: 1,
+        ownerId: 'owner-123',
         name: 'My Rotation',
         data: mockRotationData,
         createdAt: new Date(100),
@@ -73,6 +74,7 @@ describe('useRotationLibrary', () => {
     vi.mocked(mockListRotations).mockResolvedValue([]);
     vi.mocked(mockCreateRotation).mockResolvedValue({
       id: 1,
+      ownerId: 'owner-123',
       name: 'Created',
       data: mockRotationData,
       createdAt: new Date(100),
@@ -80,6 +82,7 @@ describe('useRotationLibrary', () => {
     });
     vi.mocked(mockUpdateRotation).mockResolvedValue({
       id: 1,
+      ownerId: 'owner-123',
       name: 'Updated',
       data: mockRotationData,
       createdAt: new Date(100),

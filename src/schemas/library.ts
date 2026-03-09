@@ -15,6 +15,7 @@ export type SavedRotationData = z.infer<typeof SavedRotationDataSchema>;
 
 export const SavedRotationSchema = z.object({
   id: z.number(),
+  ownerId: z.string(),
   name: z.string(),
   description: z.string().optional(),
   createdAt: z.date(),

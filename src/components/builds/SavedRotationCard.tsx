@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/dialog';
 import { Text } from '@/components/ui/typography';
 import { useRotationLibrary } from '@/hooks/useRotationLibrary';
+import { useUser } from '@/hooks/useUser';
 import type { SavedRotation } from '@/schemas/library';
 import { calculateRotation } from '@/services/rotation-calculator/calculate-client-rotation-damage';
 import { useStore } from '@/store';
@@ -42,7 +43,9 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
   const { setTeam, setEnemy, setAttacks, setBuffs } = useStore();
   const { deleteRotation, updateRotation, isDeleting, isUpdating } =
     useRotationLibrary();
+  const { userId } = useUser();
   const { team, enemy, attacks, buffs } = useStore();
+  const isOwner = userId !== undefined && userId === rotation.ownerId;
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isOverwriteDialogOpen, setIsOverwriteDialogOpen] = useState(false);
   const configuredCharacters = rotation.data.team.filter(
@@ -110,35 +113,40 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
               Last updated: {format(new Date(rotation.updatedAt), 'PPP p')}
             </CardDescription>
           </div>
-          <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-            <DialogTrigger asChild>
-              <TrashButton
-                stopPropagation={false}
-                onRemove={() => setIsDeleteDialogOpen(true)}
-              />
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Are you sure?</DialogTitle>
-                <DialogDescription>
-                  This action cannot be undone. This will permanently delete the
-                  rotation "{rotation.name}".
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => void handleDelete()}
-                  disabled={isDeleting}
-                >
-                  Delete
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          {isOwner && (
+            <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+              <DialogTrigger asChild>
+                <TrashButton
+                  stopPropagation={false}
+                  onRemove={() => setIsDeleteDialogOpen(true)}
+                />
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Are you sure?</DialogTitle>
+                  <DialogDescription>
+                    This action cannot be undone. This will permanently delete the
+                    rotation "{rotation.name}".
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsDeleteDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => void handleDelete()}
+                    disabled={isDeleting}
+                  >
+                    Delete
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </CardHeader>
       <CardContent>
@@ -203,31 +211,36 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
         </div>
       </CardContent>
       <CardFooter className="gap-compact flex justify-end">
-        <Dialog open={isOverwriteDialogOpen} onOpenChange={setIsOverwriteDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
-              <Save className="mr-2 h-4 w-4" />
-              Overwrite
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Overwrite rotation?</DialogTitle>
-              <DialogDescription>
-                This will replace the saved data in "{rotation.name}" with the current
-                rotation.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsOverwriteDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={() => void handleOverwrite()} disabled={isUpdating}>
+        {isOwner && (
+          <Dialog open={isOverwriteDialogOpen} onOpenChange={setIsOverwriteDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Save className="mr-2 h-4 w-4" />
                 Overwrite
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Overwrite rotation?</DialogTitle>
+                <DialogDescription>
+                  This will replace the saved data in "{rotation.name}" with the current
+                  rotation.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsOverwriteDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={() => void handleOverwrite()} disabled={isUpdating}>
+                  Overwrite
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
 
         <Button onClick={handleLoad} size="sm">
           <Play className="mr-2 h-4 w-4" />

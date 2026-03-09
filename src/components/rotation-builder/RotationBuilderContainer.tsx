@@ -11,7 +11,7 @@ import { RotationBuilderToolbar } from './RotationBuilderToolbar';
 
 export const RotationBuilderContainer = () => {
   const [selectedTab, setSelectedTab] = useState('team');
-  const { data: result, isPlaceholderData } = useRotationCalculation();
+  const { data: result } = useRotationCalculation();
   return (
     <Stack className="h-full min-h-0">
       <RotationBuilderToolbar
@@ -20,9 +20,7 @@ export const RotationBuilderContainer = () => {
       />
       {selectedTab === 'team' && <TeamContainer />}
       {selectedTab === 'rotation' && <RotationBuilder />}
-      {selectedTab === 'results' && result && (
-        <RotationResultContainer result={result} isStale={isPlaceholderData} />
-      )}
+      {selectedTab === 'results' && result && <RotationResultContainer />}
     </Stack>
   );
 };

@@ -10,6 +10,8 @@ interface RotationResultPopoverContextValue {
   setPopoverSelection: (
     selection: RotationResultInspectorSelection | undefined,
   ) => void;
+  inspectorPortalNode: HTMLDivElement | undefined;
+  setInspectorPortalNode: (node: HTMLDivElement | undefined) => void;
 }
 
 const RotationResultPopoverContext = createContext<

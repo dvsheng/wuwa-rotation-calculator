@@ -19,7 +19,7 @@ import type { CharacterStats, EnemyStats } from '@/types';
 
 type DamageDetail = ClientRotationResult['damageDetails'][number];
 
-interface RotationResultInspectorPanelProperties {
+interface AttackCalculationStatsBreakdownProperties {
   detail: DamageDetail;
 }
 
@@ -320,9 +320,9 @@ const GroupList = ({
 // Main component
 // ---------------------------------------------------------------------------
 
-export const RotationResultInspectorPanel = ({
+export const AttackCalculationStatsBreakdown = ({
   detail,
-}: RotationResultInspectorPanelProperties) => {
+}: AttackCalculationStatsBreakdownProperties) => {
   const characterStats = detail.teamDetails[detail.characterIndex];
   const enemyStats = detail.enemyDetails;
   const clientChar = detail.character;

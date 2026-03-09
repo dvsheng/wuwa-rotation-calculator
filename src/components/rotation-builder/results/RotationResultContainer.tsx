@@ -5,94 +5,35 @@ import { Container, Row, Stack } from '@/components/ui/layout';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Text } from '@/components/ui/typography';
-import type { useRotationCalculation } from '@/hooks/useRotationCalculation';
-import { useTeamAttackInstances } from '@/hooks/useTeamAttackInstances';
-import { useStore } from '@/store';
+import { useRotationCalculation } from '@/hooks/useRotationCalculation';
 
-import type { AttackGroup } from './RotationAttackDataTable';
-import { RotationCharacterBreakdownChart } from './RotationCharacterBreakdownChart';
-import { RotationResultDataTable } from './RotationResultDataTable';
-import { RotationResultInspectorPanel } from './RotationResultInspectorPanel';
+import { AttackBreakdownDataTable } from './AttackBreakdownDataTable';
+import { CharacterBreakdownDataTable } from './CharacterBreakdownDataTable';
 import type { RotationResultInspectorSelection } from './RotationResultPopoverContext';
 import { RotationResultPopoverProvider } from './RotationResultPopoverContext';
 import { RotationResultSummary } from './RotationResultSummary';
 
-interface RotationResultContainerProperties {
-  result: NonNullable<ReturnType<typeof useRotationCalculation>['data']>;
-  isStale?: boolean;
-}
-
-export const RotationResultContainer = ({
-  result,
-  isStale,
-}: RotationResultContainerProperties) => {
-  const storedAttacks = useStore((state) => state.attacks);
-  const { attacks: resolvedAttacks } = useTeamAttackInstances();
-  const [expandedGroups, setExpandedGroups] = useState<Set<number>>(new Set());
+export const RotationResultContainer = () => {
   const [popoverSelection, setPopoverSelection] = useState<
     RotationResultInspectorSelection | undefined
   >();
-
-  const attackMap = new Map(
-    resolvedAttacks.map((attack) => [attack.instanceId, attack]),
-  );
-  const groupMap = new Map<number, AttackGroup>();
-  const hitCountPerAttack = new Map<number, number>();
-
-  for (const detail of result.damageDetails) {
-    const storedAttack = storedAttacks[detail.attackIndex];
-    const attack = attackMap.get(storedAttack.instanceId);
-    const characterName = attack?.characterName ?? 'Unknown';
-
-    const hitIndex = hitCountPerAttack.get(detail.attackIndex) ?? 0;
-    hitCountPerAttack.set(detail.attackIndex, hitIndex + 1);
-
-    const existingGroup = groupMap.get(detail.attackIndex);
-    if (existingGroup) {
-      existingGroup.hits.push({ hitIndex, detail, damage: detail.damage });
-      existingGroup.totalDamage += detail.damage;
-      continue;
-    }
-
-    groupMap.set(detail.attackIndex, {
-      attackIndex: detail.attackIndex,
-      attack,
-      characterName,
-      hits: [{ hitIndex, detail, damage: detail.damage }],
-      totalDamage: detail.damage,
-      pct: 0,
-    });
+  const [inspectorPortalNode, setInspectorPortalNode] = useState<
+    HTMLDivElement | undefined
+  >();
+  const { data: result, isStale } = useRotationCalculation();
+  if (!result) {
+    return;
   }
-
-  const attackGroups = [...groupMap.values()];
-  for (const group of attackGroups) {
-    group.pct =
-      result.totalDamage > 0 ? (group.totalDamage / result.totalDamage) * 100 : 0;
-  }
-  const groupByAttackIndex = new Map(
-    attackGroups.map((group) => [group.attackIndex, group]),
-  );
-  const selectedDetail =
-    popoverSelection === undefined
-      ? undefined
-      : groupByAttackIndex
-          .get(popoverSelection.attackIndex)
-          ?.hits.find((hit) => hit.hitIndex === popoverSelection.hitIndex)?.detail;
-
-  const toggleGroup = (attackIndex: number) => {
-    setExpandedGroups((previous) => {
-      const next = new Set(previous);
-      if (next.has(attackIndex)) {
-        next.delete(attackIndex);
-      } else {
-        next.add(attackIndex);
-      }
-      return next;
-    });
-  };
 
   return (
-    <RotationResultPopoverProvider value={{ popoverSelection, setPopoverSelection }}>
+    <RotationResultPopoverProvider
+      value={{
+        popoverSelection,
+        setPopoverSelection,
+        inspectorPortalNode,
+        setInspectorPortalNode,
+      }}
+    >
       <Container className="h-full min-h-0">
         <Row align="stretch" className="h-full min-h-0">
           <Stack className="min-h-0 flex-1 overflow-hidden">
@@ -102,10 +43,10 @@ export const RotationResultContainer = ({
               className="canvas-header border-border px-panel border-b"
             >
               <Text as="span" variant="heading">
-                Damage Table
+                Results
               </Text>
               <Text as="span" variant="caption">
-                {attackGroups.length} {attackGroups.length === 1 ? 'attack' : 'attacks'}
+                {result.attackCount} {result.attackCount === 1 ? 'attack' : 'attacks'}
               </Text>
             </Row>
             <Stack gap="component" className="p-page min-h-0 flex-1">
@@ -125,7 +66,7 @@ export const RotationResultContainer = ({
 
               <RotationResultSummary
                 totalDamage={result.totalDamage}
-                attackCount={attackGroups.length}
+                attackCount={result.attackCount}
                 damageInstanceCount={result.damageDetails.length}
               />
               <Tabs
@@ -133,27 +74,23 @@ export const RotationResultContainer = ({
                 className="min-h-0 flex-1 overflow-hidden"
               >
                 <TabsList className="shrink-0">
-                  <TabsTrigger value="data-table">Data Table</TabsTrigger>
-                  <TabsTrigger value="character-breakdown">
-                    Character Breakdown
-                  </TabsTrigger>
+                  <TabsTrigger value="data-table">By Attack</TabsTrigger>
+                  <TabsTrigger value="character-breakdown">By Character</TabsTrigger>
                 </TabsList>
                 <TabsContent
                   value="data-table"
                   className="flex min-h-0 w-full overflow-hidden"
                 >
-                  <RotationResultDataTable
-                    attackGroups={attackGroups}
-                    expandedGroups={expandedGroups}
-                    onToggleGroup={toggleGroup}
+                  <AttackBreakdownDataTable
+                    mergedDamageDetails={result.mergedDamageDetails}
                   />
                 </TabsContent>
                 <TabsContent
                   value="character-breakdown"
                   className="flex min-h-0 w-full overflow-hidden"
                 >
-                  <RotationCharacterBreakdownChart
-                    attackGroups={attackGroups}
+                  <CharacterBreakdownDataTable
+                    mergedDamageDetails={result.mergedDamageDetails}
                     totalDamage={result.totalDamage}
                   />
                 </TabsContent>
@@ -171,10 +108,10 @@ export const RotationResultContainer = ({
               <Text as="span" variant="heading">
                 Details
               </Text>
-              {selectedDetail ? (
+              {popoverSelection ? (
                 <Text as="span" variant="caption">
-                  Attack #{popoverSelection ? popoverSelection.attackIndex + 1 : '--'} ·
-                  Hit {popoverSelection ? popoverSelection.hitIndex + 1 : '--'}
+                  Attack #{popoverSelection.attackIndex + 1} · Hit{' '}
+                  {popoverSelection.hitIndex + 1}
                 </Text>
               ) : (
                 <Text as="span" variant="caption">
@@ -182,18 +119,10 @@ export const RotationResultContainer = ({
                 </Text>
               )}
             </Row>
-            <Stack className="p-page min-h-0 flex-1 overflow-y-auto">
-              {selectedDetail ? (
-                <RotationResultInspectorPanel detail={selectedDetail} />
-              ) : (
-                <Stack className="h-full items-center justify-center">
-                  <Text variant="heading">No Detail Selected</Text>
-                  <Text variant="small">
-                    Click Details on any row to view stat breakdown data here.
-                  </Text>
-                </Stack>
-              )}
-            </Stack>
+            <Stack
+              ref={(node) => setInspectorPortalNode(node ?? undefined)}
+              className="p-page min-h-0 flex-1 overflow-y-auto"
+            />
           </Stack>
         </Row>
       </Container>

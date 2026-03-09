@@ -9,7 +9,7 @@ import { Text } from '@/components/ui/typography';
 import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
 import type { ClientRotationResult } from '@/services/rotation-calculator/client-output-adapter/adapt-rotation-result-to-client-output';
 
-import { rotationResultTableColumnLayout } from './rotation-result-table-column-layout';
+import { rotationResultTableColumnLayout } from './data-table.style';
 import { useRotationResultPopover } from './RotationResultPopoverContext';
 
 type DamageDetail = ClientRotationResult['damageDetails'][number];
@@ -26,20 +26,19 @@ export interface AttackGroup {
   characterName: string;
   hits: Array<HitRow>;
   totalDamage: number;
-  pct: number;
 }
 
-interface RotationAttackDataTableProperties {
+interface AttackBreakdownRowDropdownProperties {
   row: Row<AttackGroup>;
   columnCount: number;
   isOpen: boolean;
 }
 
-export const RotationAttackDataTable = ({
+export const AttackBreakdownRowDropdown = ({
   row: parentRow,
   columnCount,
   isOpen,
-}: RotationAttackDataTableProperties) => {
+}: AttackBreakdownRowDropdownProperties) => {
   const { popoverSelection, setPopoverSelection } = useRotationResultPopover();
   if (!isOpen) {
     return;
@@ -53,7 +52,14 @@ export const RotationAttackDataTable = ({
         headerClassName: rotationResultTableColumnLayout.index,
         cellClassName: rotationResultTableColumnLayout.index,
       },
-      cell: ({ row }) => row.original.hitIndex + 1,
+      cell: ({ row }) => (
+        <Text
+          variant="small"
+          className="text-muted-foreground justify-center font-mono"
+        >
+          {row.original.hitIndex + 1}
+        </Text>
+      ),
     },
     {
       id: 'attack-spacer',
@@ -77,9 +83,15 @@ export const RotationAttackDataTable = ({
         );
 
         return (
-          <LayoutRow justify="end" gap="tight" className="text-right font-mono">
-            <Text variant="caption"> ({motionValuePercentage}%)</Text>
-            <Text variant="small">
+          <LayoutRow
+            justify="end"
+            gap="tight"
+            className="text-muted-foreground text-right font-mono"
+          >
+            <Text variant="caption" className="text-muted-foreground">
+              ({motionValuePercentage}%)
+            </Text>
+            <Text variant="small" className="text-muted-foreground">
               {' '}
               {Math.round(row.original.damage).toLocaleString()}
             </Text>

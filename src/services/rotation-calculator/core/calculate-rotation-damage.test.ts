@@ -4,6 +4,7 @@ import {
   AttackScalingProperty,
   Attribute,
   CharacterStat,
+  DamageType,
   EnemyStat,
   Tag,
 } from '@/types';
@@ -210,6 +211,8 @@ describe('calculateRotationDamage', () => {
                 {
                   scalingStat: AttackScalingProperty.ATK,
                   motionValue: 1,
+                  damageType: DamageType.BASIC_ATTACK,
+                  attribute: Attribute.ELECTRO,
                   tags: [Tag.BASIC_ATTACK, Tag.ELECTRO],
                 },
               ],
@@ -239,6 +242,8 @@ describe('calculateRotationDamage', () => {
               {
                 scalingStat: AttackScalingProperty.ATK,
                 motionValue: 1,
+                damageType: DamageType.BASIC_ATTACK,
+                attribute: Attribute.ELECTRO,
                 tags: [Tag.BASIC_ATTACK, Tag.ELECTRO],
               },
             ],
@@ -374,11 +379,15 @@ describe('calculateRotationDamage', () => {
                 {
                   scalingStat: AttackScalingProperty.FIXED,
                   motionValue: 123.4,
+                  damageType: DamageType.BASIC_ATTACK,
+                  attribute: Attribute.ELECTRO,
                   tags: [Tag.ELECTRO, Tag.BASIC_ATTACK],
                 },
                 {
                   scalingStat: AttackScalingProperty.FIXED,
                   motionValue: 76.6,
+                  damageType: DamageType.BASIC_ATTACK,
+                  attribute: Attribute.ELECTRO,
                   tags: [Tag.ELECTRO, Tag.BASIC_ATTACK],
                 },
               ],

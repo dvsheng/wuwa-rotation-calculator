@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as BuildsRouteImport } from './routes/builds'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminEntitiesRouteImport } from './routes/admin.entities'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AdminEntitiesIdRouteImport } from './routes/admin.entities.$id'
 
 const BuildsRoute = BuildsRouteImport.update({
@@ -29,6 +30,11 @@ const AdminEntitiesRoute = AdminEntitiesRouteImport.update({
   path: '/admin/entities',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminEntitiesIdRoute = AdminEntitiesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -40,12 +46,14 @@ export interface FileRoutesByFullPath {
   '/builds': typeof BuildsRoute
   '/admin/entities': typeof AdminEntitiesRouteWithChildren
   '/admin/entities/$id': typeof AdminEntitiesIdRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/builds': typeof BuildsRoute
   '/admin/entities': typeof AdminEntitiesRouteWithChildren
   '/admin/entities/$id': typeof AdminEntitiesIdRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,19 +61,37 @@ export interface FileRoutesById {
   '/builds': typeof BuildsRoute
   '/admin/entities': typeof AdminEntitiesRouteWithChildren
   '/admin/entities/$id': typeof AdminEntitiesIdRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/builds' | '/admin/entities' | '/admin/entities/$id'
+  fullPaths:
+    | '/'
+    | '/builds'
+    | '/admin/entities'
+    | '/admin/entities/$id'
+    | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/builds' | '/admin/entities' | '/admin/entities/$id'
-  id: '__root__' | '/' | '/builds' | '/admin/entities' | '/admin/entities/$id'
+  to:
+    | '/'
+    | '/builds'
+    | '/admin/entities'
+    | '/admin/entities/$id'
+    | '/api/auth/$'
+  id:
+    | '__root__'
+    | '/'
+    | '/builds'
+    | '/admin/entities'
+    | '/admin/entities/$id'
+    | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BuildsRoute: typeof BuildsRoute
   AdminEntitiesRoute: typeof AdminEntitiesRouteWithChildren
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -89,6 +115,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/entities'
       fullPath: '/admin/entities'
       preLoaderRoute: typeof AdminEntitiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/entities/$id': {
@@ -117,6 +150,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BuildsRoute: BuildsRoute,
   AdminEntitiesRoute: AdminEntitiesRouteWithChildren,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

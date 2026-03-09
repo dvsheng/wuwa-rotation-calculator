@@ -1,4 +1,4 @@
-import { Attribute } from './attribute';
+import type { Attribute } from './attribute';
 import { NegativeStatus } from './negative-status';
 
 /**
@@ -50,6 +50,7 @@ export const DamageType = {
   TUNE_BREAK: 'tuneBreak',
   /** Tag for Tune Rupture specific multiplier increases. */
   TUNE_RUPTURE: 'tuneRupture',
+  NEGATIVE_STATUS: 'negativeStatus',
 } as const;
 
 export type DamageType = (typeof DamageType)[keyof typeof DamageType];

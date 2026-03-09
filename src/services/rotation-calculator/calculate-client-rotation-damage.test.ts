@@ -11,6 +11,7 @@ import {
   AttackScalingProperty,
   Attribute,
   CharacterStat,
+  DamageType,
   EnemyStat,
   NegativeStatus,
   Tag,
@@ -367,6 +368,8 @@ describe('calculateRotation', () => {
             {
               motionValue: 0,
               tags: [Tag.ALL, Attribute.AERO, NegativeStatus.AERO_EROSION],
+              damageType: DamageType.NEGATIVE_STATUS,
+              attribute: Attribute.AERO,
               scalingStat: NegativeStatus.AERO_EROSION,
             },
           ],
@@ -562,6 +565,8 @@ describe('calculateRotation', () => {
             {
               motionValue: 0.5,
               tags: [Tag.BASIC_ATTACK, Tag.ELECTRO],
+              damageType: DamageType.BASIC_ATTACK,
+              attribute: Attribute.ELECTRO,
               scalingStat: AttackScalingProperty.ATK,
             },
           ],

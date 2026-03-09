@@ -11,5 +11,5 @@ export const updateRotation = createServerFn({
   .middleware([authMiddleware])
   .inputValidator(UpdateRotationRequestSchema)
   .handler(async ({ data, context }) => {
-    return updateRotationHandler(data, context.user.sub);
+    return updateRotationHandler(data, context.user.id);
   });

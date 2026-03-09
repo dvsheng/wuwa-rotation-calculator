@@ -2,11 +2,7 @@ import { z } from 'zod';
 
 import { database } from '@/db/client';
 import type { DatabaseCapability, DatabaseEntity, DatabaseSkill } from '@/db/schema';
-import {
-  DatabaseAttackDataSchema,
-  DatabaseModifierDataSchema,
-  DatabasePermanentStatSchema,
-} from '@/schemas/database';
+import { DatabaseCapabilitySchema } from '@/schemas/database';
 import { CapabilityType, EntityType } from '@/services/game-data';
 import { Attribute, Tag, WeaponType } from '@/types';
 
@@ -107,26 +103,9 @@ const BaseCapabilitySchema = z.object({
   updatedAt: z.date(),
 });
 
-const AttackCapabilityValidationSchema = BaseCapabilitySchema.extend({
-  capabilityType: z.literal(CapabilityType.ATTACK),
-  capabilityJson: DatabaseAttackDataSchema,
+const CapabilityValidationSchema = BaseCapabilitySchema.extend({
+  capabilityJson: DatabaseCapabilitySchema,
 }).strict();
-
-const ModifierCapabilityValidationSchema = BaseCapabilitySchema.extend({
-  capabilityType: z.literal(CapabilityType.MODIFIER),
-  capabilityJson: DatabaseModifierDataSchema,
-}).strict();
-
-const PermanentStatCapabilityValidationSchema = BaseCapabilitySchema.extend({
-  capabilityType: z.literal(CapabilityType.PERMANENT_STAT),
-  capabilityJson: DatabasePermanentStatSchema,
-}).strict();
-
-const CapabilityValidationSchema = z.discriminatedUnion('capabilityType', [
-  AttackCapabilityValidationSchema,
-  ModifierCapabilityValidationSchema,
-  PermanentStatCapabilityValidationSchema,
-]);
 
 // ============================================================================
 // Cross-Table Validation Helpers
@@ -327,8 +306,8 @@ async function validateDatabase() {
       // Validate skill reference
       ...validateSkillReference(capability, skillMap),
       // Validate tags (for modifiers and permanent stats)
-      ...(capability.capabilityType === CapabilityType.MODIFIER ||
-      capability.capabilityType === CapabilityType.PERMANENT_STAT
+      ...(capability.capabilityJson.type === CapabilityType.MODIFIER ||
+      capability.capabilityJson.type === CapabilityType.PERMANENT_STAT
         ? validateCapabilityTags(capability, attackNames)
         : []),
     ],

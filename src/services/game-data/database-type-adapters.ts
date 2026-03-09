@@ -6,15 +6,16 @@ import type {
 
 import { Sequence } from './types';
 
-export type ResolveRefineScalableNumber<T> =
-  T extends Array<infer U>
-    ? Array<ResolveRefineScalableNumber<U>>
-    : T extends object
+export type ResolveRefineScalableNumber<T> = T extends DatabaseLeafNumber
+  ? number
+  : T extends number
+    ? number
+    : T extends readonly [any, ...Array<any>]
       ? { [K in keyof T]: ResolveRefineScalableNumber<T[K]> }
-      : T extends DatabaseLeafNumber
-        ? number
-        : T extends number
-          ? number
+      : T extends ReadonlyArray<infer U>
+        ? ReadonlyArray<ResolveRefineScalableNumber<U>>
+        : T extends object
+          ? { [K in keyof T]: ResolveRefineScalableNumber<T[K]> }
           : T;
 
 /**

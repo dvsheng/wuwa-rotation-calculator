@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { AttackScalingProperty, CharacterStat, EnemyStat, Tag } from '@/types';
+import { AttackScalingProperty, CharacterStat, EnemyStat } from '@/types';
 
 import { calculateAttackDamage } from './calculate-attack-damage';
 
@@ -64,7 +64,6 @@ describe('calculateAttackDamage', () => {
       {
         scalingStat: AttackScalingProperty.TUNE_RUPTURE_ATK,
         motionValue: 1,
-        tags: [Tag.TUNE_RUPTURE, Tag.ELECTRO],
       },
       characterStats,
       enemyStats,
@@ -88,7 +87,6 @@ describe('calculateAttackDamage', () => {
       {
         scalingStat: AttackScalingProperty.TUNE_RUPTURE_HP,
         motionValue: 1,
-        tags: [Tag.TUNE_RUPTURE],
       },
       characterStats,
       enemyStats,
@@ -97,7 +95,6 @@ describe('calculateAttackDamage', () => {
       {
         scalingStat: AttackScalingProperty.TUNE_RUPTURE_DEF,
         motionValue: 1,
-        tags: [Tag.TUNE_RUPTURE],
       },
       characterStats,
       enemyStats,

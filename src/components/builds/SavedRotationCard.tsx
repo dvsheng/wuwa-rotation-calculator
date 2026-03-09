@@ -1,5 +1,6 @@
 import { useNavigate } from '@tanstack/react-router';
 import { format } from 'date-fns';
+import { isNil } from 'es-toolkit/predicate';
 import { Play, Save } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -28,7 +29,7 @@ import {
 } from '@/components/ui/dialog';
 import { Text } from '@/components/ui/typography';
 import { useRotationLibrary } from '@/hooks/useRotationLibrary';
-import { useUser } from '@/hooks/useUser';
+import { useSession } from '@/lib/auth-client';
 import type { SavedRotation } from '@/schemas/library';
 import { calculateRotation } from '@/services/rotation-calculator/calculate-client-rotation-damage';
 import { useStore } from '@/store';
@@ -43,18 +44,10 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
   const { setTeam, setEnemy, setAttacks, setBuffs } = useStore();
   const { deleteRotation, updateRotation, isDeleting, isUpdating } =
     useRotationLibrary();
-  const { userId } = useUser();
+  const { data: session } = useSession();
   const { team, enemy, attacks, buffs } = useStore();
-  const isOwner = userId !== undefined && userId === rotation.ownerId;
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isOverwriteDialogOpen, setIsOverwriteDialogOpen] = useState(false);
-  const configuredCharacters = rotation.data.team.filter(
-    (character) => character.id > 0,
-  );
-  const resistanceEntries = Object.values(Attribute).map((attribute) => ({
-    attribute,
-    value: rotation.data.enemy.resistances[attribute],
-  }));
 
   const handleLoad = () => {
     try {
@@ -103,6 +96,15 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
     }
   };
 
+  const userId = session?.user.id;
+  const isOwner = !isNil(userId) && userId === rotation.ownerId;
+  const configuredCharacters = rotation.data.team.filter(
+    (character) => character.id > 0,
+  );
+  const resistanceEntries = Object.values(Attribute).map((attribute) => ({
+    attribute,
+    value: rotation.data.enemy.resistances[attribute],
+  }));
   return (
     <Card className="w-full">
       <CardHeader>

@@ -13,6 +13,7 @@
     "format": "prettier",
     "validate-data": "vitest run scripts/validate-game-data.test.ts",
     "check": "eslint --fix && tsc && prettier --write . && npm run test ",
+    "temp": "tsx --env-file=.env scripts/migrate-damage-instance-fields.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:validate": "tsx --env-file=.env scripts/validate-database.ts",

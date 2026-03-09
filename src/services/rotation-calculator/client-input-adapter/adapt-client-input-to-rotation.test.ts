@@ -7,7 +7,13 @@ import type {
   GameDataNumberNode,
 } from '@/services/game-data';
 import { CapabilityType } from '@/services/game-data';
-import { AttackScalingProperty, Attribute, CharacterStat, Tag } from '@/types';
+import {
+  AttackScalingProperty,
+  Attribute,
+  CharacterStat,
+  DamageType,
+  Tag,
+} from '@/types';
 
 import {
   toRotationModifier,
@@ -60,11 +66,12 @@ const createMockAttack = (
   id,
   characterId,
   description: 'Test attack description',
-  attribute: Attribute.PHYSICAL,
   damageInstances: [
     {
       motionValue: 1,
       tags: [Tag.BASIC_ATTACK],
+      damageType: DamageType.BASIC_ATTACK,
+      attribute: Attribute.PHYSICAL,
       scalingStat: AttackScalingProperty.ATK,
     },
   ],

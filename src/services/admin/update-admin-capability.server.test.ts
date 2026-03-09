@@ -81,10 +81,11 @@ describe('updateAdminCapabilityHandler', () => {
             {
               motionValue: 1,
               tags: ['basicAttack'],
+              damageType: 'basicAttack',
+              attribute: 'aero',
               scalingStat: 'atk',
             },
           ],
-          attribute: 'aero',
         },
       }),
     ).rejects.toThrow('Capability not found for ID 999');

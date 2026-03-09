@@ -212,11 +212,7 @@ export const toRotationAttack = (
 ): CharacterAttack => {
   return {
     characterIndex: characterIdToSlotNumberMap[instance.characterId],
-    damageInstances: instance.damageInstances.map((di) => ({
-      scalingStat: di.scalingStat,
-      tags: di.tags,
-      motionValue: di.motionValue,
-    })),
+    damageInstances: instance.damageInstances,
   };
 };
 

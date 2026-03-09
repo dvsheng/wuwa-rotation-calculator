@@ -17,8 +17,10 @@ import { AttackScalingType } from './types';
 
 const HAVOC_BANE_DEFENSE_REDUCTION_PER_STACK = 0.02;
 
+type DamageInstance = Pick<CharacterDamageInstance, 'scalingStat' | 'motionValue'>;
+
 export const calculateAttackDamage = (
-  damageInstance: CharacterDamageInstance,
+  damageInstance: DamageInstance,
   characterStats: Record<CharacterStat | 'level', number>,
   enemyStats: Record<EnemyStat | 'level', number>,
 ) => {
@@ -53,7 +55,7 @@ const _calculateNegativeStatusDamage = (
   damageCalculationStats: ReturnType<
     typeof convertResolvedStatsToCalculateDamageProperties
   >,
-  damageInstance: CharacterDamageInstance,
+  damageInstance: DamageInstance,
 ) => {
   if (
     getAttackScalingType(damageInstance.scalingStat) !==
@@ -80,7 +82,7 @@ const calculateStandardDamage = (
   damageCalculationStats: ReturnType<
     typeof convertResolvedStatsToCalculateDamageProperties
   >,
-  damageInstance: CharacterDamageInstance,
+  damageInstance: DamageInstance,
 ) => {
   const baseDamage =
     damageCalculationStats.character.attackScalingPropertyValue *
@@ -99,7 +101,7 @@ const calculateTuneRuptureDamage = (
   damageCalculationStats: ReturnType<
     typeof convertResolvedStatsToCalculateDamageProperties
   >,
-  damageInstance: CharacterDamageInstance,
+  damageInstance: DamageInstance,
 ) => {
   const { result, inputs } = calculateStandardDamage(
     damageCalculationStats,
@@ -117,7 +119,7 @@ const calculateFixedDamage = (
   damageCalculationStats: ReturnType<
     typeof convertResolvedStatsToCalculateDamageProperties
   >,
-  damageInstance: CharacterDamageInstance,
+  damageInstance: DamageInstance,
 ) => {
   const baseDamage = damageInstance.motionValue;
   const calculateDamageProperties = {
@@ -130,7 +132,7 @@ const calculateFixedDamage = (
   };
 };
 
-const getDamageCalculationStrategy = (instance: CharacterDamageInstance) => {
+const getDamageCalculationStrategy = (instance: DamageInstance) => {
   const attackScalingType = getAttackScalingType(instance.scalingStat);
   switch (attackScalingType) {
     case AttackScalingType.NEGATIVE_STATUS: {
@@ -156,7 +158,7 @@ const convertResolvedStatsToCalculateDamageProperties = ({
   characterStats,
   enemyStats,
 }: {
-  damageInstance: CharacterDamageInstance;
+  damageInstance: DamageInstance;
   characterStats: Record<CharacterStat | 'level', number>;
   enemyStats: Record<EnemyStat | 'level', number>;
 }) => {

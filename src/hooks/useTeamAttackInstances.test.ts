@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from 'vitest';
 import type { AttackInstance } from '@/schemas/rotation';
 import { CapabilityType, OriginType } from '@/services/game-data';
 import { useStore } from '@/store';
-import { Attribute } from '@/types';
 
 import { useTeamAttackInstances } from './useTeamAttackInstances';
 
@@ -28,7 +27,6 @@ describe('useTeamAttackInstances', () => {
           description: '',
           originType: OriginType.ECHO,
           capabilityType: CapabilityType.ATTACK,
-          attribute: Attribute.SPECTRO,
           damageInstances: [],
           parameters: [],
         },
@@ -42,7 +40,6 @@ describe('useTeamAttackInstances', () => {
           description: '',
           originType: OriginType.ECHO,
           capabilityType: CapabilityType.ATTACK,
-          attribute: Attribute.SPECTRO,
           damageInstances: [],
           parameters: [],
         },

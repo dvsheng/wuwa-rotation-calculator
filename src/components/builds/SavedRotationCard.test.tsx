@@ -5,8 +5,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { SavedRotation } from '@/schemas/library';
 
-vi.mock('@/hooks/useUser', () => ({
-  useUser: vi.fn(),
+vi.mock('@/lib/auth-client', () => ({
+  useSession: vi.fn(),
 }));
 
 vi.mock('@/hooks/useRotationLibrary', () => ({
@@ -37,7 +37,7 @@ vi.mock('@/components/common/AssetIcon', () => ({
   AttributeIcon: () => {},
 }));
 
-const { useUser: mockUseUser } = await import('@/hooks/useUser');
+const { useSession: mockUseSession } = await import('@/lib/auth-client');
 
 const mockRotation = {
   id: 1,
@@ -74,11 +74,13 @@ function wrapper({ children }: { children: ReactNode }) {
 
 describe('SavedRotationCard', () => {
   it('hides delete and overwrite buttons when logged in as a different user', async () => {
-    vi.mocked(mockUseUser).mockReturnValue({
-      userId: 'other-user-456',
-      username: 'other',
-      isLoading: false,
-    });
+    vi.mocked(mockUseSession).mockReturnValue({
+      data: {
+        user: {
+          id: 'other-user-123',
+        },
+      },
+    } as any);
 
     const { SavedRotationCard } = await import('./SavedRotationCard');
     render(<SavedRotationCard rotation={mockRotation} />, { wrapper });
@@ -88,11 +90,9 @@ describe('SavedRotationCard', () => {
   });
 
   it('hides delete and overwrite buttons when not logged in', async () => {
-    vi.mocked(mockUseUser).mockReturnValue({
-      userId: undefined,
-      username: undefined,
-      isLoading: false,
-    });
+    vi.mocked(mockUseSession).mockReturnValue({
+      undefined,
+    } as any);
 
     const { SavedRotationCard } = await import('./SavedRotationCard');
     render(<SavedRotationCard rotation={mockRotation} />, { wrapper });
@@ -102,11 +102,13 @@ describe('SavedRotationCard', () => {
   });
 
   it('shows delete and overwrite buttons when logged in as the owner', async () => {
-    vi.mocked(mockUseUser).mockReturnValue({
-      userId: 'owner-123',
-      username: 'owner',
-      isLoading: false,
-    });
+    vi.mocked(mockUseSession).mockReturnValue({
+      data: {
+        user: {
+          id: 'owner-123',
+        },
+      },
+    } as any);
 
     const { SavedRotationCard } = await import('./SavedRotationCard');
     render(<SavedRotationCard rotation={mockRotation} />, { wrapper });

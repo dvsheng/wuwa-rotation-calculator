@@ -58,22 +58,6 @@ const isCapabilityActive = (
 };
 
 /**
- * Builds the runtime tags array for a damage instance.
- *
- * The DB stores `attribute` and `damageType` as dedicated fields rather than
- * tags. They are injected back into the tags array here so that the
- * calculation engine's tag-based modifier filtering continues to work.
- * The capability name is also appended so that modifiers can target a
- * specific named attack.
- */
-export const buildDamageInstanceTags = (
-  tags: Array<string>,
-  attribute: string,
-  damageType: string,
-  capabilityName?: string | null,
-): Array<string> => compact([...tags, capabilityName, attribute, damageType]);
-
-/**
  * Convert fullCapabilities record to Attack format (flattening capabilityJson).
  * attribute and damageType are stored as dedicated fields on each damage instance.
  * They are also injected into the tags array so the calculation engine can filter
@@ -91,7 +75,7 @@ const toAttack = (attack: AttackCapability): Attack => {
     iconUrl: attack.skillIconUrl ?? attack.entityIconUrl ?? undefined,
     damageInstances: json.damageInstances.map((di) => ({
       ...di,
-      tags: buildDamageInstanceTags(di.tags, di.attribute, di.damageType, attack.capabilityName),
+      tags: compact([...di.tags, attack.capabilityName, di.attribute, di.damageType]),
     })),
   };
 };
@@ -127,7 +111,7 @@ const toPermanentStat = (permanentStat: PermanentStatCapability): PermanentStat 
     originType: permanentStat.skillOriginType,
     stat: json.stat,
     value: json.value as PermanentStat['value'],
-    tags: json.tags,
+    tags: json.tags as Array<string>,
   };
 };
 

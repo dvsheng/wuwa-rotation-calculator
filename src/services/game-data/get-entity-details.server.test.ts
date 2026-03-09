@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { DatabaseFullCapability } from '@/db/schema';
+
 import { CapabilityType, OriginType } from './types';
 
 // Mock the database and schema modules before importing the module under test.
@@ -12,7 +14,7 @@ vi.mock('@/db/schema', () => ({
   fullCapabilities: { entityId: 'entity_id' },
 }));
 vi.mock('drizzle-orm', async (importOriginal) => {
-  const original = await importOriginal<typeof import('drizzle-orm')>();
+  const original = (await importOriginal()) as any;
   return { ...original, eq: vi.fn() };
 });
 
@@ -23,27 +25,27 @@ const { getEntityByIdHandler } = await import('./get-entity-details.server');
 // Helpers
 // ---------------------------------------------------------------------------
 
-const makeMockAttackRow = (overrides: Record<string, unknown> = {}) => ({
+const makeMockAttackRow = (overrides: Partial<DatabaseFullCapability> = {}) => ({
   capabilityId: 1,
   capabilityType: CapabilityType.ATTACK,
   capabilityName: 'Blazing Slash',
-  capabilityDescription: null,
+  capabilityDescription: undefined,
   skillId: 10,
   skillName: 'Normal Attack',
-  skillDescription: null,
+  skillDescription: undefined,
   skillOriginType: OriginType.NORMAL_ATTACK,
-  skillIconUrl: null,
+  skillIconUrl: undefined,
   entityId: 100,
   entityName: 'Test Character',
   entityType: 'character',
-  entityIconUrl: null,
-  entityDescription: null,
+  entityIconUrl: undefined,
+  entityDescription: undefined,
   rank: 5,
   weaponType: 'sword',
   attribute: 'fusion',
-  echoSetIds: null,
-  cost: null,
-  setBonusThresholds: null,
+  echoSetIds: undefined,
+  cost: undefined,
+  setBonusThresholds: undefined,
   capabilityJson: {
     type: 'attack',
     damageInstances: [
@@ -122,8 +124,20 @@ describe('getEntityByIdHandler — attack damage instance fields', () => {
         capabilityJson: {
           type: 'attack',
           damageInstances: [
-            { attribute: 'glacio', damageType: 'heavyAttack', tags: [], motionValue: 2, scalingStat: 'atk' },
-            { attribute: 'fusion', damageType: 'resonanceSkill', tags: ['coordinatedAttack'], motionValue: 1, scalingStat: 'hp' },
+            {
+              attribute: 'glacio',
+              damageType: 'heavyAttack',
+              tags: [],
+              motionValue: 2,
+              scalingStat: 'atk',
+            },
+            {
+              attribute: 'fusion',
+              damageType: 'resonanceSkill',
+              tags: ['coordinatedAttack'],
+              motionValue: 1,
+              scalingStat: 'hp',
+            },
           ],
         },
       }),

@@ -7,10 +7,6 @@ import { Construct } from 'constructs';
 
 export interface ServerProperties {
   database: rds.DatabaseInstance;
-  cognito: {
-    userPoolId: string;
-    userPoolClientId: string;
-  };
 }
 
 export class Server extends Construct {
@@ -19,7 +15,7 @@ export class Server extends Construct {
   constructor(scope: Construct, id: string, properties: ServerProperties) {
     super(scope, id);
 
-    const { database, cognito } = properties;
+    const { database } = properties;
 
     this.function = new lambda.Function(this, 'Function', {
       runtime: lambda.Runtime.NODEJS_24_X,
@@ -35,8 +31,6 @@ export class Server extends Construct {
         // CDK generates RDS credentials with 'postgres' as the master username
         DATABASE_USERNAME: 'postgres',
         DATABASE_SECRET_ARN: database.secret?.secretArn ?? '',
-        COGNITO_USER_POOL_ID: cognito.userPoolId,
-        COGNITO_USER_POOL_CLIENT_ID: cognito.userPoolClientId,
       },
     });
 

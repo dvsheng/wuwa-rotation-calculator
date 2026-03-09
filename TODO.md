@@ -2,15 +2,13 @@ Clean up Palette filter styling
 
 Default character stat builder
 
-Modifiers w ith multiple targets
+Modifiers with multiple targets
 
 have buff desciptions follow you around as you pan
 
 support personal mechanics
 
 sensitivity analysis
-
-damage breakdown
 
 damage type + attribute
 

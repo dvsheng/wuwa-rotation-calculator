@@ -23,32 +23,41 @@ export class WuwaRotationBuilderStack extends cdk.Stack {
     });
 
     const database = new Database(this, 'Database', { vpc });
+
+    // Lambda runs outside the VPC — allow inbound from internet so Lambda can reach RDS
+    database.instance.connections.allowFromAnyIpv4(ec2.Port.tcp(5432));
+
+    // Build Distribution first so its domain name can be wired into Cognito's allowed URLs.
+    const bucket = new AssetBucket(this, 'Bucket');
+    // Server/API are needed by Distribution — build them before Cognito too.
+    // Cognito IDs are passed to Server as env vars; Server has no deploy-time dep on Cognito.
+    const server = new Server(this, 'Server', { database: database.instance });
+    const restApi = new ApiGateway(this, 'ApiGateway', { function: server.function });
+    const distribution = new Distribution(this, 'Distribution', {
+      restApi: restApi.webappApi,
+      bucket: bucket.assetsBucket,
+    });
+
+    const distributionUrl = `https://${distribution.distribution.distributionDomainName}`;
+    const localUrl = 'http://localhost:3000';
+
     const cognito = new Cognito(this, 'Cognito', {
       googleClientId: this.node.tryGetContext('googleClientId') as string,
       googleClientSecretName: this.node.tryGetContext(
         'googleClientSecretName',
       ) as string,
       domainPrefix: this.node.tryGetContext('cognitoDomainPrefix') as string,
-      callbackUrls: this.node.tryGetContext('cognitoCallbackUrls') as Array<string>,
-      logoutUrls: this.node.tryGetContext('cognitoLogoutUrls') as Array<string>,
-    });
-    const server = new Server(this, 'Server', {
-      database: database.instance,
-      cognito: {
-        userPoolId: cognito.userPool.userPoolId,
-        userPoolClientId: cognito.userPoolClient.userPoolClientId,
-      },
+      callbackUrls: [localUrl, distributionUrl],
+      logoutUrls: [localUrl, distributionUrl],
     });
 
-    // Lambda runs outside the VPC — allow inbound from internet so Lambda can reach RDS
-    database.instance.connections.allowFromAnyIpv4(ec2.Port.tcp(5432));
+    // Add Cognito env vars after both Server and Cognito are constructed
+    server.function.addEnvironment('COGNITO_USER_POOL_ID', cognito.userPool.userPoolId);
+    server.function.addEnvironment(
+      'COGNITO_USER_POOL_CLIENT_ID',
+      cognito.userPoolClient.userPoolClientId,
+    );
 
-    const restApi = new ApiGateway(this, 'ApiGateway', { function: server.function });
-    const bucket = new AssetBucket(this, 'Bucket');
-    const distribution = new Distribution(this, 'Distribution', {
-      restApi: restApi.webappApi,
-      bucket: bucket.assetsBucket,
-    });
     new AssetDeployment(this, 'Deployment', {
       bucket: bucket.assetsBucket,
       distribution: distribution.distribution,

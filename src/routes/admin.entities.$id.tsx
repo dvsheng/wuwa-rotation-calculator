@@ -4,6 +4,7 @@ import { ArrowLeft, Database } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { sortOriginsByAttackOrder } from '@/components/rotation-builder/constants';
 import {
   Accordion,
@@ -362,6 +363,14 @@ function AdminEntityDetailsPage() {
   );
 }
 
+function AdminEntityDetailsPageWithBoundary() {
+  return (
+    <ErrorBoundary>
+      <AdminEntityDetailsPage />
+    </ErrorBoundary>
+  );
+}
+
 export const Route = createFileRoute('/admin/entities/$id')({
-  component: AdminEntityDetailsPage,
+  component: AdminEntityDetailsPageWithBoundary,
 });

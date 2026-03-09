@@ -3,38 +3,25 @@ import { Library } from 'lucide-react';
 import { SavedRotationCard } from '@/components/builds/SavedRotationCard';
 import { SaveRotationDialog } from '@/components/builds/SaveRotationDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Row } from '@/components/ui/layout';
 import { Text } from '@/components/ui/typography';
 import { useRotationLibrary } from '@/hooks/useRotationLibrary';
 
 export function LibraryContainer() {
-  const { rotations, isLoading, error } = useRotationLibrary();
+  const { rotations } = useRotationLibrary();
 
   return (
     <div className="container mx-auto max-w-5xl space-y-6">
       <div className="flex items-center justify-between">
-        <div className="gap-compact flex items-center">
+        <Row gap="compact">
           <Library className="h-6 w-6" />
           <Text as="h2" variant="heading" className="font-bold">
             Library
           </Text>
-        </div>
+        </Row>
       </div>
 
-      {isLoading ? (
-        <Card className="border-dashed">
-          <CardContent className="py-page text-center">
-            <Text variant="small">Loading saved rotations...</Text>
-          </CardContent>
-        </Card>
-      ) : error ? (
-        <Card className="border-dashed">
-          <CardContent className="py-page text-center">
-            <Text variant="small" className="text-destructive">
-              Failed to load saved rotations.
-            </Text>
-          </CardContent>
-        </Card>
-      ) : rotations.length === 0 ? (
+      {rotations.length === 0 ? (
         <Card className="animate-in fade-in-50 border-dashed">
           <CardHeader className="items-center text-center">
             <div className="bg-muted/50 mx-auto flex h-20 w-20 items-center justify-center rounded-full">

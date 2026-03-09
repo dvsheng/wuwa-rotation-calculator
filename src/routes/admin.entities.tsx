@@ -9,6 +9,7 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { Database } from 'lucide-react';
 import { z } from 'zod';
 
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { DataTable } from '@/components/ui/data-table';
 import { Input } from '@/components/ui/input';
 import {
@@ -143,7 +144,15 @@ function AdminEntitiesPage() {
   );
 }
 
+function AdminEntitiesPageWithBoundary() {
+  return (
+    <ErrorBoundary>
+      <AdminEntitiesPage />
+    </ErrorBoundary>
+  );
+}
+
 export const Route = createFileRoute('/admin/entities')({
   validateSearch: adminEntitiesSearchSchema,
-  component: AdminEntitiesPage,
+  component: AdminEntitiesPageWithBoundary,
 });

@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
+import { Suspense } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { SavedRotationData } from '@/schemas/library';
@@ -32,7 +33,9 @@ describe('useRotationLibrary', () => {
   let queryClient: QueryClient;
 
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <Suspense>{children}</Suspense>
+    </QueryClientProvider>
   );
 
   beforeEach(() => {
@@ -88,7 +91,7 @@ describe('useRotationLibrary', () => {
     const { result } = renderHook(() => useRotationLibrary(), { wrapper });
 
     await waitFor(() => {
-      expect(mockListRotations).toHaveBeenCalledTimes(1);
+      expect(result.current.rotations).toBeDefined();
     });
 
     await act(async () => {

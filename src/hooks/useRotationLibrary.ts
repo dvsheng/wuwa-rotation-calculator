@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 
 import type { SavedRotationData } from '@/schemas/library';
 import {
@@ -31,7 +31,7 @@ export const useRotationLibrary = () => {
   const queryClient = useQueryClient();
   const queryKey = ['rotation-library'] as const;
 
-  const rotationsQuery = useQuery({
+  const rotationsQuery = useSuspenseQuery({
     queryKey,
     queryFn: () => listRotations(),
   });
@@ -58,9 +58,7 @@ export const useRotationLibrary = () => {
   });
 
   return {
-    rotations: rotationsQuery.data ?? [],
-    isLoading: rotationsQuery.isLoading,
-    error: rotationsQuery.error,
+    rotations: rotationsQuery.data,
     createRotation: createMutation.mutateAsync,
     updateRotation: updateMutation.mutateAsync,
     deleteRotation: deleteMutation.mutateAsync,

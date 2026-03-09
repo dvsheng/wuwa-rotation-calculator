@@ -186,9 +186,9 @@ export type DatabasePermanentStatData = z.infer<typeof DatabasePermanentStatSche
 
 const DatabaseBaseModifierDataSchema = z
   .object({
-    target: z.enum(Target),
     modifiedStats: z.array(
       z.object({
+        target: z.enum(Target),
         stat: z.enum({ ...CharacterStat, ...EnemyStat }),
         tags: z.array(z.string()),
         value: DatabaseNumberNodeSchema,

@@ -31,7 +31,7 @@ const createMockModifier = (
   id: number,
   characterId: number,
   target: 'self' | 'team' | 'activeCharacter' | 'enemy',
-  modifiedStats: Array<{
+  statList: Array<{
     stat: CharacterStat;
     value: number | GameDataStatReference;
     tags: Array<string>;
@@ -45,8 +45,7 @@ const createMockModifier = (
   w: 1,
   h: 1,
   description: 'Test modifier description',
-  target,
-  modifiedStats,
+  modifiedStats: statList.map((s) => ({ ...s, target })),
   name: `Modifier ${id}`,
   originType: 'Echo',
   capabilityType: CapabilityType.MODIFIER,
@@ -211,7 +210,7 @@ describe('toRotationModifier', () => {
     ]);
     const attack = createMockAttack(15_678, 32_132);
 
-    const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
+    const [result] = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
 
     expect(result.targets).toEqual([0]);
     const damageBonus = result.modifiedStats[CharacterStat.DAMAGE_BONUS]![0];
@@ -237,7 +236,7 @@ describe('toRotationModifier', () => {
     ]);
     const attack = createMockAttack(15_678, 1234);
 
-    const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
+    const [result] = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
 
     expect(result.targets).toEqual([1]);
     const damageBonus = result.modifiedStats[CharacterStat.DAMAGE_BONUS]![0];
@@ -260,7 +259,7 @@ describe('toRotationModifier', () => {
     ]);
     const attack = createMockAttack(15_678, 32_132);
 
-    const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
+    const [result] = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
 
     expect(result.targets).toEqual([0, 1, 2]);
     expect(result.modifiedStats[CharacterStat.DAMAGE_AMPLIFICATION]).toBeDefined();
@@ -276,7 +275,7 @@ describe('toRotationModifier', () => {
     ]);
     const attack = createMockAttack(15_678, 1234);
 
-    const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
+    const [result] = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
 
     expect(result.targets).toEqual([1]);
   });
@@ -291,7 +290,7 @@ describe('toRotationModifier', () => {
     ]);
     const attack = createMockAttack(15_678, 32_132);
 
-    const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
+    const [result] = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
 
     expect(result.targets).toEqual(['enemy']);
   });
@@ -311,7 +310,7 @@ describe('toRotationModifier', () => {
     ]);
     const attack = createMockAttack(15_678, 1234);
 
-    const result = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
+    const [result] = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
 
     expect(result.targets).toEqual([1]);
 

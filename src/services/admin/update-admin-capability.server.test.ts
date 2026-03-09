@@ -49,7 +49,6 @@ describe('updateAdminCapabilityHandler', () => {
       description: 'Updated Description',
       capabilityJson: {
         type: 'modifier',
-        target: 'self',
         modifiedStats: [],
       },
     });
@@ -60,7 +59,6 @@ describe('updateAdminCapabilityHandler', () => {
       description: 'Updated Description',
       capabilityJson: {
         type: 'modifier',
-        target: 'self',
         modifiedStats: [],
       },
     });

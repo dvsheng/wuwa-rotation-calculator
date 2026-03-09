@@ -131,8 +131,7 @@ const createMockCharacterData = (
   modifiers: Array<{
     id: number;
     name: string;
-    target: string;
-    modifiedStats: Array<{ stat: string; value: number; tags: Array<string> }>;
+    modifiedStats: Array<{ target: string; stat: string; value: number; tags: Array<string> }>;
   }> = [],
 ) => ({
   id,
@@ -247,9 +246,9 @@ describe('calculateRotation', () => {
         {
           id: AUGUSTA_CROWN_OF_WILLS_ID,
           name: 'Crown of Wills',
-          target: 'self',
           modifiedStats: [
             {
+              target: 'self',
               stat: CharacterStat.DAMAGE_BONUS,
               value: 0.15, // 15% Electro DMG Bonus at S0
               tags: [Tag.ELECTRO],
@@ -379,9 +378,8 @@ describe('calculateRotation', () => {
               originType: 'Inherent Skill',
               parentName: 'Negative Status',
               capabilityType: CapabilityType.MODIFIER,
-              target: 'enemy',
               modifiedStats: [
-                { stat: EnemyStat.AERO_EROSION, value: 9, tags: [Tag.ALL] },
+                { target: 'enemy', stat: EnemyStat.AERO_EROSION, value: 9, tags: [Tag.ALL] },
               ],
             };
           }
@@ -392,9 +390,9 @@ describe('calculateRotation', () => {
               originType: 'Inherent Skill',
               parentName: 'Negative Status',
               capabilityType: CapabilityType.MODIFIER,
-              target: 'team',
               modifiedStats: [
                 {
+                  target: 'team',
                   stat: CharacterStat.DEFENSE_IGNORE,
                   value: 0.3,
                   tags: [Attribute.AERO],
@@ -408,9 +406,9 @@ describe('calculateRotation', () => {
             originType: 'Inherent Skill',
             parentName: 'Negative Status',
             capabilityType: CapabilityType.MODIFIER,
-            target: 'team',
             modifiedStats: [
               {
+                target: 'team',
                 stat: CharacterStat.DAMAGE_AMPLIFICATION,
                 value: 1,
                 tags: [Tag.AERO_EROSION],
@@ -574,9 +572,9 @@ describe('calculateRotation', () => {
           parentName: 'Augusta',
           originType: 'Inherent Skill',
           capabilityType: CapabilityType.MODIFIER,
-          target: 'self',
           modifiedStats: [
             {
+              target: 'self',
               stat: CharacterStat.DAMAGE_BONUS,
               value: 0.15,
               tags: [Tag.ELECTRO],

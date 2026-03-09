@@ -101,7 +101,6 @@ const toModifier = (modifier: ModifierCapability): Modifier => {
     originType: modifier.skillOriginType,
     parentName: modifier.skillName,
     iconUrl: modifier.skillIconUrl ?? modifier.entityIconUrl ?? undefined,
-    target: json.target,
     modifiedStats: json.modifiedStats as Modifier['modifiedStats'],
   };
 };

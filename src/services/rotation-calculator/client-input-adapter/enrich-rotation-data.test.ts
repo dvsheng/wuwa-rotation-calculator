@@ -58,9 +58,9 @@ const mockModifierDetails = [
     name: 'Damage Buff',
     description: 'Increases damage',
     originType: 'Resonance Skill',
-    target: 'self' as const,
     modifiedStats: [
       {
+        target: 'self' as const,
         stat: CharacterStat.DAMAGE_BONUS,
         value: 0.2,
         tags: [Tag.ALL],
@@ -72,9 +72,9 @@ const mockModifierDetails = [
     name: 'Crit Buff',
     description: 'Increases crit rate',
     originType: 'Outro Skill',
-    target: 'team' as const,
     modifiedStats: [
       {
+        target: 'team' as const,
         stat: CharacterStat.CRITICAL_RATE,
         value: 0.15,
         tags: [Tag.ALL],
@@ -243,9 +243,9 @@ describe('createGameDataEnricher', () => {
         name: 'Damage Buff',
         description: 'Increases damage',
         originType: 'Resonance Skill',
-        target: 'self',
         modifiedStats: [
           {
+            target: 'self',
             stat: CharacterStat.DAMAGE_BONUS,
             value: 0.2,
             tags: [Tag.ALL],

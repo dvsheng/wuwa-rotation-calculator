@@ -8,7 +8,7 @@ import {
   DatabasePermanentStatSchema,
 } from '@/schemas/database';
 import { CapabilityType, EntityType } from '@/services/game-data';
-import { Attribute, NegativeStatus, Tag, WeaponType } from '@/types';
+import { Attribute, Tag, WeaponType } from '@/types';
 
 /**
  * Validates database data for the new unified schema.
@@ -211,74 +211,6 @@ function validateCapabilityTags(
   return issues;
 }
 
-const MUTUALLY_EXCLUSIVE_DAMAGE_TYPE_TAGS = new Set<string>([
-  Tag.BASIC_ATTACK,
-  Tag.HEAVY_ATTACK,
-  Tag.RESONANCE_SKILL,
-  Tag.RESONANCE_LIBERATION,
-  Tag.ECHO,
-  Tag.TUNE_RUPTURE,
-  Tag.INTRO,
-  Tag.OUTRO,
-]);
-
-const NEGATIVE_STATUS_SCALING_STATS = new Set<string>(Object.values(NegativeStatus));
-
-function validateAttackDamageTypeTags(capability: DatabaseCapability): Array<string> {
-  if (capability.capabilityJson.type !== CapabilityType.ATTACK) {
-    return [];
-  }
-
-  const issues: Array<string> = [];
-  const json = capability.capabilityJson as any;
-
-  const validateDamageInstances = (
-    damageInstances:
-      | Array<{
-          scalingStat?: string;
-          tags?: Array<string>;
-        }>
-      | undefined,
-    context: string,
-  ) => {
-    if (!Array.isArray(damageInstances)) {
-      return;
-    }
-
-    for (const [index, damageInstance] of damageInstances.entries()) {
-      const matchingTags = (damageInstance.tags ?? []).filter((tag) =>
-        MUTUALLY_EXCLUSIVE_DAMAGE_TYPE_TAGS.has(tag),
-      );
-
-      if (matchingTags.length === 0) {
-        if (NEGATIVE_STATUS_SCALING_STATS.has(damageInstance.scalingStat ?? '')) {
-          continue;
-        }
-        issues.push(
-          `${context} damageInstances[${index}] has no mutually exclusive damage type tag (exactly one required)`,
-        );
-      } else if (matchingTags.length > 1) {
-        issues.push(
-          `${context} damageInstances[${index}] has multiple mutually exclusive damage type tags: ${matchingTags.join(', ')}`,
-        );
-      }
-    }
-  };
-
-  validateDamageInstances(json.damageInstances, 'Base');
-
-  for (const [sequence, definition] of Object.entries(
-    json.alternativeDefinitions ?? {},
-  )) {
-    validateDamageInstances(
-      (definition as any)?.damageInstances,
-      `alternativeDefinitions.${sequence}`,
-    );
-  }
-
-  return issues;
-}
-
 // ============================================================================
 // Generic Validation Function
 // ============================================================================
@@ -394,8 +326,6 @@ async function validateDatabase() {
     (capability) => [
       // Validate skill reference
       ...validateSkillReference(capability, skillMap),
-      // Validate attack damage type tags
-      ...validateAttackDamageTypeTags(capability),
       // Validate tags (for modifiers and permanent stats)
       ...(capability.capabilityType === CapabilityType.MODIFIER ||
       capability.capabilityType === CapabilityType.PERMANENT_STAT

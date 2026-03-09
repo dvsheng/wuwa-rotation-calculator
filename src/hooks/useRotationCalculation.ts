@@ -12,7 +12,6 @@ type DamageDetail = ClientRotationResult['damageDetails'][number];
 export interface RotationResultMergedDamageDetail {
   detail: DamageDetail;
   attack: DetailedAttackInstance | undefined;
-  characterName: string;
 }
 
 export type RotationCalculationResult = ClientRotationResult & {
@@ -54,7 +53,6 @@ export const useRotationCalculation = () => {
       return {
         detail,
         attack,
-        characterName: attack?.characterName ?? 'Unknown',
       };
     }) ?? [];
   const attackCount = new Set(

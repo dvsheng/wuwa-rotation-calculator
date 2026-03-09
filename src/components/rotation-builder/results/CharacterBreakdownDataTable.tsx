@@ -1,4 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table';
+import { sumBy } from 'es-toolkit/math';
 import { ChevronDown, Info } from 'lucide-react';
 import { Fragment, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -29,50 +30,44 @@ const buildCharacterRows = ({
   mergedDamageDetails,
   totalDamage,
 }: CharacterBreakdownDataTableProperties): Array<CharacterBreakdownRow> => {
-  const byCharacter = new Map<
-    string,
-    { iconUrl?: string; totalDamage: number; byType: Record<string, number> }
-  >();
   const hitCountPerAttack = new Map<number, number>();
-
-  for (const { detail, attack, characterName } of mergedDamageDetails) {
+  const enriched = mergedDamageDetails.map(({ detail, attack }) => {
     const hitIndex = hitCountPerAttack.get(detail.attackIndex) ?? 0;
     hitCountPerAttack.set(detail.attackIndex, hitIndex + 1);
+    return {
+      detail,
+      attack,
+      characterName: attack?.characterName ?? '',
+      damageType: attack?.damageInstances[hitIndex]?.damageType ?? 'unknown',
+    };
+  });
 
-    let existing = byCharacter.get(characterName);
-    if (!existing) {
-      existing = {
-        iconUrl: attack?.characterIconUrl,
-        totalDamage: 0,
-        byType: {},
+  const byCharacter = Object.groupBy(enriched, (item) => item.characterName);
+  return Object.entries(byCharacter)
+    .filter(([characterName]) => characterName !== '')
+    .map(([characterName, items]) => {
+      const iconUrl = items!.find((item) => item.attack?.characterIconUrl)?.attack
+        ?.characterIconUrl;
+      const charTotalDamage = sumBy(items ?? [], (item) => item.detail.damage);
+      const byType = Object.groupBy(items!, (item) => item.damageType);
+      const damageTypes = Object.entries(byType)
+        .map(([damageType, typeItems]) => {
+          const damage = sumBy(typeItems ?? [], (item) => item.detail.damage);
+          return {
+            damageType,
+            damage,
+            pctOfCharacter: charTotalDamage > 0 ? (damage / charTotalDamage) * 100 : 0,
+          };
+        })
+        .toSorted((a, b) => b.damage - a.damage);
+      return {
+        characterName,
+        iconUrl,
+        totalDamage: charTotalDamage,
+        pctOfTotal: totalDamage > 0 ? (charTotalDamage / totalDamage) * 100 : 0,
+        damageTypes,
       };
-    }
-
-    if (!existing.iconUrl && attack?.characterIconUrl) {
-      existing.iconUrl = attack.characterIconUrl;
-    }
-
-    const damageType = attack?.damageInstances[hitIndex]?.damageType ?? 'unknown';
-    existing.byType[damageType] = (existing.byType[damageType] ?? 0) + detail.damage;
-    existing.totalDamage += detail.damage;
-
-    byCharacter.set(characterName, existing);
-  }
-
-  return [...byCharacter.entries()]
-    .map(([characterName, item]) => ({
-      characterName,
-      iconUrl: item.iconUrl,
-      totalDamage: item.totalDamage,
-      pctOfTotal: totalDamage > 0 ? (item.totalDamage / totalDamage) * 100 : 0,
-      damageTypes: Object.entries(item.byType)
-        .map(([damageType, damage]) => ({
-          damageType,
-          damage,
-          pctOfCharacter: item.totalDamage > 0 ? (damage / item.totalDamage) * 100 : 0,
-        }))
-        .toSorted((a, b) => b.damage - a.damage),
-    }))
+    })
     .toSorted((a, b) => b.totalDamage - a.totalDamage);
 };
 
@@ -82,7 +77,7 @@ export const CharacterBreakdownDataTable = ({
 }: CharacterBreakdownDataTableProperties) => {
   const { inspectorPortalNode } = useRotationResultPopover();
   const [expandedCharacters, setExpandedCharacters] = useState<Set<string>>(
-    new Set(mergedDamageDetails.map((row) => row.characterName)),
+    new Set(mergedDamageDetails.map((row) => row.attack?.characterName ?? '')),
   );
   const [selectedCharacterName, setSelectedCharacterName] = useState<
     string | undefined

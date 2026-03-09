@@ -1,5 +1,5 @@
 import { createMiddleware } from '@tanstack/react-start';
-import { getWebRequest } from '@tanstack/react-start/server';
+import { getRequest } from '@tanstack/react-start/server';
 
 import { auth } from '@/lib/auth';
 
@@ -10,7 +10,7 @@ export interface AuthContext {
 export const authMiddleware = createMiddleware({ type: 'function' })
   .client(async ({ next }) => next())
   .server(async ({ next }) => {
-    const request = getWebRequest();
+    const request = getRequest();
     const session = await auth.api.getSession({ headers: request.headers });
 
     if (!session) {

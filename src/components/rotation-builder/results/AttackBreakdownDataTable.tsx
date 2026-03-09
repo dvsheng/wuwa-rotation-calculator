@@ -46,7 +46,8 @@ export const AttackBreakdownDataTable = ({
   const groupMap = new Map<number, AttackGroup>();
   const hitCountPerAttack = new Map<number, number>();
 
-  for (const { detail, attack, characterName } of mergedDamageDetails) {
+  for (const { detail, attack } of mergedDamageDetails) {
+    const characterName = attack?.characterName ?? '';
     const hitIndex = hitCountPerAttack.get(detail.attackIndex) ?? 0;
     hitCountPerAttack.set(detail.attackIndex, hitIndex + 1);
 

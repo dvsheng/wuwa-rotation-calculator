@@ -10,7 +10,6 @@ import {
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 
 import { AppShell } from '@/components/AppShell';
-import '@/lib/amplify';
 import { Toaster } from '@/components/ui/sonner';
 import appCss from '@/styles.css?url';
 

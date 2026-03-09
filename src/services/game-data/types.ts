@@ -233,9 +233,10 @@ export type Modifier<T = {}> = ModifierBase & T;
 export interface AttackDamageInstance {
   /** Motion value — Tier 2 only: fixed, refine-scalable, or user-parameterized. */
   motionValue: GameDataUserNumber;
-  /** TODO: these should be non-optional fields and part of data modeling */
-  damageType?: DamageType;
-  attribute?: Attribute;
+  /** The elemental attribute of this damage instance. */
+  attribute: Attribute;
+  /** The damage type of this instance (e.g. basicAttack, resonanceSkill). */
+  damageType: DamageType;
   tags: Array<string>;
   scalingStat: AttackScalingProperty;
 }
@@ -244,8 +245,6 @@ export interface AttackDamageInstance {
  * Internal base for attacks.
  */
 interface AttackBase extends BaseCapability {
-  /** The elemental attribute of the damage */
-  attribute: Attribute;
   /** Individual damage instances, each with their own motion value, tags, and scaling stat */
   damageInstances: Array<AttackDamageInstance>;
 }

@@ -1,3 +1,4 @@
+import { Attribute } from './attribute';
 import { NegativeStatus } from './negative-status';
 
 /**
@@ -65,6 +66,10 @@ export interface CharacterDamageInstance {
    * For negative attributes, the motion value is the number of negative status stacks
    */
   motionValue: number;
+  /** The elemental attribute of this damage instance. */
+  attribute: Attribute;
+  /** The damage type of this instance (e.g. basicAttack, resonanceSkill). */
+  damageType: DamageType;
   tags: Array<string>;
 }
 

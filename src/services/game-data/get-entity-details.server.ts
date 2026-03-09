@@ -5,8 +5,6 @@ import { database } from '@/db/client';
 import type { DatabaseFullCapability } from '@/db/schema';
 import { fullCapabilities } from '@/db/schema';
 import type { GetEntityDetailsRequest } from '@/schemas/game-data-service';
-import { Attribute, DamageType } from '@/types';
-import type { CharacterDamageInstance } from '@/types';
 
 import { toClientAttack, toClientBuff } from './client-type-adapters';
 import {
@@ -60,7 +58,26 @@ const isCapabilityActive = (
 };
 
 /**
- * Convert fullCapabilities record to Attack format (flattening capabilityJson)
+ * Builds the runtime tags array for a damage instance.
+ *
+ * The DB stores `attribute` and `damageType` as dedicated fields rather than
+ * tags. They are injected back into the tags array here so that the
+ * calculation engine's tag-based modifier filtering continues to work.
+ * The capability name is also appended so that modifiers can target a
+ * specific named attack.
+ */
+export const buildDamageInstanceTags = (
+  tags: Array<string>,
+  attribute: string,
+  damageType: string,
+  capabilityName?: string | null,
+): Array<string> => compact([...tags, capabilityName, attribute, damageType]);
+
+/**
+ * Convert fullCapabilities record to Attack format (flattening capabilityJson).
+ * attribute and damageType are stored as dedicated fields on each damage instance.
+ * They are also injected into the tags array so the calculation engine can filter
+ * modifiers by element and damage type using its tag-based system.
  */
 const toAttack = (attack: AttackCapability): Attack => {
   const json = attack.capabilityJson;
@@ -72,19 +89,10 @@ const toAttack = (attack: AttackCapability): Attack => {
     originType: attack.skillOriginType,
     parentName: attack.skillName,
     iconUrl: attack.skillIconUrl ?? attack.entityIconUrl ?? undefined,
-    attribute: json.attribute,
-    damageInstances: (json.damageInstances as Array<CharacterDamageInstance>).map(
-      (di) => ({
-        ...di,
-        attribute: (di.tags.find((value) =>
-          Object.values(Attribute).includes(value as Attribute),
-        ) ?? attack.attribute) as Attribute,
-        damageType: di.tags.find((value) =>
-          Object.values(DamageType).includes(value as DamageType),
-        ) as DamageType,
-        tags: compact([...di.tags, attack.capabilityName, json.attribute]),
-      }),
-    ),
+    damageInstances: json.damageInstances.map((di) => ({
+      ...di,
+      tags: buildDamageInstanceTags(di.tags, di.attribute, di.damageType, attack.capabilityName),
+    })),
   };
 };
 

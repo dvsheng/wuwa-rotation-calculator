@@ -8,7 +8,7 @@ import {
   DatabasePermanentStatSchema,
 } from '@/schemas/database';
 import { CapabilityType, EntityType } from '@/services/game-data';
-import { Attribute, NegativeStatus, Tag, WeaponType } from '@/types';
+import { Attribute, DamageType, Tag, WeaponType } from '@/types';
 
 /**
  * Validates database data for the new unified schema.
@@ -211,20 +211,10 @@ function validateCapabilityTags(
   return issues;
 }
 
-const MUTUALLY_EXCLUSIVE_DAMAGE_TYPE_TAGS = new Set<string>([
-  Tag.BASIC_ATTACK,
-  Tag.HEAVY_ATTACK,
-  Tag.RESONANCE_SKILL,
-  Tag.RESONANCE_LIBERATION,
-  Tag.ECHO,
-  Tag.TUNE_RUPTURE,
-  Tag.INTRO,
-  Tag.OUTRO,
-]);
+const VALID_DAMAGE_TYPES = new Set<string>(Object.values(DamageType));
+const VALID_ATTRIBUTES = new Set<string>(Object.values(Attribute));
 
-const NEGATIVE_STATUS_SCALING_STATS = new Set<string>(Object.values(NegativeStatus));
-
-function validateAttackDamageTypeTags(capability: DatabaseCapability): Array<string> {
+function validateAttackDamageInstanceFields(capability: DatabaseCapability): Array<string> {
   if (capability.capabilityJson.type !== CapabilityType.ATTACK) {
     return [];
   }
@@ -233,12 +223,7 @@ function validateAttackDamageTypeTags(capability: DatabaseCapability): Array<str
   const json = capability.capabilityJson as any;
 
   const validateDamageInstances = (
-    damageInstances:
-      | Array<{
-          scalingStat?: string;
-          tags?: Array<string>;
-        }>
-      | undefined,
+    damageInstances: Array<{ attribute?: string; damageType?: string }> | undefined,
     context: string,
   ) => {
     if (!Array.isArray(damageInstances)) {
@@ -246,20 +231,15 @@ function validateAttackDamageTypeTags(capability: DatabaseCapability): Array<str
     }
 
     for (const [index, damageInstance] of damageInstances.entries()) {
-      const matchingTags = (damageInstance.tags ?? []).filter((tag) =>
-        MUTUALLY_EXCLUSIVE_DAMAGE_TYPE_TAGS.has(tag),
-      );
-
-      if (matchingTags.length === 0) {
-        if (NEGATIVE_STATUS_SCALING_STATS.has(damageInstance.scalingStat ?? '')) {
-          continue;
-        }
+      if (!damageInstance.attribute || !VALID_ATTRIBUTES.has(damageInstance.attribute)) {
         issues.push(
-          `${context} damageInstances[${index}] has no mutually exclusive damage type tag (exactly one required)`,
+          `${context} damageInstances[${index}] is missing a valid 'attribute' field (required on all instances)`,
         );
-      } else if (matchingTags.length > 1) {
+      }
+
+      if (!damageInstance.damageType || !VALID_DAMAGE_TYPES.has(damageInstance.damageType)) {
         issues.push(
-          `${context} damageInstances[${index}] has multiple mutually exclusive damage type tags: ${matchingTags.join(', ')}`,
+          `${context} damageInstances[${index}] is missing a valid 'damageType' field (required on all instances)`,
         );
       }
     }
@@ -394,8 +374,8 @@ async function validateDatabase() {
     (capability) => [
       // Validate skill reference
       ...validateSkillReference(capability, skillMap),
-      // Validate attack damage type tags
-      ...validateAttackDamageTypeTags(capability),
+      // Validate that each attack damage instance has required attribute and damageType fields
+      ...validateAttackDamageInstanceFields(capability),
       // Validate tags (for modifiers and permanent stats)
       ...(capability.capabilityType === CapabilityType.MODIFIER ||
       capability.capabilityType === CapabilityType.PERMANENT_STAT

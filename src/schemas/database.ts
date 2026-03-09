@@ -5,6 +5,7 @@ import {
   AttackScalingProperty,
   Attribute,
   CharacterStat,
+  DamageType,
   EnemyStat,
   Tag,
 } from '@/types';
@@ -146,13 +147,16 @@ export const DatabaseNumberNodeSchema: z.ZodType<DatabaseNumberNode> = z.lazy(()
 const DatabaseAttackDamageInstanceSchema = z.object({
   // motionValue is Tier 2 only — attack coefficients are never stat-dependent.
   motionValue: DatabaseUserNumberSchema,
+  /** The elemental attribute of this damage instance. Always required. */
+  attribute: z.enum(Attribute),
+  /** The damage type for this instance (e.g. basicAttack, resonanceSkill). */
+  damageType: z.enum(DamageType),
   tags: z.array(z.enum(Tag)),
   scalingStat: z.enum(AttackScalingProperty),
 });
 
 const DatabaseBaseAttackDataSchema = z
   .object({
-    attribute: z.enum(Attribute),
     damageInstances: z.array(DatabaseAttackDamageInstanceSchema),
   })
   .strict();

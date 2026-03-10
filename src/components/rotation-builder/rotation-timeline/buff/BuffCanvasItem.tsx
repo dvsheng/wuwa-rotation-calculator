@@ -8,6 +8,7 @@ import { ParameterConfigurationDialog } from '@/components/common/ParameterConfi
 import { TrashButton } from '@/components/common/TrashButton';
 import { Button } from '@/components/ui/button';
 import { Item, ItemActions, ItemContent, ItemMedia } from '@/components/ui/item';
+import { Row } from '@/components/ui/layout';
 import {
   getAlignmentSegments,
   useSelfBuffAlignment,
@@ -121,7 +122,11 @@ export const BuffCanvasItem = ({
             />
           ))}
           {/* Sticky left: icons and name stay visible as the item scrolls */}
-          <div className="sticky left-0 z-10 flex shrink-0 items-center gap-2 bg-inherit">
+          <Row
+            align="center"
+            gap="compact"
+            className="sticky left-0 z-10 shrink-0 bg-inherit"
+          >
             <ItemMedia>
               <EntityIconDisplay url={buff.characterIconUrl} size="medium" />
             </ItemMedia>
@@ -136,7 +141,7 @@ export const BuffCanvasItem = ({
                 className="size-5 shrink-0 text-amber-500"
               />
             )}
-          </div>
+          </Row>
           <div className="flex-1" />
           {/* Sticky right: actions stay visible as the item scrolls */}
           <ItemActions className="sticky right-0 z-10 bg-inherit">

@@ -1,15 +1,15 @@
-import { Info } from 'lucide-react';
+import { SwatchBook } from 'lucide-react';
 import { useState } from 'react';
 
 import { CapabilityIcon } from '@/components/common/CapabilityIcon';
 import { CapabilityTooltip } from '@/components/common/CapabilityTooltip';
+import { DashboardSectionHeader } from '@/components/common/DashboardSectionHeader';
 import { sortAttackOrigins } from '@/components/rotation-builder/constants';
 import { Input } from '@/components/ui/input';
 import { Item } from '@/components/ui/item';
-import { Row, Stack } from '@/components/ui/layout';
+import { Stack } from '@/components/ui/layout';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Text } from '@/components/ui/typography';
 import type { DetailedAttack, DetailedModifier } from '@/hooks/useTeamDetails';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
@@ -261,23 +261,11 @@ export const CapabilitySidebar = ({
   return (
     <Stack className="relative h-full min-h-0">
       <Stack className="border-border gap-y-tight h-fit border-b">
-        <Row
-          align="center"
-          justify="start"
-          className="canvas-header border-border gap-compact px-panel border-b"
-        >
-          <Text as="span" variant="heading">
-            Palette
-          </Text>
-          <Tooltip>
-            <TooltipContent side="right">
-              Click or drag capabilities onto the canvas to add them to your rotation
-            </TooltipContent>
-            <TooltipTrigger asChild>
-              <Info className="text-muted-foreground size-3.5 shrink-0" />
-            </TooltipTrigger>
-          </Tooltip>
-        </Row>
+        <DashboardSectionHeader
+          title="Palette"
+          description="Click or drag capabilities onto the canvas to add them to your rotation."
+          icon={<SwatchBook />}
+        />
         <Stack gap="tight" className="px-panel pb-panel">
           <Text as="label" variant="overline">
             Search

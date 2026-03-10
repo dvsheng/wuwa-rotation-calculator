@@ -1,6 +1,7 @@
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, BarChart2, ListTree } from 'lucide-react';
 import { useState } from 'react';
 
+import { DashboardSectionHeader } from '@/components/common/DashboardSectionHeader';
 import { Container, Row, Stack } from '@/components/ui/layout';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -24,18 +25,12 @@ export const RotationResultContainer = () => {
     <Container className="h-full min-h-0">
       <Row align="stretch" className="h-full min-h-0">
         <Stack className="min-h-0 flex-1 overflow-hidden">
-          <Row
-            justify="between"
-            align="center"
-            className="canvas-header border-border px-panel border-b"
-          >
-            <Text as="span" variant="heading">
-              Results
-            </Text>
-            <Text as="span" variant="caption">
-              {result.attackCount} {result.attackCount === 1 ? 'attack' : 'attacks'}
-            </Text>
-          </Row>
+          <DashboardSectionHeader
+            title="Results"
+            subtitle={`${result.attackCount} ${result.attackCount === 1 ? 'attack' : 'attacks'}`}
+            description="Calculated damage output for your current rotation."
+            icon={<BarChart2 />}
+          />
           <Stack gap="component" className="p-page min-h-0 flex-1">
             {isStale && (
               <Row className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-amber-500">
@@ -86,15 +81,11 @@ export const RotationResultContainer = () => {
 
         <Separator orientation="vertical" className="self-stretch" />
         <Stack className="min-h-0 w-2xl overflow-hidden">
-          <Row
-            justify="between"
-            align="center"
-            className="canvas-header border-border px-panel border-b"
-          >
-            <Text as="span" variant="heading">
-              Details
-            </Text>
-          </Row>
+          <DashboardSectionHeader
+            title="Details"
+            description="Select a row in Results to inspect detailed stat contributions."
+            icon={<ListTree />}
+          />
           <Stack
             ref={(node) => setInspectorPortalNode(node ?? undefined)}
             className="p-page min-h-0 flex-1 overflow-y-auto"

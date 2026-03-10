@@ -1,9 +1,7 @@
-import { Info } from 'lucide-react';
+import { Sword } from 'lucide-react';
 
+import { DashboardSectionHeader } from '@/components/common/DashboardSectionHeader';
 import { Button } from '@/components/ui/button';
-import { Row } from '@/components/ui/layout';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Text } from '@/components/ui/typography';
 import { useStore } from '@/store';
 
 export const RotationCanvasHeader = () => {
@@ -12,32 +10,16 @@ export const RotationCanvasHeader = () => {
   const clearAll = useStore((state) => state.clearAll);
 
   return (
-    <Row
-      justify="between"
-      align="center"
-      className="canvas-header border-border px-panel border-b"
-    >
-      <Row align="center" className="gap-compact">
-        <Text as="span" variant="heading">
-          Rotation
-        </Text>
-        <Text as="span" variant="caption">
-          ({attacks.length} {attacks.length === 1 ? 'attack' : 'attacks'},{' '}
-          {buffs.length} {buffs.length === 1 ? 'buff' : 'buffs'})
-        </Text>
-        <Tooltip>
-          <TooltipContent side="right">
-            Drag attacks and buffs from the sidebar onto the canvas to build your
-            rotation
-          </TooltipContent>
-          <TooltipTrigger asChild>
-            <Info className="text-muted-foreground size-3.5 shrink-0" />
-          </TooltipTrigger>
-        </Tooltip>
-      </Row>
-      <Button variant="destructive" size="xs" onClick={clearAll}>
-        Clear All
-      </Button>
-    </Row>
+    <DashboardSectionHeader
+      title="Rotation"
+      subtitle={`(${attacks.length} ${attacks.length === 1 ? 'attack' : 'attacks'}, ${buffs.length} ${buffs.length === 1 ? 'buff' : 'buffs'})`}
+      description="Drag attacks and buffs from the palette to build your timeline."
+      icon={<Sword />}
+      action={
+        <Button variant="destructive" size="xs" onClick={clearAll}>
+          Clear All
+        </Button>
+      }
+    />
   );
 };

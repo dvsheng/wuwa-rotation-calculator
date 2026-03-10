@@ -4,8 +4,6 @@ Default character stat builder
 
 have buff desciptions follow you around as you pan
 
-support personal mechanics
-
 sensitivity analysis
 
 export to sheet

@@ -108,7 +108,6 @@ describe('resolveRefineScaling', () => {
 
       // Strings should be preserved
       expect(result.modifiers[0].id).toBe('mod-1');
-      expect(result.modifiers[0].target).toBe('self');
       expect(result.permanentStats[0].tags).toEqual(['all']);
     });
   });

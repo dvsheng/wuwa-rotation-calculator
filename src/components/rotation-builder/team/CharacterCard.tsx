@@ -1,6 +1,5 @@
 import { Suspense } from 'react';
 
-import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Card, CardContent } from '@/components/ui/card';
 import { Stack } from '@/components/ui/layout';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -32,23 +31,21 @@ export const CharacterCard = ({ index }: CharacterCardProperties) => {
   return (
     <Card className="w-120">
       <CardContent>
-        <ErrorBoundary>
-          <Suspense fallback={<CharacterCardSkeleton />}>
-            <Stack gap="panel">
-              <CharacterSelector index={index} />
-              <WeaponSelector index={index} />
-              <EchoSetSelector index={index} />
-              <PrimaryEchoSelector index={index} />
-              {Array.from({ length: ECHO_PIECE_COUNT }, (_, echoIndex) => (
-                <EchoPieceEditor
-                  key={echoIndex}
-                  characterIndex={index}
-                  echoIndex={echoIndex}
-                />
-              ))}
-            </Stack>
-          </Suspense>
-        </ErrorBoundary>
+        <Suspense fallback={<CharacterCardSkeleton />}>
+          <Stack gap="panel">
+            <CharacterSelector index={index} />
+            <WeaponSelector index={index} />
+            <EchoSetSelector index={index} />
+            <PrimaryEchoSelector index={index} />
+            {Array.from({ length: ECHO_PIECE_COUNT }, (_, echoIndex) => (
+              <EchoPieceEditor
+                key={echoIndex}
+                characterIndex={index}
+                echoIndex={echoIndex}
+              />
+            ))}
+          </Stack>
+        </Suspense>
       </CardContent>
     </Card>
   );

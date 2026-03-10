@@ -5,7 +5,6 @@ import type { Construct } from 'constructs';
 import { ApiGateway } from './constructs/ApiGateway';
 import { AssetBucket } from './constructs/AssetBucket';
 import { AssetDeployment } from './constructs/AssetDeployment';
-import { Cognito } from './constructs/Cognito';
 import { Database } from './constructs/Database';
 import { Distribution } from './constructs/Distribution';
 import { Server } from './constructs/Server';
@@ -38,26 +37,29 @@ export class WuwaRotationBuilderStack extends cdk.Stack {
       bucket: bucket.assetsBucket,
     });
 
-    const distributionUrl = `https://${distribution.distribution.distributionDomainName}`;
-    const localUrl = 'http://localhost:3000';
+    const googleClientSecretName = this.node.tryGetContext(
+      'googleClientSecretName',
+    ) as string;
+    const betterAuthSecretName = this.node.tryGetContext(
+      'betterAuthSecretName',
+    ) as string;
 
-    const cognito = new Cognito(this, 'Cognito', {
-      googleClientId: this.node.tryGetContext('googleClientId') as string,
-      googleClientSecretName: this.node.tryGetContext(
-        'googleClientSecretName',
-      ) as string,
-      domainPrefix: this.node.tryGetContext('cognitoDomainPrefix') as string,
-      callbackUrls: [localUrl, distributionUrl],
-      logoutUrls: [localUrl, distributionUrl],
-    });
-
-    // Add Cognito env vars after both Server and Cognito are constructed
-    server.function.addEnvironment('COGNITO_USER_POOL_ID', cognito.userPool.userPoolId);
     server.function.addEnvironment(
-      'COGNITO_USER_POOL_CLIENT_ID',
-      cognito.userPoolClient.userPoolClientId,
+      'BETTER_AUTH_URL',
+      this.node.tryGetContext('appUrl') as string,
     );
-
+    server.function.addEnvironment(
+      'GOOGLE_CLIENT_ID',
+      this.node.tryGetContext('googleClientId') as string,
+    );
+    server.function.addEnvironment(
+      'GOOGLE_CLIENT_SECRET',
+      cdk.SecretValue.secretsManager(googleClientSecretName).unsafeUnwrap(),
+    );
+    server.function.addEnvironment(
+      'BETTER_AUTH_SECRET',
+      cdk.SecretValue.secretsManager(betterAuthSecretName).unsafeUnwrap(),
+    );
     new AssetDeployment(this, 'Deployment', {
       bucket: bucket.assetsBucket,
       distribution: distribution.distribution,

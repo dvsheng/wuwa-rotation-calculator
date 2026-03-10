@@ -181,7 +181,7 @@ export const toRotationModifier = (
 
   return Object.entries(statsByTarget).map(([target, statsForTarget]) => {
     const modifiedStats = Object.groupBy(
-      (statsForTarget ?? []).map((stat) => ({
+      statsForTarget.map((stat) => ({
         ...stat,
         value: resolveStatReferences(stat.value, characterSlotNumber),
         name: modifier.name,
@@ -191,7 +191,11 @@ export const toRotationModifier = (
     );
 
     return {
-      targets: resolveModifierTarget(target, characterSlotNumber, activeCharacterSlotNumber),
+      targets: resolveModifierTarget(
+        target,
+        characterSlotNumber,
+        activeCharacterSlotNumber,
+      ),
       modifiedStats,
     };
   });

@@ -29,7 +29,7 @@ describe('useTeamAttackInstances', () => {
           capabilityType: CapabilityType.ATTACK,
           damageInstances: [],
           parameters: [],
-        },
+        } as any,
         {
           id: 10,
           characterId: 1002,
@@ -42,7 +42,7 @@ describe('useTeamAttackInstances', () => {
           capabilityType: CapabilityType.ATTACK,
           damageInstances: [],
           parameters: [],
-        },
+        } as any,
       ],
       buffs: [],
       isLoading: false,

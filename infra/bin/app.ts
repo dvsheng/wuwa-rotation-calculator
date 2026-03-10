@@ -1,7 +1,12 @@
 #!/usr/bin/env node
+import path from 'node:path';
+
 import * as cdk from 'aws-cdk-lib';
+import { config } from 'dotenv';
 
 import { WuwaRotationBuilderStack } from '../lib/stack';
+
+config({ path: path.resolve(__dirname, '../../.env'), quiet: true });
 
 const app = new cdk.App();
 

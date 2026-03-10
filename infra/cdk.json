@@ -50,14 +50,7 @@
     "@aws-cdk/aws-ec2:ipv6IncorrectSubnetCidrAllowedInV22100": false,
     "googleClientId": "456233492244-2nhv7m4cme8q9s0hipl9b44ad81h2139.apps.googleusercontent.com",
     "googleClientSecretName": "oauth-client-secret",
-    "cognitoDomainPrefix": "wuwa-rotation",
-    "cognitoCallbackUrls": [
-      "http://localhost:3000/",
-      "https://d3cmchfh91t9xk.cloudfront.net/"
-    ],
-    "cognitoLogoutUrls": [
-      "http://localhost:3000/",
-      "https://d3cmchfh91t9xk.cloudfront.net/"
-    ]
+    "betterAuthSecretName": "better-auth-secret",
+    "appUrl": "https://d3cmchfh91t9xk.cloudfront.net/"
   }
 }

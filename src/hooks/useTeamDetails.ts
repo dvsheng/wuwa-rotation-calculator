@@ -1,13 +1,11 @@
 import { useQueries } from '@tanstack/react-query';
-import { useEffect } from 'react';
-import { toast } from 'sonner';
 
 import type {
   ClientAttack,
   ClientModifier,
   GetClientEntityDetailsResponse,
 } from '@/services/game-data';
-import { EntityType, getClientEntityById } from '@/services/game-data';
+import { EntityType, Target, getClientEntityById } from '@/services/game-data';
 import { useStore } from '@/store';
 
 interface ClientCharacterDetails {
@@ -21,14 +19,16 @@ export type DetailedAttack = ClientCharacterDetails & ClientAttack;
 
 export type DetailedModifier = ClientCharacterDetails & ClientModifier;
 
-export interface UseTeamDetailsResult {
-  attacks: Array<DetailedAttack>;
-  buffs: Array<DetailedModifier>;
-  isLoading: boolean;
-  isError: boolean;
-}
+export type UseTeamDetailsResult = ReturnType<typeof useTeamDetails>;
 
-export const useTeamDetails = (): UseTeamDetailsResult => {
+const TARGET_ORDERING = [
+  Target.TEAM,
+  Target.ENEMY,
+  Target.ACTIVE_CHARACTER,
+  Target.SELF,
+];
+
+export const useTeamDetails = () => {
   const team = useStore((state) => state.team);
   const queryMetadata = team.flatMap((character) => {
     const items = [
@@ -146,13 +146,21 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
 
         const { characterId, entityId } = queryMetadata[index];
         const character = characterMap.get(characterId);
-        return data.modifiers.map((modifier) => ({
-          ...modifier,
-          entityId,
-          characterId,
-          characterName: character?.name ?? '',
-          characterIconUrl: character?.iconUrl,
-        }));
+        return data.modifiers.map((modifier) => {
+          const target = modifier.modifiedStats
+            .map((stat) => stat.target)
+            .toSorted(
+              (a, b) => TARGET_ORDERING.indexOf(a) - TARGET_ORDERING.indexOf(b),
+            )[0];
+          const modifierWithTarget = { ...modifier, target };
+          return {
+            ...modifierWithTarget,
+            entityId,
+            characterId,
+            characterName: character?.name ?? '',
+            characterIconUrl: character?.iconUrl,
+          };
+        });
       });
 
       return {
@@ -163,11 +171,6 @@ export const useTeamDetails = (): UseTeamDetailsResult => {
       };
     },
   });
-
-  useEffect(() => {
-    if (!result.isError) return;
-    toast.error('Failed to load some team details');
-  }, [result.isError]);
 
   return result;
 };

@@ -97,6 +97,8 @@ const makeBuff = (x: number, w: number, withStackConfig = false) => ({
   y: 0,
   w,
   h: 1,
+  iconUrl: '',
+  characterIconUrl: '',
 });
 
 beforeEach(() => {

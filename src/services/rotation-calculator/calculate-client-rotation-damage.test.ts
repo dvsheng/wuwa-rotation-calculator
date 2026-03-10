@@ -132,7 +132,12 @@ const createMockCharacterData = (
   modifiers: Array<{
     id: number;
     name: string;
-    modifiedStats: Array<{ target: string; stat: string; value: number; tags: Array<string> }>;
+    modifiedStats: Array<{
+      target: string;
+      stat: string;
+      value: number;
+      tags: Array<string>;
+    }>;
   }> = [],
 ) => ({
   id,
@@ -382,7 +387,12 @@ describe('calculateRotation', () => {
               parentName: 'Negative Status',
               capabilityType: CapabilityType.MODIFIER,
               modifiedStats: [
-                { target: 'enemy', stat: EnemyStat.AERO_EROSION, value: 9, tags: [Tag.ALL] },
+                {
+                  target: 'enemy',
+                  stat: EnemyStat.AERO_EROSION,
+                  value: 9,
+                  tags: [Tag.ALL],
+                },
               ],
             };
           }

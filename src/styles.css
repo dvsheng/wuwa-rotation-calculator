@@ -251,66 +251,9 @@ code {
   border-radius: var(--radius);
 }
 
-/* 1. Target the item container */
 .react-grid-item {
-  /* This ensures the handle (which is a child) doesn't poke out */
-  overflow: hidden;
-}
-
-/* 2. Style the handle to be a seamless bar */
-.react-grid-item > .react-resizable-handle-e {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 5px;
-  height: 100% !important;
-  cursor: col-resize;
-
-  /* Matches the dark grey cap in your screenshot */
-  background-color: rgba(0, 0, 0, 0.15);
-
-  /* Crucial: Match your pill's rounding on the right side only */
-  border-top-right-radius: 6px;
-  border-bottom-right-radius: 6px;
-  transition: background-color 0.2s;
-}
-
-/* 3. Remove the default L-shaped icon */
-.react-grid-item > .react-resizable-handle-e::after {
-  content: none;
-}
-
-/* 4. Hover effect to make it feel responsive */
-.react-grid-item > .react-resizable-handle-e:hover {
-  background-color: rgba(0, 0, 0, 0.25);
-}
-
-/* West (left) resize handle */
-.react-grid-item > .react-resizable-handle-w {
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 5px;
-  height: 100% !important;
-  cursor: col-resize;
-
-  /* Matches the dark grey cap */
-  background-color: rgba(0, 0, 0, 0.15);
-
-  /* Match rounding on the left side */
-  border-top-left-radius: 6px;
-  border-bottom-left-radius: 6px;
-  transition: background-color 0.2s;
-}
-
-/* Remove the default L-shaped icon */
-.react-grid-item > .react-resizable-handle-w::after {
-  content: none;
-}
-
-/* Hover effect */
-.react-grid-item > .react-resizable-handle-w:hover {
-  background-color: rgba(0, 0, 0, 0.25);
+  /* overflow: clip clips children visually but does NOT create a scroll
+     container, so position: sticky on descendants still propagates to the
+     real scroll ancestor and works correctly. */
+  overflow: clip;
 }

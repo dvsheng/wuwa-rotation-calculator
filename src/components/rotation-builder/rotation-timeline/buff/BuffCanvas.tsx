@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import type { Ref } from 'react';
 import type { Layout, LayoutItem } from 'react-grid-layout';
 import GridLayout from 'react-grid-layout';
 
 import { Text } from '@/components/ui/typography';
 import { useCanvasLayout } from '@/hooks/useCanvasLayout';
 import { useTeamModifierInstances } from '@/hooks/useTeamModifierInstances';
+import { cn } from '@/lib/utils';
 import { useStore } from '@/store';
 
 import { BUFF_LENGTH_ON_ADD } from '../RotationTimelineBuilder';
@@ -29,7 +31,25 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
 
   const { layout: fullLayoutProperties, isInteracting } = useCanvasLayout({
     gridConfig: { rowHeight: 48 },
-    resizeConfig: { enabled: isGridInteractable, handles: ['e', 'w'] },
+    resizeConfig: {
+      enabled: isGridInteractable,
+      handles: ['e', 'w'],
+      // Render handles as styled React elements rather than CSS-positioned divs.
+      // react-grid-layout types this ref generically as Ref<HTMLElement>; the cast
+      // to Ref<HTMLDivElement> is safe because HTMLDivElement extends HTMLElement.
+      handleComponent: (axis, reference) => (
+        <div
+          ref={reference as Ref<HTMLDivElement>}
+          className={cn(
+            'react-resizable-handle',
+            `react-resizable-handle-${axis}`,
+            'absolute inset-y-0 z-20 w-1.5 cursor-col-resize overflow-hidden rounded-md',
+            'bg-muted-foreground/20 hover:bg-muted-foreground/40 transition-colors',
+            axis === 'e' ? 'right-0' : 'left-0',
+          )}
+        />
+      ),
+    },
     dragConfig: { enabled: isGridInteractable },
     layout: buffs.map((buff) => ({
       i: buff.instanceId,

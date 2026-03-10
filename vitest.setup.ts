@@ -47,3 +47,8 @@ globalThis.localStorage = new LocalStorageMock() as Storage;
 // Mock Zustand to reset stores between tests
 // This follows the pattern from: https://zustand.docs.pmnd.rs/guides/testing#vitest
 vi.mock('zustand');
+
+// Prevent the DB client from throwing "Set DATABASE_URL" at module-evaluation
+// time in tests that don't need a real connection. Tests that actually exercise
+// database code (e.g. *.server.test.ts) override this with their own vi.mock.
+vi.mock('@/db/client', () => ({ database: {} }));

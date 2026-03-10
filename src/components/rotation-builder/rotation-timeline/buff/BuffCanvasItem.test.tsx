@@ -167,6 +167,69 @@ describe('BuffCanvasItem', () => {
     });
   });
 
+  describe('sticky positioning', () => {
+    it('wraps icons and name in a sticky-left group', () => {
+      const buff = makeBuff(1, 2);
+      useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
+
+      render(
+        <BuffCanvasItem buff={buff} onRemove={() => {}} isDialogClickable={true} />,
+      );
+
+      const nameElement = screen.getByText('ATK Buff');
+      const stickyGroup = nameElement.closest('div[class*="sticky"]') as HTMLElement;
+      expect(stickyGroup).not.toBeNull();
+      expect(stickyGroup).toHaveClass('left-0');
+    });
+
+    it('applies sticky-right to the actions container', () => {
+      const buff = makeBuff(1, 2);
+      useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
+
+      const { container } = render(
+        <BuffCanvasItem buff={buff} onRemove={() => {}} isDialogClickable={true} />,
+      );
+
+      const actionsElement = container.querySelector('[data-slot="item-actions"]');
+      expect(actionsElement).toHaveClass('sticky');
+      expect(actionsElement).toHaveClass('right-0');
+    });
+
+    it('places icons in the sticky-left group alongside the name', () => {
+      const buff = makeBuff(1, 2);
+      useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
+
+      render(
+        <BuffCanvasItem buff={buff} onRemove={() => {}} isDialogClickable={true} />,
+      );
+
+      const nameElement = screen.getByText('ATK Buff');
+      const stickyGroup = nameElement.closest('div[class*="sticky"]') as HTMLElement;
+      // Both ItemMedia slots live inside the same sticky-left group
+      const mediaSlots = stickyGroup.querySelectorAll('[data-slot="item-media"]');
+      expect(mediaSlots).toHaveLength(2);
+    });
+
+    it('places action buttons in the sticky-right group, not the sticky-left group', () => {
+      const buff = makeBuff(1, 2);
+      useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
+
+      const { container } = render(
+        <BuffCanvasItem buff={buff} onRemove={() => {}} isDialogClickable={true} />,
+      );
+
+      const nameElement = screen.getByText('ATK Buff');
+      const stickyLeft = nameElement.closest('div[class*="sticky"]') as HTMLElement;
+      const buttons = stickyLeft.querySelectorAll('button');
+      expect(buttons).toHaveLength(0);
+
+      const actionsElement = container.querySelector(
+        '[data-slot="item-actions"]',
+      ) as HTMLElement;
+      expect(actionsElement.querySelectorAll('button').length).toBeGreaterThan(0);
+    });
+  });
+
   describe('onOpenChange', () => {
     it('calls onOpenChange(true) when the dialog opens', async () => {
       const buff = makeBuff(1, 2);

@@ -105,7 +105,7 @@ export const BuffCanvasItem = ({
       <CapabilityTooltip capability={buff}>
         <Item
           className={cn(
-            'relative flex h-12 items-center justify-center py-0 select-none',
+            'relative flex h-12 items-center py-0 select-none',
             itemClassName,
           )}
         >
@@ -120,21 +120,26 @@ export const BuffCanvasItem = ({
               }}
             />
           ))}
-          <ItemMedia>
-            <EntityIconDisplay url={buff.characterIconUrl} size="medium" />
-          </ItemMedia>
-          <ItemMedia>
-            <CapabilityIconDisplay url={buff.iconUrl} size="medium" />
-          </ItemMedia>
-          <ItemContent className="text-xs">{buff.name}</ItemContent>
-          {/* Warning indicator */}
-          {shouldShowWarning && (
-            <AlertTriangle
-              data-testid="alert-triangle"
-              className="size-5 shrink-0 text-amber-500"
-            />
-          )}
-          <ItemActions>
+          {/* Sticky left: icons and name stay visible as the item scrolls */}
+          <div className="sticky left-0 z-10 flex shrink-0 items-center gap-2 bg-inherit">
+            <ItemMedia>
+              <EntityIconDisplay url={buff.characterIconUrl} size="medium" />
+            </ItemMedia>
+            <ItemMedia>
+              <CapabilityIconDisplay url={buff.iconUrl} size="medium" />
+            </ItemMedia>
+            <ItemContent className="text-xs">{buff.name}</ItemContent>
+            {/* Warning indicator */}
+            {shouldShowWarning && (
+              <AlertTriangle
+                data-testid="alert-triangle"
+                className="size-5 shrink-0 text-amber-500"
+              />
+            )}
+          </div>
+          <div className="flex-1" />
+          {/* Sticky right: actions stay visible as the item scrolls */}
+          <ItemActions className="sticky right-0 z-10 bg-inherit">
             <Button
               variant="ghost"
               size="icon"

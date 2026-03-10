@@ -23,10 +23,7 @@ type InferredListEntityResponse<T extends ListEntitiesRequest> =
 
 export const useEntityList = <T extends ListEntitiesRequest>(request: T) => {
   return useSuspenseQuery({
-    queryKey: [
-      request.entityType,
-      'weaponType' in request ? request.weaponType : undefined,
-    ],
+    queryKey: [request.entityType],
     queryFn: () => listEntities({ data: request }),
   }) as Omit<ReturnType<typeof useSuspenseQuery>, 'data'> & {
     data: InferredListEntityResponse<T>;

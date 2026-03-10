@@ -103,10 +103,14 @@ Note: `capability_type` column was removed. Use `capability_json->>'type'` when 
 ```json
 {
   "type": "attack",
-  "scalingStat": "atk",
-  "attribute": "glacio",
   "damageInstances": [
-    { "motionValue": 0.4871, "tags": ["basicAttack"], "scalingStat": "atk" }
+    {
+      "motionValue": 0.4871,
+      "attribute": "glacio",
+      "damageType": "basicAttack",
+      "tags": [],
+      "scalingStat": "atk"
+    }
   ]
 }
 ```
@@ -116,8 +120,20 @@ Note: `capability_type` column was removed. Use `capability_json->>'type'` when 
 ```json
 {
   "type": "modifier",
-  "target": "self",
-  "modifiedStats": [{ "stat": "damageBonus", "value": 0.2, "tags": ["resonanceSkill"] }]
+  "modifiedStats": [
+    {
+      "target": "self",
+      "stat": "damageBonus",
+      "value": 0.2,
+      "tags": ["resonanceSkill"]
+    },
+    {
+      "target": "team",
+      "stat": "attackScalingBonus",
+      "value": 0.1,
+      "tags": ["all"]
+    }
+  ]
 }
 ```
 
@@ -158,9 +174,55 @@ Update example:
 
 ```sql
 UPDATE capabilities
-SET capability_json = jsonb_set(capability_json, '{target}', '"activeCharacter"')
+SET capability_json = jsonb_set(
+  capability_json,
+  '{modifiedStats,0,target}',
+  '"activeCharacter"'
+)
 WHERE id = 1328;
 ```
+
+---
+
+## Post-Migration Invariants (d9397bd + af4352c)
+
+Always preserve these:
+
+1. `modifier` no longer has top-level `target`.
+1. Every `modifier.modifiedStats[]` entry MUST include its own `target`.
+1. Every `attack.damageInstances[]` entry MUST include both `attribute` and `damageType`.
+1. `attack` no longer has top-level `attribute`.
+
+Quick validation SQL:
+
+```sql
+-- Should all be zero
+SELECT COUNT(*) FROM capabilities
+WHERE capability_json->>'type'='modifier'
+  AND capability_json ? 'target';
+
+SELECT COUNT(*) FROM capabilities c
+WHERE c.capability_json->>'type'='modifier'
+  AND EXISTS (
+    SELECT 1
+    FROM jsonb_array_elements(COALESCE(c.capability_json->'modifiedStats','[]'::jsonb)) s
+    WHERE NOT (s ? 'target')
+  );
+
+SELECT COUNT(*) FROM capabilities
+WHERE capability_json->>'type'='attack'
+  AND capability_json ? 'attribute';
+
+SELECT COUNT(*) FROM capabilities c
+WHERE c.capability_json->>'type'='attack'
+  AND EXISTS (
+    SELECT 1
+    FROM jsonb_array_elements(COALESCE(c.capability_json->'damageInstances','[]'::jsonb)) di
+    WHERE NOT (di ? 'attribute') OR NOT (di ? 'damageType')
+  );
+```
+
+When a skill has multiple modifier rows triggered together, prefer a single modifier row with multiple `modifiedStats` entries (mixed targets allowed).
 
 ---
 

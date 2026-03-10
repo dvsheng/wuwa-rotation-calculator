@@ -16,10 +16,7 @@ import { useTeamDetails } from '@/hooks/useTeamDetails';
 import { cn } from '@/lib/utils';
 import type { Capability } from '@/schemas/rotation';
 import { Target } from '@/services/game-data';
-import type {
-  AttackOriginType,
-  OriginType as CapabilityOriginType,
-} from '@/services/game-data';
+import type { OriginType as CapabilityOriginType } from '@/services/game-data';
 
 const ATTACK_COLORS: Record<CapabilityOriginType, string> = {
   'Normal Attack': 'border-slate-400 bg-slate-100 text-foreground',
@@ -181,11 +178,12 @@ const CapabilityGroup = ({ name, children }: CapabilityGroupProperties) => {
         </Text>
         <div className="bg-border h-px flex-1" />
       </div>
-      <div className="grid-cols-auto-fit-24 gap-tight grid">{children}</div>
+      <div className="grid-cols-auto-fit-28 gap-tight grid">{children}</div>
     </div>
   );
 };
 
+// TODO: move this to separate file
 const CapabilityCard = ({
   capability,
   colorClassName,
@@ -200,8 +198,9 @@ const CapabilityCard = ({
         draggable={isDraggable}
         onDragStart={onDragStart}
         onClick={onClick}
+        variant="outline"
         className={cn(
-          'hover:bg-accent/30 border-border gap-tight p-compact relative flex aspect-square h-24 w-24 flex-col rounded-lg border shadow-sm transition-colors',
+          'hover:bg-accent/30 gap-tight p-compact relative flex aspect-square size-28 flex-col rounded-lg border shadow-sm transition-colors',
           isDraggable
             ? 'cursor-grab active:cursor-grabbing'
             : onClick
@@ -212,16 +211,12 @@ const CapabilityCard = ({
           accentClass,
         )}
       >
-        <CapabilityIcon
-          iconUrl={capability.iconUrl}
-          size="medium"
-          className="absolute top-2"
-        />
+        <CapabilityIcon iconUrl={capability.iconUrl} size="medium" />
 
         <Text
           as="div"
           variant="caption"
-          className="text-foreground mt-auto line-clamp-2 w-full text-center"
+          className="text-foreground line-clamp-3 text-center"
         >
           {capability.name}
         </Text>
@@ -237,9 +232,6 @@ export const CapabilitySidebar = ({
   onDragBuff,
 }: CapabilitySidebarProperties) => {
   const [selectedCharacters, setSelectedCharacters] = useState<Array<string>>([]);
-  const [selectedOrigins, setSelectedOrigins] = useState<Array<CapabilityOriginType>>(
-    [],
-  );
   const [searchText, setSearchText] = useState('');
   const { attacks, buffs } = useTeamDetails();
   const characterNames = [
@@ -248,37 +240,15 @@ export const CapabilitySidebar = ({
       ...buffs.map((buff) => buff.characterName),
     ]),
   ].toSorted((left, right) => left.localeCompare(right));
-  const availableOrigins = [
-    ...new Set<CapabilityOriginType>([
-      ...attacks.map((attack) => attack.originType),
-      ...buffs.map((buff) => buff.originType),
-    ]),
-  ];
-  const orderedOrigins = [
-    ...BUFF_SKILL_ORDER.filter((origin) => availableOrigins.includes(origin)),
-    ...availableOrigins
-      .filter((origin) => !BUFF_SKILL_ORDER.includes(origin))
-      .toSorted((left, right) => left.localeCompare(right)),
-  ];
 
   const matchesCharacterFilter = (characterName: string) =>
     selectedCharacters.length === 0 || selectedCharacters.includes(characterName);
-  const matchesOriginFilter = (originType: CapabilityOriginType) =>
-    selectedOrigins.length === 0 || selectedOrigins.includes(originType);
-  const matchesCapabilityFilters = (
-    capability: DetailedAttack | DetailedModifier,
-    originType: CapabilityOriginType,
-  ) =>
+  const matchesCapabilityFilters = (capability: DetailedAttack | DetailedModifier) =>
     matchesCharacterFilter(capability.characterName) &&
-    matchesOriginFilter(originType) &&
     matchesSearchText(capability, searchText);
 
-  const filteredAttacks = attacks.filter((attack) =>
-    matchesCapabilityFilters(attack, attack.originType),
-  );
-  const filteredBuffs = buffs.filter((buff) =>
-    matchesCapabilityFilters(buff, buff.originType),
-  );
+  const filteredAttacks = attacks.filter((attack) => matchesCapabilityFilters(attack));
+  const filteredBuffs = buffs.filter((buff) => matchesCapabilityFilters(buff));
   const attacksByCharacter = Object.groupBy(
     filteredAttacks,
     (attack) => attack.characterName,
@@ -329,42 +299,18 @@ export const CapabilitySidebar = ({
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
-          <ToggleGroup
-            type="multiple"
-            value={selectedOrigins}
-            onValueChange={(values) =>
-              setSelectedOrigins(values as Array<CapabilityOriginType>)
-            }
-            size="sm"
-          >
-            {orderedOrigins.map((origin) => (
-              <ToggleGroupItem
-                key={origin}
-                value={origin}
-                size={'sm'}
-                className="line-clamp-2 truncate"
-              >
-                {origin}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
         </Stack>
       </Stack>
       <ScrollArea className="min-h-0 flex-1">
         <CapabilitySection title="Attacks" emptyMessage="No attacks available">
           {Object.entries(attacksByCharacter).map(
             ([characterName, characterAttacks]) => {
-              const attacksByOrigin = Object.groupBy(
-                characterAttacks ?? [],
-                (attack) => attack.originType,
+              // Sort by origin first, then by name
+              const orderedAttacks = (characterAttacks ?? []).toSorted(
+                (a, b) =>
+                  sortAttackOrigins(a.originType, b.originType) ||
+                  a.name.localeCompare(b.name),
               );
-              const orderedAttackOrigins = (
-                Object.keys(attacksByOrigin) as Array<AttackOriginType>
-              ).toSorted(sortAttackOrigins);
-              const orderedAttacks = orderedAttackOrigins.flatMap(
-                (origin) => attacksByOrigin[origin] ?? [],
-              );
-
               return (
                 <CapabilityGroup key={`attack-${characterName}`} name={characterName}>
                   {orderedAttacks.map((attack) => (

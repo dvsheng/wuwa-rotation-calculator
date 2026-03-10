@@ -28,7 +28,7 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
   };
 
   const { layout: fullLayoutProperties, isInteracting } = useCanvasLayout({
-    gridConfig: { rowHeight: 48, margin: [4, 4] as const },
+    gridConfig: { rowHeight: 48 },
     resizeConfig: { enabled: isGridInteractable, handles: ['e', 'w'] },
     dragConfig: { enabled: isGridInteractable },
     layout: buffs.map((buff) => ({

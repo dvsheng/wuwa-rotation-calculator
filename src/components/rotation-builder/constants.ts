@@ -1,7 +1,6 @@
-import type { AttackOriginType } from '@/services/game-data';
 import { OriginType, Sequence } from '@/services/game-data';
 
-export const ATTACK_SKILL_ORDER: Array<AttackOriginType> = [
+export const ATTACK_SKILL_ORDER: Array<OriginType> = [
   OriginType.NORMAL_ATTACK,
   OriginType.RESONANCE_SKILL,
   OriginType.RESONANCE_LIBERATION,
@@ -11,9 +10,10 @@ export const ATTACK_SKILL_ORDER: Array<AttackOriginType> = [
   OriginType.TUNE_BREAK,
   OriginType.ECHO,
   OriginType.WEAPON,
+  OriginType.INHERENT_SKILL,
 ];
 
-const SEQUENCE_ORDER: Array<AttackOriginType> = [
+const SEQUENCE_ORDER: Array<OriginType> = [
   Sequence.S1,
   Sequence.S2,
   Sequence.S3,
@@ -30,16 +30,13 @@ const SEQUENCE_ORDER_INDEX = new Map(
   SEQUENCE_ORDER.map((skill, index) => [skill, index]),
 );
 
-export const sortAttackOrigins = (
-  left: AttackOriginType,
-  right: AttackOriginType,
-): number => {
+export const sortAttackOrigins = (left: OriginType, right: OriginType): number => {
   return sortOriginsByAttackOrder(left, right);
 };
 
 export const sortOriginsByAttackOrder = (
-  left: AttackOriginType,
-  right: AttackOriginType,
+  left: OriginType,
+  right: OriginType,
 ): number => {
   const leftBaseIndex = ATTACK_SKILL_ORDER_INDEX.get(left);
   const rightBaseIndex = ATTACK_SKILL_ORDER_INDEX.get(right);

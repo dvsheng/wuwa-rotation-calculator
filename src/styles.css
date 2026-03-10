@@ -181,8 +181,8 @@ code {
   }
 }
 
-@utility grid-cols-auto-fit-24 {
-  grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr)); /* 6rem = 96px = h-24 */
+@utility grid-cols-auto-fit-28 {
+  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr)); /* 7rem = h-28 */
 }
 
 /* Canvas component styles for rotation builder sections */

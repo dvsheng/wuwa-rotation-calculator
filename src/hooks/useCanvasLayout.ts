@@ -144,6 +144,7 @@ export const useCanvasLayout = (
     gridConfig: {
       cols: columnCount,
       rowHeight: 208,
+      margin: [4, 4] as const,
     },
     style: {
       minHeight: 208,

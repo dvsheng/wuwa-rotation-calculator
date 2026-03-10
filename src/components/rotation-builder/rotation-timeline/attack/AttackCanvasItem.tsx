@@ -36,7 +36,7 @@ export const AttackCanvasItem = ({
       isDialogClickable={isAttackConfigurable && isDialogClickable}
     >
       <CapabilityTooltip capability={attack}>
-        <div className="bg-card hover:bg-accent/50 p-compact relative flex h-full w-full flex-col items-center overflow-hidden rounded-lg border">
+        <div className="bg-card hover:bg-accent/50 p-compact relative flex h-full w-full flex-col items-center overflow-hidden rounded-lg border select-none">
           {/* Index at top-left */}
           <Text as="span" variant="caption" className="absolute top-1 left-1">
             {index + 1}

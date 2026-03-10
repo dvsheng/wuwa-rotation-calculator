@@ -163,11 +163,30 @@ VALUES (
   164,
   NULL,
   'Increase the Resonator''s Coordinated Attack DMG by 80%.',
-  ${JSON.stringify({ type: 'permanent_stat', stat: 'damageBonus', value: 0.8, tags: ['coordinatedAttack'] })}::jsonb
+  ${{
+    type: 'permanent_stat',
+    stat: 'damageBonus',
+    value: 0.8,
+    tags: ['coordinatedAttack'],
+  }}::jsonb
 )`;
 
 await sql.end();
 NODE
+```
+
+Important:
+
+- Do NOT pass `JSON.stringify(obj)` into `::jsonb`. That stores a JSON **string**, not a JSON object.
+- Use `${obj}::jsonb` or `${sql.json(obj)}::jsonb` for `capability_json`.
+- If this mistake happened, repair with:
+
+```sql
+UPDATE capabilities
+SET capability_json = (capability_json #>> '{}')::jsonb,
+    updated_at = now()
+WHERE jsonb_typeof(capability_json) = 'string'
+  AND LEFT(capability_json #>> '{}', 1) IN ('{', '[');
 ```
 
 Update example:
@@ -223,6 +242,28 @@ WHERE c.capability_json->>'type'='attack'
 ```
 
 When a skill has multiple modifier rows triggered together, prefer a single modifier row with multiple `modifiedStats` entries (mixed targets allowed).
+
+## Post-Write Sanity Checks
+
+Run these after inserts/updates (before `db:validate`):
+
+```sql
+-- 1) No serialized JSON strings in capability_json
+SELECT COUNT(*) AS json_strings
+FROM capabilities
+WHERE jsonb_typeof(capability_json) = 'string';
+
+-- 2) Every capability has a type
+SELECT COUNT(*) AS missing_type
+FROM capabilities
+WHERE capability_json->>'type' IS NULL;
+
+-- 3) Distribution by type (quick smoke check)
+SELECT capability_json->>'type' AS type, COUNT(*)
+FROM capabilities
+GROUP BY 1
+ORDER BY 1;
+```
 
 ---
 

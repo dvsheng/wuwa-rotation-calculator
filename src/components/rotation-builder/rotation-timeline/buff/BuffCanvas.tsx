@@ -7,6 +7,8 @@ import { useCanvasLayout } from '@/hooks/useCanvasLayout';
 import { useTeamModifierInstances } from '@/hooks/useTeamModifierInstances';
 import { useStore } from '@/store';
 
+import { BUFF_LENGTH_ON_ADD } from '../RotationTimelineBuilder';
+
 import { BuffCanvasItem } from './BuffCanvasItem';
 
 interface BuffCanvasProperties {
@@ -36,6 +38,7 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
       w: buff.w,
       h: buff.h,
     })),
+    droppingItem: { w: BUFF_LENGTH_ON_ADD, h: 1, i: 'new-buff', x: 0, y: 0 },
     style: { minHeight: 400 },
     onLayoutChange,
     onDrop: onDropBuff,

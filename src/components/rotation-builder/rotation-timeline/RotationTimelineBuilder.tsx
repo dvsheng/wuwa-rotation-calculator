@@ -14,6 +14,8 @@ import { CapabilitySidebar } from './CapabilitySidebar';
 import { RotationCanvasHeader } from './RotationCanvasHeader';
 import { TimelinePanWrapper } from './TimelinePanWrapper';
 
+export const BUFF_LENGTH_ON_ADD = 6;
+
 export const RotationBuilder = () => {
   const addAttack = useStore((state) => state.addAttack);
   const addBuff = useStore((state) => state.addBuff);
@@ -40,13 +42,13 @@ export const RotationBuilder = () => {
     addBuff(buff, {
       x: item.x,
       y: item.y,
-      w: item.w,
+      w: BUFF_LENGTH_ON_ADD,
       h: item.h,
     });
   });
 
   const handleAddBuff = (buff: Capability) => {
-    addBuff(buff, { x: 0, y: 0, w: 2, h: 1 });
+    addBuff(buff, { x: 0, y: 0, w: BUFF_LENGTH_ON_ADD, h: 1 });
   };
 
   return (

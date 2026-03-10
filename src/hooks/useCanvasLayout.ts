@@ -1,5 +1,5 @@
 import { merge } from 'es-toolkit/object';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { GridLayoutProps } from 'react-grid-layout';
 
 import { useStore } from '@/store';
@@ -9,8 +9,8 @@ export const useCanvasLayout = (
 ) => {
   const rotationAttackCount = useStore((state) => state.attacks.length);
   const [isInteracting, setIsInteracting] = useState(false);
-  const interactionTimeoutReference = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
+  const interactionTimeoutReference = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
   );
 
   const columnCount = Math.max(rotationAttackCount, 5);
@@ -25,37 +25,118 @@ export const useCanvasLayout = (
   // The container will handle its own scrolling if needed
   const width = calculatedWidth;
 
-  // Event handlers that reference the interaction timeout ref
-  const eventHandlers = {
-    onDragStart: () => {
-      if (interactionTimeoutReference.current !== null) {
-        clearTimeout(interactionTimeoutReference.current);
-      }
-      setIsInteracting(true);
-    },
-    onDragStop: () => {
-      if (interactionTimeoutReference.current !== null) {
-        clearTimeout(interactionTimeoutReference.current);
-      }
-      interactionTimeoutReference.current = globalThis.setTimeout(() => {
-        setIsInteracting(false);
-      }, 100);
-    },
-    onResizeStart: () => {
-      if (interactionTimeoutReference.current !== null) {
-        clearTimeout(interactionTimeoutReference.current);
-      }
-      setIsInteracting(true);
-    },
-    onResizeStop: () => {
-      if (interactionTimeoutReference.current !== null) {
-        clearTimeout(interactionTimeoutReference.current);
-      }
-      interactionTimeoutReference.current = globalThis.setTimeout(() => {
-        setIsInteracting(false);
-      }, 100);
-    },
+  const {
+    onDragStart: externalOnDragStart,
+    onDragStop: externalOnDragStop,
+    onResizeStart: externalOnResizeStart,
+    onResizeStop: externalOnResizeStop,
+    ...layoutProperties
+  } = partialProperties ?? {};
+
+  const clearInteractionTimeout = () => {
+    if (interactionTimeoutReference.current !== undefined) {
+      clearTimeout(interactionTimeoutReference.current);
+      interactionTimeoutReference.current = undefined;
+    }
   };
+
+  const startInteraction = () => {
+    clearInteractionTimeout();
+    setIsInteracting(true);
+  };
+
+  const stopInteraction = (delayMs = 100) => {
+    clearInteractionTimeout();
+    interactionTimeoutReference.current = globalThis.setTimeout(() => {
+      setIsInteracting(false);
+      interactionTimeoutReference.current = undefined;
+    }, delayMs);
+  };
+
+  const handleDragStart: NonNullable<GridLayoutProps['onDragStart']> = (
+    ...arguments_
+  ) => {
+    startInteraction();
+    externalOnDragStart?.(...arguments_);
+  };
+
+  const handleDragStop: NonNullable<GridLayoutProps['onDragStop']> = (
+    ...arguments_
+  ) => {
+    stopInteraction();
+    externalOnDragStop?.(...arguments_);
+  };
+
+  const handleResizeStart: NonNullable<GridLayoutProps['onResizeStart']> = (
+    ...arguments_
+  ) => {
+    startInteraction();
+    externalOnResizeStart?.(...arguments_);
+  };
+
+  const handleResizeStop: NonNullable<GridLayoutProps['onResizeStop']> = (
+    ...arguments_
+  ) => {
+    stopInteraction();
+    externalOnResizeStop?.(...arguments_);
+  };
+
+  // Clear any pending interaction timeout when the hook unmounts.
+  useEffect(() => {
+    return () => {
+      if (interactionTimeoutReference.current !== undefined) {
+        clearTimeout(interactionTimeoutReference.current);
+      }
+    };
+  }, []);
+
+  // While a drag/resize interaction is active, listen for global end signals
+  // so interaction state still resets even if grid-level stop callbacks are missed.
+  useEffect(() => {
+    if (!isInteracting) return;
+
+    const scheduleInteractionEnd = (delayMs = 0) => {
+      if (interactionTimeoutReference.current !== undefined) {
+        clearTimeout(interactionTimeoutReference.current);
+      }
+
+      interactionTimeoutReference.current = globalThis.setTimeout(() => {
+        setIsInteracting(false);
+        interactionTimeoutReference.current = undefined;
+      }, delayMs);
+    };
+
+    const handleInteractionEnd = () => {
+      scheduleInteractionEnd();
+    };
+
+    const handleVisibilityChange = () => {
+      if (globalThis.document.visibilityState === 'hidden') {
+        scheduleInteractionEnd();
+      }
+    };
+
+    globalThis.addEventListener('pointerup', handleInteractionEnd);
+    globalThis.addEventListener('pointercancel', handleInteractionEnd);
+    globalThis.addEventListener('mouseup', handleInteractionEnd);
+    globalThis.addEventListener('touchend', handleInteractionEnd);
+    globalThis.addEventListener('dragend', handleInteractionEnd);
+    globalThis.addEventListener('blur', handleInteractionEnd);
+    globalThis.document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      globalThis.removeEventListener('pointerup', handleInteractionEnd);
+      globalThis.removeEventListener('pointercancel', handleInteractionEnd);
+      globalThis.removeEventListener('mouseup', handleInteractionEnd);
+      globalThis.removeEventListener('touchend', handleInteractionEnd);
+      globalThis.removeEventListener('dragend', handleInteractionEnd);
+      globalThis.removeEventListener('blur', handleInteractionEnd);
+      globalThis.document.removeEventListener(
+        'visibilitychange',
+        handleVisibilityChange,
+      );
+    };
+  }, [isInteracting]);
 
   // Base layout config without event handlers
   const baseLayoutConfig = {
@@ -68,13 +149,18 @@ export const useCanvasLayout = (
       minHeight: 208,
     },
     dropConfig: { enabled: true },
-    dragConfig: { enabled: true },
+    dragConfig: { enabled: true, bounded: true },
   };
 
-  // Merge config with partial properties, then add event handlers
-  const layout = partialProperties
-    ? { ...merge(baseLayoutConfig, partialProperties), ...eventHandlers }
-    : { ...baseLayoutConfig, ...eventHandlers };
+  const mergedLayoutConfig = merge(baseLayoutConfig, layoutProperties);
+
+  const layout = {
+    ...mergedLayoutConfig,
+    onDragStart: handleDragStart,
+    onDragStop: handleDragStop,
+    onResizeStart: handleResizeStart,
+    onResizeStop: handleResizeStop,
+  };
 
   return {
     layout,

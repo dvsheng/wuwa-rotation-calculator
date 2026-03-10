@@ -19,6 +19,7 @@ You are a specialized data transformation agent for Wuthering Waves. Your goal i
 - **Modifiers vs. Permanent Stats:**
   - **`permanentStats`:** Use for unconditional, "always-on" bonuses once unlocked (e.g., "Crit. DMG is increased by 100%" or "ATK +15%").
   - **`modifiers`:** Use for conditional bonuses (e.g., "After casting Skill...", "When HP is below 70%", "When hitting a target marked with...").
+  - **Sequence defaults:** If an S1/S2/S5 line says "`DMG Multiplier ... is increased by X%`" with no activation condition, default to `permanentStats` (tagged to the specific affected attacks).
 
 ### Data Paths & Acquisition
 
@@ -90,6 +91,7 @@ You are a specialized data transformation agent for Wuthering Waves. Your goal i
   - **Versioning & alternativeDefinitions:** Use `alternativeDefinitions` to handle Sequence upgrades (S1-S6) that modify or replace existing effects.
     - **Replacement:** If a sequence _upgrades_ an existing effect (e.g., S3 increases a percentage or adds a new stat to the same trigger), add an entry to `alternativeDefinitions` keyed by the sequence.
     - **Cumulative Behavior:** Each entry in `alternativeDefinitions` MUST contain the full replacement `modifiedStats` array (including per-stat `target`) for that sequence level.
+    - If S6 extends an existing passive stack effect (instead of creating a new trigger), model it as another alternative definition on that base capability (for example `alternativeDefinitions.s6`), not as a separate standalone capability.
     - **Additive Splitting:** Only split an effect into multiple separate base entries if the base effect is _always_ active (e.g., a passive) and the sequence adds a _conditional_ bonus (e.g., a temporary buff) that doesn't replace the passive part.
   - **Stackable Buffs:** If a buff stacks (e.g., "up to 3 times"), do not use the old `parameterConfigs` shape. Use the current node format.
     - For a pure stack count that directly becomes the value, use:
@@ -116,8 +118,16 @@ You are a specialized data transformation agent for Wuthering Waves. Your goal i
         ]
       }
       ```
+    - If a single effect has two bands (for example `>= threshold` does multiplier bonus, otherwise amplification based on consumed amount), keep it as one modifier with `conditional` nodes rather than splitting into separate capabilities.
   - **Stat-Scaled Buffs:** If an effect scales with a tracked stat (for example Energy Regen or Crit Rate), use a `statParameterizedNumber` inside a `DatabaseNumberNode` expression tree
+    - For "over threshold, capped" phrasing, prefer `clamp(product(rate, sum(stat, -threshold)), min, max)`.
   - **Exclusions:** Omit modifiers that only restore flat energy or affect mechanics not tracked in stats (like hit counts, dodge refreshes, character-specific mechanics, healing).
+
+#### Sigrika-Derived Modeling Notes
+
+- **Blessing-style mixed targets:** If one trigger buffs the active character and adds an extra self bonus at max stacks, keep this as a single `modifier` capability with multiple `modifiedStats` entries and per-entry `target` (`activeCharacter` + `self`), using `conditional` for the max-stack bonus.
+- **Echo Skill DMG Bonus wording:** Map to `damageBonus` with `tags: ["echo"]` unless the text explicitly says "damage multiplier."
+- **Capability descriptions:** For each capability, use a short direct quote from the source skill line whenever possible, then add a concise modeling note. Keep descriptions short and specific to that capability row.
 
 ### B. Echo Logic
 

@@ -105,7 +105,7 @@ export const BuffCanvasItem = ({
       <CapabilityTooltip capability={buff}>
         <Item
           className={cn(
-            'relative flex h-12 items-center justify-center py-0',
+            'relative flex h-12 items-center justify-center py-0 select-none',
             itemClassName,
           )}
         >

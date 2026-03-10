@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
@@ -20,3 +21,21 @@ export const useStore = create<AppStore>()(
     },
   ),
 );
+
+export const useStoreHydrated = () => {
+  const [hydrated, setHydrated] = useState(() => useStore.persist.hasHydrated());
+
+  useEffect(() => {
+    const unsubHydrate = useStore.persist.onHydrate(() => setHydrated(false));
+    const unsubFinish = useStore.persist.onFinishHydration(() => setHydrated(true));
+
+    void useStore.persist.rehydrate();
+
+    return () => {
+      unsubHydrate();
+      unsubFinish();
+    };
+  }, []);
+
+  return hydrated;
+};

@@ -171,6 +171,5 @@ export const useTeamDetails = () => {
       };
     },
   });
-
   return result;
 };

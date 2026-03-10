@@ -19,6 +19,9 @@ interface ValidationResult {
   errors: Array<{ id: number; issues: Array<string> }>;
 }
 
+const isJsonObjectRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
 // ============================================================================
 // Validation Schemas
 // ============================================================================
@@ -286,9 +289,32 @@ async function validateDatabase() {
   // ========================================================================
   console.log('Building attack name index...');
   const capabilities = await database.query.capabilities.findMany();
+  const malformedCapabilityJsonIssues = new Map<number, Array<string>>();
+
+  for (const capability of capabilities) {
+    const json = capability.capabilityJson as unknown;
+    const issues: Array<string> = [];
+
+    if (!isJsonObjectRecord(json)) {
+      const jsonKind = Array.isArray(json) ? 'array' : typeof json;
+      issues.push(
+        `capability_json must be a JSON object, got ${jsonKind}. This often means JSON was double-serialized.`,
+      );
+    } else if (typeof json.type !== 'string') {
+      issues.push('capability_json.type is missing or not a string');
+    }
+
+    if (issues.length > 0) {
+      malformedCapabilityJsonIssues.set(capability.id, issues);
+    }
+  }
+
   const attackNames = new Set(
     capabilities
-      .filter((capability) => capability.capabilityJson.type === CapabilityType.ATTACK)
+      .filter((capability) => {
+        const json = capability.capabilityJson as unknown;
+        return isJsonObjectRecord(json) && json.type === CapabilityType.ATTACK;
+      })
       .map((capability) => capability.name)
       .filter((name) => name !== null),
   );
@@ -302,15 +328,25 @@ async function validateDatabase() {
     'capabilities',
     CapabilityValidationSchema,
     capabilities,
-    (capability) => [
-      // Validate skill reference
-      ...validateSkillReference(capability, skillMap),
-      // Validate tags (for modifiers and permanent stats)
-      ...(capability.capabilityJson.type === CapabilityType.MODIFIER ||
-      capability.capabilityJson.type === CapabilityType.PERMANENT_STAT
-        ? validateCapabilityTags(capability, attackNames)
-        : []),
-    ],
+    (capability) => {
+      const issues: Array<string> = [
+        // Validate skill reference
+        ...validateSkillReference(capability, skillMap),
+        ...(malformedCapabilityJsonIssues.get(capability.id) ?? []),
+      ];
+
+      // Validate tags (for modifiers and permanent stats) only if shape is valid.
+      if (issues.length === 0) {
+        issues.push(
+          ...(capability.capabilityJson.type === CapabilityType.MODIFIER ||
+          capability.capabilityJson.type === CapabilityType.PERMANENT_STAT
+            ? validateCapabilityTags(capability, attackNames)
+            : []),
+        );
+      }
+
+      return issues;
+    },
   );
   results.push(capabilitiesResult);
   console.log(

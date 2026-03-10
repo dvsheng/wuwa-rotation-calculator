@@ -25,6 +25,7 @@ export const useEntityList = <T extends ListEntitiesRequest>(request: T) => {
   return useSuspenseQuery({
     queryKey: [request.entityType],
     queryFn: () => listEntities({ data: request }),
+    staleTime: Infinity,
   }) as Omit<ReturnType<typeof useSuspenseQuery>, 'data'> & {
     data: InferredListEntityResponse<T>;
   };

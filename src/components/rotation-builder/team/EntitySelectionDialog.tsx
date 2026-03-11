@@ -16,13 +16,13 @@ import { Grid, Row } from '@/components/ui/layout';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Text } from '@/components/ui/typography';
 import { cn } from '@/lib/utils';
-import type { ListEntitiesResponse } from '@/services/game-data';
+import type { ListEntityResponseItem } from '@/services/game-data';
 import { Attribute, WeaponType } from '@/types';
 
 import { EntitySelectorTile } from './EntitySelectorTile';
 
 export interface EntitySelectionDialogProperties {
-  items: ListEntitiesResponse;
+  items: Array<ListEntityResponseItem>;
   value: number;
   onValueChange: (value: number) => void;
   excludeIds?: Array<number>;
@@ -40,7 +40,7 @@ export const EntitySelectionDialog = ({
     new Map(),
   );
 
-  const handleSelect = (item: ListEntitiesResponse[number]) => {
+  const handleSelect = (item: ListEntityResponseItem) => {
     onValueChange(item.id);
     setIsOpen(false);
   };

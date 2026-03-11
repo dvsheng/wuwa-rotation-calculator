@@ -1,12 +1,12 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 
 import type { ListEntitiesRequest } from '@/schemas/game-data-service';
-import { listEntities } from '@/services/game-data';
+import { EntityType, listEntities } from '@/services/game-data';
 import type {
-  EntityType,
   ListCharactersResponseItem,
   ListEchoSetsResponseItem,
   ListEchoesResponseItem,
+  ListEntitiesResponse,
   ListWeaponsResponseItem,
 } from '@/services/game-data';
 
@@ -22,13 +22,40 @@ type InferredListEntityResponse<T extends ListEntitiesRequest> =
           : never;
 
 export const useEntityList = <T extends ListEntitiesRequest>(request: T) => {
-  return useSuspenseQuery({
-    queryKey: [request.entityType],
-    queryFn: () => listEntities({ data: request }),
+  const query = useSuspenseQuery({
+    queryKey: ['entity'],
+    queryFn: () => listEntities(),
     staleTime: Infinity,
-    // TODO: Investigate why this server function fails so often.
-    retry: 10,
   }) as Omit<ReturnType<typeof useSuspenseQuery>, 'data'> & {
+    data: ListEntitiesResponse;
+  };
+
+  const data = (() => {
+    switch (request.entityType) {
+      case EntityType.CHARACTER: {
+        return request.weaponType
+          ? query.data.characters.filter(
+              (character) => character.weaponType === request.weaponType,
+            )
+          : query.data.characters;
+      }
+      case EntityType.WEAPON: {
+        return request.weaponType
+          ? query.data.weapons.filter(
+              (weapon) => weapon.weaponType === request.weaponType,
+            )
+          : query.data.weapons;
+      }
+      case EntityType.ECHO: {
+        return query.data.echoes;
+      }
+      case EntityType.ECHO_SET: {
+        return query.data.echoSets;
+      }
+    }
+  })();
+
+  return { ...query, data } as Omit<ReturnType<typeof useSuspenseQuery>, 'data'> & {
     data: InferredListEntityResponse<T>;
   };
 };

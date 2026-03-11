@@ -33,10 +33,17 @@ export interface ListEchoSetsResponseItem {
   iconUrl?: string;
 }
 
-export type ListEntitiesResponse =
-  | Array<ListCharactersResponseItem>
-  | Array<ListWeaponsResponseItem>
-  | Array<ListEchoesResponseItem>
-  | Array<ListEchoSetsResponseItem>;
+export type ListEntityResponseItem =
+  | ListCharactersResponseItem
+  | ListWeaponsResponseItem
+  | ListEchoesResponseItem
+  | ListEchoSetsResponseItem;
+
+export interface ListEntitiesResponse {
+  characters: Array<ListCharactersResponseItem>;
+  weapons: Array<ListWeaponsResponseItem>;
+  echoes: Array<ListEchoesResponseItem>;
+  echoSets: Array<ListEchoSetsResponseItem>;
+}
 
 export type { ListEntitiesRequest } from '@/schemas/game-data-service';

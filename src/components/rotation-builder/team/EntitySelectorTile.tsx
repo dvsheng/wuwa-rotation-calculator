@@ -5,12 +5,12 @@ import { EntityIconDisplay } from '@/components/common/EntityIcon';
 import { Row, Stack } from '@/components/ui/layout';
 import { Text } from '@/components/ui/typography';
 import { cn } from '@/lib/utils';
-import type { ListEntitiesResponse } from '@/services/game-data';
+import type { ListEntityResponseItem } from '@/services/game-data';
 
 import { ATTRIBUTE_COLORS } from './constants';
 
 interface EntitySelectorTileProperties extends ComponentPropsWithRef<'div'> {
-  entity: ListEntitiesResponse[number];
+  entity: ListEntityResponseItem;
   isSelected?: boolean;
   onClick?: () => void;
 }

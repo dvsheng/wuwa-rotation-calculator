@@ -1,112 +1,63 @@
-import { eq } from 'drizzle-orm';
-
 import { database } from '@/db/client';
-import { entities } from '@/db/schema';
-import type { ListEntitiesRequest } from '@/schemas/game-data-service';
 
 import type { ListEntitiesResponse } from './list-entities.types';
 import { EntityType } from './types';
 
-export const listEntitiesHandler = async (
-  input: ListEntitiesRequest,
-): Promise<ListEntitiesResponse> => {
-  switch (input.entityType) {
-    case EntityType.CHARACTER: {
-      const characters = await database.query.entities.findMany({
-        where: eq(entities.type, EntityType.CHARACTER),
-        columns: {
-          id: true,
-          name: true,
-          weaponType: true,
-          rank: true,
-          attribute: true,
-          iconUrl: true,
-        },
-      });
+export const listEntitiesHandler = async (): Promise<ListEntitiesResponse> => {
+  const rows = await database.query.entities.findMany();
 
-      const list = characters.map((char) => ({
-        id: char.id,
-        name: char.name,
-        weaponType: char.weaponType!,
-        rarity: char.rank!,
-        attribute: char.attribute!,
-        iconUrl: char.iconUrl ?? undefined,
-      }));
+  const catalog: ListEntitiesResponse = {
+    characters: [],
+    weapons: [],
+    echoes: [],
+    echoSets: [],
+  };
 
-      if (input.weaponType) {
-        return list.filter((char) => char.weaponType === input.weaponType);
+  for (const row of rows) {
+    switch (row.type) {
+      case EntityType.CHARACTER: {
+        catalog.characters.push({
+          id: row.id,
+          name: row.name,
+          weaponType: row.weaponType!,
+          rarity: row.rank!,
+          attribute: row.attribute!,
+          iconUrl: row.iconUrl ?? undefined,
+        });
+        break;
       }
-
-      return list;
-    }
-
-    case EntityType.WEAPON: {
-      const weapons = await database.query.entities.findMany({
-        where: eq(entities.type, EntityType.WEAPON),
-        columns: {
-          id: true,
-          name: true,
-          weaponType: true,
-          rank: true,
-          iconUrl: true,
-        },
-      });
-
-      const list = weapons.map((weapon) => ({
-        id: weapon.id,
-        name: weapon.name,
-        weaponType: weapon.weaponType!,
-        rarity: weapon.rank!,
-        iconUrl: weapon.iconUrl ?? undefined,
-      }));
-
-      if (input.weaponType) {
-        return list.filter((weapon) => weapon.weaponType === input.weaponType);
+      case EntityType.WEAPON: {
+        catalog.weapons.push({
+          id: row.id,
+          name: row.name,
+          weaponType: row.weaponType!,
+          rarity: row.rank!,
+          iconUrl: row.iconUrl ?? undefined,
+        });
+        break;
       }
-
-      return list;
-    }
-
-    case EntityType.ECHO: {
-      const echoes = await database.query.entities.findMany({
-        where: eq(entities.type, EntityType.ECHO),
-        columns: {
-          id: true,
-          name: true,
-          cost: true,
-          echoSetIds: true,
-          iconUrl: true,
-        },
-      });
-
-      return echoes.map((echo) => ({
-        id: echo.id,
-        name: echo.name,
-        cost: echo.cost!,
-        sets: echo.echoSetIds!,
-        iconUrl: echo.iconUrl ?? undefined,
-      }));
-    }
-
-    case EntityType.ECHO_SET: {
-      const echoSets = await database.query.entities.findMany({
-        where: eq(entities.type, EntityType.ECHO_SET),
-        columns: {
-          id: true,
-          gameId: true,
-          name: true,
-          setBonusThresholds: true,
-          iconUrl: true,
-        },
-      });
-
-      return echoSets.map((set) => ({
-        id: set.id,
-        gameId: set.gameId!,
-        name: set.name,
-        tiers: set.setBonusThresholds!,
-        iconUrl: set.iconUrl ?? undefined,
-      }));
+      case EntityType.ECHO: {
+        catalog.echoes.push({
+          id: row.id,
+          name: row.name,
+          cost: row.cost!,
+          sets: row.echoSetIds!,
+          iconUrl: row.iconUrl ?? undefined,
+        });
+        break;
+      }
+      case EntityType.ECHO_SET: {
+        catalog.echoSets.push({
+          id: row.id,
+          gameId: row.gameId!,
+          name: row.name,
+          tiers: row.setBonusThresholds!,
+          iconUrl: row.iconUrl ?? undefined,
+        });
+        break;
+      }
     }
   }
+
+  return catalog;
 };

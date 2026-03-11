@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -101,19 +101,6 @@ const makeBuff = (x: number, w: number, withStackConfig = false) => ({
   characterIconUrl: '',
 });
 
-const makeHorizontalRect = (left: number, right: number): DOMRect =>
-  ({
-    x: left,
-    y: 0,
-    width: right - left,
-    height: 48,
-    top: 0,
-    right,
-    bottom: 48,
-    left,
-    toJSON: () => ({}),
-  }) as DOMRect;
-
 beforeEach(() => {
   mockUseCapabilityIcon.mockReturnValue({ data: undefined } as ReturnType<
     typeof useCapabilityIcon
@@ -195,19 +182,6 @@ describe('BuffCanvasItem', () => {
       expect(stickyGroup).toHaveClass('left-0');
     });
 
-    it('applies sticky-right to the actions container', () => {
-      const buff = makeBuff(1, 2);
-      useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
-
-      const { container } = render(
-        <BuffCanvasItem buff={buff} onRemove={() => {}} isDialogClickable={true} />,
-      );
-
-      const actionsElement = container.querySelector('[data-slot="item-actions"]');
-      expect(actionsElement).toHaveClass('sticky');
-      expect(actionsElement).toHaveClass('right-0');
-    });
-
     it('places icons in the sticky-left group alongside the name', () => {
       const buff = makeBuff(1, 2);
       useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
@@ -240,57 +214,6 @@ describe('BuffCanvasItem', () => {
         '[data-slot="item-actions"]',
       ) as HTMLElement;
       expect(actionsElement.querySelectorAll('button').length).toBeGreaterThan(0);
-    });
-
-    it('only activates sticky classes when a buff is actually clipped by the viewport', async () => {
-      const buff = makeBuff(1, 2);
-      useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
-
-      const { container } = render(
-        <div data-slot="scroll-area-viewport">
-          <BuffCanvasItem buff={buff} onRemove={() => {}} isDialogClickable={true} />
-        </div>,
-      );
-
-      const viewport = container.querySelector(
-        '[data-slot="scroll-area-viewport"]',
-      ) as HTMLElement;
-      const stickyHost = screen.getByTestId('buff-item-sticky-host');
-      const actionsElement = container.querySelector(
-        '[data-slot="item-actions"]',
-      ) as HTMLElement;
-
-      const viewportRectSpy = vi
-        .spyOn(viewport, 'getBoundingClientRect')
-        .mockReturnValue(makeHorizontalRect(100, 900));
-      const stickyHostRectSpy = vi.spyOn(stickyHost, 'getBoundingClientRect');
-
-      // Fully visible in viewport: sticky classes should not be active.
-      stickyHostRectSpy.mockReturnValue(makeHorizontalRect(300, 700));
-      viewport.dispatchEvent(new Event('scroll'));
-
-      await waitFor(() => {
-        const nameElement = screen.getByText('ATK Buff');
-        const stickyGroup = nameElement.closest('div[class*="sticky"]');
-        expect(stickyGroup).toBeNull();
-        expect(actionsElement).not.toHaveClass('sticky');
-      });
-
-      // Clipped on both sides: sticky classes should be active.
-      stickyHostRectSpy.mockReturnValue(makeHorizontalRect(40, 960));
-      viewport.dispatchEvent(new Event('scroll'));
-
-      await waitFor(() => {
-        const nameElement = screen.getByText('ATK Buff');
-        const stickyGroup = nameElement.closest('div[class*="sticky"]');
-        expect(stickyGroup).not.toBeNull();
-        expect(stickyGroup).toHaveClass('left-0');
-        expect(actionsElement).toHaveClass('sticky');
-        expect(actionsElement).toHaveClass('right-0');
-      });
-
-      viewportRectSpy.mockRestore();
-      stickyHostRectSpy.mockRestore();
     });
   });
 

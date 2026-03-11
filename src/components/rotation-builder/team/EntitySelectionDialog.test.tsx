@@ -2,8 +2,6 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import type { ListEntitiesResponse } from '@/services/game-data';
-
 import { EntitySelectionDialog } from './EntitySelectionDialog';
 
 beforeAll(() => {
@@ -15,31 +13,31 @@ beforeAll(() => {
   HTMLElement.prototype.scrollIntoView = vi.fn();
 });
 
-const CHARACTER_ITEMS: ListEntitiesResponse = [
+const CHARACTER_ITEMS = [
   {
     id: 1,
     name: 'Jiyan',
     attribute: 'aero',
     weaponType: 'Broadblade',
     rarity: 5,
-  },
+  } as const,
   {
     id: 2,
     name: 'Calcharo',
     attribute: 'electro',
     weaponType: 'Broadblade',
     rarity: 5,
-  },
+  } as const,
   {
     id: 3,
     name: 'Baizhi',
     attribute: 'glacio',
     weaponType: 'Rectifier',
     rarity: 4,
-  },
+  } as const,
 ];
 
-const ECHO_ITEMS: ListEntitiesResponse = [
+const ECHO_ITEMS = [
   { id: 10, name: 'Tempest Mephis', cost: 4, sets: [1] },
   { id: 11, name: 'Feilian Beringal', cost: 3, sets: [1] },
   { id: 12, name: 'Excarat', cost: 1, sets: [2] },

@@ -35,7 +35,11 @@ type StackProps = React.HTMLAttributes<HTMLDivElement> &
 
 const Stack = React.forwardRef<HTMLDivElement, StackProps>(
   ({ className, gap, align, fullWidth, ...props }, ref) => (
-    <div ref={ref} className={cn(stackVariants({ gap, align, fullWidth }), className)} {...props} />
+    <div
+      ref={ref}
+      className={cn(stackVariants({ gap, align, fullWidth }), className)}
+      {...props}
+    />
   ),
 );
 Stack.displayName = 'Stack';

@@ -102,7 +102,7 @@ export const BuffCanvasItem = ({
       isDialogClickable={!isDialogDisabled}
       buffedAttacks={buffedAttacks}
     >
-      <CapabilityTooltip capability={buff}>
+      <CapabilityTooltip capability={buff} followCursor={true}>
         <Item
           className={cn(
             'relative flex h-12 items-center gap-0 px-0 py-0 select-none',

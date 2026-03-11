@@ -199,7 +199,7 @@ export const AttackBreakdownDataTable = ({
             selectedDetail ? (
               <AttackCalculationStatsBreakdown detail={selectedDetail} />
             ) : (
-              <Stack className="h-full items-center justify-center">
+              <Stack align="center" className="h-full justify-center">
                 <Text variant="heading">No Detail Selected</Text>
                 <Text variant="small">
                   Click Details on any row to view stat breakdown data here.

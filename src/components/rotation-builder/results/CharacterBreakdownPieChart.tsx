@@ -46,7 +46,7 @@ export const CharacterBreakdownPieChart = ({
 
   if (!selectedCharacter) {
     return (
-      <Stack className="h-full items-center justify-center">
+      <Stack align="center" className="h-full justify-center">
         <Text variant="heading">Character Breakdown</Text>
         <Text variant="small">
           Click the info icon to view a character&apos;s damage-type pie chart.
@@ -78,7 +78,7 @@ export const CharacterBreakdownPieChart = ({
                     pctOfCharacter: number;
                   };
                   return (
-                    <Row justify="between" className="w-full">
+                    <Row justify="between" fullWidth>
                       <Text as="span" variant="caption">
                         {payload.label}
                       </Text>

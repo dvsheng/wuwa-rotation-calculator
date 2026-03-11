@@ -13,7 +13,7 @@ export const RotationResultSummary = ({
   damageInstanceCount,
 }: RotationResultSummaryProperties) => {
   return (
-    <Row className="border-primary/10 pb-panel justify-between border-b">
+    <Row justify="between" className="border-primary/10 pb-panel border-b">
       <Stack gap="tight">
         <Text variant="overline">Total Rotation Damage</Text>
         <Text variant="display" className="text-primary leading-none">

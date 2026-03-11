@@ -11,7 +11,7 @@ import { CharacterCard } from './CharacterCard';
 
 export const TeamContainer = () => {
   return (
-    <Row justify="center" className="min-h-0 min-w-0 flex-1">
+    <Row justify="center" align="start" fullWidth className="min-h-0 min-w-0 flex-1">
       <Stack className="border-border flex h-full w-fit overflow-hidden border-r">
         <DashboardSectionHeader
           title="Team"

@@ -128,7 +128,7 @@ export const CharacterBreakdownDataTable = ({
         cellClassName: rotationResultTableColumnLayout.damage,
       },
       cell: ({ row }) => (
-        <Stack className="items-end">
+        <Stack align="end">
           <Text as="p" variant="small" className="text-primary text-right font-mono">
             {Math.round(row.original.totalDamage).toLocaleString()}
           </Text>

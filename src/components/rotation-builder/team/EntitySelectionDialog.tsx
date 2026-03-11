@@ -115,8 +115,13 @@ export const EntitySelectionDialog = ({
 
         {/* Filter Bar */}
         {hasFilters && (
-          <Row className="px-component py-compact gap-panel flex-wrap items-center border-b">
-            <Row className="gap-compact flex items-center">
+          <Row
+            gap="panel"
+            align="center"
+            wrap
+            className="px-component py-compact border-b"
+          >
+            <Row gap="compact" align="center">
               <Filter className="text-muted-foreground h-4 w-4" />
               <Text as="span">Filters:</Text>
             </Row>

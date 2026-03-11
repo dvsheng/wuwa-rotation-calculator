@@ -219,7 +219,7 @@ const ContributorRow = ({
   flat: boolean;
   enemy?: boolean;
 }) => (
-  <Row className="justify-between">
+  <Row justify="between">
     <Stack className="min-w-0 flex-1">
       <Text as="p" variant="caption">
         <Text as="span" variant="caption" className="font-semibold">
@@ -264,7 +264,7 @@ const StatValueRow = ({
   value: string;
   valueClassName?: string;
 }) => (
-  <Row className="justify-between">
+  <Row justify="between">
     <Text as="span" variant="small">
       {label}
     </Text>
@@ -290,7 +290,7 @@ const GroupList = ({
       return (
         <AccordionItem key={group.statLabel} value={`${group.stat}-${group.statLabel}`}>
           <AccordionTrigger className="py-2">
-            <Row className="w-full justify-between pr-2">
+            <Row justify="between" fullWidth className="pr-2">
               <Text as="span" variant="small">
                 {group.statLabel}
               </Text>
@@ -335,7 +335,7 @@ export const AttackCalculationStatsBreakdown = ({
   const characterGroups = buildCharContributors(characterStats, CHARACTER_STATS);
   const enemyGroups = buildEnemyContributors(enemyStats, ENEMY_STATS);
   return (
-    <Stack gap="compact" className="p-panel w-full">
+    <Stack gap="compact" fullWidth className="p-panel">
       <Text variant="heading" className="border-border border-b">
         Stat Breakdown
       </Text>

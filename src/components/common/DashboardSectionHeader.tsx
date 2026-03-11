@@ -24,9 +24,10 @@ export const DashboardSectionHeader = ({
     <Row
       justify="between"
       align="center"
-      className="canvas-header border-border px-panel w-full min-w-0 self-start border-b"
+      fullWidth
+      className="canvas-header border-border px-panel min-w-0 self-start border-b"
     >
-      <Row align="center" className="gap-compact min-w-0">
+      <Row align="center" gap="compact" className="min-w-0">
         {icon ?? <div className="text-muted-foreground size-4">{icon}</div>}
         <Text as="span" variant="heading" className="truncate">
           {title}

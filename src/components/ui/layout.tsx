@@ -15,7 +15,18 @@ const gapVariants = {
 
 // Stack — flex column container
 const stackVariants = cva('flex flex-col', {
-  variants: { gap: gapVariants },
+  variants: {
+    gap: gapVariants,
+    align: {
+      start: 'items-start',
+      center: 'items-center',
+      end: 'items-end',
+      stretch: 'items-stretch',
+    },
+    fullWidth: {
+      true: 'w-full',
+    },
+  },
   defaultVariants: { gap: 'none' },
 });
 
@@ -23,8 +34,8 @@ type StackProps = React.HTMLAttributes<HTMLDivElement> &
   VariantProps<typeof stackVariants>;
 
 const Stack = React.forwardRef<HTMLDivElement, StackProps>(
-  ({ className, gap, ...props }, ref) => (
-    <div ref={ref} className={cn(stackVariants({ gap }), className)} {...props} />
+  ({ className, gap, align, fullWidth, ...props }, ref) => (
+    <div ref={ref} className={cn(stackVariants({ gap, align, fullWidth }), className)} {...props} />
   ),
 );
 Stack.displayName = 'Stack';
@@ -46,6 +57,12 @@ const rowVariants = cva('flex', {
       end: 'justify-end',
       between: 'justify-between',
     },
+    fullWidth: {
+      true: 'w-full',
+    },
+    wrap: {
+      true: 'flex-wrap',
+    },
   },
   defaultVariants: { gap: 'none', align: 'center' },
 });
@@ -53,10 +70,10 @@ const rowVariants = cva('flex', {
 type RowProps = React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof rowVariants>;
 
 const Row = React.forwardRef<HTMLDivElement, RowProps>(
-  ({ className, gap, align, justify, ...props }, ref) => (
+  ({ className, gap, align, justify, fullWidth, wrap, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn(rowVariants({ gap, align, justify }), className)}
+      className={cn(rowVariants({ gap, align, justify, fullWidth, wrap }), className)}
       {...props}
     />
   ),

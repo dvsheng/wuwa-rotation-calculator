@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Ref } from 'react';
 import type { Layout, LayoutItem } from 'react-grid-layout';
 import GridLayout from 'react-grid-layout';
+import { absoluteStrategy } from 'react-grid-layout/core';
 
 import { Text } from '@/components/ui/typography';
 import { useCanvasLayout } from '@/hooks/useCanvasLayout';
@@ -60,6 +61,7 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
     })),
     droppingItem: { w: BUFF_LENGTH_ON_ADD, h: 1, i: 'new-buff', x: 0, y: 0 },
     style: { minHeight: 400 },
+    positionStrategy: absoluteStrategy,
     onLayoutChange,
     onDrop: onDropBuff,
   });

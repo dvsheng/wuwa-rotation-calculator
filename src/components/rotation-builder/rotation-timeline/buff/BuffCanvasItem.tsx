@@ -7,8 +7,8 @@ import { EntityIconDisplay } from '@/components/common/EntityIcon';
 import { ParameterConfigurationDialog } from '@/components/common/ParameterConfigurationDialog';
 import { TrashButton } from '@/components/common/TrashButton';
 import { Button } from '@/components/ui/button';
-import { Item, ItemActions, ItemContent, ItemMedia } from '@/components/ui/item';
-import { Row } from '@/components/ui/layout';
+import { Item, ItemActions, ItemMedia } from '@/components/ui/item';
+import { Text } from '@/components/ui/typography';
 import {
   getAlignmentSegments,
   useSelfBuffAlignment,
@@ -46,7 +46,6 @@ export const BuffCanvasItem = ({
   const updateBuffLayout = useStore((state) => state.updateBuffLayout);
   const { attacks } = useTeamAttackInstances();
   const alignment = useSelfBuffAlignment(buff);
-
   // Generate styling and segments based on target and alignment
   const getItemClassNameAndSegments = (): {
     itemClassName: string;
@@ -106,7 +105,7 @@ export const BuffCanvasItem = ({
       <CapabilityTooltip capability={buff}>
         <Item
           className={cn(
-            'relative flex h-12 items-center py-0 select-none',
+            'relative flex h-12 items-center gap-0 px-0 py-0 select-none',
             itemClassName,
           )}
         >
@@ -121,47 +120,47 @@ export const BuffCanvasItem = ({
               }}
             />
           ))}
-          {/* Sticky left: icons and name stay visible as the item scrolls */}
-          <Row
-            align="center"
-            gap="compact"
-            className="sticky left-0 z-10 shrink-0 bg-inherit"
-          >
+          {/* Left sticky: icons + name */}
+          <div className="sticky left-0 flex h-full min-w-0 items-center gap-4 overflow-hidden bg-inherit px-4">
             <ItemMedia>
               <EntityIconDisplay url={buff.characterIconUrl} size="medium" />
             </ItemMedia>
             <ItemMedia>
               <CapabilityIconDisplay url={buff.iconUrl} size="medium" />
             </ItemMedia>
-            <ItemContent className="text-xs">{buff.name}</ItemContent>
-            {/* Warning indicator */}
+            <Text variant="caption" className="text-foreground min-w-0 truncate">
+              {buff.name}
+            </Text>
+          </div>
+          {/* Spacer */}
+          <div className="flex-1" />
+          {/* Right sticky: warning + actions */}
+          <div className="sticky right-0 flex h-full shrink-0 items-center gap-2 bg-inherit px-4">
             {shouldShowWarning && (
               <AlertTriangle
                 data-testid="alert-triangle"
                 className="size-5 shrink-0 text-amber-500"
               />
             )}
-          </Row>
-          <div className="flex-1" />
-          {/* Sticky right: actions stay visible as the item scrolls */}
-          <ItemActions className="sticky right-0 z-10 bg-inherit">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground size-6 shrink-0"
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={(event) => {
-                event.stopPropagation();
-                updateBuffLayout(buff.instanceId, { x: 0, w: attacks.length });
-              }}
-            >
-              <Maximize2 className="size-3.5" />
-            </Button>
-            <TrashButton
-              className="shrink-0"
-              onRemove={() => onRemove(buff.instanceId)}
-            />
-          </ItemActions>
+            <ItemActions>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground size-6 shrink-0"
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  updateBuffLayout(buff.instanceId, { x: 0, w: attacks.length });
+                }}
+              >
+                <Maximize2 className="size-3.5" />
+              </Button>
+              <TrashButton
+                className="shrink-0"
+                onRemove={() => onRemove(buff.instanceId)}
+              />
+            </ItemActions>
+          </div>
         </Item>
       </CapabilityTooltip>
     </ParameterConfigurationDialog>

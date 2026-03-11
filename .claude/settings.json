@@ -29,7 +29,12 @@
       "Bash(sqlite3 /Users/david/Code/wuwa-rotation-builder/.local/data/game-data.db \"SELECT id, name, capability_type, capability_json FROM capabilities WHERE capability_json LIKE ''%tuneStrain%'' AND capability_type = ''modifier'';\")",
       "Bash(sqlite3 /Users/david/Code/wuwa-rotation-builder/.local/data/game-data.db \"SELECT * FROM full_capabilities WHERE capability_json LIKE ''%tuneStrain%'' AND capability_type = ''modifier'' AND entity_name = ''Luuk Herssen'';\")",
       "Bash(sqlite3 /Users/david/Code/wuwa-rotation-builder/.local/data/game-data.db \"SELECT id, name, capability_type, capability_json FROM capabilities WHERE capability_json LIKE ''%tuneRupture%'' OR capability_json LIKE ''%tuneBreakBoost%'';\")",
-      "Bash(node -e \"const m = require\\(''@tanstack/react-start''\\); console.log\\(Object.keys\\(m\\).filter\\(k => k.toLowerCase\\(\\).includes\\(''request''\\) || k.toLowerCase\\(\\).includes\\(''server''\\) || k.toLowerCase\\(\\).includes\\(''web''\\)\\)\\)\")"
+      "Bash(node -e \"const m = require\\(''@tanstack/react-start''\\); console.log\\(Object.keys\\(m\\).filter\\(k => k.toLowerCase\\(\\).includes\\(''request''\\) || k.toLowerCase\\(\\).includes\\(''server''\\) || k.toLowerCase\\(\\).includes\\(''web''\\)\\)\\)\")",
+      "Bash(node -e \"const p = require\\(''/Users/david/Code/wuwa-rotation-builder/package.json''\\); console.log\\(p.dependencies.react\\)\")",
+      "Bash(node -e \"const rgl = require\\(''react-grid-layout''\\); console.log\\(Object.keys\\(rgl\\).filter\\(k => k.toLowerCase\\(\\).includes\\(''strat''\\) || k.toLowerCase\\(\\).includes\\(''absolute''\\)\\)\\)\")",
+      "Bash(node -e \"const rgl = require\\(''react-grid-layout''\\); console.log\\(Object.keys\\(rgl\\)\\)\")",
+      "Bash(node -e \"const core = require\\(''react-grid-layout/dist/core.js''\\); console.log\\(Object.keys\\(core\\).filter\\(k => k.includes\\(''strat''\\) || k.includes\\(''absolute''\\) || k.includes\\(''topLeft''\\)\\)\\)\")",
+      "Bash(node -e \"const rgl = require\\(''react-grid-layout''\\); console.log\\(rgl.setTopLeft.toString\\(\\).slice\\(0, 200\\)\\)\")"
     ],
     "additionalDirectories": [
       "/Users/david/.claude/projects/-Users-david-Code-wuwa-rotation-builder/memory",

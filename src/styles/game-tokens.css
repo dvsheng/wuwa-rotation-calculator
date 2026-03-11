@@ -9,18 +9,107 @@
 
 @theme inline {
   /* ── Attribute / element colors ───────────────────────────────────────── */
-  --color-attribute-fusion: #c32439;
-  --color-attribute-glacio: #56b9d7;
-  --color-attribute-aero: #36ba92;
-  --color-attribute-electro: #a242b1;
-  --color-attribute-spectro: #baa525;
-  --color-attribute-havoc: #8f1d4f;
-  --color-attribute-physical: #999999;
+  --color-attribute-fusion: oklch(0.533 0.192 20.635);
+  --color-attribute-glacio: oklch(0.738 0.101 220.66);
+  --color-attribute-aero: oklch(0.708 0.127 168.234);
+  --color-attribute-electro: oklch(0.552 0.186 322.04);
+  --color-attribute-spectro: oklch(0.719 0.139 99.238);
+  --color-attribute-havoc: oklch(0.438 0.154 359.617);
+  --color-attribute-physical: oklch(0.683 0 0);
+
+  /* Strong variants for emphasis */
+  --color-attribute-fusion-strong: color-mix(
+    in oklab,
+    var(--color-attribute-fusion) 60%,
+    black
+  );
+  --color-attribute-glacio-strong: color-mix(
+    in oklab,
+    var(--color-attribute-glacio) 60%,
+    black
+  );
+  --color-attribute-aero-strong: color-mix(
+    in oklab,
+    var(--color-attribute-aero) 60%,
+    black
+  );
+  --color-attribute-electro-strong: color-mix(
+    in oklab,
+    var(--color-attribute-electro) 60%,
+    black
+  );
+  --color-attribute-spectro-strong: color-mix(
+    in oklab,
+    var(--color-attribute-spectro) 60%,
+    black
+  );
+  --color-attribute-havoc-strong: color-mix(
+    in oklab,
+    var(--color-attribute-havoc) 60%,
+    black
+  );
+  --color-attribute-physical-strong: color-mix(
+    in oklab,
+    var(--color-attribute-physical) 60%,
+    black
+  );
+
+  /* Subtle variants for background/surface tints */
+  --color-attribute-fusion-subtle: color-mix(
+    in oklab,
+    var(--color-attribute-fusion) 18%,
+    transparent
+  );
+  --color-attribute-glacio-subtle: color-mix(
+    in oklab,
+    var(--color-attribute-glacio) 18%,
+    transparent
+  );
+  --color-attribute-aero-subtle: color-mix(
+    in oklab,
+    var(--color-attribute-aero) 18%,
+    transparent
+  );
+  --color-attribute-electro-subtle: color-mix(
+    in oklab,
+    var(--color-attribute-electro) 18%,
+    transparent
+  );
+  --color-attribute-spectro-subtle: color-mix(
+    in oklab,
+    var(--color-attribute-spectro) 18%,
+    transparent
+  );
+  --color-attribute-havoc-subtle: color-mix(
+    in oklab,
+    var(--color-attribute-havoc) 18%,
+    transparent
+  );
+  --color-attribute-physical-subtle: color-mix(
+    in oklab,
+    var(--color-attribute-physical) 18%,
+    transparent
+  );
 
   /* ── Rarity tier colors ───────────────────────────────────────────────── */
-  /* Matched to Tailwind's yellow-500 / purple-500 / blue-500 so that
-     bg-rarity-5/10 produces the same tint currently hardcoded as bg-yellow-500/10 */
-  --color-rarity-5: oklch(0.795 0.184 86); /* golden */
-  --color-rarity-4: oklch(0.627 0.265 304); /* purple */
-  --color-rarity-3: oklch(0.623 0.214 260); /* blue   */
+  /* Base palette */
+  --color-rarity-5: #eae287;
+  --color-rarity-4: #ffbefd;
+  --color-rarity-3: #a9eeff;
+  --color-rarity-2: #9cf3b0;
+  --color-rarity-1: #c7c7c7;
+
+  /* Strong variants for text/borders on dark UI */
+  --color-rarity-5-strong: color-mix(in oklab, var(--color-rarity-5) 60%, black);
+  --color-rarity-4-strong: color-mix(in oklab, var(--color-rarity-4) 60%, black);
+  --color-rarity-3-strong: color-mix(in oklab, var(--color-rarity-3) 60%, black);
+  --color-rarity-2-strong: color-mix(in oklab, var(--color-rarity-2) 60%, black);
+  --color-rarity-1-strong: color-mix(in oklab, var(--color-rarity-1) 60%, black);
+
+  /* Subtle variants for pill/card backgrounds */
+  --color-rarity-5-subtle: color-mix(in oklab, var(--color-rarity-5) 18%, transparent);
+  --color-rarity-4-subtle: color-mix(in oklab, var(--color-rarity-4) 18%, transparent);
+  --color-rarity-3-subtle: color-mix(in oklab, var(--color-rarity-3) 18%, transparent);
+  --color-rarity-2-subtle: color-mix(in oklab, var(--color-rarity-2) 18%, transparent);
+  --color-rarity-1-subtle: color-mix(in oklab, var(--color-rarity-1) 18%, transparent);
 }

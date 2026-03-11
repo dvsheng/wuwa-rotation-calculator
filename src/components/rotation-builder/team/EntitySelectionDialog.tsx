@@ -28,6 +28,12 @@ export interface EntitySelectionDialogProperties {
   excludeIds?: Array<number>;
 }
 
+const getItemTier = (item: ListEntityResponseItem): number | undefined => {
+  if ('rarity' in item) return item.rarity;
+  if ('cost' in item) return item.cost;
+  return undefined;
+};
+
 export const EntitySelectionDialog = ({
   items,
   value,
@@ -64,32 +70,45 @@ export const EntitySelectionDialog = ({
 
   const shouldShowWeaponTypeFilter = items[0] && 'weaponType' in items[0];
   const shouldShowAttributeFilter = items[0] && 'attribute' in items[0];
-  const rarityFilterOptions = compact([
-    ...new Set(items.map((item) => ('rarity' in item ? item.rarity : undefined))),
-  ]).toSorted();
   const costFilterOptions = compact([
     ...new Set(items.map((item) => ('cost' in item ? item.cost : undefined))),
   ]).toSorted();
 
-  const filteredItems = items.filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilters = activeFilters.entries().every(([key, values]) => {
-      if (values.size === 0) return true;
-      return (
-        key in item &&
-        values.has(String((item as unknown as Record<string, string>)[key]))
-      );
+  const filteredItems = items
+    .filter((item) => {
+      const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesFilters = activeFilters.entries().every(([key, values]) => {
+        if (values.size === 0) return true;
+        return (
+          key in item &&
+          values.has(String((item as unknown as Record<string, string>)[key]))
+        );
+      });
+      const isNotExcluded = !excludeIds.includes(item.id);
+      return matchesSearch && matchesFilters && isNotExcluded;
+    })
+    .toSorted((a, b) => {
+      const tierA = getItemTier(a);
+      const tierB = getItemTier(b);
+
+      if (tierA === undefined && tierB === undefined) return 0;
+      if (tierA === undefined) return 1;
+      if (tierB === undefined) return -1;
+      if (tierA === tierB) {
+        return 0;
+      }
+
+      return tierB - tierA;
     });
-    const isNotExcluded = !excludeIds.includes(item.id);
-    return matchesSearch && matchesFilters && isNotExcluded;
-  });
 
   const selectedItem = items.find((item) => item.id === value);
 
   const hasActiveFilters =
     [...activeFilters.values()].some((values) => values.size > 0) || !!searchTerm;
-  const hasFilters = rarityFilterOptions.length > 0 || costFilterOptions.length > 0;
-  shouldShowWeaponTypeFilter || shouldShowAttributeFilter;
+  const hasFilters =
+    costFilterOptions.length > 0 ||
+    shouldShowWeaponTypeFilter ||
+    shouldShowAttributeFilter;
 
   return (
     <>
@@ -116,16 +135,12 @@ export const EntitySelectionDialog = ({
         {/* Filter Bar */}
         {hasFilters && (
           <Row
-            gap="panel"
+            gap="compact"
             align="center"
             wrap
             className="px-component py-compact border-b"
           >
-            <Row gap="compact" align="center">
-              <Filter className="text-muted-foreground h-4 w-4" />
-              <Text as="span">Filters:</Text>
-            </Row>
-
+            <Filter className="h-4 w-4" />
             {shouldShowAttributeFilter && (
               <ToggleGroup
                 type="multiple"
@@ -140,21 +155,6 @@ export const EntitySelectionDialog = ({
                       <AttributeIcon attribute={attribute} />
                     </ToggleGroupItem>
                   ))}
-              </ToggleGroup>
-            )}
-
-            {rarityFilterOptions.length > 0 && (
-              <ToggleGroup
-                type="multiple"
-                variant="outline"
-                value={[...(activeFilters.get('rarity') ?? new Set())]}
-                onValueChange={(values) => toggleFilter('rarity', values)}
-              >
-                {rarityFilterOptions.map((rarity) => (
-                  <ToggleGroupItem key={rarity} value={String(rarity)}>
-                    {rarity}★
-                  </ToggleGroupItem>
-                ))}
               </ToggleGroup>
             )}
 

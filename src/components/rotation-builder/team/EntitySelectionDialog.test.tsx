@@ -43,6 +43,12 @@ const ECHO_ITEMS = [
   { id: 12, name: 'Excarat', cost: 1, sets: [2] },
 ];
 
+const ECHO_ITEMS_UNSORTED = [
+  { id: 12, name: 'Excarat', cost: 1, sets: [2] },
+  { id: 10, name: 'Tempest Mephis', cost: 4, sets: [1] },
+  { id: 11, name: 'Feilian Beringal', cost: 3, sets: [1] },
+];
+
 const openDialog = async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Jiyan' }));
   const dialog = await screen.findByRole('dialog');
@@ -106,32 +112,6 @@ describe('EntitySelectionDialog', () => {
     expect(within(dialog).queryByText('Baizhi')).not.toBeInTheDocument();
   });
 
-  it('filters by rarity and can clear active filters', async () => {
-    render(
-      <EntitySelectionDialog
-        items={CHARACTER_ITEMS}
-        value={1}
-        onValueChange={() => {}}
-      />,
-    );
-    const { dialog, input } = await openDialog();
-
-    await userEvent.click(within(dialog).getByRole('button', { name: '4★' }));
-
-    expect(within(dialog).getByText('Baizhi')).toBeInTheDocument();
-    expect(within(dialog).queryByText('Jiyan')).not.toBeInTheDocument();
-    expect(within(dialog).queryByText('Calcharo')).not.toBeInTheDocument();
-    expect(within(dialog).getByRole('button', { name: /clear/i })).toBeInTheDocument();
-
-    await userEvent.type(input, 'bai');
-    await userEvent.click(within(dialog).getByRole('button', { name: /clear/i }));
-
-    expect(input).toHaveValue('');
-    expect(within(dialog).getByText('Jiyan')).toBeInTheDocument();
-    expect(within(dialog).getByText('Calcharo')).toBeInTheDocument();
-    expect(within(dialog).getByText('Baizhi')).toBeInTheDocument();
-  });
-
   it('excludes entities from selectable list when excludeIds is provided', async () => {
     render(
       <EntitySelectionDialog
@@ -165,5 +145,26 @@ describe('EntitySelectionDialog', () => {
     expect(
       within(dialog).queryByRole('button', { name: 'Broadblade' }),
     ).not.toBeInTheDocument();
+  });
+
+  it('sorts echoes by cost descending when rarity is not present', async () => {
+    render(
+      <EntitySelectionDialog
+        items={ECHO_ITEMS_UNSORTED}
+        value={10}
+        onValueChange={() => {}}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Tempest Mephis' }));
+    const dialog = await screen.findByRole('dialog');
+    const dialogText = dialog.textContent;
+
+    expect(dialogText.indexOf('Tempest Mephis')).toBeLessThan(
+      dialogText.indexOf('Feilian Beringal'),
+    );
+    expect(dialogText.indexOf('Feilian Beringal')).toBeLessThan(
+      dialogText.indexOf('Excarat'),
+    );
   });
 });

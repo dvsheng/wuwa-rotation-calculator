@@ -7,73 +7,52 @@ import { Text } from '@/components/ui/typography';
 import { cn } from '@/lib/utils';
 import type { ListEntityResponseItem } from '@/services/game-data';
 
-import { ATTRIBUTE_COLORS } from './constants';
-
 interface EntitySelectorTileProperties extends ComponentPropsWithRef<'div'> {
   entity: ListEntityResponseItem;
   isSelected?: boolean;
   onClick?: () => void;
 }
 
-const RARITY_CLASSES: Record<number, string> = {
-  5: 'bg-rarity-5/10',
-  4: 'bg-rarity-4/10',
-  3: 'bg-rarity-3/10',
+const RARITY_TILE_CLASSES: Record<number, string> = {
+  5: 'bg-rarity-5-subtle bg-linear-to-br from-rarity-5/30 via-rarity-5-subtle to-rarity-5-strong/14',
+  4: 'bg-rarity-4-subtle bg-linear-to-br from-rarity-4/30 via-rarity-4-subtle to-rarity-4-strong/14',
+  3: 'bg-rarity-3-subtle bg-linear-to-br from-rarity-3/30 via-rarity-3-subtle to-rarity-3-strong/14',
+  2: 'bg-rarity-2-subtle bg-linear-to-br from-rarity-2/30 via-rarity-2-subtle to-rarity-2-strong/14',
+  1: 'bg-rarity-1-subtle bg-linear-to-br from-rarity-1/26 via-rarity-1-subtle to-rarity-1-strong/12',
 };
 
 export const EntitySelectorTile = ({
   entity,
   isSelected,
   onClick,
-}: EntitySelectorTileProperties) => (
-  <Stack
-    gap="compact"
-    className={cn(
-      'hover:bg-accent hover:border-primary/50 p-compact border-border size-40 items-center rounded-lg border',
-      isSelected && 'border-primary ring-primary bg-accent ring-1',
-    )}
-    style={
-      'attribute' in entity
-        ? { borderLeft: `4px solid ${ATTRIBUTE_COLORS[entity.attribute]}` }
-        : undefined
-    }
-    onClick={onClick}
-  >
-    <EntityIconDisplay url={entity.iconUrl} size="xlarge" className="shrink-0" />
-    <Text as="div" variant="bodySm" className="wrap-2 max-w-30">
-      {entity.name}
-    </Text>
-    <Row gap="tight" align="center" justify="center">
-      {'rarity' in entity && (
-        <Text
-          as="span"
-          variant="caption"
-          className={cn(
-            'px-tight py-tight rounded-full',
-            RARITY_CLASSES[entity.rarity],
-          )}
-        >
-          {entity.rarity}★
-        </Text>
+}: EntitySelectorTileProperties) => {
+  const resolvedRarity = 'rarity' in entity ? entity.rarity : 1;
+
+  return (
+    <Stack
+      gap="tight"
+      className={cn(
+        'p-compact border-border/55 hover:border-primary/40 size-36 items-center rounded-lg border shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md hover:brightness-105',
+        RARITY_TILE_CLASSES[resolvedRarity] ?? RARITY_TILE_CLASSES[1],
+        isSelected && 'border-primary ring-primary/40 shadow-md ring-1',
       )}
-      {'cost' in entity && (
-        <Text
-          as="span"
-          variant="caption"
-          className={cn(
-            'px-tight py-tight rounded-full',
-            RARITY_CLASSES[entity.cost === 4 ? 5 : entity.cost === 3 ? 4 : 3],
-          )}
-        >
-          Cost {entity.cost}
-        </Text>
-      )}
-      {'weaponType' in entity && (
-        <WeaponTypeIcon weaponType={entity.weaponType} size={20} />
-      )}
-      {'attribute' in entity && entity.attribute !== 'physical' && (
-        <AttributeIcon attribute={entity.attribute} size={20} />
-      )}
-    </Row>
-  </Stack>
-);
+      onClick={onClick}
+    >
+      <EntityIconDisplay url={entity.iconUrl} size="xlarge" className="shrink-0" />
+      <Text as="div" variant="bodySm" className="wrap-2 text-center">
+        {entity.name}
+      </Text>
+      <Row gap="tight" align="center" justify="center">
+        {'cost' in entity && (
+          <Text as="span" variant="caption">
+            Cost {entity.cost}
+          </Text>
+        )}
+        {'weaponType' in entity && <WeaponTypeIcon weaponType={entity.weaponType} />}
+        {'attribute' in entity && entity.attribute !== 'physical' && (
+          <AttributeIcon attribute={entity.attribute} />
+        )}
+      </Row>
+    </Stack>
+  );
+};

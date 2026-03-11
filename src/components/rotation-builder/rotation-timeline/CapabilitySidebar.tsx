@@ -1,8 +1,8 @@
 import { SwatchBook } from 'lucide-react';
 import { useState } from 'react';
 
+import { CapabilityHoverCard } from '@/components/common/CapabilityHoverCard';
 import { CapabilityIcon } from '@/components/common/CapabilityIcon';
-import { CapabilityTooltip } from '@/components/common/CapabilityTooltip';
 import { DashboardSectionHeader } from '@/components/common/DashboardSectionHeader';
 import { sortAttackOrigins } from '@/components/rotation-builder/constants';
 import { Input } from '@/components/ui/input';
@@ -193,7 +193,7 @@ const CapabilityCard = ({
   const isDraggable = onDragStart !== undefined;
   const accentClass = toLeftBorderAccent(colorClassName);
   return (
-    <CapabilityTooltip capability={capability}>
+    <CapabilityHoverCard capability={capability}>
       <Item
         draggable={isDraggable}
         onDragStart={onDragStart}
@@ -221,7 +221,7 @@ const CapabilityCard = ({
           {capability.name}
         </Text>
       </Item>
-    </CapabilityTooltip>
+    </CapabilityHoverCard>
   );
 };
 

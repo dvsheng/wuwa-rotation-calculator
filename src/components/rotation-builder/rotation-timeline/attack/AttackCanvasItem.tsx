@@ -1,8 +1,8 @@
 import { isNil } from 'es-toolkit/predicate';
 import { AlertTriangle } from 'lucide-react';
 
+import { CapabilityHoverCard } from '@/components/common/CapabilityHoverCard';
 import { CapabilityIconDisplay } from '@/components/common/CapabilityIcon';
-import { CapabilityTooltip } from '@/components/common/CapabilityTooltip';
 import { EntityIconDisplay } from '@/components/common/EntityIcon';
 import { ParameterConfigurationDialog } from '@/components/common/ParameterConfigurationDialog';
 import { TrashButton } from '@/components/common/TrashButton';
@@ -35,7 +35,7 @@ export const AttackCanvasItem = ({
       capability={attack}
       isDialogClickable={isAttackConfigurable && isDialogClickable}
     >
-      <CapabilityTooltip capability={attack}>
+      <CapabilityHoverCard capability={attack}>
         <div className="bg-card hover:bg-accent/50 p-compact relative flex h-full w-full flex-col items-center overflow-hidden rounded-lg border select-none">
           {/* Index at top-left */}
           <Text as="span" variant="caption" className="absolute top-1 left-1">
@@ -66,7 +66,7 @@ export const AttackCanvasItem = ({
             stopPropagation={true}
           />
         </div>
-      </CapabilityTooltip>
+      </CapabilityHoverCard>
     </ParameterConfigurationDialog>
   );
 };

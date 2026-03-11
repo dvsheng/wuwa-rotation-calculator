@@ -1,8 +1,8 @@
 import { isNil } from 'es-toolkit/predicate';
 import { AlertTriangle, Maximize2 } from 'lucide-react';
 
+import { CapabilityHoverCard } from '@/components/common/CapabilityHoverCard';
 import { CapabilityIconDisplay } from '@/components/common/CapabilityIcon';
-import { CapabilityTooltip } from '@/components/common/CapabilityTooltip';
 import { EntityIconDisplay } from '@/components/common/EntityIcon';
 import { ParameterConfigurationDialog } from '@/components/common/ParameterConfigurationDialog';
 import { TrashButton } from '@/components/common/TrashButton';
@@ -102,7 +102,7 @@ export const BuffCanvasItem = ({
       isDialogClickable={!isDialogDisabled}
       buffedAttacks={buffedAttacks}
     >
-      <CapabilityTooltip capability={buff} followCursor={true}>
+      <CapabilityHoverCard capability={buff} followCursor={true}>
         <Item
           className={cn(
             'relative flex h-12 items-center gap-0 px-0 py-0 select-none',
@@ -162,7 +162,7 @@ export const BuffCanvasItem = ({
             </ItemActions>
           </div>
         </Item>
-      </CapabilityTooltip>
+      </CapabilityHoverCard>
     </ParameterConfigurationDialog>
   );
 };

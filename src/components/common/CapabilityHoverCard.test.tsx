@@ -1,8 +1,11 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { CapabilityTooltip } from './CapabilityTooltip';
+import type { DetailedAttack } from '@/hooks/useTeamDetails';
+import { CapabilityType } from '@/services/game-data/types';
+
+import { CapabilityHoverCard } from './CapabilityHoverCard';
 
 beforeAll(() => {
   // floating-ui's autoUpdate uses ResizeObserver
@@ -13,33 +16,38 @@ beforeAll(() => {
   };
 });
 
-const makeCapability = (overrides: Record<string, unknown> = {}) =>
+const makeAttack = (overrides: Record<string, unknown> = {}): DetailedAttack =>
   ({
     id: 1,
     name: 'Test Buff',
     description: 'Increases ATK by 10%',
     parentName: 'Weapon',
     parameters: [],
+    capabilityType: CapabilityType.ATTACK,
+    damageInstances: [],
+    characterId: 1,
+    entityId: 1,
+    characterName: 'Rover',
     ...overrides,
-  }) as any;
+  }) as unknown as DetailedAttack;
 
-// The cursor tooltip wraps children in a display:contents div. Because mouseenter
+// The cursor hover card wraps children in a display:contents div. Because mouseenter
 // does not bubble, events must be fired on that wrapper div, not the child trigger.
 const getWrapper = (trigger: HTMLElement) => trigger.parentElement!;
 
-describe('CapabilityTooltip', () => {
+describe('CapabilityHoverCard', () => {
   describe('when capability has no displayable content', () => {
-    it('renders children directly without a tooltip', () => {
-      const capability = makeCapability({
+    it('renders children directly without a hover card', () => {
+      const capability = makeAttack({
         description: '',
         parentName: '',
-        parameters: [],
+        damageInstances: [],
       });
 
       render(
-        <CapabilityTooltip capability={capability}>
+        <CapabilityHoverCard capability={capability}>
           <button>trigger</button>
-        </CapabilityTooltip>,
+        </CapabilityHoverCard>,
       );
 
       expect(screen.getByRole('button', { name: 'trigger' })).toBeInTheDocument();
@@ -47,90 +55,80 @@ describe('CapabilityTooltip', () => {
     });
   });
 
-  describe('default tooltip (followCursor=false)', () => {
-    // Radix renders content twice: once visible, once in a visually-hidden role="tooltip"
-    // span for screen readers. Use within(screen.getByRole('tooltip')) to scope assertions
-    // to avoid "multiple elements found" errors.
-    it('shows tooltip content on hover', async () => {
-      const capability = makeCapability();
+  describe('default hover card (followCursor=false)', () => {
+    it('shows hover card content on hover', async () => {
+      const capability = makeAttack();
 
       render(
-        <CapabilityTooltip capability={capability}>
+        <CapabilityHoverCard capability={capability}>
           <button>trigger</button>
-        </CapabilityTooltip>,
+        </CapabilityHoverCard>,
       );
 
       await userEvent.hover(screen.getByRole('button', { name: 'trigger' }));
-      await act(async () => {}); // Flush microtasks per floating-ui testing guide
 
-      const tooltip = screen.getByRole('tooltip');
-      expect(within(tooltip).getByText('Test Buff')).toBeInTheDocument();
-      expect(within(tooltip).getByText('Increases ATK by 10%')).toBeInTheDocument();
-      expect(within(tooltip).getByText('Weapon')).toBeInTheDocument();
+      expect(await screen.findByText('Test Buff')).toBeInTheDocument();
+      expect(await screen.findByText('Increases ATK by 10%')).toBeInTheDocument();
+      expect(await screen.findByText('Weapon')).toBeInTheDocument();
     });
 
     it('shows Parameterized badge when capability has parameters', async () => {
-      const capability = makeCapability({
+      const capability = makeAttack({
         parameters: [{ id: '0', minimum: 0, maximum: 100 }],
       });
 
       render(
-        <CapabilityTooltip capability={capability}>
+        <CapabilityHoverCard capability={capability}>
           <button>trigger</button>
-        </CapabilityTooltip>,
+        </CapabilityHoverCard>,
       );
 
       await userEvent.hover(screen.getByRole('button', { name: 'trigger' }));
-      await act(async () => {});
 
-      expect(
-        within(screen.getByRole('tooltip')).getByText('Parameterized'),
-      ).toBeInTheDocument();
+      expect(await screen.findByText('Parameterized')).toBeInTheDocument();
     });
 
     it('does not show Parameterized badge when capability has no parameters', async () => {
-      const capability = makeCapability({ parameters: [] });
+      const capability = makeAttack({ parameters: [] });
 
       render(
-        <CapabilityTooltip capability={capability}>
+        <CapabilityHoverCard capability={capability}>
           <button>trigger</button>
-        </CapabilityTooltip>,
+        </CapabilityHoverCard>,
       );
 
       await userEvent.hover(screen.getByRole('button', { name: 'trigger' }));
-      await act(async () => {});
+      await screen.findByText('Increases ATK by 10%');
 
-      expect(
-        within(screen.getByRole('tooltip')).queryByText('Parameterized'),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByText('Parameterized')).not.toBeInTheDocument();
     });
   });
 
-  describe('followCursor tooltip', () => {
-    it('shows tooltip content on mouseenter', async () => {
-      const capability = makeCapability();
+  describe('followCursor hover card', () => {
+    it('shows hover card content on mouseenter', async () => {
+      const capability = makeAttack();
 
       render(
-        <CapabilityTooltip capability={capability} followCursor>
+        <CapabilityHoverCard capability={capability} followCursor>
           <button>trigger</button>
-        </CapabilityTooltip>,
+        </CapabilityHoverCard>,
       );
 
       fireEvent.mouseEnter(getWrapper(screen.getByRole('button', { name: 'trigger' })));
-      await act(async () => {}); // Flush microtasks per floating-ui testing guide
+      await act(async () => {});
 
       expect(screen.getByText('Test Buff')).toBeInTheDocument();
       expect(screen.getByText('Increases ATK by 10%')).toBeInTheDocument();
       expect(screen.getByText('Weapon')).toBeInTheDocument();
     });
 
-    it('hides tooltip content on mouseleave', async () => {
-      const capability = makeCapability();
+    it('hides hover card content on mouseleave', async () => {
+      const capability = makeAttack();
 
       render(
-        <CapabilityTooltip capability={capability} followCursor>
+        <CapabilityHoverCard capability={capability} followCursor>
           <button>trigger</button>
-        </CapabilityTooltip>,
+        </CapabilityHoverCard>,
       );
 
       const wrapper = getWrapper(screen.getByRole('button', { name: 'trigger' }));
@@ -142,13 +140,13 @@ describe('CapabilityTooltip', () => {
       expect(screen.queryByText('Increases ATK by 10%')).not.toBeInTheDocument();
     });
 
-    it('keeps tooltip visible as cursor moves', async () => {
-      const capability = makeCapability();
+    it('keeps hover card visible as cursor moves', async () => {
+      const capability = makeAttack();
 
       render(
-        <CapabilityTooltip capability={capability} followCursor>
+        <CapabilityHoverCard capability={capability} followCursor>
           <button>trigger</button>
-        </CapabilityTooltip>,
+        </CapabilityHoverCard>,
       );
 
       const wrapper = getWrapper(screen.getByRole('button', { name: 'trigger' }));
@@ -162,14 +160,14 @@ describe('CapabilityTooltip', () => {
     });
 
     it('shows Parameterized badge when capability has parameters', async () => {
-      const capability = makeCapability({
+      const capability = makeAttack({
         parameters: [{ id: '0', minimum: 0, maximum: 100 }],
       });
 
       render(
-        <CapabilityTooltip capability={capability} followCursor>
+        <CapabilityHoverCard capability={capability} followCursor>
           <button>trigger</button>
-        </CapabilityTooltip>,
+        </CapabilityHoverCard>,
       );
 
       fireEvent.mouseEnter(getWrapper(screen.getByRole('button', { name: 'trigger' })));
@@ -179,12 +177,12 @@ describe('CapabilityTooltip', () => {
     });
 
     it('shows parentName when present', async () => {
-      const capability = makeCapability({ parentName: 'Echo' });
+      const capability = makeAttack({ parentName: 'Echo' });
 
       render(
-        <CapabilityTooltip capability={capability} followCursor>
+        <CapabilityHoverCard capability={capability} followCursor>
           <button>trigger</button>
-        </CapabilityTooltip>,
+        </CapabilityHoverCard>,
       );
 
       fireEvent.mouseEnter(getWrapper(screen.getByRole('button', { name: 'trigger' })));
@@ -194,12 +192,12 @@ describe('CapabilityTooltip', () => {
     });
 
     it('does not show Parameterized badge when capability has no parameters', async () => {
-      const capability = makeCapability({ parameters: [] });
+      const capability = makeAttack({ parameters: [] });
 
       render(
-        <CapabilityTooltip capability={capability} followCursor>
+        <CapabilityHoverCard capability={capability} followCursor>
           <button>trigger</button>
-        </CapabilityTooltip>,
+        </CapabilityHoverCard>,
       );
 
       fireEvent.mouseEnter(getWrapper(screen.getByRole('button', { name: 'trigger' })));

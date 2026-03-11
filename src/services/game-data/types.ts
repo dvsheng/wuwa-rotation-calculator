@@ -254,6 +254,22 @@ interface AttackBase extends BaseCapability {
  */
 export type Attack<T = {}> = AttackBase & T;
 
+export type Capability = Attack | Modifier | PermanentStat;
+
+export const isAttack = (capability: Capability): capability is Attack => {
+  return capability.capabilityType === CapabilityType.ATTACK;
+};
+
+export const isModifier = (capability: Capability): capability is Modifier => {
+  return capability.capabilityType === CapabilityType.MODIFIER;
+};
+
+export const isPermanentStat = (
+  capability: Capability,
+): capability is PermanentStat => {
+  return capability.capabilityType === CapabilityType.PERMANENT_STAT;
+};
+
 /**
  * Container for all types of capabilities associated with an entity.
  */

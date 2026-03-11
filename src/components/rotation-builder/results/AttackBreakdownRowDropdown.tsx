@@ -53,10 +53,7 @@ export const AttackBreakdownRowDropdown = ({
         cellClassName: rotationResultTableColumnLayout.index,
       },
       cell: ({ row }) => (
-        <Text
-          variant="small"
-          className="text-muted-foreground justify-center font-mono"
-        >
+        <Text variant="bodySm" tone="muted" className="justify-center font-mono">
           {row.original.hitIndex + 1}
         </Text>
       ),
@@ -88,10 +85,10 @@ export const AttackBreakdownRowDropdown = ({
             gap="tight"
             className="text-muted-foreground text-right font-mono"
           >
-            <Text variant="caption" className="text-muted-foreground">
+            <Text variant="caption" tone="muted">
               ({motionValuePercentage}%)
             </Text>
-            <Text variant="small" className="text-muted-foreground">
+            <Text variant="bodySm" tone="muted">
               {' '}
               {Math.round(row.original.damage).toLocaleString()}
             </Text>

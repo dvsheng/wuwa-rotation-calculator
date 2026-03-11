@@ -128,7 +128,7 @@ export const BuffCanvasItem = ({
             <ItemMedia>
               <CapabilityIconDisplay url={buff.iconUrl} size="medium" />
             </ItemMedia>
-            <Text variant="caption" className="text-foreground min-w-0 truncate">
+            <Text variant="caption" className="min-w-0 truncate">
               {buff.name}
             </Text>
           </div>

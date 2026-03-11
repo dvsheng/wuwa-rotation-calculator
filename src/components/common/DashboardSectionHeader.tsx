@@ -33,7 +33,7 @@ export const DashboardSectionHeader = ({
           {title}
         </Text>
         {subtitle ?? (
-          <Text as="span" variant="caption">
+          <Text as="span" variant="caption" tone="muted">
             {subtitle}
           </Text>
         )}

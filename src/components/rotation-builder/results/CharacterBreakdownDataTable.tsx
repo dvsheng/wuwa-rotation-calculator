@@ -99,7 +99,11 @@ export const CharacterBreakdownDataTable = ({
         cellClassName: rotationResultTableColumnLayout.index,
       },
       cell: ({ row }) => (
-        <Text variant="small" className="text-primary justify-center font-mono">
+        <Text
+          variant="bodySm"
+          tabular={true}
+          className="text-primary justify-center font-mono"
+        >
           {row.index + 1}
         </Text>
       ),
@@ -114,7 +118,7 @@ export const CharacterBreakdownDataTable = ({
       cell: ({ row }) => (
         <Row align="center" gap="tight" className="min-w-0">
           <CharacterIconDisplay url={row.original.iconUrl} size="small" />
-          <Text as="span" variant="small" className="truncate">
+          <Text as="span" variant="bodySm" tone="muted" className="truncate">
             {row.original.characterName}
           </Text>
         </Row>
@@ -129,10 +133,20 @@ export const CharacterBreakdownDataTable = ({
       },
       cell: ({ row }) => (
         <Stack align="end">
-          <Text as="p" variant="small" className="text-primary text-right font-mono">
+          <Text
+            as="p"
+            variant="bodySm"
+            tabular={true}
+            className="text-primary text-right font-mono"
+          >
             {Math.round(row.original.totalDamage).toLocaleString()}
           </Text>
-          <Text as="p" variant="caption" className="text-primary text-right font-mono">
+          <Text
+            as="p"
+            variant="caption"
+            tabular={true}
+            className="text-primary text-right font-mono"
+          >
             {row.original.pctOfTotal.toFixed(1)}%
           </Text>
         </Stack>

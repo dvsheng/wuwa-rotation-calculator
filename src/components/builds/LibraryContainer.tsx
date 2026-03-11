@@ -30,7 +30,9 @@ export function LibraryContainer() {
             <CardTitle>No saved rotations</CardTitle>
           </CardHeader>
           <CardContent className="gap-panel flex flex-col items-center text-center">
-            <Text variant="small">Save your current configuration to see it here.</Text>
+            <Text variant="bodySm" tone="muted">
+              Save your current configuration to see it here.
+            </Text>
             <SaveRotationDialog />
           </CardContent>
         </Card>

@@ -38,8 +38,7 @@ const fmtNumber = (v: number): string =>
     maximumFractionDigits: 1,
     minimumFractionDigits: 1,
   });
-const VALUE_COLUMN_CLASS =
-  'w-28 shrink-0 text-right font-mono tabular-nums whitespace-nowrap';
+const VALUE_COLUMN_CLASS = 'w-28 shrink-0 text-right font-mono whitespace-nowrap';
 
 // ---------------------------------------------------------------------------
 // Stat section definitions
@@ -221,14 +220,20 @@ const ContributorRow = ({
 }) => (
   <Row justify="between">
     <Stack className="min-w-0 flex-1">
-      <Text as="p" variant="caption">
-        <Text as="span" variant="caption" className="font-semibold">
+      <Text as="p" variant="caption" tone="muted">
+        <Text as="span" variant="caption" tone="muted" className="font-semibold">
           {name}
         </Text>{' '}
         - {description}
       </Text>
     </Stack>
-    <Text as="span" variant="caption" className={VALUE_COLUMN_CLASS}>
+    <Text
+      as="span"
+      variant="caption"
+      tone="muted"
+      tabular={true}
+      className={VALUE_COLUMN_CLASS}
+    >
       {value === undefined
         ? 'Variable'
         : enemy
@@ -265,10 +270,16 @@ const StatValueRow = ({
   valueClassName?: string;
 }) => (
   <Row justify="between">
-    <Text as="span" variant="small">
+    <Text as="span" variant="bodySm" tone="muted">
       {label}
     </Text>
-    <Text as="span" variant="small" className={cn(VALUE_COLUMN_CLASS, valueClassName)}>
+    <Text
+      as="span"
+      variant="bodySm"
+      tone="muted"
+      tabular={true}
+      className={cn(VALUE_COLUMN_CLASS, valueClassName)}
+    >
       {value}
     </Text>
   </Row>
@@ -291,10 +302,16 @@ const GroupList = ({
         <AccordionItem key={group.statLabel} value={`${group.stat}-${group.statLabel}`}>
           <AccordionTrigger className="py-2">
             <Row justify="between" fullWidth className="pr-2">
-              <Text as="span" variant="small">
+              <Text as="span" variant="bodySm" tone="muted">
                 {group.statLabel}
               </Text>
-              <Text as="span" variant="small" className={VALUE_COLUMN_CLASS}>
+              <Text
+                as="span"
+                variant="bodySm"
+                tone="muted"
+                tabular={true}
+                className={VALUE_COLUMN_CLASS}
+              >
                 {formatTotalValue({ value: total, flat: group.flat, enemy })}
               </Text>
             </Row>

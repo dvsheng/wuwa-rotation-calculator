@@ -6,45 +6,28 @@ import { cn } from '@/lib/utils';
 const textVariants = cva('', {
   variants: {
     variant: {
-      /**
-       * Hero numbers and primary stats. Use for big totals, damage figures.
-       * Renders as `<p>` by default — pass `as="h1"` etc. for semantics.
-       */
       display: 'text-4xl font-bold tracking-tight',
-
-      /**
-       * Section and page headings.
-       */
       heading: 'text-xl font-semibold tracking-tight',
-
-      /**
-       * Default readable body copy.
-       */
+      title: 'text-base font-semibold tracking-tight',
       body: 'text-base',
-
-      /**
-       * Secondary / supporting text. Muted color at smaller size.
-       */
-      small: 'text-sm text-muted-foreground',
-
-      /**
-       * Text for errors. Red color at smaller size
-       */
-      error: 'text-sm text-destructive',
-
-      /**
-       * Fine-print details — indexes, timestamps, metadata.
-       */
-      caption: 'text-xs text-muted-foreground',
-
-      /**
-       * All-caps category labels, section labels, field overlines.
-       */
-      overline: 'text-xs font-semibold tracking-wider uppercase text-muted-foreground',
+      bodySm: 'text-sm',
+      caption: 'text-xs',
+      overline: 'text-xs font-semibold tracking-wider uppercase',
+      label: 'text-sm font-medium',
+      stat: 'text-2xl font-semibold tracking-tight',
+    },
+    tone: {
+      default: 'text-foreground',
+      muted: 'text-muted-foreground',
+      destructive: 'text-destructive',
+    },
+    tabular: {
+      true: 'tabular-nums',
     },
   },
   defaultVariants: {
     variant: 'body',
+    tone: 'default',
   },
 });
 
@@ -55,9 +38,16 @@ type TextProps<T extends ElementType = 'p'> = VariantProps<typeof textVariants> 
 export function Text<T extends ElementType = 'p'>({
   as,
   variant,
+  tone,
+  tabular,
   className,
   ...props
 }: TextProps<T>) {
   const Comp = (as ?? 'p') as ElementType;
-  return <Comp className={cn(textVariants({ variant }), className)} {...props} />;
+  return (
+    <Comp
+      className={cn(textVariants({ variant, tone, tabular }), className)}
+      {...props}
+    />
+  );
 }

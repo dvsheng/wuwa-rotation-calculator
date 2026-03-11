@@ -152,10 +152,12 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
         </div>
       </CardHeader>
       <CardContent>
-        <Text variant="small">{rotation.description || 'No description.'}</Text>
+        <Text variant="bodySm" tone="muted">
+          {rotation.description || 'No description.'}
+        </Text>
         <div className="mt-4 space-y-3">
           <div>
-            <Text variant="overline" className="mb-2">
+            <Text variant="overline" tone="muted" className="mb-2">
               Team
             </Text>
             {configuredCharacters.length > 0 ? (
@@ -165,21 +167,23 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
                 ))}
               </div>
             ) : (
-              <Text variant="small">No characters configured.</Text>
+              <Text variant="bodySm" tone="muted">
+                No characters configured.
+              </Text>
             )}
           </div>
 
           <div>
-            <Text variant="overline" className="mb-2">
+            <Text variant="overline" tone="muted" className="mb-2">
               Enemy
             </Text>
             <div className="gap-compact mb-2 flex flex-wrap items-center">
-              <Text as="span" variant="small">
+              <Text as="span" variant="bodySm" tone="muted">
                 Level: {rotation.data.enemy.level}
               </Text>
             </div>
             <div className="gap-compact flex flex-wrap items-center">
-              <Text as="span" variant="small">
+              <Text as="span" variant="bodySm" tone="muted">
                 Resistances:
               </Text>
               {resistanceEntries.map(({ attribute, value }) => (
@@ -191,7 +195,7 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
                   {attribute !== 'physical' && (
                     <AttributeIcon attribute={attribute} size={14} />
                   )}
-                  <Text as="span" variant="caption" className="text-foreground">
+                  <Text as="span" variant="caption">
                     {value}%
                   </Text>
                 </Badge>

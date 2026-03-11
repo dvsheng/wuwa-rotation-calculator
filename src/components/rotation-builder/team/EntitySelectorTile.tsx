@@ -40,7 +40,7 @@ export const EntitySelectorTile = ({
     onClick={onClick}
   >
     <EntityIconDisplay url={entity.iconUrl} size="xlarge" className="shrink-0" />
-    <Text as="div" variant="small" className="wrap-2 text-foreground max-w-30">
+    <Text as="div" variant="bodySm" className="wrap-2 max-w-30">
       {entity.name}
     </Text>
     <Row gap="tight" align="center" justify="center">
@@ -49,7 +49,7 @@ export const EntitySelectorTile = ({
           as="span"
           variant="caption"
           className={cn(
-            'px-tight py-tight text-foreground rounded-full',
+            'px-tight py-tight rounded-full',
             RARITY_CLASSES[entity.rarity],
           )}
         >
@@ -61,7 +61,7 @@ export const EntitySelectorTile = ({
           as="span"
           variant="caption"
           className={cn(
-            'px-tight py-tight text-foreground rounded-full',
+            'px-tight py-tight rounded-full',
             RARITY_CLASSES[entity.cost === 4 ? 5 : entity.cost === 3 ? 4 : 3],
           )}
         >

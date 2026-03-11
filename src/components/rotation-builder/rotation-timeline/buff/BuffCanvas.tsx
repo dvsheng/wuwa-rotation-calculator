@@ -79,7 +79,9 @@ export const BuffCanvas = ({ onDropBuff }: BuffCanvasProperties) => {
         >
           {buffs.length === 0 && (
             <div className="canvas-empty-state">
-              <Text variant="small">Drag buffs here to align with attacks</Text>
+              <Text variant="bodySm" tone="muted">
+                Drag buffs here to align with attacks
+              </Text>
             </div>
           )}
 

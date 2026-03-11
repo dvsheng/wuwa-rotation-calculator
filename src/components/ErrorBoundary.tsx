@@ -34,10 +34,12 @@ export class ErrorBoundary extends Component<Properties, State> {
         >
           <AlertTriangle className="text-destructive mt-0.5 h-4 w-4 shrink-0" />
           <Stack gap="tight">
-            <Text variant="error" className="font-medium">
+            <Text variant="label" tone="destructive">
               Something went wrong
             </Text>
-            <Text variant="caption">{this.state.error.message}</Text>
+            <Text variant="caption" tone="muted">
+              {this.state.error.message}
+            </Text>
           </Stack>
         </Row>
       );

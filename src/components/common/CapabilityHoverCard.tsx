@@ -77,31 +77,37 @@ const AttackCapabilityContent = ({ capability }: { capability: DetailedAttack })
   if (capability.damageInstances.length === 0) return;
   return (
     <Stack gap="tight">
-      <Text as="div" variant="overline">
+      <Text as="div" variant="overline" tone="muted">
         Damage Instances
       </Text>
       <Stack gap="tight">
         {capability.damageInstances.map((di, index) => (
           <Row key={index} gap="compact" className="w-full">
             <Row gap="tight" className="min-w-0 flex-1">
-              <Text as="span" variant="caption" className="text-foreground capitalize">
+              <Text as="span" variant="caption" className="capitalize">
                 {di.attribute}
               </Text>
-              <Text as="span" variant="caption">
+              <Text as="span" variant="caption" tone="muted">
                 ·
               </Text>
-              <Text as="span" variant="caption" className="truncate">
+              <Text as="span" variant="caption" tone="muted" className="truncate">
                 {formatLabel(di.damageType)}
               </Text>
             </Row>
             <Text
               as="span"
               variant="caption"
-              className="text-foreground shrink-0 font-mono tabular-nums"
+              tabular={true}
+              className="shrink-0 font-mono"
             >
               {formatMotionValue(di.motionValue)}
             </Text>
-            <Text as="span" variant="overline" className="w-8 shrink-0 text-right">
+            <Text
+              as="span"
+              variant="overline"
+              tone="muted"
+              className="w-8 shrink-0 text-right"
+            >
               {formatLabel(di.scalingStat)}
             </Text>
           </Row>
@@ -119,26 +125,23 @@ const ModifierCapabilityContent = ({
   if (capability.modifiedStats.length === 0) return;
   return (
     <Stack gap="tight">
-      <Text as="div" variant="overline">
+      <Text as="div" variant="overline" tone="muted">
         Modified Stats
       </Text>
       <Stack gap="tight">
         {capability.modifiedStats.map((stat, index) => (
           <Row key={index} gap="compact" className="w-full">
-            <Text as="span" variant="overline" className="w-8">
+            <Text as="span" variant="overline" tone="muted" className="w-8">
               {TARGET_LABELS[stat.target]}
             </Text>
-            <Text
-              as="span"
-              variant="caption"
-              className="text-foreground min-w-0 flex-1 truncate"
-            >
+            <Text as="span" variant="caption" className="min-w-0 flex-1 truncate">
               {formatLabel(stat.stat)}
             </Text>
             <Text
               as="span"
               variant="caption"
-              className="text-foreground shrink-0 font-mono tabular-nums"
+              tabular={true}
+              className="shrink-0 font-mono"
             >
               {formatNodeValue(stat.value)}
             </Text>
@@ -162,11 +165,7 @@ const CapabilityCardContent = ({
   return (
     <Stack gap="compact" className="min-w-72">
       <Row justify="between" align="start" gap="compact">
-        <Text
-          as="div"
-          variant="small"
-          className="text-foreground leading-tight font-semibold"
-        >
+        <Text as="div" variant="bodySm" className="leading-tight font-semibold">
           {capability.name}
         </Text>
         {isParameterized && (
@@ -175,9 +174,13 @@ const CapabilityCardContent = ({
           </Badge>
         )}
       </Row>
-      {capability.parentName && <Text variant="caption">{capability.parentName}</Text>}
+      {capability.parentName && (
+        <Text variant="caption" tone="muted">
+          {capability.parentName}
+        </Text>
+      )}
       {capability.description && (
-        <Text as="div" variant="caption" className="text-foreground">
+        <Text as="div" variant="caption">
           {capability.description}
         </Text>
       )}

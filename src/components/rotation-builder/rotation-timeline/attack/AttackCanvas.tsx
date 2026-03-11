@@ -65,7 +65,9 @@ export const AttackCanvas = ({ onDropAttack }: AttackCanvasProperties) => {
         >
           {attacks.length === 0 && (
             <div className="canvas-empty-state">
-              <Text variant="overline">Drag attacks here to build your rotation</Text>
+              <Text variant="overline" tone="muted">
+                Drag attacks here to build your rotation
+              </Text>
             </div>
           )}
 

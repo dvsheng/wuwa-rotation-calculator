@@ -15,11 +15,13 @@ export const RotationResultSummary = ({
   return (
     <Row justify="between" className="border-primary/10 pb-panel border-b">
       <Stack gap="tight">
-        <Text variant="overline">Total Rotation Damage</Text>
+        <Text variant="overline" tone="muted">
+          Total Rotation Damage
+        </Text>
         <Text variant="display" className="text-primary leading-none">
           {Math.round(totalDamage).toLocaleString()}
         </Text>
-        <Text variant="caption" className="text-muted-foreground">
+        <Text variant="caption" tone="muted">
           {attackCount} attack{attackCount === 1 ? '' : 's'} · {damageInstanceCount}{' '}
           damage instance{damageInstanceCount === 1 ? '' : 's'}
         </Text>

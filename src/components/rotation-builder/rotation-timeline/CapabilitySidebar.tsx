@@ -136,7 +136,7 @@ const CapabilitySection = ({
   return (
     <section className="flex flex-col">
       <div className="border-border px-panel py-compact border-t">
-        <Text as="h3" variant="overline" className="text-foreground">
+        <Text as="h3" variant="overline">
           {title}
         </Text>
       </div>
@@ -146,7 +146,8 @@ const CapabilitySection = ({
         ) : (
           <Text
             as="div"
-            variant="small"
+            variant="bodySm"
+            tone="muted"
             className="py-page flex items-center justify-center italic"
           >
             {emptyMessage}
@@ -172,6 +173,7 @@ const CapabilityGroup = ({ name, children }: CapabilityGroupProperties) => {
         <Text
           as="span"
           variant="overline"
+          tone="muted"
           className="shrink-0 font-bold tracking-widest"
         >
           {name}
@@ -213,11 +215,7 @@ const CapabilityCard = ({
       >
         <CapabilityIcon iconUrl={capability.iconUrl} size="medium" />
 
-        <Text
-          as="div"
-          variant="caption"
-          className="text-foreground line-clamp-3 text-center"
-        >
+        <Text as="div" variant="caption" className="line-clamp-3 text-center">
           {capability.name}
         </Text>
       </Item>
@@ -267,7 +265,7 @@ export const CapabilitySidebar = ({
           icon={<SwatchBook />}
         />
         <Stack gap="tight" className="px-panel pb-panel">
-          <Text as="label" variant="overline">
+          <Text as="label" variant="overline" tone="muted">
             Search
           </Text>
           <Input

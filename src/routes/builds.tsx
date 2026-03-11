@@ -13,7 +13,9 @@ function LibraryLoadingFallback() {
       <Skeleton className="h-7 w-32" />
       <Card className="border-dashed">
         <CardContent className="py-page text-center">
-          <Text variant="small">Loading saved rotations...</Text>
+          <Text variant="bodySm" tone="muted">
+            Loading saved rotations...
+          </Text>
         </CardContent>
       </Card>
     </div>

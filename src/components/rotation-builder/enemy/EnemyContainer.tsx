@@ -41,7 +41,7 @@ export const EnemyContainer = () => {
         name="level"
         children={(field) => (
           <Stack gap="compact">
-            <Text variant="overline" as="label" htmlFor={field.name}>
+            <Text variant="overline" tone="muted" as="label" htmlFor={field.name}>
               Level
             </Text>
             <Input
@@ -52,14 +52,16 @@ export const EnemyContainer = () => {
               onChange={(event) => field.handleChange(Number(event.target.value))}
             />
             {field.state.meta.errors.length > 0 ? (
-              <Text as="p" variant="error">
+              <Text as="p" variant="bodySm" tone="destructive">
                 {field.state.meta.errors.join(', ')}
               </Text>
             ) : undefined}
           </Stack>
         )}
       />
-      <Text variant="overline">Attribute Resistances</Text>
+      <Text variant="overline" tone="muted">
+        Attribute Resistances
+      </Text>
       <Container padding="none" className="rounded-md border">
         <Table>
           <TableHeader>
@@ -88,7 +90,7 @@ export const EnemyContainer = () => {
                         className="ml-auto w-24 text-right"
                       />
                       {field.state.meta.errors.length > 0 ? (
-                        <Text as="p" variant="error">
+                        <Text as="p" variant="bodySm" tone="destructive">
                           {field.state.meta.errors.join(', ')}
                         </Text>
                       ) : undefined}

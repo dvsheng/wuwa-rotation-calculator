@@ -38,7 +38,12 @@ export const AttackCanvasItem = ({
       <CapabilityHoverCard capability={attack}>
         <div className="bg-card hover:bg-accent/50 p-compact relative flex h-full w-full flex-col items-center overflow-hidden rounded-lg border select-none">
           {/* Index at top-left */}
-          <Text as="span" variant="caption" className="absolute top-1 left-1">
+          <Text
+            as="span"
+            variant="caption"
+            tone="muted"
+            className="absolute top-1 left-1"
+          >
             {index + 1}
           </Text>
 
@@ -56,7 +61,7 @@ export const AttackCanvasItem = ({
           <Text
             as="div"
             variant="caption"
-            className="text-foreground mt-2 line-clamp-4 w-full text-center leading-tight"
+            className="mt-2 line-clamp-4 w-full text-center leading-tight"
           >
             {attack.name}
           </Text>

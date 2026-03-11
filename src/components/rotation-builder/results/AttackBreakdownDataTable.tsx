@@ -80,7 +80,11 @@ export const AttackBreakdownDataTable = ({
         cellClassName: rotationResultTableColumnLayout.index,
       },
       cell: ({ row }) => (
-        <Text variant="small" className="text-primary justify-center font-mono">
+        <Text
+          variant="bodySm"
+          tabular={true}
+          className="text-primary justify-center font-mono"
+        >
           {row.original.attackIndex + 1}
         </Text>
       ),
@@ -98,11 +102,11 @@ export const AttackBreakdownDataTable = ({
           <div className="min-w-0">
             {attack ? (
               <Stack>
-                <Text as="span" variant="caption">
+                <Text as="span" variant="caption" tone="muted">
                   {attack.parentName}
                 </Text>
                 <Row>
-                  <Text as="p" variant="small" className="text-foreground">
+                  <Text as="p" variant="bodySm">
                     {attack.name}
                   </Text>
                   {hits.length > 1 && (
@@ -125,7 +129,12 @@ export const AttackBreakdownDataTable = ({
       cell: ({ row }) => {
         const { totalDamage } = row.original;
         return (
-          <Text as="p" variant="small" className="text-primary text-right font-mono">
+          <Text
+            as="p"
+            variant="bodySm"
+            tabular={true}
+            className="text-primary text-right font-mono"
+          >
             {Math.round(totalDamage).toLocaleString()}
           </Text>
         );
@@ -201,7 +210,7 @@ export const AttackBreakdownDataTable = ({
             ) : (
               <Stack align="center" className="h-full justify-center">
                 <Text variant="heading">No Detail Selected</Text>
-                <Text variant="small">
+                <Text variant="bodySm" tone="muted">
                   Click Details on any row to view stat breakdown data here.
                 </Text>
               </Stack>

@@ -48,7 +48,7 @@ export const CharacterBreakdownPieChart = ({
     return (
       <Stack align="center" className="h-full justify-center">
         <Text variant="heading">Character Breakdown</Text>
-        <Text variant="small">
+        <Text variant="bodySm" tone="muted">
           Click the info icon to view a character&apos;s damage-type pie chart.
         </Text>
       </Stack>
@@ -79,13 +79,15 @@ export const CharacterBreakdownPieChart = ({
                   };
                   return (
                     <Row justify="between" fullWidth>
-                      <Text as="span" variant="caption">
+                      <Text as="span" variant="caption" tone="muted">
                         {payload.label}
                       </Text>
                       <Text
                         as="span"
                         variant="caption"
-                        className="font-mono tabular-nums"
+                        tone="muted"
+                        tabular={true}
+                        className="font-mono"
                       >
                         {Math.round(Number(value)).toLocaleString()} (
                         {payload.pctOfCharacter.toFixed(1)}%)

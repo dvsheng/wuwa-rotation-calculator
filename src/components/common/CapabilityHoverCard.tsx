@@ -131,7 +131,7 @@ const ModifierCapabilityContent = ({
       <Stack gap="tight">
         {capability.modifiedStats.map((stat, index) => (
           <Row key={index} gap="compact" className="w-full">
-            <Text as="span" variant="overline" tone="muted" className="w-8">
+            <Text as="span" variant="overline" tone="muted" className="w-12">
               {TARGET_LABELS[stat.target]}
             </Text>
             <Text as="span" variant="caption" className="min-w-0 flex-1 truncate">

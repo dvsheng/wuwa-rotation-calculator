@@ -19,31 +19,31 @@ import { Target } from '@/services/game-data';
 import type { OriginType as CapabilityOriginType } from '@/services/game-data';
 
 const ATTACK_COLORS: Record<CapabilityOriginType, string> = {
-  'Normal Attack': 'border-slate-400 bg-slate-100 text-foreground',
-  'Resonance Skill': 'border-sky-400 bg-sky-100 text-foreground',
-  'Resonance Liberation': 'border-violet-400 bg-violet-100 text-foreground',
-  'Forte Circuit': 'border-amber-400 bg-amber-100 text-foreground',
-  'Intro Skill': 'border-lime-400 bg-lime-100 text-foreground',
-  'Outro Skill': 'border-emerald-400 bg-emerald-100 text-foreground',
-  'Tune Break': 'border-cyan-400 bg-cyan-100 text-foreground',
-  Echo: 'border-orange-400 bg-orange-100 text-foreground',
-  Weapon: 'border-indigo-400 bg-indigo-100 text-foreground',
-  'Echo Set': 'border-fuchsia-400 bg-fuchsia-100 text-foreground',
-  s1: 'border-yellow-400 bg-yellow-100 text-foreground',
-  s2: 'border-yellow-400 bg-yellow-100 text-foreground',
-  s3: 'border-yellow-400 bg-yellow-100 text-foreground',
-  s4: 'border-yellow-400 bg-yellow-100 text-foreground',
-  s5: 'border-yellow-400 bg-yellow-100 text-foreground',
-  s6: 'border-yellow-400 bg-yellow-100 text-foreground',
-  'Inherent Skill': 'border-yellow-400 bg-yellow-100 text-foreground',
-  'Base Stats': 'border-yellow-400 bg-yellow-100 text-foreground',
+  'Normal Attack': 'border-l-slate-400',
+  'Resonance Skill': 'border-l-sky-400',
+  'Resonance Liberation': 'border-l-violet-400',
+  'Forte Circuit': 'border-l-amber-400',
+  'Intro Skill': 'border-l-lime-400',
+  'Outro Skill': 'border-l-emerald-400',
+  'Tune Break': 'border-l-cyan-400',
+  Echo: 'border-l-orange-400',
+  Weapon: 'border-l-indigo-400',
+  'Echo Set': 'border-l-fuchsia-400',
+  s1: 'border-l-yellow-400',
+  s2: 'border-l-yellow-400',
+  s3: 'border-l-yellow-400',
+  s4: 'border-l-yellow-400',
+  s5: 'border-l-yellow-400',
+  s6: 'border-l-yellow-400',
+  'Inherent Skill': 'border-l-yellow-400',
+  'Base Stats': 'border-l-yellow-400',
 };
 
 const TARGET_COLORS: Record<Target, string> = {
-  [Target.SELF]: 'border-blue-400 bg-blue-100 text-foreground',
-  [Target.TEAM]: 'border-green-400 bg-green-100 text-foreground',
-  [Target.ACTIVE_CHARACTER]: 'border-amber-400 bg-amber-100 text-foreground',
-  [Target.ENEMY]: 'border-red-400 bg-red-100 text-foreground',
+  [Target.SELF]: 'border-l-blue-400',
+  [Target.TEAM]: 'border--l-green-400',
+  [Target.ACTIVE_CHARACTER]: 'border-l-amber-400',
+  [Target.ENEMY]: 'border-l-red-400',
 };
 
 const BUFF_SKILL_ORDER: Array<CapabilityOriginType> = [
@@ -91,18 +91,6 @@ interface CapabilityCardProperties {
   onClick?: () => void;
   onDragStart?: (event: React.DragEvent<HTMLElement>) => void;
 }
-
-const toLeftBorderAccent = (className?: string) => {
-  if (!className) return '';
-
-  const borderClass = className
-    .split(' ')
-    .find((token) => token.startsWith('border-') && !token.startsWith('border-l'));
-
-  if (!borderClass) return '';
-
-  return borderClass.replace(/^border-/, 'border-l-');
-};
 
 const matchesSearchText = (
   capability: DetailedAttack | DetailedModifier,
@@ -193,7 +181,6 @@ const CapabilityCard = ({
   onDragStart,
 }: CapabilityCardProperties) => {
   const isDraggable = onDragStart !== undefined;
-  const accentClass = toLeftBorderAccent(colorClassName);
   return (
     <CapabilityHoverCard capability={capability}>
       <Item
@@ -202,7 +189,7 @@ const CapabilityCard = ({
         onClick={onClick}
         variant="outline"
         className={cn(
-          'hover:bg-accent/30 gap-tight p-compact relative flex aspect-square size-28 flex-col rounded-lg border shadow-sm transition-colors',
+          'gap-tight p-compact relative flex size-28 flex-col border shadow-sm',
           isDraggable
             ? 'cursor-grab active:cursor-grabbing'
             : onClick
@@ -210,11 +197,9 @@ const CapabilityCard = ({
               : 'cursor-default',
           colorClassName,
           'border-l-4',
-          accentClass,
         )}
       >
         <CapabilityIcon iconUrl={capability.iconUrl} size="medium" />
-
         <Text as="div" variant="caption" className="line-clamp-3 text-center">
           {capability.name}
         </Text>

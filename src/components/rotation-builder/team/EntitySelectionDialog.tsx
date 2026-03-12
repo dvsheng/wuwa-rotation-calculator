@@ -196,15 +196,14 @@ export const EntitySelectionDialog = ({
           </Row>
         )}
 
-        <CommandList className="max-h-none flex-1 overflow-y-auto">
+        <CommandList className="max-h-none flex-1">
           <CommandEmpty>No items found matching your filters.</CommandEmpty>
           <CommandGroup>
-            <Grid gap="component" className="grid-cols-4 items-center overflow-y-auto">
+            <Grid gap="component" className="grid-cols-4 overflow-y-auto">
               {filteredItems.map((item) => (
                 <CommandItem asChild key={item.id} value={item.name}>
                   <EntitySelectorTile
                     entity={item}
-                    isSelected={value === item.id}
                     onClick={() => handleSelect(item)}
                   />
                 </CommandItem>

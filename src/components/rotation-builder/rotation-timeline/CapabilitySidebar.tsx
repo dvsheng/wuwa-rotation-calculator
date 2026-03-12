@@ -1,4 +1,4 @@
-import { SwatchBook } from 'lucide-react';
+import { Info, SwatchBook } from 'lucide-react';
 import { useState } from 'react';
 
 import { CapabilityHoverCard } from '@/components/common/CapabilityHoverCard';
@@ -10,6 +10,7 @@ import { Item } from '@/components/ui/item';
 import { Stack } from '@/components/ui/layout';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Text } from '@/components/ui/typography';
 import type { DetailedAttack, DetailedModifier } from '@/hooks/useTeamDetails';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
@@ -41,10 +42,37 @@ const ATTACK_COLORS: Record<CapabilityOriginType, string> = {
 
 const TARGET_COLORS: Record<Target, string> = {
   [Target.SELF]: 'border-l-blue-400',
-  [Target.TEAM]: 'border--l-green-400',
+  [Target.TEAM]: 'border-l-green-400',
   [Target.ACTIVE_CHARACTER]: 'border-l-amber-400',
   [Target.ENEMY]: 'border-l-red-400',
 };
+
+interface LegendItem {
+  label: string;
+  colorClassName: string;
+}
+
+const ATTACK_COLOR_LEGEND: Array<LegendItem> = [
+  { label: 'Normal Attack', colorClassName: 'bg-slate-400' },
+  { label: 'Resonance Skill', colorClassName: 'bg-sky-400' },
+  { label: 'Resonance Liberation', colorClassName: 'bg-violet-400' },
+  { label: 'Forte Circuit', colorClassName: 'bg-amber-400' },
+  { label: 'Intro Skill', colorClassName: 'bg-lime-400' },
+  { label: 'Outro Skill', colorClassName: 'bg-emerald-400' },
+  { label: 'Tune Break', colorClassName: 'bg-cyan-400' },
+  { label: 'Echo', colorClassName: 'bg-orange-400' },
+  { label: 'Weapon', colorClassName: 'bg-indigo-400' },
+  { label: 'Echo Set', colorClassName: 'bg-fuchsia-400' },
+  { label: 'Inherent Skill', colorClassName: 'bg-yellow-400' },
+  { label: 'Base Stats', colorClassName: 'bg-yellow-400' },
+];
+
+const BUFF_COLOR_LEGEND: Array<LegendItem> = [
+  { label: 'Self Target', colorClassName: 'bg-blue-400' },
+  { label: 'Team Target', colorClassName: 'bg-green-400' },
+  { label: 'Active Character Target', colorClassName: 'bg-amber-400' },
+  { label: 'Enemy Target', colorClassName: 'bg-red-400' },
+];
 
 const BUFF_SKILL_ORDER: Array<CapabilityOriginType> = [
   'Normal Attack',
@@ -77,6 +105,8 @@ interface CapabilitySidebarProperties {
 interface CapabilitySectionProperties {
   title: string;
   emptyMessage: string;
+  legend?: Array<LegendItem>;
+  legendAriaLabel?: string;
   children: React.ReactNode;
 }
 
@@ -113,6 +143,8 @@ const matchesSearchText = (
 const CapabilitySection = ({
   title,
   emptyMessage,
+  legend,
+  legendAriaLabel,
   children,
 }: CapabilitySectionProperties) => {
   const itemCount = Array.isArray(children)
@@ -124,9 +156,34 @@ const CapabilitySection = ({
   return (
     <section className="flex flex-col">
       <div className="border-border px-panel py-compact border-t">
-        <Text as="h3" variant="overline">
-          {title}
-        </Text>
+        <div className="flex items-center gap-2">
+          <Text as="h3" variant="overline">
+            {title}
+          </Text>
+          {legend ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={legendAriaLabel}
+                  className="text-muted-foreground hover:text-foreground inline-flex items-center justify-center"
+                >
+                  <Info className="size-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-64 p-3">
+                <div className="space-y-1">
+                  {legend.map((entry) => (
+                    <div key={entry.label} className="flex items-center gap-2">
+                      <span className={cn('size-2 rounded-sm', entry.colorClassName)} />
+                      <span>{entry.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          ) : undefined}
+        </div>
       </div>
       <div className="border-border border-t">
         {itemCount > 0 ? (
@@ -273,7 +330,12 @@ export const CapabilitySidebar = ({
         </Stack>
       </Stack>
       <ScrollArea className="min-h-0 flex-1">
-        <CapabilitySection title="Attacks" emptyMessage="No attacks available">
+        <CapabilitySection
+          title="Attacks"
+          emptyMessage="No attacks available"
+          legend={ATTACK_COLOR_LEGEND}
+          legendAriaLabel="Attack color legend"
+        >
           {Object.entries(attacksByCharacter).map(
             ([characterName, characterAttacks]) => {
               // Sort by origin first, then by name
@@ -303,7 +365,12 @@ export const CapabilitySidebar = ({
           )}
         </CapabilitySection>
 
-        <CapabilitySection title="Buffs" emptyMessage="No buffs available">
+        <CapabilitySection
+          title="Buffs"
+          emptyMessage="No buffs available"
+          legend={BUFF_COLOR_LEGEND}
+          legendAriaLabel="Buff color legend"
+        >
           {Object.entries(filteredBuffsByCharacter).map(
             ([characterName, characterBuffs]) => {
               const buffsByOrigin = Object.groupBy(

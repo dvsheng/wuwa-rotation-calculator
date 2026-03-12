@@ -2,8 +2,6 @@ Clean up Palette filter styling
 
 Default character stat builder
 
-have buff desciptions follow you around as you pan
-
 sensitivity analysis
 
 export to sheet

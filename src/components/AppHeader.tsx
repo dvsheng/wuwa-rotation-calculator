@@ -16,7 +16,7 @@ export const AppHeader = () => {
   return (
     <header className="bg-background px-panel sticky top-0 z-20 flex h-14 items-center justify-between border-b">
       <Text as="h1" variant="title" className="text-lg">
-        I.R.I.S. Rotation Inspector Service
+        I.R.I.S. Rotation Inspector
       </Text>
       <div className="flex items-center">
         <NavigationMenu viewport={false}>

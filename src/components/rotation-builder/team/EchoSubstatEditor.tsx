@@ -68,10 +68,7 @@ export const EchoSubstatEditor = ({
             })
           }
         >
-          <SelectTrigger
-            size="sm"
-            className="w-full border-transparent shadow-none focus-visible:ring-0"
-          >
+          <SelectTrigger size="sm" className="w-full border-transparent shadow-none">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -83,7 +80,7 @@ export const EchoSubstatEditor = ({
           </SelectContent>
         </Select>
       </TableCell>
-      <TableCell className="p-tight">
+      <TableCell className="p-tight flex-1">
         <Select
           value={String(substat.value)}
           onValueChange={(value) =>

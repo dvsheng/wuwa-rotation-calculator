@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Stack } from '@/components/ui/layout';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Text } from '@/components/ui/typography';
 import { ECHO_PIECE_COUNT } from '@/schemas/echo';
 
 import { CharacterSelector } from './CharacterSelector';
@@ -37,13 +38,16 @@ export const CharacterCard = ({ index }: CharacterCardProperties) => {
             <WeaponSelector index={index} />
             <EchoSetSelector index={index} />
             <PrimaryEchoSelector index={index} />
-            {Array.from({ length: ECHO_PIECE_COUNT }, (_, echoIndex) => (
-              <EchoPieceEditor
-                key={echoIndex}
-                characterIndex={index}
-                echoIndex={echoIndex}
-              />
-            ))}
+            <Stack gap="component" className="p-page">
+              <Text variant="title">Echo Substats</Text>
+              {Array.from({ length: ECHO_PIECE_COUNT }, (_, echoIndex) => (
+                <EchoPieceEditor
+                  key={echoIndex}
+                  characterIndex={index}
+                  echoIndex={echoIndex}
+                />
+              ))}
+            </Stack>
           </Stack>
         </Suspense>
       </CardContent>

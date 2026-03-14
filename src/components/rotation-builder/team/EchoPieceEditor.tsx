@@ -44,80 +44,78 @@ export const EchoPieceEditor = ({
   };
 
   return (
-    <div className="border-border bg-muted/5 text-card-foreground p-component rounded-md border shadow-sm">
-      <Table>
-        <TableBody>
-          <TableRow>
-            <TableHead>Cost</TableHead>
-            <TableCell className="p-tight">
-              <Select value={String(echo.cost)} onValueChange={handleCostChange}>
-                <SelectTrigger
-                  size="sm"
-                  className="w-full border-transparent shadow-none focus-visible:ring-0"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.values(EchoCost).map((c) => (
-                    <SelectItem key={c} value={String(c)}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </TableCell>
-          </TableRow>
-
-          <TableRow>
-            <TableHead>Main Stat</TableHead>
-            <TableCell className="p-tight">
-              <Select
-                value={echo.mainStatType}
-                onValueChange={(value) =>
-                  updateEchoPiece(characterIndex, echoIndex, (draft) => {
-                    // @ts-ignore - dynamic enum cast
-                    draft.mainStatType = value;
-                  })
-                }
+    <Table className="w-full table-fixed">
+      <TableBody>
+        <TableRow>
+          <TableHead className="w-48">Cost</TableHead>
+          <TableCell className="p-tight">
+            <Select value={String(echo.cost)} onValueChange={handleCostChange}>
+              <SelectTrigger
+                size="sm"
+                className="w-full border-transparent shadow-none focus-visible:ring-0"
               >
-                <SelectTrigger
-                  size="sm"
-                  className="w-full border-transparent shadow-none focus-visible:ring-0"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {mainStatOptions.map((opt) => (
-                    <SelectItem key={opt} value={opt}>
-                      {STAT_LABELS[opt] || opt}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </TableCell>
-          </TableRow>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.values(EchoCost).map((c) => (
+                  <SelectItem key={c} value={String(c)}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </TableCell>
+        </TableRow>
 
-          <TableRow className="border-t-2">
-            <TableHead>Substats</TableHead>
-            <TableHead className="w-24">Value</TableHead>
-          </TableRow>
-
-          {echo.substats.map((substat, substatIndex) => (
-            <EchoSubstatEditor
-              key={substatIndex}
-              substat={substat}
-              usedStats={echo.substats
-                .filter((_, index) => index !== substatIndex)
-                .map((s) => s.stat)}
-              onUpdate={(updater) =>
+        <TableRow>
+          <TableHead>Main Stat</TableHead>
+          <TableCell className="p-tight">
+            <Select
+              value={echo.mainStatType}
+              onValueChange={(value) =>
                 updateEchoPiece(characterIndex, echoIndex, (draft) => {
-                  updater(draft.substats[substatIndex]);
+                  // @ts-ignore - dynamic enum cast
+                  draft.mainStatType = value;
                 })
               }
-            />
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+            >
+              <SelectTrigger
+                size="sm"
+                className="w-full border-transparent shadow-none focus-visible:ring-0"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {mainStatOptions.map((opt) => (
+                  <SelectItem key={opt} value={opt}>
+                    {STAT_LABELS[opt] || opt}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </TableCell>
+        </TableRow>
+
+        <TableRow className="border-t-2">
+          <TableHead>Substats</TableHead>
+          <TableHead>Value</TableHead>
+        </TableRow>
+
+        {echo.substats.map((substat, substatIndex) => (
+          <EchoSubstatEditor
+            key={substatIndex}
+            substat={substat}
+            usedStats={echo.substats
+              .filter((_, index) => index !== substatIndex)
+              .map((s) => s.stat)}
+            onUpdate={(updater) =>
+              updateEchoPiece(characterIndex, echoIndex, (draft) => {
+                updater(draft.substats[substatIndex]);
+              })
+            }
+          />
+        ))}
+      </TableBody>
+    </Table>
   );
 };

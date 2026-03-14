@@ -47,11 +47,7 @@ export const WeaponSelector = ({ index }: WeaponSelectorProperties) => {
   return (
     <Row className="items-center gap-3">
       <div className="flex w-20 items-center justify-center">
-        <EntityIcon
-          iconUrl={selectedWeapon?.iconUrl}
-          size="large"
-          className="border-background border-2"
-        />
+        <EntityIcon iconUrl={selectedWeapon?.iconUrl} size="large" />
       </div>
       <Row gap="component" className="flex-1">
         <EntitySelectionDialog
@@ -68,7 +64,7 @@ export const WeaponSelector = ({ index }: WeaponSelectorProperties) => {
           value={String(weapon.refine)}
           onValueChange={(value) => setRefine(index, value)}
         >
-          <SelectTrigger className="w-20 shrink-0">
+          <SelectTrigger className="bg-background w-20 shrink-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

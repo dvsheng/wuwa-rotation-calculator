@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Stack } from '@/components/ui/layout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/typography';
@@ -16,41 +16,39 @@ interface CharacterCardProperties {
   index: number;
 }
 
-const CharacterCardSkeleton = () => (
+const CharacterCardHeaderSkeleton = () => (
   <Stack gap="panel">
     <Skeleton className="h-9 w-full" />
     <Skeleton className="h-9 w-full" />
     <Skeleton className="h-9 w-full" />
-    {Array.from({ length: ECHO_PIECE_COUNT }, (_, index) => (
-      <Skeleton key={index} className="h-8 w-full" />
-    ))}
+    <Skeleton className="h-9 w-full" />
   </Stack>
 );
 
 export const CharacterCard = ({ index }: CharacterCardProperties) => {
   return (
-    <Card className="w-120 gap-0 overflow-hidden py-0">
-      <CardContent className="pt-4 pb-6">
-        <Suspense fallback={<CharacterCardSkeleton />}>
-          <Stack gap="panel">
-            <Stack>
-              <CharacterSelector index={index} />
-              <WeaponSelector index={index} />
-              <EchoSetSelector index={index} />
-              <PrimaryEchoSelector index={index} />
-            </Stack>
-            <Stack gap="component" className="p-page">
-              <Text variant="title">Echo Substats</Text>
-              {Array.from({ length: ECHO_PIECE_COUNT }, (_, echoIndex) => (
-                <EchoPieceEditor
-                  key={echoIndex}
-                  characterIndex={index}
-                  echoIndex={echoIndex}
-                />
-              ))}
-            </Stack>
-          </Stack>
+    <Card className="w-lg py-0">
+      <CardHeader className="py-compact bg-accent">
+        <Suspense fallback={<CharacterCardHeaderSkeleton />}>
+          <CharacterSelector index={index} />
+          <WeaponSelector index={index} />
+          <EchoSetSelector index={index} />
+          <PrimaryEchoSelector index={index} />
         </Suspense>
+      </CardHeader>
+      <CardContent>
+        <Stack gap="component" className="p-component">
+          <Text variant="title">Echo Stats</Text>
+          <Stack className="gap-component divide-border divide-y">
+            {Array.from({ length: ECHO_PIECE_COUNT }, (_, echoIndex) => (
+              <EchoPieceEditor
+                key={echoIndex}
+                characterIndex={index}
+                echoIndex={echoIndex}
+              />
+            ))}
+          </Stack>
+        </Stack>
       </CardContent>
     </Card>
   );

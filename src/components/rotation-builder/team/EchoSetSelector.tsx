@@ -1,10 +1,9 @@
 import { Plus } from 'lucide-react';
 
-import { EntityIcon } from '@/components/common/EntityIcon';
-import { SearchableSelect } from '@/components/common/SearchableSelect';
+import { EntityIconDisplay } from '@/components/common/EntityIcon';
 import { TrashButton } from '@/components/common/TrashButton';
 import { Button } from '@/components/ui/button';
-import { Row } from '@/components/ui/layout';
+import { Row, Stack } from '@/components/ui/layout';
 import {
   Select,
   SelectContent,
@@ -15,6 +14,8 @@ import {
 import { useEntityList } from '@/hooks/useEntityList';
 import { EntityType } from '@/services/game-data';
 import { useStore } from '@/store';
+
+import { EntitySelectionDialog } from './EntitySelectionDialog';
 
 interface EchoSetSelectorProperties {
   index: number;
@@ -31,7 +32,7 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
   const handleAddSet = () => {
     if (selectedEchoSets.length < 2) {
       updateCharacter(index, (draft) => {
-        draft.echoSets = [draft.echoSets[0], { id: '', requirement: '2' }] as any;
+        draft.echoSets = [draft.echoSets[0], { id: -9999, requirement: '2' }];
       });
     }
   };
@@ -63,41 +64,30 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
         const selectedSetConfig = echoSetList.find((s) => s.id === set.id);
         const availableTiers = selectedSetConfig?.tiers || [2, 5];
         return (
-          <Row className="items-center gap-3">
-            <div className="flex w-20 shrink-0 items-center justify-center">
-              <EntityIcon
-                iconUrl={echoSetList.find((s) => s.id === set.id)?.iconUrl}
-                size="medium"
-                className="border-background border-2"
-              />
-            </div>
-            <Row gap="component" className="flex-1">
-              <SearchableSelect
-                items={echoSetList}
-                value={selectedSetConfig?.id}
-                onItemClick={(item) => handleUpdateSet(setIndex, item.id)}
-                placeholder="Select echo set"
-                className="h-9 text-base"
-                renderItem={(item) => (
-                  <>
-                    <img
-                      src={echoSetList.find((s) => s.id === item.id)?.iconUrl}
-                      className="size-5 shrink-0 object-contain"
-                      alt=""
-                    />
-                    {item.name}
-                  </>
-                )}
-              />
+          <Stack fullWidth>
+            <Row align="center" gap="component">
+              <div className="flex w-20 shrink-0 items-center justify-center">
+                <EntityIconDisplay
+                  url={echoSetList.find((s) => s.id === set.id)?.iconUrl}
+                  size="medium"
+                />
+              </div>
 
-              {set.id && (
+              <Row gap="component" className="flex-1">
+                <EntitySelectionDialog
+                  items={echoSetList}
+                  value={echoSetList.find((s) => s.id === set.id)?.id ?? 0}
+                  onValueChange={(id) => {
+                    handleUpdateSet(setIndex, id);
+                  }}
+                />
                 <Select
                   value={String(set.requirement)}
                   onValueChange={(value) =>
                     setEchoSetRequirement(index, setIndex, value)
                   }
                 >
-                  <SelectTrigger className="w-20 shrink-0">
+                  <SelectTrigger className="bg-background w-20 shrink-0">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -108,32 +98,31 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
                     ))}
                   </SelectContent>
                 </Select>
-              )}
 
-              {selectedEchoSets.length > 1 &&
-                (setIndex === 1 || selectedEchoSets[1]?.id) && (
+                {setIndex > 0 && (
                   <TrashButton
                     className="size-8"
                     onRemove={() => handleRemoveSet(setIndex)}
                   />
                 )}
+              </Row>
             </Row>
-          </Row>
+            {selectedEchoSets.length < 2 && (
+              <Row>
+                <div className="flex w-20"></div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleAddSet}
+                  className="text-muted-foreground"
+                >
+                  <Plus className="h-3 w-3" /> Add Echo Set Bonus
+                </Button>
+              </Row>
+            )}
+          </Stack>
         );
       })}
-
-      {selectedEchoSets.length < 2 && (
-        <Row className="selector-row">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleAddSet}
-            className="text-muted-foreground"
-          >
-            <Plus className="h-3 w-3" /> Add Echo Set Bonus
-          </Button>
-        </Row>
-      )}
     </>
   );
 };

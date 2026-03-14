@@ -31,7 +31,7 @@ const TARGET_ORDERING = [
 export const useTeamDetails = () => {
   const team = useStore((state) => state.team);
   const queryMetadata = team.flatMap((character) => {
-    const items = [
+    return [
       {
         characterId: character.id,
         entityId: character.id,
@@ -47,19 +47,13 @@ export const useTeamDetails = () => {
         entityId: character.primarySlotEcho.id,
         queryType: 'echo',
       },
+      ...character.echoSets.map((set) => ({
+        characterId: character.id,
+        entityId: set.id,
+        queryType: 'echo-set',
+        requirement: set.requirement,
+      })),
     ];
-
-    for (const set of character.echoSets) {
-      if (set.id) {
-        items.push({
-          characterId: character.id,
-          entityId: set.id,
-          queryType: 'echo-set',
-        });
-      }
-    }
-
-    return items;
   });
 
   const result = useQueries({

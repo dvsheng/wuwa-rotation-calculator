@@ -28,11 +28,7 @@ export const PrimaryEchoSelector = ({ index }: PrimaryEchoSelectorProperties) =>
   return (
     <Row className="items-center gap-3">
       <div className="flex w-20 items-center justify-center">
-        <EntityIcon
-          entityId={echo.id}
-          size="large"
-          className="border-background border-2"
-        />
+        <EntityIcon entityId={echo.id} size="large" />
       </div>
       <EntitySelectionDialog
         items={primaryEchoOptions}

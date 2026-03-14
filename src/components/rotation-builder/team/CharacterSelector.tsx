@@ -41,7 +41,7 @@ export const CharacterSelector = ({ index }: CharacterSelectorProperties) => {
         <EntityIcon
           iconUrl={characterList.find((c) => c.id === character.id)?.iconUrl}
           size="large"
-          className="flex size-20 items-center justify-center"
+          className="h-full w-full"
         />
       </div>
 
@@ -63,7 +63,7 @@ export const CharacterSelector = ({ index }: CharacterSelectorProperties) => {
           value={String(character.sequence)}
           onValueChange={(value) => setSequence(index, Number.parseInt(value))}
         >
-          <SelectTrigger className="w-20 shrink-0">
+          <SelectTrigger className="bg-background w-20 shrink-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

@@ -12,13 +12,13 @@ import { CharacterCard } from './CharacterCard';
 export const TeamContainer = () => {
   return (
     <Row justify="center" align="start" fullWidth className="min-h-0 min-w-0 flex-1">
-      <Stack className="border-border flex h-full w-fit overflow-hidden border-r">
+      <Stack className="border-border h-full min-w-0 flex-1 overflow-hidden border-r">
         <DashboardSectionHeader
           title="Team"
           description="Configure your team, weapons, and echoes."
           icon={<Users />}
         />
-        <ScrollArea className="min-h-0 flex-1">
+        <ScrollArea orientation="both" className="min-h-0 flex-1">
           <Row gap="component" className="p-component w-fit">
             {Array.from({ length: TEAM_SIZE }).map((_, index) => (
               <CharacterCard key={index} index={index} />

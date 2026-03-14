@@ -1,6 +1,6 @@
 import { useShallow } from 'zustand/react/shallow';
 
-import { AssetIcon } from '@/components/common/AssetIcon';
+import { EntityIcon } from '@/components/common/EntityIcon';
 import { Row } from '@/components/ui/layout';
 import {
   Select,
@@ -36,39 +36,45 @@ export const CharacterSelector = ({ index }: CharacterSelectorProperties) => {
   });
 
   return (
-    <Row className="selector-row">
-      <AssetIcon name="role" className="selector-icon" />
-      <EntitySelectionDialog
-        items={characterList}
-        value={character.id}
-        onValueChange={(id) => {
-          if (id === character.id) {
-            return;
-          }
+    <Row className="items-center gap-3">
+      <div className="flex size-20 items-center justify-center">
+        <EntityIcon
+          iconUrl={characterList.find((c) => c.id === character.id)?.iconUrl}
+          size="large"
+          className="flex size-20 items-center justify-center"
+        />
+      </div>
 
-          clearAllForCharacter(character.id);
-          setCharacter(index, id);
-          syncCharacterEchoes(id).catch((error: unknown) => {
-            console.error(error);
-          });
-        }}
-        excludeIds={otherSelectedCharacterIds}
-      />
-      <Select
-        value={String(character.sequence)}
-        onValueChange={(value) => setSequence(index, Number.parseInt(value))}
-      >
-        <SelectTrigger className="selector-secondary">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {[0, 1, 2, 3, 4, 5, 6].map((s) => (
-            <SelectItem key={s} value={String(s)}>
-              S{s}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Row gap="component" className="flex-1">
+        <EntitySelectionDialog
+          items={characterList}
+          value={character.id}
+          onValueChange={(id) => {
+            if (id === character.id) return;
+            clearAllForCharacter(character.id);
+            setCharacter(index, id);
+            syncCharacterEchoes(id).catch((error: unknown) => {
+              console.error(error);
+            });
+          }}
+          excludeIds={otherSelectedCharacterIds}
+        />
+        <Select
+          value={String(character.sequence)}
+          onValueChange={(value) => setSequence(index, Number.parseInt(value))}
+        >
+          <SelectTrigger className="w-20 shrink-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {[0, 1, 2, 3, 4, 5, 6].map((s) => (
+              <SelectItem key={s} value={String(s)}>
+                S{s}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Row>
     </Row>
   );
 };

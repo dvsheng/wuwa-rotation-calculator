@@ -21,7 +21,6 @@ const CharacterCardSkeleton = () => (
     <Skeleton className="h-9 w-full" />
     <Skeleton className="h-9 w-full" />
     <Skeleton className="h-9 w-full" />
-    <Skeleton className="h-9 w-full" />
     {Array.from({ length: ECHO_PIECE_COUNT }, (_, index) => (
       <Skeleton key={index} className="h-8 w-full" />
     ))}
@@ -30,14 +29,16 @@ const CharacterCardSkeleton = () => (
 
 export const CharacterCard = ({ index }: CharacterCardProperties) => {
   return (
-    <Card className="w-120">
-      <CardContent>
+    <Card className="w-120 gap-0 overflow-hidden py-0">
+      <CardContent className="pt-4 pb-6">
         <Suspense fallback={<CharacterCardSkeleton />}>
           <Stack gap="panel">
-            <CharacterSelector index={index} />
-            <WeaponSelector index={index} />
-            <EchoSetSelector index={index} />
-            <PrimaryEchoSelector index={index} />
+            <Stack>
+              <CharacterSelector index={index} />
+              <WeaponSelector index={index} />
+              <EchoSetSelector index={index} />
+              <PrimaryEchoSelector index={index} />
+            </Stack>
             <Stack gap="component" className="p-page">
               <Text variant="title">Echo Substats</Text>
               {Array.from({ length: ECHO_PIECE_COUNT }, (_, echoIndex) => (

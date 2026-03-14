@@ -15,7 +15,6 @@ import {
 import { Grid, Row } from '@/components/ui/layout';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Text } from '@/components/ui/typography';
-import { cn } from '@/lib/utils';
 import type { ListEntityResponseItem } from '@/services/game-data';
 import { Attribute, WeaponType } from '@/types';
 
@@ -112,11 +111,7 @@ export const EntitySelectionDialog = ({
 
   return (
     <>
-      <Button
-        variant="outline"
-        onClick={() => setIsOpen(true)}
-        className={cn('selector-main w-full flex-1 justify-start truncate font-normal')}
-      >
+      <Button variant="outline" onClick={() => setIsOpen(true)} className="flex-1">
         <Text as="span" className="truncate">
           {selectedItem?.name ?? 'Click to select'}
         </Text>

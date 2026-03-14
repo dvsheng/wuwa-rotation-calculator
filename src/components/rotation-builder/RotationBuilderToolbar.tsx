@@ -7,6 +7,7 @@ import { ButtonGroup } from '@/components/ui/button-group';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRotationCalculation } from '@/hooks/useRotationCalculation';
 
+import { Badge } from '../ui/badge';
 import { Row } from '../ui/layout';
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
 import { Text } from '../ui/typography';
@@ -50,9 +51,20 @@ export function RotationBuilderToolbar({
         {result && (
           <Row justify="center" align="center" gap="compact">
             <Text>Total Damage:</Text>
-            <Text className={isPlaceholderData ? 'text-amber-500' : 'text-primary'}>
+            <Text
+              className={
+                isPlaceholderData
+                  ? 'text-muted-foreground line-through'
+                  : 'text-primary'
+              }
+            >
               {Math.round(result.totalDamage).toLocaleString()}
             </Text>
+            {isPlaceholderData && (
+              <Badge className="bg-amber-500/15 text-amber-500">
+                Outdated — Recalculate
+              </Badge>
+            )}
           </Row>
         )}
       </Row>

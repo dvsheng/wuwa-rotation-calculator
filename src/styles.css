@@ -224,6 +224,7 @@ code {
   transition-property: transform;
 }
 .react-grid-item.resizing {
+  transition: none;
   z-index: 1;
   will-change: width, height;
 }

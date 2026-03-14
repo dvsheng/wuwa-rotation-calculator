@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import { DashboardSectionHeader } from '@/components/common/DashboardSectionHeader';
 import { Container, Row, Stack } from '@/components/ui/layout';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Text } from '@/components/ui/typography';
@@ -91,16 +92,18 @@ export const RotationResultContainer = () => {
         </Stack>
 
         <Separator orientation="vertical" className="self-stretch" />
-        <Stack className="min-h-0 w-2xl overflow-hidden">
+        <Stack className="w-xl">
           <DashboardSectionHeader
             title="Details"
             description="Select a row in Results to inspect detailed stat contributions or perturbation deltas."
             icon={<ListTree />}
           />
-          <Stack
-            ref={(node) => setInspectorPortalNode(node ?? undefined)}
-            className="p-page min-h-0 flex-1 overflow-y-auto"
-          />
+          <ScrollArea className="min-h-0 flex-1">
+            <Stack
+              ref={(node) => setInspectorPortalNode(node ?? undefined)}
+              className="p-page"
+            />
+          </ScrollArea>
         </Stack>
       </Row>
     </Container>

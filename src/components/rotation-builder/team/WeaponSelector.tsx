@@ -1,6 +1,6 @@
 import { isNil } from 'es-toolkit/predicate';
 
-import { AssetIcon } from '@/components/common/AssetIcon';
+import { EntityIcon } from '@/components/common/EntityIcon';
 import { Row } from '@/components/ui/layout';
 import {
   Select,
@@ -32,6 +32,8 @@ export const WeaponSelector = ({ index }: WeaponSelectorProperties) => {
     entityType: EntityType.CHARACTER,
   });
 
+  const selectedWeapon = weaponList.find((w) => w.id === weapon.id);
+
   const characterWeaponType = characterList.find(
     (c) => c.id === character.id,
   )?.weaponType;
@@ -43,33 +45,41 @@ export const WeaponSelector = ({ index }: WeaponSelectorProperties) => {
         .map(({ weaponType, ...rest }) => ({ ...rest }) as ListWeaponsResponseItem);
 
   return (
-    <Row className="selector-row">
-      <AssetIcon name="weapon" className="selector-icon" />
-      <EntitySelectionDialog
-        items={filteredWeaponList}
-        value={weapon.id}
-        onValueChange={(id) => {
-          if (id !== weapon.id) {
-            clearForEntity(weapon.id);
-            setWeapon(index, id);
-          }
-        }}
-      />
-      <Select
-        value={String(weapon.refine)}
-        onValueChange={(value) => setRefine(index, value)}
-      >
-        <SelectTrigger className="selector-secondary">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {[1, 2, 3, 4, 5].map((r) => (
-            <SelectItem key={r} value={String(r)}>
-              R{r}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+    <Row className="items-center gap-3">
+      <div className="flex w-20 items-center justify-center">
+        <EntityIcon
+          iconUrl={selectedWeapon?.iconUrl}
+          size="large"
+          className="border-background border-2"
+        />
+      </div>
+      <Row gap="component" className="flex-1">
+        <EntitySelectionDialog
+          items={filteredWeaponList}
+          value={weapon.id}
+          onValueChange={(id) => {
+            if (id !== weapon.id) {
+              clearForEntity(weapon.id);
+              setWeapon(index, id);
+            }
+          }}
+        />
+        <Select
+          value={String(weapon.refine)}
+          onValueChange={(value) => setRefine(index, value)}
+        >
+          <SelectTrigger className="w-20 shrink-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {[1, 2, 3, 4, 5].map((r) => (
+              <SelectItem key={r} value={String(r)}>
+                R{r}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Row>
     </Row>
   );
 };

@@ -1,4 +1,4 @@
-import { AssetIcon } from '@/components/common/AssetIcon';
+import { EntityIcon } from '@/components/common/EntityIcon';
 import { Row } from '@/components/ui/layout';
 import { useEntityList } from '@/hooks/useEntityList';
 import { EntityType } from '@/services/game-data';
@@ -17,15 +17,23 @@ export const PrimaryEchoSelector = ({ index }: PrimaryEchoSelectorProperties) =>
   const clearForEntity = useStore((state) => state.clearForEntity);
   const { data: echoList = [] } = useEntityList({ entityType: EntityType.ECHO });
   const { data: echoSetList = [] } = useEntityList({ entityType: EntityType.ECHO_SET });
+
   const selectedSetIds = new Set(
     selectedEchoSets.map((set) => echoSetList.find((s) => s.id === set.id)?.gameId),
   );
   const primaryEchoOptions = echoList.filter((_echo) =>
     _echo.sets.some((set) => selectedSetIds.has(set)),
   );
+
   return (
-    <Row className="selector-row">
-      <AssetIcon name="monster" className="selector-icon" />
+    <Row className="items-center gap-3">
+      <div className="flex w-20 items-center justify-center">
+        <EntityIcon
+          entityId={echo.id}
+          size="large"
+          className="border-background border-2"
+        />
+      </div>
       <EntitySelectionDialog
         items={primaryEchoOptions}
         value={echo.id}

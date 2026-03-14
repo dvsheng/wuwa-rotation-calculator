@@ -1,16 +1,31 @@
+import {
+  GetSecretValueCommand,
+  SecretsManagerClient,
+} from '@aws-sdk/client-secrets-manager';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 
 import * as schema from './schema';
+
+// Cached secret — fetched once per Lambda instance lifetime.
+let cachedPassword: string | undefined;
+
+const fetchSecret = async (secretArn: string): Promise<string> => {
+  if (cachedPassword) return cachedPassword;
+  const sm = new SecretsManagerClient({});
+  const { SecretString } = await sm.send(
+    new GetSecretValueCommand({ SecretId: secretArn }),
+  );
+  const secret = JSON.parse(SecretString!) as { password: string };
+  cachedPassword = secret.password;
+  return cachedPassword;
+};
 
 function createClient() {
   // Local dev: use a full connection URL from .env
   const url = process.env.DATABASE_URL;
   if (url) return postgres(url);
 
-  // Lambda: non-secret parts are plain env vars; password is resolved lazily
-  // from Secrets Manager on first connection (postgres.js calls the async fn
-  // only when it opens the first physical connection).
   const {
     DATABASE_HOST,
     DATABASE_PORT,
@@ -31,16 +46,7 @@ function createClient() {
     database: DATABASE_NAME ?? 'wuwa_rotation_builder',
     username: DATABASE_USERNAME ?? 'postgres',
     ssl: 'require',
-    password: async () => {
-      const { SecretsManagerClient, GetSecretValueCommand } =
-        await import('@aws-sdk/client-secrets-manager');
-      const sm = new SecretsManagerClient({});
-      const { SecretString } = await sm.send(
-        new GetSecretValueCommand({ SecretId: DATABASE_SECRET_ARN }),
-      );
-      const secret = JSON.parse(SecretString!) as { password: string };
-      return secret.password;
-    },
+    password: () => fetchSecret(DATABASE_SECRET_ARN),
   });
 }
 
@@ -53,3 +59,11 @@ const client = createClient();
  * Drizzle database client
  */
 export const database = drizzle(client, { schema });
+
+// Pre-warm the connection at module init so the first real request doesn't pay
+// the TCP + TLS + Secrets Manager handshake cost.
+try {
+  await client`SELECT 1`;
+} catch {
+  // Ignore — if the DB is unreachable at startup we'll surface the error on the first real query.
+}

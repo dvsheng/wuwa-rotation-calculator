@@ -44,6 +44,12 @@ class LocalStorageMock {
 
 globalThis.localStorage = new LocalStorageMock() as Storage;
 
+globalThis.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
 // Mock Zustand to reset stores between tests
 // This follows the pattern from: https://zustand.docs.pmnd.rs/guides/testing#vitest
 vi.mock('zustand');

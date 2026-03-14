@@ -6,9 +6,17 @@ import { CapabilityType, OriginType, Target } from '@/services/game-data';
 
 import { CapabilitySidebar } from './CapabilitySidebar';
 
+vi.mock('@dnd-kit/react', () => ({
+  useDraggable: vi.fn(() => ({
+    ref: vi.fn(),
+  })),
+}));
+
 vi.mock('@/hooks/useTeamDetails');
 
+const { useDraggable } = await import('@dnd-kit/react');
 const { useTeamDetails } = await import('@/hooks/useTeamDetails');
+const mockUseDraggable = vi.mocked(useDraggable);
 const mockUseTeamDetails = vi.mocked(useTeamDetails);
 
 const makeAttack = (
@@ -53,7 +61,7 @@ const makeBuff = (
 
 const getSectionCapabilityNames = (sectionName: 'Attacks' | 'Buffs') => {
   const heading = screen.getByRole('heading', { name: sectionName });
-  const section = heading.closest('section');
+  const section = heading.parentElement?.parentElement;
   if (!section) {
     throw new Error(`Expected "${sectionName}" section to exist`);
   }
@@ -140,5 +148,22 @@ describe('CapabilitySidebar', () => {
       'Active Buff',
       'Enemy Debuff',
     ]);
+  });
+
+  it('configures palette drags to use clone feedback', () => {
+    mockUseTeamDetails.mockReturnValue({
+      attacks: [makeAttack(1, 'Basic Attack', OriginType.NORMAL_ATTACK)],
+      buffs: [makeBuff(2, 'Team Buff', Target.TEAM)],
+      isLoading: false,
+      isError: false,
+    });
+
+    renderCapabilitySidebar();
+
+    expect(mockUseDraggable).toHaveBeenCalledWith(
+      expect.objectContaining({
+        feedback: 'clone',
+      }),
+    );
   });
 });

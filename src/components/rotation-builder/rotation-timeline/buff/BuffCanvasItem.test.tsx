@@ -6,7 +6,7 @@ import { CapabilityType, OriginType, Target } from '@/services/game-data';
 import { useStore } from '@/store';
 import { Attribute } from '@/types';
 
-import { BuffCanvasItem } from './BuffCanvasItem';
+import { BaseBuffCanvasItem, BuffCanvasItem } from './BuffCanvasItem';
 
 vi.mock('@/hooks/useIcons');
 vi.mock('@/hooks/useSelfBuffAlignment');
@@ -121,6 +121,20 @@ beforeEach(() => {
 });
 
 describe('BuffCanvasItem', () => {
+  describe('base item', () => {
+    it('renders the shared buff canvas item chrome', () => {
+      render(
+        <BaseBuffCanvasItem
+          name="Moonlit Buff"
+          iconUrl="/buff.png"
+          characterIconUrl="/char.png"
+        />,
+      );
+
+      expect(screen.getByText('Moonlit Buff')).toBeInTheDocument();
+    });
+  });
+
   describe('buffedAttacks passed to CanvasItem', () => {
     it('uses the names of attacks at buff positions as dialog labels when stack config is enabled', async () => {
       // buff at x=1, w=2 → covers MOCK_ATTACKS[1] ("Heavy Attack") and MOCK_ATTACKS[2] ("Basic Attack")

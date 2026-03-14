@@ -1,13 +1,23 @@
+import { useSortable } from '@dnd-kit/react/sortable';
 import { isNil } from 'es-toolkit/predicate';
 import { AlertTriangle } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 import { CapabilityHoverCard } from '@/components/common/CapabilityHoverCard';
 import { CapabilityIconDisplay } from '@/components/common/CapabilityIcon';
 import { EntityIconDisplay } from '@/components/common/EntityIcon';
 import { ParameterConfigurationDialog } from '@/components/common/ParameterConfigurationDialog';
 import { TrashButton } from '@/components/common/TrashButton';
+import {
+  ATTACK_CANVAS_DROP_ID,
+  ATTACK_SORTABLE_DRAG_TYPE,
+  COLUMN_WIDTH,
+} from '@/components/rotation-builder/rotation-timeline/constants';
+import { Item } from '@/components/ui/item';
 import { Text } from '@/components/ui/typography';
 import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
+import { cn } from '@/lib/utils';
+import type { CanvasAttackDragData } from '@/types/dnd';
 
 interface AttackCanvasItemProperties {
   attack: DetailedAttackInstance;
@@ -16,12 +26,67 @@ interface AttackCanvasItemProperties {
   isDialogClickable: boolean;
 }
 
+interface BaseAttackCanvasItemProperties {
+  cardWrapper?: (card: ReactNode) => ReactNode;
+  characterIconUrl?: string;
+  iconUrl?: string;
+  name?: string;
+  children?: ReactNode;
+  itemRef?: (element: Element | null) => void;
+  isDragging?: boolean;
+}
+
+export const BaseAttackCanvasItem = ({
+  cardWrapper,
+  characterIconUrl,
+  iconUrl,
+  name,
+  children,
+  itemRef,
+  isDragging,
+}: BaseAttackCanvasItemProperties) => {
+  const card = (
+    <Item
+      variant="outline"
+      size="sm"
+      className={cn('p-tight relative flex h-56 flex-col', isDragging && 'opacity-0')}
+      data-testid="attack-sort-card"
+      style={{ width: COLUMN_WIDTH }}
+    >
+      <EntityIconDisplay url={characterIconUrl} size="large" />
+      <CapabilityIconDisplay url={iconUrl} size="medium" />
+      <Text as="div" variant="caption" className="line-clamp-4 text-center">
+        {name}
+      </Text>
+      {children}
+    </Item>
+  );
+
+  return (
+    <div data-testid="attack-sort-slot" ref={itemRef}>
+      {cardWrapper ? cardWrapper(card) : card}
+    </div>
+  );
+};
+
 export const AttackCanvasItem = ({
   attack,
   index,
   onRemove,
   isDialogClickable,
 }: AttackCanvasItemProperties) => {
+  const { isDragging, ref } = useSortable<CanvasAttackDragData>({
+    id: attack.instanceId,
+    index,
+    group: ATTACK_CANVAS_DROP_ID,
+    type: ATTACK_SORTABLE_DRAG_TYPE,
+    accept: ATTACK_SORTABLE_DRAG_TYPE,
+    data: {
+      kind: 'canvas-attack',
+      capability: attack,
+    },
+  });
+
   const isAttackConfigurable = (attack.parameters?.length ?? 0) > 0;
   const shouldShowWarning =
     isAttackConfigurable &&
@@ -31,47 +96,35 @@ export const AttackCanvasItem = ({
       false);
 
   return (
-    <ParameterConfigurationDialog
-      capability={attack}
-      isDialogClickable={isAttackConfigurable && isDialogClickable}
+    <BaseAttackCanvasItem
+      cardWrapper={(card) => (
+        <ParameterConfigurationDialog
+          capability={attack}
+          isDialogClickable={isAttackConfigurable && isDialogClickable}
+        >
+          <CapabilityHoverCard capability={attack}>{card}</CapabilityHoverCard>
+        </ParameterConfigurationDialog>
+      )}
+      characterIconUrl={attack.characterIconUrl}
+      iconUrl={attack.iconUrl}
+      name={attack.name}
+      itemRef={ref}
+      isDragging={isDragging}
     >
-      <CapabilityHoverCard capability={attack}>
-        <div className="bg-card hover:bg-accent/50 p-compact relative flex h-full w-full flex-col items-center overflow-hidden rounded-lg border select-none">
-          {/* Index at top-left */}
-          <Text
-            as="span"
-            variant="caption"
-            tone="muted"
-            className="absolute top-1 left-1"
-          >
-            {index + 1}
-          </Text>
-
-          {/* Warning indicator at top-right */}
-          {shouldShowWarning && (
-            <AlertTriangle
-              data-testid="alert-triangle"
-              className="absolute top-1 right-1 h-5 w-5 text-amber-500"
-            />
-          )}
-          <EntityIconDisplay url={attack.characterIconUrl} size="large" />
-          <div className="mt-2">
-            <CapabilityIconDisplay url={attack.iconUrl} size="medium" />
-          </div>
-          <Text
-            as="div"
-            variant="caption"
-            className="mt-2 line-clamp-4 w-full text-center leading-tight"
-          >
-            {attack.name}
-          </Text>
-          <TrashButton
-            className="absolute bottom-1 left-1/2 -translate-x-1/2"
-            onRemove={() => onRemove(attack.instanceId)}
-            stopPropagation={true}
-          />
-        </div>
-      </CapabilityHoverCard>
-    </ParameterConfigurationDialog>
+      <Text as="span" variant="caption" tone="muted" className="absolute top-1 left-1">
+        {index + 1}
+      </Text>
+      <TrashButton
+        className="absolute bottom-1 left-1/2 -translate-x-1/2"
+        onRemove={() => onRemove(attack.instanceId)}
+        stopPropagation={true}
+      />
+      {shouldShowWarning && (
+        <AlertTriangle
+          data-testid="alert-triangle"
+          className="absolute top-1 right-1 h-5 w-5 text-amber-500"
+        />
+      )}
+    </BaseAttackCanvasItem>
   );
 };

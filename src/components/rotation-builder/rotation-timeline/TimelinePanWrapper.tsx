@@ -150,7 +150,6 @@ export const TimelinePanWrapper = ({
       >
         <ChevronLeft />
       </Button>
-
       <Button
         type="button"
         variant="outline"
@@ -165,14 +164,13 @@ export const TimelinePanWrapper = ({
       >
         <ChevronRight />
       </Button>
-
       <ScrollArea
         orientation="both"
         viewportRef={scrollReference}
         className="min-h-0 flex-1"
-        viewportClassName="flex min-h-0 w-full flex-col overflow-auto"
+        viewportClassName="flex w-full h-full flex-col"
       >
-        <div className="flex min-h-0 min-w-full flex-col">{children}</div>
+        {children}
       </ScrollArea>
     </Container>
   );

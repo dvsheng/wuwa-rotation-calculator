@@ -8,6 +8,7 @@ import { ParameterConfigurationDialog } from '@/components/common/ParameterConfi
 import { TrashButton } from '@/components/common/TrashButton';
 import { Button } from '@/components/ui/button';
 import { Item, ItemActions, ItemMedia } from '@/components/ui/item';
+import { Row } from '@/components/ui/layout';
 import { Text } from '@/components/ui/typography';
 import {
   getAlignmentSegments,
@@ -21,14 +22,11 @@ import { Target } from '@/services/game-data';
 import { useStore } from '@/store';
 
 const TARGET_COLORS: Record<Target, string> = {
-  [Target.SELF]: 'border-blue-400 bg-blue-100 text-foreground',
-  [Target.TEAM]: 'border-green-400 bg-green-100 text-foreground',
-  [Target.ACTIVE_CHARACTER]: 'border-amber-400 bg-amber-100 text-foreground',
-  [Target.ENEMY]: 'border-red-400 bg-red-100 text-foreground',
+  [Target.SELF]: 'bg-blue-100',
+  [Target.TEAM]: 'bg-green-100',
+  [Target.ACTIVE_CHARACTER]: 'bg-amber-100',
+  [Target.ENEMY]: 'bg-red-100',
 };
-
-/** Classes for self buffs without a solid fill (border + text, background transparent) */
-const SELF_UNFILLED_CLASSES = 'border-blue-400 bg-transparent text-foreground';
 
 interface BuffCanvasItemProperties {
   buff: DetailedModifierInstance;
@@ -36,6 +34,57 @@ interface BuffCanvasItemProperties {
   onRemove: (instanceId: string) => void;
   onOpenChange?: (isOpen: boolean) => void;
 }
+
+interface BaseBuffCanvasItemProperties {
+  characterIconUrl?: string;
+  iconUrl?: string;
+  name?: string;
+  children?: React.ReactNode;
+  actions?: React.ReactNode;
+  className?: string;
+}
+
+export const BaseBuffCanvasItem = ({
+  characterIconUrl,
+  iconUrl,
+  name,
+  children,
+  actions,
+  className,
+}: BaseBuffCanvasItemProperties) => (
+  <Item
+    className={cn(
+      'border-border relative flex h-12 items-center gap-0 border px-0 py-0 select-none',
+      className,
+    )}
+  >
+    {children}
+    {/* Left sticky: icons + name */}
+    <Row
+      align="center"
+      className="sticky left-0 h-full min-w-0 gap-4 overflow-hidden bg-inherit px-4"
+    >
+      <ItemMedia>
+        <EntityIconDisplay url={characterIconUrl} size="medium" />
+      </ItemMedia>
+      <ItemMedia>
+        <CapabilityIconDisplay url={iconUrl} size="medium" />
+      </ItemMedia>
+      <Text variant="caption" className="min-w-0 truncate">
+        {name}
+      </Text>
+    </Row>
+    {/* Spacer */}
+    <div className="flex-1" />
+    {/* Right sticky: warning + actions */}
+    <Row
+      align="center"
+      className="gap-compact sticky right-0 h-full shrink-0 bg-inherit px-4"
+    >
+      <ItemActions>{actions}</ItemActions>
+    </Row>
+  </Item>
+);
 
 export const BuffCanvasItem = ({
   buff,
@@ -64,13 +113,13 @@ export const BuffCanvasItem = ({
       }
       case 'all-misaligned': {
         // Fully misaligned: outline only
-        return { itemClassName: SELF_UNFILLED_CLASSES, segments: [] };
+        return { itemClassName: '', segments: [] };
       }
       case 'mixed': {
         // Partially aligned: render individual segments with rounded corners
         const alignmentSegments = getAlignmentSegments(alignment.columnAlignments);
         return {
-          itemClassName: SELF_UNFILLED_CLASSES,
+          itemClassName: '',
           segments: alignmentSegments,
         };
       }
@@ -103,46 +152,19 @@ export const BuffCanvasItem = ({
       buffedAttacks={buffedAttacks}
     >
       <CapabilityHoverCard capability={buff} followCursor={true}>
-        <Item
-          className={cn(
-            'relative flex h-12 items-center gap-0 px-0 py-0 select-none',
-            itemClassName,
-          )}
-        >
-          {/* Background overlay segments */}
-          {segments.map((segment, index) => (
-            <div
-              key={index}
-              className="pointer-events-none absolute inset-y-0 -z-10 rounded-md bg-blue-100"
-              style={{
-                left: `${segment.start}%`,
-                width: `${segment.width}%`,
-              }}
-            />
-          ))}
-          {/* Left sticky: icons + name */}
-          <div className="sticky left-0 flex h-full min-w-0 items-center gap-4 overflow-hidden bg-inherit px-4">
-            <ItemMedia>
-              <EntityIconDisplay url={buff.characterIconUrl} size="medium" />
-            </ItemMedia>
-            <ItemMedia>
-              <CapabilityIconDisplay url={buff.iconUrl} size="medium" />
-            </ItemMedia>
-            <Text variant="caption" className="min-w-0 truncate">
-              {buff.name}
-            </Text>
-          </div>
-          {/* Spacer */}
-          <div className="flex-1" />
-          {/* Right sticky: warning + actions */}
-          <div className="sticky right-0 flex h-full shrink-0 items-center gap-2 bg-inherit px-4">
-            {shouldShowWarning && (
-              <AlertTriangle
-                data-testid="alert-triangle"
-                className="size-5 shrink-0 text-amber-500"
-              />
-            )}
-            <ItemActions>
+        <BaseBuffCanvasItem
+          characterIconUrl={buff.characterIconUrl}
+          iconUrl={buff.iconUrl}
+          name={buff.name}
+          className={itemClassName}
+          actions={
+            <>
+              {shouldShowWarning && (
+                <AlertTriangle
+                  data-testid="alert-triangle"
+                  className="size-5 shrink-0 text-amber-500"
+                />
+              )}
               <Button
                 variant="ghost"
                 size="icon"
@@ -159,9 +181,20 @@ export const BuffCanvasItem = ({
                 className="shrink-0"
                 onRemove={() => onRemove(buff.instanceId)}
               />
-            </ItemActions>
-          </div>
-        </Item>
+            </>
+          }
+        >
+          {segments.map((segment, index) => (
+            <div
+              key={index}
+              className="pointer-events-none absolute inset-y-0 -z-10 rounded-md bg-blue-100"
+              style={{
+                left: `${segment.start}%`,
+                width: `${segment.width}%`,
+              }}
+            />
+          ))}
+        </BaseBuffCanvasItem>
       </CapabilityHoverCard>
     </ParameterConfigurationDialog>
   );

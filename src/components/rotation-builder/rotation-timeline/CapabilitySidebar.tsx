@@ -1,5 +1,6 @@
+import { useDraggable } from '@dnd-kit/react';
 import { Info, SwatchBook } from 'lucide-react';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 
 import { CapabilityHoverCard } from '@/components/common/CapabilityHoverCard';
 import { CapabilityIcon } from '@/components/common/CapabilityIcon';
@@ -18,6 +19,7 @@ import { cn } from '@/lib/utils';
 import type { Capability } from '@/schemas/rotation';
 import { Target } from '@/services/game-data';
 import type { OriginType as CapabilityOriginType } from '@/services/game-data';
+import type { SidebarCapabilityDragData } from '@/types/dnd';
 
 const ATTACK_COLORS: Record<CapabilityOriginType, string> = {
   'Normal Attack': 'border-l-slate-400',
@@ -97,9 +99,7 @@ const TARGET_ORDER: Array<Target> = [
 
 interface CapabilitySidebarProperties {
   onClickAttack?: (attack: Capability) => void;
-  onDragAttack?: (attack: Capability, event: React.DragEvent<HTMLElement>) => void;
   onClickBuff?: (buff: Capability) => void;
-  onDragBuff?: (buff: Capability, event: React.DragEvent<HTMLElement>) => void;
 }
 
 interface CapabilitySectionProperties {
@@ -119,7 +119,6 @@ interface CapabilityCardProperties {
   capability: DetailedAttack | DetailedModifier;
   colorClassName?: string;
   onClick?: () => void;
-  onDragStart?: (event: React.DragEvent<HTMLElement>) => void;
 }
 
 const matchesSearchText = (
@@ -231,23 +230,26 @@ const CapabilityCard = ({
   capability,
   colorClassName,
   onClick,
-  onDragStart,
 }: CapabilityCardProperties) => {
-  const isDraggable = onDragStart !== undefined;
+  const id = useId();
+  const { ref } = useDraggable<SidebarCapabilityDragData>({
+    id,
+    type: capability.capabilityType,
+    feedback: 'clone',
+    data: {
+      kind: 'sidebar-capability',
+      capability,
+    },
+  });
   return (
     <CapabilityHoverCard capability={capability}>
       <Item
-        draggable={isDraggable}
-        onDragStart={onDragStart}
         onClick={onClick}
+        ref={ref}
         variant="outline"
         className={cn(
-          'gap-tight p-compact relative flex size-28 flex-col border shadow-sm',
-          isDraggable
-            ? 'cursor-grab active:cursor-grabbing'
-            : onClick
-              ? 'cursor-pointer'
-              : 'cursor-default',
+          'gap-tight p-compact relative flex size-28 cursor-grab flex-col border shadow-sm active:cursor-grabbing',
+          onClick && 'cursor-pointer',
           colorClassName,
           'border-l-4',
         )}
@@ -263,9 +265,7 @@ const CapabilityCard = ({
 
 export const CapabilitySidebar = ({
   onClickAttack,
-  onDragAttack,
   onClickBuff,
-  onDragBuff,
 }: CapabilitySidebarProperties) => {
   const [selectedCharacters, setSelectedCharacters] = useState<Array<string>>([]);
   const [searchText, setSearchText] = useState('');
@@ -347,11 +347,6 @@ export const CapabilitySidebar = ({
                       key={attack.id}
                       capability={attack}
                       colorClassName={ATTACK_COLORS[attack.originType]}
-                      onDragStart={
-                        onDragAttack
-                          ? (event) => onDragAttack(attack, event)
-                          : undefined
-                      }
                       onClick={onClickAttack ? () => onClickAttack(attack) : undefined}
                     />
                   ))}
@@ -394,9 +389,6 @@ export const CapabilitySidebar = ({
                       key={buff.id}
                       capability={buff}
                       colorClassName={TARGET_COLORS[buff.target]}
-                      onDragStart={
-                        onDragBuff ? (event) => onDragBuff(buff, event) : undefined
-                      }
                       onClick={onClickBuff ? () => onClickBuff(buff) : undefined}
                     />
                   ))}

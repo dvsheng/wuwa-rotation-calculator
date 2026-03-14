@@ -204,7 +204,7 @@ code {
   }
 
   .canvas-empty-state {
-    @apply pointer-events-none absolute inset-0 flex items-center justify-center;
+    @apply mx-auto flex items-center justify-center;
   }
 }
 

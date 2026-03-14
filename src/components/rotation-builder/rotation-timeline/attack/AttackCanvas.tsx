@@ -1,90 +1,67 @@
-import { compact } from 'es-toolkit/array';
-import type { Layout, LayoutItem } from 'react-grid-layout';
-import GridLayout, { verticalCompactor } from 'react-grid-layout';
+import { useDroppable } from '@dnd-kit/react';
 
+import {
+  ATTACK_CANVAS_DROP_ID,
+  SIDEBAR_ATTACK_DRAG_TYPE,
+} from '@/components/rotation-builder/rotation-timeline/constants';
+import { Container, Row } from '@/components/ui/layout';
 import { Text } from '@/components/ui/typography';
-import { useCanvasLayout } from '@/hooks/useCanvasLayout';
 import { useTeamAttackInstances } from '@/hooks/useTeamAttackInstances';
+import { cn } from '@/lib/utils';
 import { useStore } from '@/store';
+import type { TimelineDragData } from '@/types/dnd';
 
-import { AttackCanvasItem } from './AttackCanvasItem';
+import { AttackCanvasItem, BaseAttackCanvasItem } from './AttackCanvasItem';
 
-export interface AttackCanvasProperties {
-  onDropAttack: (layout: Layout, item: LayoutItem | undefined, event: Event) => void;
+interface AttackCanvasProperties {
+  previewInsertIndex?: number;
 }
 
-export const AttackCanvas = ({ onDropAttack }: AttackCanvasProperties) => {
+export const AttackCanvas = ({ previewInsertIndex }: AttackCanvasProperties) => {
   const { attacks } = useTeamAttackInstances();
-  const storedAttacks = useStore((state) => state.attacks);
   const removeAttack = useStore((state) => state.removeAttack);
-  const setAttacks = useStore((state) => state.setAttacks);
-
-  const handleLayoutChange = (layout: Layout) => {
-    if (layout.length !== storedAttacks.length) return;
-    const newAttackInstanceIdOrder = [...layout]
-      .toSorted((a, b) => a.x - b.x)
-      .map((layoutItem) => layoutItem.i);
-    const hasAttackOrderChanged = storedAttacks.some(
-      (attack, index) => attack.instanceId !== newAttackInstanceIdOrder[index],
-    );
-    if (hasAttackOrderChanged) {
-      const newAttackOrder = compact(
-        newAttackInstanceIdOrder.map((id) =>
-          storedAttacks.find((attack) => attack.instanceId === id),
-        ),
-      );
-      setAttacks(newAttackOrder);
-    }
-  };
-
-  const { layout: fullLayoutProperties, isInteracting } = useCanvasLayout({
-    layout: attacks.map((attack, index) => ({
-      i: attack.instanceId,
-      x: index,
-      y: 0,
-      w: 1,
-      h: 1,
-    })),
-    gridConfig: { maxRows: 1 },
-    compactor: verticalCompactor,
-    resizeConfig: { enabled: false },
-    onDrop: onDropAttack,
-    onLayoutChange: handleLayoutChange,
+  const { ref, isDropTarget } = useDroppable<TimelineDragData>({
+    id: ATTACK_CANVAS_DROP_ID,
+    accept: (source) => source.type === SIDEBAR_ATTACK_DRAG_TYPE,
   });
 
-  const handleRemoveAttack = (instanceId: string) => {
-    removeAttack(instanceId);
-  };
+  const hasPreview = previewInsertIndex !== undefined;
+  const attackCards = attacks.flatMap((attack, index) => {
+    const cards = [];
+    if (previewInsertIndex === index) {
+      cards.push(<BaseAttackCanvasItem key="attack-drop-preview" />);
+    }
+    cards.push(
+      <AttackCanvasItem
+        key={attack.instanceId}
+        attack={attack}
+        index={index}
+        onRemove={removeAttack}
+        isDialogClickable={true}
+      />,
+    );
+    return cards;
+  });
+  if (previewInsertIndex === attacks.length) {
+    attackCards.push(<BaseAttackCanvasItem key="attack-drop-preview" />);
+  }
 
   return (
-    <div className="canvas-section">
-      <div className="canvas-content">
-        <div
-          className="canvas-drop-zone"
-          style={{ minWidth: fullLayoutProperties.width }}
-        >
-          {attacks.length === 0 && (
-            <div className="canvas-empty-state">
-              <Text variant="overline" tone="muted">
-                Drag attacks here to build your rotation
-              </Text>
-            </div>
-          )}
-
-          <GridLayout {...fullLayoutProperties}>
-            {attacks.map((attack, index) => (
-              <div key={attack.instanceId}>
-                <AttackCanvasItem
-                  attack={attack}
-                  index={index}
-                  onRemove={handleRemoveAttack}
-                  isDialogClickable={!isInteracting}
-                />
-              </div>
-            ))}
-          </GridLayout>
-        </div>
-      </div>
-    </div>
+    <Container
+      ref={ref}
+      className={cn(
+        'py-tight flex h-58 flex-1 items-center justify-center',
+        isDropTarget && 'bg-accent/10',
+      )}
+    >
+      {attacks.length === 0 && !hasPreview && (
+        <Text variant="bodySm" tone="muted">
+          Drag attacks here to start building your rotation.
+        </Text>
+      )}
+      <Row gap="tight" align="start" fullWidth className="px-panel">
+        {attackCards}
+      </Row>
+    </Container>
   );
 };

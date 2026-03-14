@@ -13,6 +13,12 @@ const makeEntity = (overrides: Record<string, unknown> = {}) =>
   ({
     id: 1,
     name: 'Test Character',
+    derivedAttributes: {
+      preferredScalingStat: 'atk',
+      dominantAttribute: 'fusion',
+      preferredThreeCostScalingMainStat: EchoMainStatOption.ATK_PERCENT,
+      preferredThreeCostAttributeMainStat: EchoMainStatOption.DAMAGE_BONUS_FUSION,
+    },
     capabilities: {
       attacks: [],
       modifiers: [],
@@ -71,6 +77,12 @@ describe('buildEchoPieces', () => {
             stat: CharacterStat.ENERGY_REGEN,
           },
         ],
+        derivedAttributes: {
+          preferredScalingStat: 'hp',
+          dominantAttribute: 'spectro',
+          preferredThreeCostScalingMainStat: EchoMainStatOption.HP_PERCENT,
+          preferredThreeCostAttributeMainStat: EchoMainStatOption.DAMAGE_BONUS_SPECTRO,
+        },
       }),
     );
 
@@ -217,6 +229,12 @@ describe('buildEchoPieces', () => {
             stat: CharacterStat.ENERGY_REGEN,
           },
         ],
+        derivedAttributes: {
+          preferredScalingStat: 'atk',
+          dominantAttribute: 'aero',
+          preferredThreeCostScalingMainStat: EchoMainStatOption.ATK_PERCENT,
+          preferredThreeCostAttributeMainStat: EchoMainStatOption.DAMAGE_BONUS_AERO,
+        },
       }),
     );
 

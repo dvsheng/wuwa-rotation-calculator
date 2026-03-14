@@ -1,5 +1,6 @@
 import { mergeWith } from 'es-toolkit/object';
 
+import { EchoSubstatOption } from '@/schemas/echo';
 import type { EchoMainStatOptionType, EchoSubstatOptionType } from '@/schemas/echo';
 import type { Enemy as ClientEnemy } from '@/schemas/enemy';
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
@@ -70,6 +71,19 @@ export const ECHO_STAT_MAP: Record<
   damage_bonus_havoc: [CharacterStat.DAMAGE_BONUS, [Tag.HAVOC]],
   healing_bonus: [CharacterStat.HEALING_BONUS, [Tag.ALL]],
 } as const;
+
+const FLAT_ECHO_SUBSTAT_OPTIONS = new Set<EchoSubstatOptionType>([
+  EchoSubstatOption.HP_FLAT,
+  EchoSubstatOption.ATK_FLAT,
+  EchoSubstatOption.DEF_FLAT,
+]);
+
+export const normalizeEchoSubstatValue = (
+  stat: EchoSubstatOptionType,
+  value: number,
+) => {
+  return FLAT_ECHO_SUBSTAT_OPTIONS.has(stat) ? value : value / 100;
+};
 
 const createEmptyCharacterStats = (): CharacterStats<StatMeta> =>
   Object.fromEntries(
@@ -252,7 +266,11 @@ export const shouldModifierApplyToAttack = (
  * @returns A Rotation object ready for damage calculation
  */
 export const adaptClientInputToRotation = async (
-  clientTeam: ClientTeam,
+  clientTeam: Array<
+    ClientTeam[number] & {
+      additionalStats?: Array<TaggedStatValue & { stat: CharacterStat }>;
+    }
+  >,
   clientEnemy: ClientEnemy,
   attacks: Array<AttackInstance>,
   buffs: Array<ModifierInstance>,
@@ -285,7 +303,7 @@ export const adaptClientInputToRotation = async (
         const [subName, subTags] = ECHO_STAT_MAP[substat.stat];
         return {
           stat: subName,
-          value: Number.isInteger(substat.value) ? substat.value : substat.value / 100,
+          value: normalizeEchoSubstatValue(substat.stat, substat.value),
           tags: subTags,
           name: 'Echo Substat',
           description: substat.stat,
@@ -299,6 +317,7 @@ export const adaptClientInputToRotation = async (
       [
         ...permanentStats.map((stat) => toRotationPermanentStat(stat, charIndex)),
         ...echoStats,
+        ...(clientChar.additionalStats ?? []),
       ],
       (item) => item.stat,
     );

@@ -1,3 +1,4 @@
+import type { EchoMainStatOptionType } from '@/schemas/echo';
 import type {
   AttackScalingProperty,
   Attribute,
@@ -291,6 +292,13 @@ export interface Capabilities<T = {}> {
   permanentStats: Array<PermanentStat<T>>;
 }
 
+export interface CharacterDerivedAttributes {
+  preferredScalingStat: 'atk' | 'def' | 'hp';
+  dominantAttribute?: Attribute;
+  preferredThreeCostScalingMainStat: EchoMainStatOptionType;
+  preferredThreeCostAttributeMainStat?: EchoMainStatOptionType;
+}
+
 /**
  * Base properties for game entities like Characters, Weapons, or Echoes.
  */
@@ -304,4 +312,8 @@ export interface BaseEntity<T = {}> {
   /** Icon URL for this entity */
   iconUrl?: string;
   capabilities: Capabilities<T>;
+}
+
+export interface CharacterEntity<T = {}> extends BaseEntity<T> {
+  derivedAttributes: CharacterDerivedAttributes;
 }

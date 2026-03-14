@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { DatabaseFullCapability } from '@/db/schema';
+import { EchoMainStatOption } from '@/schemas/echo';
 
 import { CapabilityType, OriginType } from './types';
 
@@ -77,7 +78,7 @@ describe('getEntityByIdHandler — attack damage instance fields', () => {
   });
 
   it('preserves attribute and damageType as dedicated typed fields', async () => {
-    mockDatabaseSelect([makeMockAttackRow()]);
+    mockDatabaseSelect([makeMockAttackRow({ entityId: 100 })]);
 
     const entity = await getEntityByIdHandler({
       id: 100,
@@ -91,10 +92,10 @@ describe('getEntityByIdHandler — attack damage instance fields', () => {
   });
 
   it('injects attribute and damageType into the tags array for the calculation engine', async () => {
-    mockDatabaseSelect([makeMockAttackRow()]);
+    mockDatabaseSelect([makeMockAttackRow({ entityId: 101 })]);
 
     const entity = await getEntityByIdHandler({
-      id: 100,
+      id: 101,
       entityType: 'character',
       activatedSequence: 0,
     });
@@ -105,10 +106,10 @@ describe('getEntityByIdHandler — attack damage instance fields', () => {
   });
 
   it('preserves existing tags and appends the capability name', async () => {
-    mockDatabaseSelect([makeMockAttackRow()]);
+    mockDatabaseSelect([makeMockAttackRow({ entityId: 102 })]);
 
     const entity = await getEntityByIdHandler({
-      id: 100,
+      id: 102,
       entityType: 'character',
       activatedSequence: 0,
     });
@@ -121,6 +122,7 @@ describe('getEntityByIdHandler — attack damage instance fields', () => {
   it('handles multiple damage instances with different attributes and damage types', async () => {
     mockDatabaseSelect([
       makeMockAttackRow({
+        entityId: 103,
         capabilityJson: {
           type: 'attack',
           damageInstances: [
@@ -144,7 +146,7 @@ describe('getEntityByIdHandler — attack damage instance fields', () => {
     ]);
 
     const entity = await getEntityByIdHandler({
-      id: 100,
+      id: 103,
       entityType: 'character',
       activatedSequence: 0,
     });
@@ -160,5 +162,134 @@ describe('getEntityByIdHandler — attack damage instance fields', () => {
     expect(second.tags).toContain('fusion');
     expect(second.tags).toContain('resonanceSkill');
     expect(second.tags).toContain('coordinatedAttack');
+  });
+});
+
+describe('getEntityByIdHandler — caching', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('memoizes repeated identical requests', async () => {
+    mockDatabaseSelect([makeMockAttackRow({ entityId: 107 })]);
+
+    const first = await getEntityByIdHandler({
+      id: 107,
+      entityType: 'character',
+      activatedSequence: 0,
+    });
+    const second = await getEntityByIdHandler({
+      id: 107,
+      entityType: 'character',
+      activatedSequence: 0,
+    });
+
+    expect(first).toEqual(second);
+    expect(database.select).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('getEntityByIdHandler — character derivedAttributes', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('includes derivedAttributes for character entities', async () => {
+    mockDatabaseSelect([
+      makeMockAttackRow({
+        entityId: 104,
+        capabilityJson: {
+          type: 'attack',
+          damageInstances: [
+            {
+              attribute: 'fusion',
+              damageType: 'basicAttack',
+              tags: [],
+              motionValue: 1,
+              scalingStat: 'atk',
+            },
+            {
+              attribute: 'fusion',
+              damageType: 'resonanceSkill',
+              tags: [],
+              motionValue: 1,
+              scalingStat: 'atk',
+            },
+          ],
+        },
+      }),
+    ]);
+
+    const entity = await getEntityByIdHandler({
+      id: 104,
+      entityType: 'character',
+      activatedSequence: 0,
+    });
+
+    expect(entity).toHaveProperty('derivedAttributes');
+    expect((entity as any).derivedAttributes).toEqual({
+      preferredScalingStat: 'atk',
+      dominantAttribute: 'fusion',
+      preferredThreeCostScalingMainStat: EchoMainStatOption.ATK_PERCENT,
+      preferredThreeCostAttributeMainStat: EchoMainStatOption.DAMAGE_BONUS_FUSION,
+    });
+  });
+
+  it('prioritizes hp/def scaling over atk when deriving scaling main stats', async () => {
+    mockDatabaseSelect([
+      makeMockAttackRow({
+        entityId: 105,
+        capabilityJson: {
+          type: 'attack',
+          damageInstances: [
+            {
+              attribute: 'spectro',
+              damageType: 'resonanceLiberation',
+              tags: [],
+              motionValue: 1,
+              scalingStat: 'hp',
+            },
+            {
+              attribute: 'spectro',
+              damageType: 'basicAttack',
+              tags: [],
+              motionValue: 1,
+              scalingStat: 'atk',
+            },
+          ],
+        },
+      }),
+    ]);
+
+    const entity = await getEntityByIdHandler({
+      id: 105,
+      entityType: 'character',
+      activatedSequence: 0,
+    });
+
+    expect((entity as any).derivedAttributes.preferredScalingStat).toBe('hp');
+    expect((entity as any).derivedAttributes.preferredThreeCostScalingMainStat).toBe(
+      EchoMainStatOption.HP_PERCENT,
+    );
+    expect((entity as any).derivedAttributes.preferredThreeCostAttributeMainStat).toBe(
+      EchoMainStatOption.DAMAGE_BONUS_SPECTRO,
+    );
+  });
+
+  it('does not include derivedAttributes for non-character entities', async () => {
+    mockDatabaseSelect([
+      makeMockAttackRow({
+        entityId: 106,
+        entityType: 'weapon',
+      }),
+    ]);
+
+    const entity = await getEntityByIdHandler({
+      id: 106,
+      entityType: 'weapon',
+      refineLevel: '1',
+    });
+
+    expect(entity).not.toHaveProperty('derivedAttributes');
   });
 });

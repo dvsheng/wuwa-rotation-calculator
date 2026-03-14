@@ -1,11 +1,9 @@
-Clean up Palette filter styling
-
-Default character stat builder
-
-sensitivity analysis
+fix dragging buffs
 
 export to sheet
 
 right click context menu on buff canvas
 
 skill templates
+
+frost resolve is missing a modifier

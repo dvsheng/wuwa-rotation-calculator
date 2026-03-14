@@ -1,11 +1,13 @@
 import { eq } from 'drizzle-orm';
 import { compact } from 'es-toolkit/array';
+import { memoize } from 'es-toolkit/function';
 
 import { database } from '@/db/client';
 import type { DatabaseFullCapability } from '@/db/schema';
 import { fullCapabilities } from '@/db/schema';
 import type { GetEntityDetailsRequest } from '@/schemas/game-data-service';
 
+import { deriveCharacterAttributes } from './character-derived-attributes';
 import { toClientAttack, toClientBuff } from './client-type-adapters';
 import {
   replaceNullsWithUndefined,
@@ -13,9 +15,12 @@ import {
   resolveStoreNumberType,
   sequenceToNumber,
 } from './database-type-adapters';
-import type { GetClientEntityDetailsResponse } from './get-entity-details.types';
+import type {
+  GetClientEntityDetailsResponse,
+  GetEntityDetailsResponse,
+} from './get-entity-details.types';
 import { CapabilityType, EntityType } from './types';
-import type { Attack, BaseEntity, Modifier, PermanentStat, RefineLevel } from './types';
+import type { Attack, Modifier, PermanentStat, RefineLevel } from './types';
 
 const refineLevelToNumber = (refineLevel?: RefineLevel): number => {
   if (!refineLevel) return 0;
@@ -148,9 +153,9 @@ const isPermanentStatCapability = (
  * Shared handler for fetching character details from database.
  * Resolves alternativeDefinitions based on the requested sequence.
  */
-export const getEntityByIdHandler = async (
-  options: GetEntityDetailsRequest,
-): Promise<BaseEntity> => {
+const baseGetEntityByIdHandler = async <T extends GetEntityDetailsRequest>(
+  options: T,
+): Promise<GetEntityDetailsResponse<T>> => {
   // Query entity with all capabilities
   const databaseCapabilities = await database
     .select()
@@ -186,7 +191,7 @@ export const getEntityByIdHandler = async (
   const permanentStats = capabilities
     .filter((capability) => isPermanentStatCapability(capability))
     .map((stat) => toPermanentStat(stat));
-  return {
+  const entity = {
     id: firstCapability.entityId,
     gameId: firstCapability.entityId,
     name: firstCapability.entityName,
@@ -197,7 +202,21 @@ export const getEntityByIdHandler = async (
       permanentStats: permanentStats,
     },
   };
+
+  if (options.entityType === EntityType.CHARACTER) {
+    return {
+      ...entity,
+      derivedAttributes: deriveCharacterAttributes(attacks),
+    } as GetEntityDetailsResponse<T>;
+  }
+
+  return entity as GetEntityDetailsResponse<T>;
 };
+
+export const getEntityByIdHandler = memoize(baseGetEntityByIdHandler, {
+  getCacheKey: (parameters: Parameters<typeof baseGetEntityByIdHandler>[0]) =>
+    JSON.stringify(parameters),
+});
 
 export const getClientEntityByIdHandler = async (
   options: GetEntityDetailsRequest,

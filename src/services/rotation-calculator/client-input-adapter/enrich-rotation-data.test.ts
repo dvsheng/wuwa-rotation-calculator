@@ -11,8 +11,17 @@ const { mockgetEntityById } = vi.hoisted(() => ({
   mockgetEntityById: vi.fn(),
 }));
 
+vi.mock('@/services/game-data', async () => {
+  const actual = await vi.importActual('@/services/game-data');
+
+  return {
+    ...actual,
+    getEntityById: ({ data }: { data: unknown }) => mockgetEntityById(data),
+  };
+});
+
 vi.mock('@/services/game-data/get-entity-details.function', () => ({
-  getEntityById: mockgetEntityById,
+  getTypedEntityById: mockgetEntityById,
 }));
 
 // Mock data shared across tests
@@ -313,7 +322,7 @@ describe('createGameDataEnricher', () => {
       ];
 
       // Mock the getEntityById to return different stats for each entity
-      mockgetEntityById.mockImplementation(({ data }) => {
+      mockgetEntityById.mockImplementation((data) => {
         if (data.entityType === 'character') {
           return Promise.resolve({
             capabilities: {
@@ -427,7 +436,7 @@ describe('createGameDataEnricher', () => {
         { stat: CharacterStat.CRITICAL_RATE, value: 0.05, tags: [Tag.ALL] },
       ];
 
-      mockgetEntityById.mockImplementation(({ data }) => {
+      mockgetEntityById.mockImplementation((data) => {
         if (data.entityType === 'character') {
           return Promise.resolve({
             capabilities: {
@@ -508,7 +517,7 @@ describe('createGameDataEnricher', () => {
         { stat: CharacterStat.ATTACK_FLAT, value: 700, tags: [Tag.ALL] },
       ];
 
-      mockgetEntityById.mockImplementation(({ data }) => {
+      mockgetEntityById.mockImplementation((data) => {
         if (data.entityType === 'character') {
           // Return different stats based on character ID
           if (data.id === 1306) {

@@ -31,9 +31,38 @@ export interface ClientDamageDetail {
   enemyDetails: EnemyStats<StatMeta>;
 }
 
-export interface ClientRotationResult {
+export const SensitivityAnalysisCategory = {
+  SUBSTAT_ROLL: 'substatRoll',
+  THREE_COST_MAIN_STAT_SWAP: 'threeCostMainStatSwap',
+  FOUR_COST_MAIN_STAT_SWAP: 'fourCostMainStatSwap',
+} as const;
+
+export type SensitivityAnalysisCategory =
+  (typeof SensitivityAnalysisCategory)[keyof typeof SensitivityAnalysisCategory];
+
+export interface ClientSensitivityAnalysisScenario {
+  id: string;
+  label: string;
+  description: string;
+  category: SensitivityAnalysisCategory;
+  perturbedTotalDamage: number;
+  totalDamageDelta: number;
+  relativeDelta: number;
+}
+
+export interface ClientSensitivityAnalysis {
+  baselineTotalDamage: number;
+  characterIndex: number;
+  scenarios: Array<ClientSensitivityAnalysisScenario>;
+}
+
+export interface ClientRotationCalculationOutput {
   totalDamage: number;
   damageDetails: Array<ClientDamageDetail>;
+}
+
+export interface ClientRotationResult extends ClientRotationCalculationOutput {
+  sensitivityAnalysis: ClientSensitivityAnalysis;
 }
 
 // ---------------------------------------------------------------------------
@@ -135,7 +164,7 @@ const filterEnemyStats = (
 
 export const adaptRotationResultToClientOutput = (
   result: RotationResult<StatMeta>,
-): ClientRotationResult => ({
+): ClientRotationCalculationOutput => ({
   totalDamage: result.totalDamage,
   damageDetails: result.damageDetails.map((detail) => ({
     attackIndex: detail.attackIndex,

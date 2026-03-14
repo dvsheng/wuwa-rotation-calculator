@@ -13,17 +13,13 @@ import type {
 } from '@/schemas/echo';
 import type { OriginType as OriginTypeType } from '@/services/game-data';
 import { OriginType } from '@/services/game-data';
-import { AttackScalingProperty, Attribute, CharacterStat, DamageType } from '@/types';
+import { CharacterStat, DamageType } from '@/types';
 import type {
-  AttackScalingProperty as AttackScalingPropertyType,
-  Attribute as AttributeType,
   CharacterStat as CharacterStatType,
   DamageType as DamageTypeType,
 } from '@/types';
 
 import type { CharacterDetailsWithRuntimeStats, RuntimeStatTarget } from './types';
-
-type PreferredScalingStat = 'atk' | 'def' | 'hp';
 
 /** Selected substat roll tier used when approximating generated echo pieces. */
 const APPROXIMATED_SUBSTAT_VALUE_INDEX = 2;
@@ -35,18 +31,6 @@ const FULLY_PREFERRED_PIECE_INDEXES = new Set([0, 1]);
  * will be mapped to energy regeneration.
  */
 const MAIN_STAT_RUNTIME_THRESHOLD = 2;
-
-/** Maps character attributes to their matching three-cost elemental damage main stat. */
-const ATTRIBUTE_MAIN_STAT_BY_ATTRIBUTE: Partial<
-  Record<AttributeType, EchoMainStatOptionType>
-> = {
-  [Attribute.AERO]: EchoMainStatOption.DAMAGE_BONUS_AERO,
-  [Attribute.ELECTRO]: EchoMainStatOption.DAMAGE_BONUS_ELECTRO,
-  [Attribute.FUSION]: EchoMainStatOption.DAMAGE_BONUS_FUSION,
-  [Attribute.GLACIO]: EchoMainStatOption.DAMAGE_BONUS_GLACIO,
-  [Attribute.HAVOC]: EchoMainStatOption.DAMAGE_BONUS_HAVOC,
-  [Attribute.SPECTRO]: EchoMainStatOption.DAMAGE_BONUS_SPECTRO,
-};
 
 /** Maps damage instance types to the corresponding echo substat option when one exists. */
 const DAMAGE_TYPE_SUBSTAT_BY_DAMAGE_TYPE: Partial<
@@ -105,46 +89,8 @@ const DAMAGE_TYPE_BY_ORIGIN_TYPE: Partial<Record<OriginTypeType, DamageTypeType>
 const getSubstatValue = (stat: EchoSubstatOptionType) =>
   ECHO_SUBSTAT_VALUES[stat][APPROXIMATED_SUBSTAT_VALUE_INDEX];
 
-const normalizeScalingProperty = (
-  property: AttackScalingPropertyType,
-): PreferredScalingStat | undefined => {
-  switch (property) {
-    case AttackScalingProperty.ATK:
-    case AttackScalingProperty.TUNE_RUPTURE_ATK: {
-      return 'atk';
-    }
-    case AttackScalingProperty.DEF:
-    case AttackScalingProperty.TUNE_RUPTURE_DEF: {
-      return 'def';
-    }
-    case AttackScalingProperty.HP:
-    case AttackScalingProperty.TUNE_RUPTURE_HP: {
-      return 'hp';
-    }
-    default: {
-      return undefined;
-    }
-  }
-};
-
-const getScalingMainStat = (
-  scalingStat: PreferredScalingStat,
-): EchoMainStatOptionType => {
-  switch (scalingStat) {
-    case 'def': {
-      return EchoMainStatOption.DEF_PERCENT;
-    }
-    case 'hp': {
-      return EchoMainStatOption.HP_PERCENT;
-    }
-    default: {
-      return EchoMainStatOption.ATK_PERCENT;
-    }
-  }
-};
-
 const getScalingSubstat = (
-  scalingStat: PreferredScalingStat,
+  scalingStat: CharacterDetailsWithRuntimeStats['derivedAttributes']['preferredScalingStat'],
 ): EchoSubstatOptionType => {
   switch (scalingStat) {
     case 'def': {
@@ -160,7 +106,7 @@ const getScalingSubstat = (
 };
 
 const getFlatScalingSubstat = (
-  scalingStat: PreferredScalingStat,
+  scalingStat: CharacterDetailsWithRuntimeStats['derivedAttributes']['preferredScalingStat'],
 ): EchoSubstatOptionType => {
   switch (scalingStat) {
     case 'def': {
@@ -181,45 +127,6 @@ const addWeight = <TKey extends string>(
   weight: number,
 ) => {
   weights.set(key, (weights.get(key) ?? 0) + weight);
-};
-
-const getPreferredScalingStat = (
-  entity: CharacterDetailsWithRuntimeStats,
-): PreferredScalingStat => {
-  const weights = new Map<PreferredScalingStat, number>();
-
-  for (const attack of entity.capabilities.attacks) {
-    for (const instance of attack.damageInstances) {
-      const stat = normalizeScalingProperty(instance.scalingStat);
-      if (!stat) continue;
-      addWeight(weights, stat, 1);
-    }
-  }
-
-  const hpWeight = weights.get('hp') ?? 0;
-  const defenseWeight = weights.get('def') ?? 0;
-  const atkWeight = weights.get('atk') ?? 0;
-
-  if (hpWeight > 0 || defenseWeight > 0) {
-    return hpWeight >= defenseWeight ? 'hp' : 'def';
-  }
-
-  return atkWeight > 0 ? 'atk' : 'atk';
-};
-
-const getDominantAttribute = (
-  entity: CharacterDetailsWithRuntimeStats,
-): AttributeType | undefined => {
-  const weights = new Map<AttributeType, number>();
-
-  for (const attack of entity.capabilities.attacks) {
-    for (const instance of attack.damageInstances) {
-      if (!(instance.attribute in ATTRIBUTE_MAIN_STAT_BY_ATTRIBUTE)) continue;
-      addWeight(weights, instance.attribute, 1);
-    }
-  }
-
-  return [...weights.entries()].toSorted((left, right) => right[1] - left[1])[0]?.[0];
 };
 
 const rankDamageTypes = (
@@ -269,7 +176,7 @@ const createSubstats = (
  * runtime targets, and ranked damage-type bonuses before falling back to generic scaling rolls.
  */
 const rankSubstats = (
-  scalingStat: PreferredScalingStat,
+  scalingStat: CharacterDetailsWithRuntimeStats['derivedAttributes']['preferredScalingStat'],
   runtimeTargets: Array<RuntimeStatTarget>,
   rankedDamageTypes: Array<EchoSubstatOptionType>,
 ): Array<EchoSubstatOptionType> => {
@@ -294,8 +201,7 @@ const rankSubstats = (
 
 const getThreeCostMainStat = (
   runtimeTargets: Array<RuntimeStatTarget>,
-  dominantAttribute: AttributeType | undefined,
-  scalingStat: PreferredScalingStat,
+  entity: CharacterDetailsWithRuntimeStats,
 ): EchoMainStatOptionType => {
   const runtimeMainStat = runtimeTargets.find(
     (target) =>
@@ -308,8 +214,8 @@ const getThreeCostMainStat = (
   }
 
   return (
-    (dominantAttribute && ATTRIBUTE_MAIN_STAT_BY_ATTRIBUTE[dominantAttribute]) ??
-    getScalingMainStat(scalingStat)
+    entity.derivedAttributes.preferredThreeCostAttributeMainStat ??
+    entity.derivedAttributes.preferredThreeCostScalingMainStat
   );
 };
 
@@ -317,17 +223,12 @@ const getThreeCostMainStat = (
 export const buildEchoPieces = (
   entity: CharacterDetailsWithRuntimeStats,
 ): Array<EchoPiece> => {
-  const scalingStat = getPreferredScalingStat(entity);
-  const dominantAttribute = getDominantAttribute(entity);
+  const scalingStat = entity.derivedAttributes.preferredScalingStat;
   const rankedDamageTypes = rankDamageTypes(entity);
   const runtimeTargets = entity.runtimeStatTargets;
   const rankedSubstats = rankSubstats(scalingStat, runtimeTargets, rankedDamageTypes);
-  const threeCostMainStat = getThreeCostMainStat(
-    runtimeTargets,
-    dominantAttribute,
-    scalingStat,
-  );
-  const oneCostMainStat = getScalingMainStat(scalingStat);
+  const threeCostMainStat = getThreeCostMainStat(runtimeTargets, entity);
+  const oneCostMainStat = entity.derivedAttributes.preferredThreeCostScalingMainStat;
 
   return [
     { cost: EchoCost.FOUR, mainStatType: EchoMainStatOption.CRIT_RATE },

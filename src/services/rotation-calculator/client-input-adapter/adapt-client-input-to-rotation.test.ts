@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import type {
@@ -16,10 +16,15 @@ import {
 } from '@/types';
 
 import {
+  normalizeEchoSubstatValue,
   toRotationModifier,
   toRotationPermanentStat,
 } from './adapt-client-input-to-rotation';
 import type { ResolveUserParameterizedType } from './resolve-user-parameterized-values';
+
+vi.mock('./enrich-rotation-data', () => ({
+  createGameDataEnricher: vi.fn(),
+}));
 
 type GameDataStatReference = {
   type: 'statParameterizedNumber';
@@ -332,5 +337,19 @@ describe('toRotationModifier', () => {
 
     const critRate = result.modifiedStats[CharacterStat.CRITICAL_RATE]![0];
     expect(critRate.value).toBe(0.05);
+  });
+});
+
+describe('normalizeEchoSubstatValue', () => {
+  it('preserves flat echo substats as whole numbers', () => {
+    expect(normalizeEchoSubstatValue('atk_flat', 50)).toBe(50);
+  });
+
+  it('converts crit damage substats from percent values to decimals', () => {
+    expect(normalizeEchoSubstatValue('crit_dmg', 15)).toBe(0.15);
+  });
+
+  it('converts energy regen substats from percent values to decimals', () => {
+    expect(normalizeEchoSubstatValue('energy_regen', 10)).toBe(0.1);
   });
 });

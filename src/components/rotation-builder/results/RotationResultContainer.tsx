@@ -11,6 +11,7 @@ import { useRotationCalculation } from '@/hooks/useRotationCalculation';
 import { AttackBreakdownDataTable } from './AttackBreakdownDataTable';
 import { CharacterBreakdownDataTable } from './CharacterBreakdownDataTable';
 import { RotationResultSummary } from './RotationResultSummary';
+import { SensitivityAnalysisTable } from './SensitivityAnalysisTable';
 
 export const RotationResultContainer = () => {
   const [inspectorPortalNode, setInspectorPortalNode] = useState<
@@ -55,6 +56,7 @@ export const RotationResultContainer = () => {
               <TabsList className="shrink-0">
                 <TabsTrigger value="data-table">By Attack</TabsTrigger>
                 <TabsTrigger value="character-breakdown">By Character</TabsTrigger>
+                <TabsTrigger value="sensitivity-analysis">Sensitivity</TabsTrigger>
               </TabsList>
               <TabsContent
                 value="data-table"
@@ -75,6 +77,15 @@ export const RotationResultContainer = () => {
                   inspectorPortalNode={inspectorPortalNode}
                 />
               </TabsContent>
+              <TabsContent
+                value="sensitivity-analysis"
+                className="flex min-h-0 w-full overflow-hidden"
+              >
+                <SensitivityAnalysisTable
+                  sensitivityAnalysis={result.sensitivityAnalysis}
+                  inspectorPortalNode={inspectorPortalNode}
+                />
+              </TabsContent>
             </Tabs>
           </Stack>
         </Stack>
@@ -83,7 +94,7 @@ export const RotationResultContainer = () => {
         <Stack className="min-h-0 w-2xl overflow-hidden">
           <DashboardSectionHeader
             title="Details"
-            description="Select a row in Results to inspect detailed stat contributions."
+            description="Select a row in Results to inspect detailed stat contributions or perturbation deltas."
             icon={<ListTree />}
           />
           <Stack

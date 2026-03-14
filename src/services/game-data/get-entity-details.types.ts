@@ -1,4 +1,12 @@
-import type { Attack, BaseEntity, Modifier } from './types';
+import type { GetEntityDetailsRequest } from '@/schemas/game-data-service';
+
+import type {
+  Attack,
+  BaseEntity,
+  CharacterEntity,
+  EntityType,
+  Modifier,
+} from './types';
 
 /**
  * Interfaces for client-facing entity details outputs.
@@ -31,6 +39,7 @@ export interface GetClientEntityDetailsResponse {
   modifiers: Array<ClientModifier>;
 }
 
-export type GetEntityDetailsResponse = BaseEntity;
+export type GetEntityDetailsResponse<T extends GetEntityDetailsRequest> =
+  T['entityType'] extends typeof EntityType.CHARACTER ? CharacterEntity : BaseEntity;
 
-export type { GetEntityDetailsRequest } from '@/schemas/game-data-service';
+export { type GetEntityDetailsRequest } from '@/schemas/game-data-service';

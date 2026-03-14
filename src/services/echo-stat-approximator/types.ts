@@ -1,5 +1,5 @@
 import type { EchoPiece } from '@/schemas/echo';
-import type { BaseEntity } from '@/services/game-data';
+import type { CharacterEntity } from '@/services/game-data';
 import type { CharacterStat } from '@/types';
 
 export interface GetEchoStatsRequest {
@@ -15,6 +15,6 @@ export interface RuntimeStatTarget {
   stat: CharacterStat;
 }
 
-export type CharacterDetailsWithRuntimeStats = BaseEntity & {
+export type CharacterDetailsWithRuntimeStats = CharacterEntity & {
   runtimeStatTargets: Array<RuntimeStatTarget>;
 };

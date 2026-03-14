@@ -1,12 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Character } from '@/schemas/character';
-import { EchoMainStatOption, EchoSubstatOption } from '@/schemas/echo';
+import {
+  ECHO_SUBSTAT_VALUES,
+  EchoMainStatOption,
+  EchoSubstatOption,
+} from '@/schemas/echo';
 import type { Enemy } from '@/schemas/enemy';
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import type { Team } from '@/schemas/team';
 import { CapabilityType } from '@/services/game-data';
 import { calculateRotationHandler } from '@/services/rotation-calculator/calculate-client-rotation-damage';
+import { SensitivityAnalysisCategory } from '@/services/rotation-calculator/client-output-adapter/adapt-rotation-result-to-client-output';
 import {
   AttackScalingProperty,
   Attribute,
@@ -24,8 +29,18 @@ const { mockgetEntityById } = vi.hoisted(() => ({
   mockgetEntityById: vi.fn(),
 }));
 
+vi.mock('@/services/game-data', async () => {
+  const actual = await vi.importActual('@/services/game-data');
+
+  return {
+    ...actual,
+    getEntityById: ({ data }: { data: unknown }) => mockgetEntityById(data),
+  };
+});
+
 vi.mock('@/services/game-data/get-entity-details.function', () => ({
-  getEntityById: mockgetEntityById,
+  getEntityById: ({ data }: { data: unknown }) => mockgetEntityById(data),
+  getTypedEntityById: mockgetEntityById,
 }));
 
 /**
@@ -114,7 +129,7 @@ const createTestEnemy = (): Enemy => ({
 });
 
 /**
- * Creates mock character data returned by getCharacterDetails
+ * Creates mock character entity data returned by getTypedEntityById
  */
 const createMockCharacterData = (
   id: number,
@@ -143,6 +158,25 @@ const createMockCharacterData = (
   id,
   name,
   attribute,
+  derivedAttributes: {
+    preferredScalingStat: 'atk',
+    dominantAttribute: attribute === Attribute.PHYSICAL ? undefined : attribute,
+    preferredThreeCostScalingMainStat: EchoMainStatOption.ATK_PERCENT,
+    preferredThreeCostAttributeMainStat:
+      attribute === Attribute.GLACIO
+        ? EchoMainStatOption.DAMAGE_BONUS_GLACIO
+        : attribute === Attribute.FUSION
+          ? EchoMainStatOption.DAMAGE_BONUS_FUSION
+          : attribute === Attribute.AERO
+            ? EchoMainStatOption.DAMAGE_BONUS_AERO
+            : attribute === Attribute.ELECTRO
+              ? EchoMainStatOption.DAMAGE_BONUS_ELECTRO
+              : attribute === Attribute.HAVOC
+                ? EchoMainStatOption.DAMAGE_BONUS_HAVOC
+                : attribute === Attribute.SPECTRO
+                  ? EchoMainStatOption.DAMAGE_BONUS_SPECTRO
+                  : undefined,
+  },
   capabilities: {
     attacks: attacks.map((a) => ({
       ...a,
@@ -199,7 +233,7 @@ describe('calculateRotation', () => {
     mockgetEntityById.mockReset();
 
     // Default mock implementation - returns appropriate data based on entity type
-    mockgetEntityById.mockImplementation(({ data }) => {
+    mockgetEntityById.mockImplementation((data) => {
       switch (data.entityType) {
         case 'echo': {
           return Promise.resolve(createMockEchoData());
@@ -269,7 +303,7 @@ describe('calculateRotation', () => {
     const mockShorekeeper = createMockCharacterData(1505, 'Shorekeeper', Tag.SPECTRO);
 
     beforeEach(() => {
-      mockgetEntityById.mockImplementation(({ data }) => {
+      mockgetEntityById.mockImplementation((data) => {
         // Handle character requests
         if (data.entityType === 'character') {
           switch (data.id) {
@@ -359,6 +393,28 @@ describe('calculateRotation', () => {
     const AERO_EROSION_DEFENSE_IGNORE_MODIFIER_ID = 7_701_004;
 
     beforeEach(() => {
+      mockgetEntityById.mockImplementation((data) => {
+        switch (data.entityType) {
+          case 'character': {
+            return Promise.resolve(
+              createMockCharacterData(data.id, `Character ${data.id}`, Attribute.AERO),
+            );
+          }
+          case 'echo': {
+            return Promise.resolve(createMockEchoData());
+          }
+          case 'weapon': {
+            return Promise.resolve(createMockWeaponData());
+          }
+          case 'echo_set': {
+            return Promise.resolve(createMockEchoSetData());
+          }
+          default: {
+            return Promise.reject(new Error(`Unknown entity type: ${data.entityType}`));
+          }
+        }
+      });
+
       vi.spyOn(enrichRotationData, 'createGameDataEnricher').mockResolvedValue({
         enrichAttack: (attack) => ({
           ...attack,
@@ -560,6 +616,34 @@ describe('calculateRotation', () => {
     const DETAIL_MODIFIER_ID = 9_602_988;
 
     beforeEach(() => {
+      mockgetEntityById.mockImplementation((data) => {
+        switch (data.entityType) {
+          case 'character': {
+            return Promise.resolve(
+              createMockCharacterData(
+                data.id,
+                data.id === DETAIL_CHARACTER_ID
+                  ? 'Detail Character'
+                  : `Character ${data.id}`,
+                Attribute.ELECTRO,
+              ),
+            );
+          }
+          case 'echo': {
+            return Promise.resolve(createMockEchoData());
+          }
+          case 'weapon': {
+            return Promise.resolve(createMockWeaponData());
+          }
+          case 'echo_set': {
+            return Promise.resolve(createMockEchoSetData());
+          }
+          default: {
+            return Promise.reject(new Error(`Unknown entity type: ${data.entityType}`));
+          }
+        }
+      });
+
       vi.spyOn(enrichRotationData, 'createGameDataEnricher').mockResolvedValue({
         enrichAttack: (attack) => ({
           ...attack,
@@ -735,12 +819,179 @@ describe('calculateRotation', () => {
     });
   });
 
+  describe('sensitivity analysis', () => {
+    const SENSITIVITY_CHARACTER_ID = 1306;
+    const SENSITIVITY_ATTACK_ID = 1_234_565;
+
+    beforeEach(() => {
+      mockgetEntityById.mockImplementation((data) => {
+        switch (data.entityType) {
+          case 'echo': {
+            return Promise.resolve(createMockEchoData());
+          }
+          case 'weapon': {
+            return Promise.resolve(createMockWeaponData());
+          }
+          case 'echo_set': {
+            return Promise.resolve(createMockEchoSetData());
+          }
+          case 'character': {
+            if (data.id === SENSITIVITY_CHARACTER_ID) {
+              return Promise.resolve(
+                createMockCharacterData(
+                  SENSITIVITY_CHARACTER_ID,
+                  'Augusta',
+                  Attribute.FUSION,
+                  [
+                    {
+                      id: SENSITIVITY_ATTACK_ID,
+                      name: 'Basic Attack Stage 1',
+                      damageInstances: [
+                        {
+                          motionValue: 0.5,
+                          tags: [Tag.BASIC_ATTACK, Tag.FUSION],
+                          scalingStat: AttackScalingProperty.ATK,
+                        },
+                      ],
+                    },
+                  ],
+                ),
+              );
+            }
+
+            return Promise.resolve(
+              createMockCharacterData(
+                data.id,
+                `Character ${data.id}`,
+                Attribute.FUSION,
+              ),
+            );
+          }
+          default: {
+            return Promise.reject(new Error(`Unknown entity type: ${data.entityType}`));
+          }
+        }
+      });
+    });
+
+    it('returns grouped sensitivity scenarios using the configured perturbations', async () => {
+      const team: Team = [
+        createTestCharacter(SENSITIVITY_CHARACTER_ID),
+        createTestCharacter(1304),
+        createTestCharacter(1505),
+      ];
+      const attack: AttackInstance = {
+        instanceId: 'attack-1',
+        id: SENSITIVITY_ATTACK_ID,
+        characterId: SENSITIVITY_CHARACTER_ID,
+      };
+
+      const result = await calculateRotationHandler(
+        team,
+        createTestEnemy(),
+        [attack],
+        [],
+      );
+
+      const substatScenarios = result.sensitivityAnalysis.scenarios.filter(
+        (scenario) => scenario.category === SensitivityAnalysisCategory.SUBSTAT_ROLL,
+      );
+      const threeCostScenarios = result.sensitivityAnalysis.scenarios.filter(
+        (scenario) =>
+          scenario.category === SensitivityAnalysisCategory.THREE_COST_MAIN_STAT_SWAP,
+      );
+      const fourCostScenarios = result.sensitivityAnalysis.scenarios.filter(
+        (scenario) =>
+          scenario.category === SensitivityAnalysisCategory.FOUR_COST_MAIN_STAT_SWAP,
+      );
+
+      expect(result.sensitivityAnalysis.characterIndex).toBe(0);
+      expect(result.sensitivityAnalysis.baselineTotalDamage).toBe(result.totalDamage);
+      expect(substatScenarios).toHaveLength(Object.values(EchoSubstatOption).length);
+      expect(threeCostScenarios).toHaveLength(1);
+      expect(fourCostScenarios).toHaveLength(1);
+      expect(fourCostScenarios[0].label).toContain('Crit Dmg');
+      expect(fourCostScenarios[0].label).toContain('Crit Rate');
+      expect(threeCostScenarios[0].label).toContain('Atk Percent');
+      expect(threeCostScenarios[0].label).toContain('Damage Bonus Fusion');
+    });
+
+    it('applies substat sensitivity using the third roll tier and correct tags', async () => {
+      const team: Team = [
+        createTestCharacter(SENSITIVITY_CHARACTER_ID),
+        createTestCharacter(1304),
+        createTestCharacter(1505),
+      ];
+      const attack: AttackInstance = {
+        instanceId: 'attack-1',
+        id: SENSITIVITY_ATTACK_ID,
+        characterId: SENSITIVITY_CHARACTER_ID,
+      };
+
+      const result = await calculateRotationHandler(
+        team,
+        createTestEnemy(),
+        [attack],
+        [],
+      );
+
+      const critRateScenario = result.sensitivityAnalysis.scenarios.find(
+        (scenario) => scenario.id === `substat:${EchoSubstatOption.CRIT_RATE}`,
+      );
+      const resonanceSkillScenario = result.sensitivityAnalysis.scenarios.find(
+        (scenario) =>
+          scenario.id === `substat:${EchoSubstatOption.DAMAGE_BONUS_RESONANCE_SKILL}`,
+      );
+      const basicAttackScenario = result.sensitivityAnalysis.scenarios.find(
+        (scenario) =>
+          scenario.id === `substat:${EchoSubstatOption.DAMAGE_BONUS_BASIC_ATTACK}`,
+      );
+
+      expect(critRateScenario?.description).toContain(
+        String(ECHO_SUBSTAT_VALUES[EchoSubstatOption.CRIT_RATE][2]),
+      );
+      expect(basicAttackScenario?.totalDamageDelta).toBeGreaterThan(0);
+      expect(resonanceSkillScenario?.totalDamageDelta).toBe(0);
+      expect(critRateScenario?.totalDamageDelta).toBe(
+        (critRateScenario?.perturbedTotalDamage ?? 0) - result.totalDamage,
+      );
+    });
+
+    it('treats crit damage sensitivity rolls as percentage rolls, not flat values', async () => {
+      const team: Team = [
+        createTestCharacter(SENSITIVITY_CHARACTER_ID),
+        createTestCharacter(1304),
+        createTestCharacter(1505),
+      ];
+      const attack: AttackInstance = {
+        instanceId: 'attack-1',
+        id: SENSITIVITY_ATTACK_ID,
+        characterId: SENSITIVITY_CHARACTER_ID,
+      };
+
+      const result = await calculateRotationHandler(
+        team,
+        createTestEnemy(),
+        [attack],
+        [],
+      );
+
+      const critDamageScenario = result.sensitivityAnalysis.scenarios.find(
+        (scenario) => scenario.id === `substat:${EchoSubstatOption.CRIT_DMG}`,
+      );
+
+      expect(critDamageScenario).toBeDefined();
+      expect(critDamageScenario?.totalDamageDelta).toBeGreaterThan(0);
+      expect(critDamageScenario?.relativeDelta).toBeLessThan(1);
+    });
+  });
+
   describe('error handling', () => {
     it('throws an error when an invalid character entity ID is provided', async () => {
       const INVALID_CHARACTER_ID = 99_999;
 
       // Set up mock to throw error for invalid ID
-      mockgetEntityById.mockImplementation(({ data }) => {
+      mockgetEntityById.mockImplementation((data) => {
         if (data.entityType === 'character' && data.id === INVALID_CHARACTER_ID) {
           return Promise.reject(new Error(`Entity not found for ID ${data.id}`));
         }

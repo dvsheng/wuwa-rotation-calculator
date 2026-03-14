@@ -1,36 +1,23 @@
 import type { ColumnDef } from '@tanstack/react-table';
-import { Fragment, useMemo, useState } from 'react';
+import { Fragment, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DataTable } from '@/components/ui/data-table';
 import { Row, Stack } from '@/components/ui/layout';
 import { Text } from '@/components/ui/typography';
 import { cn } from '@/lib/utils';
-import { SensitivityAnalysisCategory } from '@/services/rotation-calculator/client-output-adapter/adapt-rotation-result-to-client-output';
 import type {
   ClientSensitivityAnalysis,
   ClientSensitivityAnalysisScenario,
 } from '@/services/rotation-calculator/client-output-adapter/adapt-rotation-result-to-client-output';
 
+import { formatPercentDelta, formatSignedDamage } from './result-chart.utilities';
+import { useSensitivityAnalysisBreakdown } from './useSensitivityAnalysisBreakdown';
+
 interface SensitivityAnalysisTableProperties {
   sensitivityAnalysis: ClientSensitivityAnalysis;
   inspectorPortalNode: HTMLDivElement | undefined;
 }
-
-const sectionDefinitions = [
-  {
-    category: SensitivityAnalysisCategory.SUBSTAT_ROLL,
-    title: 'Substat Rolls',
-  },
-  {
-    category: SensitivityAnalysisCategory.THREE_COST_MAIN_STAT_SWAP,
-    title: '3-Cost Swaps',
-  },
-  {
-    category: SensitivityAnalysisCategory.FOUR_COST_MAIN_STAT_SWAP,
-    title: '4-Cost Swap',
-  },
-] as const;
 
 const tableClassNames = {
   wrapper: 'bg-card min-w-0 rounded-lg w-full',
@@ -42,17 +29,7 @@ const tableClassNames = {
   cell: 'py-compact',
 };
 
-const formatSignedDamage = (value: number) => {
-  const rounded = Math.round(value);
-  return `${rounded >= 0 ? '+' : ''}${rounded.toLocaleString()}`;
-};
-
-const formatPercentDelta = (value: number) => {
-  const percentValue = value * 100;
-  return `${percentValue >= 0 ? '+' : ''}${percentValue.toFixed(2)}%`;
-};
-
-const buildColumns = (): Array<ColumnDef<ClientSensitivityAnalysisScenario>> => [
+const columns: Array<ColumnDef<ClientSensitivityAnalysisScenario>> = [
   {
     id: 'scenario',
     header: 'Scenario',
@@ -193,7 +170,7 @@ export const SensitivityAnalysisTable = ({
   inspectorPortalNode,
 }: SensitivityAnalysisTableProperties) => {
   const [selectedScenarioId, setSelectedScenarioId] = useState<string | undefined>();
-  const columns = useMemo(() => buildColumns(), []);
+  const { sections } = useSensitivityAnalysisBreakdown(sensitivityAnalysis);
   const selectedScenario = sensitivityAnalysis.scenarios.find(
     (scenario) => scenario.id === selectedScenarioId,
   );
@@ -201,30 +178,20 @@ export const SensitivityAnalysisTable = ({
   return (
     <Fragment>
       <Stack gap="component" className="min-h-0 flex-1 overflow-y-auto">
-        {sectionDefinitions.map((section) => {
-          const rows = sensitivityAnalysis.scenarios
-            .filter((scenario) => scenario.category === section.category)
-            .toSorted((left, right) => right.totalDamageDelta - left.totalDamageDelta);
-
-          if (rows.length === 0) {
-            return;
-          }
-
-          return (
-            <Stack key={section.category} gap="tight">
-              <Text variant="overline" tone="muted">
-                {section.title}
-              </Text>
-              <DataTable
-                columns={columns}
-                data={rows}
-                onRowClick={(row) => setSelectedScenarioId(row.id)}
-                emptyMessage={`No ${section.title.toLowerCase()} scenarios.`}
-                classNames={tableClassNames}
-              />
-            </Stack>
-          );
-        })}
+        {sections.map((section) => (
+          <Stack key={section.category} gap="tight">
+            <Text variant="overline" tone="muted">
+              {section.title}
+            </Text>
+            <DataTable
+              columns={columns}
+              data={section.rows}
+              onRowClick={(row) => setSelectedScenarioId(row.id)}
+              emptyMessage={`No ${section.title.toLowerCase()} scenarios.`}
+              classNames={tableClassNames}
+            />
+          </Stack>
+        ))}
       </Stack>
 
       {inspectorPortalNode

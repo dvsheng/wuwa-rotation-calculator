@@ -1,5 +1,6 @@
 import { AlertCircle, BarChart2, ListTree } from 'lucide-react';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { DashboardSectionHeader } from '@/components/common/DashboardSectionHeader';
 import { Container, Row, Stack } from '@/components/ui/layout';
@@ -12,9 +13,11 @@ import { useRotationCalculation } from '@/hooks/useRotationCalculation';
 import { AttackBreakdownDataTable } from './AttackBreakdownDataTable';
 import { CharacterBreakdownDataTable } from './CharacterBreakdownDataTable';
 import { RotationResultSummary } from './RotationResultSummary';
+import { RotationSummaryTab } from './RotationSummaryTab';
 import { SensitivityAnalysisTable } from './SensitivityAnalysisTable';
 
 export const RotationResultContainer = () => {
+  const [selectedTab, setSelectedTab] = useState('summary');
   const [inspectorPortalNode, setInspectorPortalNode] = useState<
     HTMLDivElement | undefined
   >();
@@ -53,12 +56,23 @@ export const RotationResultContainer = () => {
               attackCount={result.attackCount}
               damageInstanceCount={result.damageDetails.length}
             />
-            <Tabs defaultValue="data-table" className="min-h-0 flex-1 overflow-hidden">
+            <Tabs
+              value={selectedTab}
+              onValueChange={setSelectedTab}
+              className="min-h-0 flex-1 overflow-hidden"
+            >
               <TabsList className="shrink-0">
+                <TabsTrigger value="summary">Summary</TabsTrigger>
                 <TabsTrigger value="data-table">By Attack</TabsTrigger>
                 <TabsTrigger value="character-breakdown">By Character</TabsTrigger>
                 <TabsTrigger value="sensitivity-analysis">Sensitivity</TabsTrigger>
               </TabsList>
+              <TabsContent
+                value="summary"
+                className="flex min-h-0 w-full overflow-hidden"
+              >
+                <RotationSummaryTab result={result} />
+              </TabsContent>
               <TabsContent
                 value="data-table"
                 className="flex min-h-0 w-full overflow-hidden"
@@ -106,6 +120,18 @@ export const RotationResultContainer = () => {
           </ScrollArea>
         </Stack>
       </Row>
+      {inspectorPortalNode && selectedTab === 'summary'
+        ? createPortal(
+            <Stack align="center" className="h-full justify-center">
+              <Text variant="heading">Summary Selected</Text>
+              <Text variant="bodySm" tone="muted" className="text-center">
+                Switch to By Attack, By Character, or Sensitivity to inspect detailed
+                result rows here.
+              </Text>
+            </Stack>,
+            inspectorPortalNode,
+          )
+        : undefined}
     </Container>
   );
 };

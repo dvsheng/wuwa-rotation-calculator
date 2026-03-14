@@ -26,6 +26,7 @@ export const useEntityList = <T extends ListEntitiesRequest>(request: T) => {
     queryKey: ['entity'],
     queryFn: () => listEntities(),
     staleTime: Infinity,
+    retry: 10,
   }) as Omit<ReturnType<typeof useSuspenseQuery>, 'data'> & {
     data: ListEntitiesResponse;
   };

@@ -58,7 +58,7 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
         const selectedSetConfig = echoSetList.find((s) => s.id === set.id);
         const availableTiers = selectedSetConfig?.tiers || [2, 5];
         return (
-          <Stack fullWidth>
+          <Stack fullWidth key={setIndex}>
             <SelectorLayout
               icon={
                 <EntityIconDisplay

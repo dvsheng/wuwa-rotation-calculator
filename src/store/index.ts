@@ -23,9 +23,20 @@ export const useStore = create<AppStore>()(
 );
 
 export const useStoreHydrated = () => {
-  const [hydrated, setHydrated] = useState(() => useStore.persist.hasHydrated());
+  // Always initialize as false so the first committed render is consistent.
+  // Using `useState(() => useStore.persist.hasHydrated())` causes a React 18
+  // concurrent-mode hydration mismatch: hasHydrated() can return different
+  // values across render attempts (false → Skeleton committed to DOM, then
+  // true → RotationBuilderContainer on next pass), which React flags as a
+  // mismatch. Starting false guarantees the Skeleton is always the first
+  // committed output; the effect below promotes to true after mount.
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    if (useStore.persist.hasHydrated()) {
+      setHydrated(true);
+      return;
+    }
     const unsubHydrate = useStore.persist.onHydrate(() => setHydrated(false));
     const unsubFinish = useStore.persist.onFinishHydration(() => setHydrated(true));
 

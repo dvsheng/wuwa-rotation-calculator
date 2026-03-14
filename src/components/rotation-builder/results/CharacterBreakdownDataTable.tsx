@@ -1,5 +1,4 @@
 import type { ColumnDef } from '@tanstack/react-table';
-import { sumBy } from 'es-toolkit/math';
 import { ChevronDown, Info } from 'lucide-react';
 import { Fragment, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -19,60 +18,13 @@ import {
   rotationResultDataTableClassNames,
   rotationResultTableColumnLayout,
 } from './data-table.style';
+import { useCharacterBreakdown } from './useCharacterBreakdown';
 
 interface CharacterBreakdownDataTableProperties {
   mergedDamageDetails: Array<RotationResultMergedDamageDetail>;
   totalDamage: number;
   inspectorPortalNode: HTMLDivElement | undefined;
 }
-
-const buildCharacterRows = ({
-  mergedDamageDetails,
-  totalDamage,
-}: Pick<
-  CharacterBreakdownDataTableProperties,
-  'mergedDamageDetails' | 'totalDamage'
->): Array<CharacterBreakdownRow> => {
-  const hitCountPerAttack = new Map<number, number>();
-  const enriched = mergedDamageDetails.map(({ detail, attack }) => {
-    const hitIndex = hitCountPerAttack.get(detail.attackIndex) ?? 0;
-    hitCountPerAttack.set(detail.attackIndex, hitIndex + 1);
-    return {
-      detail,
-      attack,
-      characterName: attack?.characterName ?? '',
-      damageType: attack?.damageInstances[hitIndex]?.damageType ?? 'unknown',
-    };
-  });
-
-  const byCharacter = Object.groupBy(enriched, (item) => item.characterName);
-  return Object.entries(byCharacter)
-    .filter(([characterName]) => characterName !== '')
-    .map(([characterName, items]) => {
-      const iconUrl = items!.find((item) => item.attack?.characterIconUrl)?.attack
-        ?.characterIconUrl;
-      const charTotalDamage = sumBy(items ?? [], (item) => item.detail.damage);
-      const byType = Object.groupBy(items!, (item) => item.damageType);
-      const damageTypes = Object.entries(byType)
-        .map(([damageType, typeItems]) => {
-          const damage = sumBy(typeItems ?? [], (item) => item.detail.damage);
-          return {
-            damageType,
-            damage,
-            pctOfCharacter: charTotalDamage > 0 ? (damage / charTotalDamage) * 100 : 0,
-          };
-        })
-        .toSorted((a, b) => b.damage - a.damage);
-      return {
-        characterName,
-        iconUrl,
-        totalDamage: charTotalDamage,
-        pctOfTotal: totalDamage > 0 ? (charTotalDamage / totalDamage) * 100 : 0,
-        damageTypes,
-      };
-    })
-    .toSorted((a, b) => b.totalDamage - a.totalDamage);
-};
 
 export const CharacterBreakdownDataTable = ({
   mergedDamageDetails,
@@ -85,7 +37,7 @@ export const CharacterBreakdownDataTable = ({
   const [selectedCharacterName, setSelectedCharacterName] = useState<
     string | undefined
   >();
-  const rows = buildCharacterRows({ mergedDamageDetails, totalDamage });
+  const { rows } = useCharacterBreakdown({ mergedDamageDetails, totalDamage });
   const selectedCharacter = rows.find(
     (row) => row.characterName === selectedCharacterName,
   );

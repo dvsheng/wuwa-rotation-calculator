@@ -2,7 +2,6 @@ import { Suspense } from 'react';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Stack } from '@/components/ui/layout';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/typography';
 import { ECHO_PIECE_COUNT } from '@/schemas/echo';
 
@@ -10,6 +9,7 @@ import { CharacterSelector } from './CharacterSelector';
 import { EchoPieceEditor } from './EchoPieceEditor';
 import { EchoSetSelector } from './EchoSetSelector';
 import { PrimaryEchoSelector } from './PrimaryEchoSelector';
+import { SelectorSkeleton } from './StyledBaseSelector';
 import { WeaponSelector } from './WeaponSelector';
 
 interface CharacterCardProperties {
@@ -18,10 +18,10 @@ interface CharacterCardProperties {
 
 const CharacterCardHeaderSkeleton = () => (
   <Stack gap="panel">
-    <Skeleton className="h-9 w-full" />
-    <Skeleton className="h-9 w-full" />
-    <Skeleton className="h-9 w-full" />
-    <Skeleton className="h-9 w-full" />
+    <SelectorSkeleton />
+    <SelectorSkeleton />
+    <SelectorSkeleton />
+    <SelectorSkeleton withSecondary={false} />
   </Stack>
 );
 

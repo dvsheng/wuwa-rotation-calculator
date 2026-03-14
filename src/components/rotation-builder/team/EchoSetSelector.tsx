@@ -4,18 +4,12 @@ import { EntityIconDisplay } from '@/components/common/EntityIcon';
 import { TrashButton } from '@/components/common/TrashButton';
 import { Button } from '@/components/ui/button';
 import { Row, Stack } from '@/components/ui/layout';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useEntityList } from '@/hooks/useEntityList';
 import { EntityType } from '@/services/game-data';
 import { useStore } from '@/store';
 
 import { EntitySelectionDialog } from './EntitySelectionDialog';
+import { SecondarySelector, SelectorLayout } from './StyledBaseSelector';
 
 interface EchoSetSelectorProperties {
   index: number;
@@ -65,48 +59,36 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
         const availableTiers = selectedSetConfig?.tiers || [2, 5];
         return (
           <Stack fullWidth>
-            <Row align="center" gap="component">
-              <div className="flex w-20 shrink-0 items-center justify-center">
+            <SelectorLayout
+              icon={
                 <EntityIconDisplay
                   url={echoSetList.find((s) => s.id === set.id)?.iconUrl}
                   size="medium"
                 />
-              </div>
-
-              <Row gap="component" className="flex-1">
-                <EntitySelectionDialog
-                  items={echoSetList}
-                  value={echoSetList.find((s) => s.id === set.id)?.id ?? 0}
-                  onValueChange={(id) => {
-                    handleUpdateSet(setIndex, id);
-                  }}
+              }
+            >
+              <EntitySelectionDialog
+                items={echoSetList}
+                value={echoSetList.find((s) => s.id === set.id)?.id ?? 0}
+                onValueChange={(id) => {
+                  handleUpdateSet(setIndex, id);
+                }}
+              />
+              <SecondarySelector
+                value={String(set.requirement)}
+                onValueChange={(value) => setEchoSetRequirement(index, setIndex, value)}
+                options={availableTiers.map((tier) => ({
+                  value: String(tier),
+                  label: `${tier}Pc`,
+                }))}
+              />
+              {setIndex > 0 && (
+                <TrashButton
+                  className="size-8"
+                  onRemove={() => handleRemoveSet(setIndex)}
                 />
-                <Select
-                  value={String(set.requirement)}
-                  onValueChange={(value) =>
-                    setEchoSetRequirement(index, setIndex, value)
-                  }
-                >
-                  <SelectTrigger className="bg-background w-20 shrink-0">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableTiers.map((tier) => (
-                      <SelectItem key={tier} value={String(tier)}>
-                        {tier}-Pc
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {setIndex > 0 && (
-                  <TrashButton
-                    className="size-8"
-                    onRemove={() => handleRemoveSet(setIndex)}
-                  />
-                )}
-              </Row>
-            </Row>
+              )}
+            </SelectorLayout>
             {selectedEchoSets.length < 2 && (
               <Row>
                 <div className="flex w-20"></div>

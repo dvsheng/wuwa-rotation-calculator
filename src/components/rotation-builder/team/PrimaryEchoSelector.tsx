@@ -1,10 +1,10 @@
 import { EntityIcon } from '@/components/common/EntityIcon';
-import { Row } from '@/components/ui/layout';
 import { useEntityList } from '@/hooks/useEntityList';
 import { EntityType } from '@/services/game-data';
 import { useStore } from '@/store';
 
 import { EntitySelectionDialog } from './EntitySelectionDialog';
+import { SelectorLayout } from './StyledBaseSelector';
 
 interface PrimaryEchoSelectorProperties {
   index: number;
@@ -26,10 +26,7 @@ export const PrimaryEchoSelector = ({ index }: PrimaryEchoSelectorProperties) =>
   );
 
   return (
-    <Row className="items-center gap-3">
-      <div className="flex w-20 items-center justify-center">
-        <EntityIcon entityId={echo.id} size="large" />
-      </div>
+    <SelectorLayout icon={<EntityIcon entityId={echo.id} size="large" />}>
       <EntitySelectionDialog
         items={primaryEchoOptions}
         value={echo.id}
@@ -38,6 +35,6 @@ export const PrimaryEchoSelector = ({ index }: PrimaryEchoSelectorProperties) =>
           setEcho(index, id);
         }}
       />
-    </Row>
+    </SelectorLayout>
   );
 };

@@ -26,7 +26,7 @@ export const AppHeader = () => {
                 <Link to="/admin/entities" className={navigationMenuTriggerStyle()}>
                   <div className="gap-compact flex items-center">
                     <Database className="h-4 w-4" />
-                    Configure entities
+                    Entities
                   </div>
                 </Link>
               </NavigationMenuLink>
@@ -36,7 +36,7 @@ export const AppHeader = () => {
                 <Link to="/builds" className={navigationMenuTriggerStyle()}>
                   <div className="gap-compact flex items-center">
                     <Library className="h-4 w-4" />
-                    Explore builds
+                    Builds
                   </div>
                 </Link>
               </NavigationMenuLink>
@@ -44,8 +44,10 @@ export const AppHeader = () => {
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
                 <Link to="/" className={navigationMenuTriggerStyle()}>
-                  <Calculator size={16} />
-                  Build Rotation
+                  <div className="gap-compact flex items-center">
+                    <Calculator size={16} />
+                    Create
+                  </div>
                 </Link>
               </NavigationMenuLink>
             </NavigationMenuItem>

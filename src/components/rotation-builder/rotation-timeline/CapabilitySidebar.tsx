@@ -7,7 +7,7 @@ import { DashboardSectionHeader } from '@/components/common/DashboardSectionHead
 import { sortAttackOrigins } from '@/components/rotation-builder/constants';
 import { Input } from '@/components/ui/input';
 import { Item } from '@/components/ui/item';
-import { Stack } from '@/components/ui/layout';
+import { Row, Stack } from '@/components/ui/layout';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -154,52 +154,48 @@ const CapabilitySection = ({
       : 0;
 
   return (
-    <section className="flex flex-col">
-      <div className="border-border px-panel py-compact border-t">
-        <div className="flex items-center gap-2">
-          <Text as="h3" variant="overline">
-            {title}
-          </Text>
-          {legend ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  aria-label={legendAriaLabel}
-                  className="text-muted-foreground hover:text-foreground inline-flex items-center justify-center"
-                >
-                  <Info className="size-3.5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-64 p-3">
-                <div className="space-y-1">
-                  {legend.map((entry) => (
-                    <div key={entry.label} className="flex items-center gap-2">
-                      <span className={cn('size-2 rounded-sm', entry.colorClassName)} />
-                      <span>{entry.label}</span>
-                    </div>
-                  ))}
-                </div>
-              </TooltipContent>
-            </Tooltip>
-          ) : undefined}
-        </div>
-      </div>
-      <div className="border-border border-t">
-        {itemCount > 0 ? (
-          <div className="flex flex-col">{children}</div>
-        ) : (
-          <Text
-            as="div"
-            variant="bodySm"
-            tone="muted"
-            className="py-page flex items-center justify-center italic"
-          >
-            {emptyMessage}
-          </Text>
-        )}
-      </div>
-    </section>
+    <Stack>
+      <Row align="center" className="px-panel py-compact gap-2">
+        <Text as="h3" variant="title" className="text-lg">
+          {title}
+        </Text>
+        {legend ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                aria-label={legendAriaLabel}
+                className="text-muted-foreground hover:text-foreground inline-flex items-center justify-center"
+              >
+                <Info className="size-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="max-w-64 p-3">
+              <div className="space-y-1">
+                {legend.map((entry) => (
+                  <div key={entry.label} className="flex items-center gap-2">
+                    <span className={cn('size-2 rounded-sm', entry.colorClassName)} />
+                    <span>{entry.label}</span>
+                  </div>
+                ))}
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        ) : undefined}
+      </Row>
+      {itemCount > 0 ? (
+        <Stack>{children}</Stack>
+      ) : (
+        <Text
+          as="div"
+          variant="bodySm"
+          tone="muted"
+          className="py-page flex items-center justify-center italic"
+        >
+          {emptyMessage}
+        </Text>
+      )}
+    </Stack>
   );
 };
 

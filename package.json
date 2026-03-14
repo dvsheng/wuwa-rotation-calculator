@@ -77,11 +77,11 @@
     "tailwind-merge": "^3.0.2",
     "tailwindcss": "^4.0.6",
     "tw-animate-css": "^1.3.6",
-    "vite-tsconfig-paths": "^6.0.2",
     "zod": "^4.3.5",
     "zustand": "^5.0.10"
   },
   "devDependencies": {
+    "@rolldown/plugin-babel": "^0.2.0",
     "@tanstack/devtools-vite": "^0.3.11",
     "@tanstack/eslint-config": "^0.3.0",
     "@tanstack/react-query-devtools": "^5.91.2",
@@ -94,7 +94,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@types/react-grid-layout": "^1.3.6",
-    "@vitejs/plugin-react": "^5.0.4",
+    "@vitejs/plugin-react": "^6.0.1",
     "babel-plugin-react-compiler": "^1.0.0",
     "concurrently": "^9.2.1",
     "drizzle-kit": "^0.31.8",
@@ -112,7 +112,7 @@
     "prettier-plugin-tailwindcss": "^0.7.2",
     "shadcn": "^3.8.5",
     "typescript": "^5.7.2",
-    "vite": "^7.1.7",
+    "vite": "^8.0.0",
     "vitest": "^3.0.5",
     "web-vitals": "^5.1.0"
   }

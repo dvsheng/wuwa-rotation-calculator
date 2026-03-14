@@ -8,154 +8,159 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root';
-import { Route as BuildsRouteImport } from './routes/builds';
-import { Route as IndexRouteImport } from './routes/index';
-import { Route as AdminEntitiesRouteImport } from './routes/admin.entities';
-import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$';
-import { Route as AdminEntitiesIdRouteImport } from './routes/admin.entities.$id';
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as BuildsRouteImport } from './routes/builds'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminEntitiesRouteImport } from './routes/admin.entities'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as AdminEntitiesIdRouteImport } from './routes/admin.entities.$id'
 
 const BuildsRoute = BuildsRouteImport.update({
   id: '/builds',
   path: '/builds',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const AdminEntitiesRoute = AdminEntitiesRouteImport.update({
   id: '/admin/entities',
   path: '/admin/entities',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const AdminEntitiesIdRoute = AdminEntitiesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => AdminEntitiesRoute,
-} as any);
+} as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute;
-  '/builds': typeof BuildsRoute;
-  '/admin/entities': typeof AdminEntitiesRouteWithChildren;
-  '/admin/entities/$id': typeof AdminEntitiesIdRoute;
-  '/api/auth/$': typeof ApiAuthSplatRoute;
+  '/': typeof IndexRoute
+  '/builds': typeof BuildsRoute
+  '/admin/entities': typeof AdminEntitiesRouteWithChildren
+  '/admin/entities/$id': typeof AdminEntitiesIdRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute;
-  '/builds': typeof BuildsRoute;
-  '/admin/entities': typeof AdminEntitiesRouteWithChildren;
-  '/admin/entities/$id': typeof AdminEntitiesIdRoute;
-  '/api/auth/$': typeof ApiAuthSplatRoute;
+  '/': typeof IndexRoute
+  '/builds': typeof BuildsRoute
+  '/admin/entities': typeof AdminEntitiesRouteWithChildren
+  '/admin/entities/$id': typeof AdminEntitiesIdRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  '/': typeof IndexRoute;
-  '/builds': typeof BuildsRoute;
-  '/admin/entities': typeof AdminEntitiesRouteWithChildren;
-  '/admin/entities/$id': typeof AdminEntitiesIdRoute;
-  '/api/auth/$': typeof ApiAuthSplatRoute;
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/builds': typeof BuildsRoute
+  '/admin/entities': typeof AdminEntitiesRouteWithChildren
+  '/admin/entities/$id': typeof AdminEntitiesIdRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
+  fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/builds'
     | '/admin/entities'
     | '/admin/entities/$id'
-    | '/api/auth/$';
-  fileRoutesByTo: FileRoutesByTo;
-  to: '/' | '/builds' | '/admin/entities' | '/admin/entities/$id' | '/api/auth/$';
+    | '/api/auth/$'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/builds'
+    | '/admin/entities'
+    | '/admin/entities/$id'
+    | '/api/auth/$'
   id:
     | '__root__'
     | '/'
     | '/builds'
     | '/admin/entities'
     | '/admin/entities/$id'
-    | '/api/auth/$';
-  fileRoutesById: FileRoutesById;
+    | '/api/auth/$'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  BuildsRoute: typeof BuildsRoute;
-  AdminEntitiesRoute: typeof AdminEntitiesRouteWithChildren;
-  ApiAuthSplatRoute: typeof ApiAuthSplatRoute;
+  IndexRoute: typeof IndexRoute
+  BuildsRoute: typeof BuildsRoute
+  AdminEntitiesRoute: typeof AdminEntitiesRouteWithChildren
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
     '/builds': {
-      id: '/builds';
-      path: '/builds';
-      fullPath: '/builds';
-      preLoaderRoute: typeof BuildsRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/builds'
+      path: '/builds'
+      fullPath: '/builds'
+      preLoaderRoute: typeof BuildsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
-      id: '/';
-      path: '/';
-      fullPath: '/';
-      preLoaderRoute: typeof IndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/entities': {
-      id: '/admin/entities';
-      path: '/admin/entities';
-      fullPath: '/admin/entities';
-      preLoaderRoute: typeof AdminEntitiesRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/admin/entities'
+      path: '/admin/entities'
+      fullPath: '/admin/entities'
+      preLoaderRoute: typeof AdminEntitiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
-      id: '/api/auth/$';
-      path: '/api/auth/$';
-      fullPath: '/api/auth/$';
-      preLoaderRoute: typeof ApiAuthSplatRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/entities/$id': {
-      id: '/admin/entities/$id';
-      path: '/$id';
-      fullPath: '/admin/entities/$id';
-      preLoaderRoute: typeof AdminEntitiesIdRouteImport;
-      parentRoute: typeof AdminEntitiesRoute;
-    };
+      id: '/admin/entities/$id'
+      path: '/$id'
+      fullPath: '/admin/entities/$id'
+      preLoaderRoute: typeof AdminEntitiesIdRouteImport
+      parentRoute: typeof AdminEntitiesRoute
+    }
   }
 }
 
 interface AdminEntitiesRouteChildren {
-  AdminEntitiesIdRoute: typeof AdminEntitiesIdRoute;
+  AdminEntitiesIdRoute: typeof AdminEntitiesIdRoute
 }
 
 const AdminEntitiesRouteChildren: AdminEntitiesRouteChildren = {
   AdminEntitiesIdRoute: AdminEntitiesIdRoute,
-};
+}
 
 const AdminEntitiesRouteWithChildren = AdminEntitiesRoute._addFileChildren(
   AdminEntitiesRouteChildren,
-);
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BuildsRoute: BuildsRoute,
   AdminEntitiesRoute: AdminEntitiesRouteWithChildren,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
-};
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from './router.tsx';
-import type { createStart } from '@tanstack/react-start';
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
 declare module '@tanstack/react-start' {
   interface Register {
-    ssr: true;
-    router: Awaited<ReturnType<typeof getRouter>>;
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
   }
 }

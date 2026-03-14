@@ -1,13 +1,13 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 
+import babel from '@rolldown/plugin-babel';
 import tailwindcss from '@tailwindcss/vite';
 import { devtools } from '@tanstack/devtools-vite';
 import { tanstackStart } from '@tanstack/react-start/plugin/vite';
-import viteReact from '@vitejs/plugin-react';
+import viteReact, { reactCompilerPreset } from '@vitejs/plugin-react';
 import { nitro } from 'nitro/vite';
 import { defineConfig } from 'vite';
-import viteTsConfigPaths from 'vite-tsconfig-paths';
 
 // Force Vite/Nitro to resolve @noble/ciphers from the better-auth copy (v2.x), which exports managedNonce
 const betterAuthNobleCiphersPath = path.resolve(
@@ -22,6 +22,7 @@ const nobleCiphersPath = existsSync(betterAuthNobleCiphersPath)
 
 const config = defineConfig({
   resolve: {
+    tsconfigPaths: true,
     alias: {
       '@noble/ciphers': nobleCiphersPath,
     },
@@ -32,19 +33,13 @@ const config = defineConfig({
       awsLambda: { streaming: true },
       preset: 'aws-lambda',
     }),
-    // this is the plugin that enables path aliases
-    viteTsConfigPaths({
-      projects: ['./tsconfig.json'],
-    }),
     tailwindcss(),
     tanstackStart({
       srcDirectory: 'src',
     }),
-    viteReact({
-      babel: {
-        plugins: [['babel-plugin-react-compiler', {}]],
-      },
-    }),
+    viteReact(),
+    // @ts-expect-error - RolldownBabelPreset is not assignable to PluginOptions due to incomplete types
+    babel({ presets: [reactCompilerPreset()] }),
   ],
 });
 

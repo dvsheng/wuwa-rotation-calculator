@@ -55,6 +55,7 @@ export const RotationResultContainer = () => {
               totalDamage={result.totalDamage}
               attackCount={result.attackCount}
               damageInstanceCount={result.damageDetails.length}
+              mergedDamageDetails={result.mergedDamageDetails}
             />
             <Tabs
               value={selectedTab}

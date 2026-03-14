@@ -49,7 +49,7 @@ export const useRotationCalculation = () => {
   );
   const mergedDamageDetails =
     calculationQuery.data?.damageDetails.map((detail) => {
-      const attack = attackMap.get(attacks[detail.attackIndex].instanceId);
+      const attack = attackMap.get(attacks[detail.attackIndex]?.instanceId);
       return {
         detail,
         attack,

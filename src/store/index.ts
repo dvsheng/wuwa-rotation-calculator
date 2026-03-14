@@ -34,8 +34,8 @@ export const useStoreHydrated = () => {
 
   useEffect(() => {
     if (useStore.persist.hasHydrated()) {
-      setHydrated(true);
-      return;
+      const hydrationUpdateId = globalThis.setTimeout(() => setHydrated(true), 0);
+      return () => globalThis.clearTimeout(hydrationUpdateId);
     }
     const unsubHydrate = useStore.persist.onHydrate(() => setHydrated(false));
     const unsubFinish = useStore.persist.onFinishHydration(() => setHydrated(true));

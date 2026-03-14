@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useCharacterEchoes } from '@/hooks/useCharacterEchoes';
 import { useEntityList } from '@/hooks/useEntityList';
 import { EntityType } from '@/services/game-data';
 import { useStore } from '@/store';
@@ -29,6 +30,7 @@ export const CharacterSelector = ({ index }: CharacterSelectorProperties) => {
   const setCharacter = useStore((state) => state.setCharacter);
   const clearAllForCharacter = useStore((state) => state.clearAllForCharacter);
   const setSequence = useStore((state) => state.setSequence);
+  const { syncCharacterEchoes } = useCharacterEchoes(index);
   const { data: characterList = [] } = useEntityList({
     entityType: EntityType.CHARACTER,
   });
@@ -40,8 +42,15 @@ export const CharacterSelector = ({ index }: CharacterSelectorProperties) => {
         items={characterList}
         value={character.id}
         onValueChange={(id) => {
-          if (id !== character.id) clearAllForCharacter(character.id);
+          if (id === character.id) {
+            return;
+          }
+
+          clearAllForCharacter(character.id);
           setCharacter(index, id);
+          syncCharacterEchoes(id).catch((error: unknown) => {
+            console.error(error);
+          });
         }}
         excludeIds={otherSelectedCharacterIds}
       />

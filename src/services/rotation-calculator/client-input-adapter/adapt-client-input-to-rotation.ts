@@ -10,7 +10,7 @@ import type {
   Modifier,
   PermanentStat,
 } from '@/services/game-data';
-import { getEchoStats } from '@/services/game-data';
+import { getEchoStats, isGameDataStatParameterizedNumber } from '@/services/game-data';
 import { CharacterStat, Tag } from '@/types';
 import type {
   CharacterAttack,
@@ -76,15 +76,6 @@ const createEmptyCharacterStats = (): CharacterStats<StatMeta> =>
     Object.values(CharacterStat).map((stat) => [stat, []]),
   ) as unknown as CharacterStats<StatMeta>;
 
-const isStatParameterizedNode = (
-  value: unknown,
-): value is GameDataStatParameterizedNumber =>
-  typeof value === 'object' &&
-  value !== null &&
-  'type' in value &&
-  (value as Record<string, unknown>).type === 'statParameterizedNumber' &&
-  'resolveWith' in value;
-
 /**
  * Converts game-data statParameterizedNumber nodes into runtime stat references.
  * Works with union types, arrays, and objects (recursively).
@@ -115,7 +106,7 @@ export function resolveStatReferences<T>(
   value: T,
   index: number,
 ): ResolveStatParameterizedType<T> {
-  if (isStatParameterizedNode(value)) {
+  if (isGameDataStatParameterizedNumber(value)) {
     return {
       type: 'statParameterizedNumber',
       stat: value.stat,

@@ -20,12 +20,12 @@ import {
 import * as enrichRotationData from './client-input-adapter/enrich-rotation-data';
 
 // Use vi.hoisted to define mocks used in vi.mock
-const { mockGetEntityByHakushinId } = vi.hoisted(() => ({
-  mockGetEntityByHakushinId: vi.fn(),
+const { mockgetEntityById } = vi.hoisted(() => ({
+  mockgetEntityById: vi.fn(),
 }));
 
 vi.mock('@/services/game-data/get-entity-details.function', () => ({
-  getEntityByHakushinId: mockGetEntityByHakushinId,
+  getEntityById: mockgetEntityById,
 }));
 
 /**
@@ -196,10 +196,10 @@ const createMockEchoSetData = () => ({
 
 describe('calculateRotation', () => {
   beforeEach(() => {
-    mockGetEntityByHakushinId.mockReset();
+    mockgetEntityById.mockReset();
 
     // Default mock implementation - returns appropriate data based on entity type
-    mockGetEntityByHakushinId.mockImplementation(({ data }) => {
+    mockgetEntityById.mockImplementation(({ data }) => {
       switch (data.entityType) {
         case 'echo': {
           return Promise.resolve(createMockEchoData());
@@ -269,7 +269,7 @@ describe('calculateRotation', () => {
     const mockShorekeeper = createMockCharacterData(1505, 'Shorekeeper', Tag.SPECTRO);
 
     beforeEach(() => {
-      mockGetEntityByHakushinId.mockImplementation(({ data }) => {
+      mockgetEntityById.mockImplementation(({ data }) => {
         // Handle character requests
         if (data.entityType === 'character') {
           switch (data.id) {
@@ -740,7 +740,7 @@ describe('calculateRotation', () => {
       const INVALID_CHARACTER_ID = 99_999;
 
       // Set up mock to throw error for invalid ID
-      mockGetEntityByHakushinId.mockImplementation(({ data }) => {
+      mockgetEntityById.mockImplementation(({ data }) => {
         if (data.entityType === 'character' && data.id === INVALID_CHARACTER_ID) {
           return Promise.reject(new Error(`Entity not found for ID ${data.id}`));
         }

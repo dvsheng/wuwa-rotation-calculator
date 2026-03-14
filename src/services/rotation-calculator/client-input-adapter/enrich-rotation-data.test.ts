@@ -7,12 +7,12 @@ import { AttackScalingProperty, Attribute, CharacterStat, Tag } from '@/types';
 import { GameDataNotFoundError, createGameDataEnricher } from './enrich-rotation-data';
 
 // Use vi.hoisted to define mocks used in vi.mock
-const { mockGetEntityByHakushinId } = vi.hoisted(() => ({
-  mockGetEntityByHakushinId: vi.fn(),
+const { mockgetEntityById } = vi.hoisted(() => ({
+  mockgetEntityById: vi.fn(),
 }));
 
 vi.mock('@/services/game-data/get-entity-details.function', () => ({
-  getEntityByHakushinId: mockGetEntityByHakushinId,
+  getEntityById: mockgetEntityById,
 }));
 
 // Mock data shared across tests
@@ -100,7 +100,7 @@ const setupDefaultGameDataMock = (config?: {
   const modifiers = config?.modifiers ?? mockModifierDetails;
   const permanentStats = config?.permanentStats ?? mockPermanentStats;
 
-  mockGetEntityByHakushinId.mockImplementation(() =>
+  mockgetEntityById.mockImplementation(() =>
     Promise.resolve({
       capabilities: {
         attacks,
@@ -312,8 +312,8 @@ describe('createGameDataEnricher', () => {
         { stat: CharacterStat.CRITICAL_RATE, value: 0.05, tags: [Tag.ALL] },
       ];
 
-      // Mock the getEntityByHakushinId to return different stats for each entity
-      mockGetEntityByHakushinId.mockImplementation(({ data }) => {
+      // Mock the getEntityById to return different stats for each entity
+      mockgetEntityById.mockImplementation(({ data }) => {
         if (data.entityType === 'character') {
           return Promise.resolve({
             capabilities: {
@@ -427,7 +427,7 @@ describe('createGameDataEnricher', () => {
         { stat: CharacterStat.CRITICAL_RATE, value: 0.05, tags: [Tag.ALL] },
       ];
 
-      mockGetEntityByHakushinId.mockImplementation(({ data }) => {
+      mockgetEntityById.mockImplementation(({ data }) => {
         if (data.entityType === 'character') {
           return Promise.resolve({
             capabilities: {
@@ -508,7 +508,7 @@ describe('createGameDataEnricher', () => {
         { stat: CharacterStat.ATTACK_FLAT, value: 700, tags: [Tag.ALL] },
       ];
 
-      mockGetEntityByHakushinId.mockImplementation(({ data }) => {
+      mockgetEntityById.mockImplementation(({ data }) => {
         if (data.entityType === 'character') {
           // Return different stats based on character ID
           if (data.id === 1306) {

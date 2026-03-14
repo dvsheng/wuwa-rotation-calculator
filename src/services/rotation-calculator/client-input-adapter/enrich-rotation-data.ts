@@ -9,7 +9,7 @@ import type {
   Modifier as GameDataModifier,
   PermanentStat,
 } from '@/services/game-data';
-import { getEntityByHakushinId } from '@/services/game-data';
+import { getEntityById } from '@/services/game-data';
 
 /**
  * Error thrown when game data is not found.
@@ -78,12 +78,12 @@ const fetchRotationGameData = async (clientTeam: ClientTeam) => {
     const [echoDetails, characterDetails, weaponDetails, echoSetDetails] =
       await Promise.all([
         mapAsync(clientTeam, (c) =>
-          getEntityByHakushinId({
+          getEntityById({
             data: { id: c.primarySlotEcho.id, entityType: 'echo' },
           }),
         ),
         mapAsync(clientTeam, (c) =>
-          getEntityByHakushinId({
+          getEntityById({
             data: {
               id: c.id,
               entityType: 'character',
@@ -92,7 +92,7 @@ const fetchRotationGameData = async (clientTeam: ClientTeam) => {
           }),
         ),
         mapAsync(clientTeam, (c) =>
-          getEntityByHakushinId({
+          getEntityById({
             data: {
               id: c.weapon.id,
               entityType: 'weapon',
@@ -103,7 +103,7 @@ const fetchRotationGameData = async (clientTeam: ClientTeam) => {
         mapAsync(clientTeam, (c) =>
           Promise.all(
             c.echoSets.map((set) =>
-              getEntityByHakushinId({
+              getEntityById({
                 data: {
                   id: set.id,
                   entityType: 'echo_set',

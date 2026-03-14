@@ -63,6 +63,12 @@ export const CalculateRotationInputSchema = z.object({
 
 export type CalculateRotationInput = z.infer<typeof CalculateRotationInputSchema>;
 
+export const GetEchoStatsRequestSchema = z.object({
+  characterId: z.number(),
+});
+
+export type GetEchoStatsRequest = z.infer<typeof GetEchoStatsRequestSchema>;
+
 // Icon Service Types
 export const IconRequestType = {
   CAPABILITY: 'capability',

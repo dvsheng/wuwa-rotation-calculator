@@ -150,6 +150,15 @@ export interface GameDataStatParameterizedNumber {
   resolveWith: 'self' | 'enemy';
 }
 
+export const isGameDataStatParameterizedNumber = (
+  value: unknown,
+): value is GameDataStatParameterizedNumber =>
+  typeof value === 'object' &&
+  value !== null &&
+  'type' in value &&
+  (value as Record<string, unknown>).type === 'statParameterizedNumber' &&
+  'resolveWith' in value;
+
 /**
  * Full expression tree at the game-data layer.
  * All refine-scalable numbers are plain numbers; user params and stat refs

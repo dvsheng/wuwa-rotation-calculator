@@ -7,7 +7,7 @@ import {
   getEntityByIdHandler,
 } from './get-entity-details.server';
 
-export const getEntityByHakushinId = createServerFn({
+export const getEntityById = createServerFn({
   method: 'GET',
 })
   .inputValidator(GetEntityDetailsRequestSchema)

@@ -1,10 +1,10 @@
 import type { ColumnDef } from '@tanstack/react-table';
-import { ChevronDown, Info } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { Fragment, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { CharacterIconDisplay } from '@/components/common/CharacterIcon';
-import { Button } from '@/components/ui/button';
+import { InfoTooltip } from '@/components/common/InfoTooltip';
 import { DataTable } from '@/components/ui/data-table';
 import { Row, Stack } from '@/components/ui/layout';
 import { Text } from '@/components/ui/typography';
@@ -113,9 +113,8 @@ export const CharacterBreakdownDataTable = ({
       },
       cell: ({ row }) => (
         <div className="flex justify-end">
-          <Button
-            variant="ghost"
-            size="icon-sm"
+          <InfoTooltip
+            ariaLabel="Open character damage type pie chart"
             onClick={(event) => {
               event.stopPropagation();
               setSelectedCharacterName((previous) =>
@@ -124,10 +123,9 @@ export const CharacterBreakdownDataTable = ({
                   : row.original.characterName,
               );
             }}
-            aria-label="Open character damage type pie chart"
           >
-            <Info />
-          </Button>
+            Open character damage type pie chart
+          </InfoTooltip>
         </div>
       ),
     },

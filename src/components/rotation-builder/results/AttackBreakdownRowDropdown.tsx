@@ -1,7 +1,6 @@
 import type { ColumnDef, Row } from '@tanstack/react-table';
-import { Info } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { InfoTooltip } from '@/components/common/InfoTooltip';
 import { DataTable } from '@/components/ui/data-table';
 import { Row as LayoutRow } from '@/components/ui/layout';
 import { TableCell, TableRow } from '@/components/ui/table';
@@ -105,14 +104,12 @@ export const AttackBreakdownRowDropdown = ({
       },
       cell: ({ row }) => (
         <div className="flex justify-end">
-          <Button
-            variant="ghost"
-            size="icon-sm"
+          <InfoTooltip
+            ariaLabel="Open damage details inspector"
             onClick={() => onSelect(row.original.detail)}
-            aria-label="Open damage details inspector"
           >
-            <Info />
-          </Button>
+            Open damage details inspector
+          </InfoTooltip>
         </div>
       ),
     },

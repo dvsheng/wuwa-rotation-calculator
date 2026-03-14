@@ -1,8 +1,7 @@
-import { Info } from 'lucide-react';
 import type { ReactNode } from 'react';
 
+import { InfoTooltip } from '@/components/common/InfoTooltip';
 import { Row } from '@/components/ui/layout';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Text } from '@/components/ui/typography';
 
 interface DashboardSectionHeaderProperties {
@@ -37,14 +36,7 @@ export const DashboardSectionHeader = ({
             {subtitle}
           </Text>
         )}
-        {description ? (
-          <Tooltip>
-            <TooltipContent side="right">{description}</TooltipContent>
-            <TooltipTrigger asChild>
-              <Info className="text-muted-foreground size-4" />
-            </TooltipTrigger>
-          </Tooltip>
-        ) : undefined}
+        {description ? <InfoTooltip>{description}</InfoTooltip> : undefined}
       </Row>
       {action}
     </Row>

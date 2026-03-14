@@ -1,17 +1,17 @@
 import { useDraggable } from '@dnd-kit/react';
-import { Info, SwatchBook } from 'lucide-react';
+import { SwatchBook } from 'lucide-react';
 import { useId, useState } from 'react';
 
 import { CapabilityHoverCard } from '@/components/common/CapabilityHoverCard';
 import { CapabilityIconDisplay } from '@/components/common/CapabilityIcon';
 import { DashboardSectionHeader } from '@/components/common/DashboardSectionHeader';
+import { InfoTooltip } from '@/components/common/InfoTooltip';
 import { sortAttackOrigins } from '@/components/rotation-builder/constants';
 import { Input } from '@/components/ui/input';
 import { Item } from '@/components/ui/item';
 import { Row, Stack } from '@/components/ui/layout';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Text } from '@/components/ui/typography';
 import type { DetailedAttack, DetailedModifier } from '@/hooks/useTeamDetails';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
@@ -159,27 +159,16 @@ const CapabilitySection = ({
           {title}
         </Text>
         {legend ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                aria-label={legendAriaLabel}
-                className="text-muted-foreground hover:text-foreground inline-flex items-center justify-center"
-              >
-                <Info className="size-3.5" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="max-w-64 p-3">
-              <div className="space-y-1">
-                {legend.map((entry) => (
-                  <div key={entry.label} className="flex items-center gap-2">
-                    <span className={cn('size-2 rounded-sm', entry.colorClassName)} />
-                    <span>{entry.label}</span>
-                  </div>
-                ))}
-              </div>
-            </TooltipContent>
-          </Tooltip>
+          <InfoTooltip ariaLabel={legendAriaLabel} contentClassName="max-w-64 p-3">
+            <div className="space-y-1">
+              {legend.map((entry) => (
+                <div key={entry.label} className="flex items-center gap-2">
+                  <span className={cn('size-2 rounded-sm', entry.colorClassName)} />
+                  <span>{entry.label}</span>
+                </div>
+              ))}
+            </div>
+          </InfoTooltip>
         ) : undefined}
       </Row>
       {itemCount > 0 ? (

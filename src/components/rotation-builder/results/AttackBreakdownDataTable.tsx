@@ -1,10 +1,10 @@
 import type { ColumnDef } from '@tanstack/react-table';
-import { ChevronDown, Info } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { Fragment, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { InfoTooltip } from '@/components/common/InfoTooltip';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { Row, Stack } from '@/components/ui/layout';
 import { Text } from '@/components/ui/typography';
@@ -127,17 +127,16 @@ export const AttackBreakdownDataTable = ({
       cell: ({ row }) => {
         return (
           <div className="flex justify-end">
-            <Button
-              variant="ghost"
-              size="icon-sm"
+            <InfoTooltip
+              ariaLabel="Open damage details inspector"
               onClick={(event) => {
+                // Keep the table row collapsed/expanded state unchanged when opening the inspector.
                 event.stopPropagation();
                 setSelectedDetail(row.original.hits[0]?.detail);
               }}
-              aria-label="Open damage details inspector"
             >
-              <Info />
-            </Button>
+              Open damage details inspector
+            </InfoTooltip>
           </div>
         );
       },

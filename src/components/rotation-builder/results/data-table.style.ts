@@ -14,4 +14,5 @@ export const rotationResultTableColumnLayout = {
   damage: 'w-[10rem] min-w-[10rem]',
   details: 'w-[3rem] min-w-[3rem]',
   expand: 'w-[3rem] min-w-[3rem]',
+  magnitude: 'w-[6rem] min-w-[6rem]',
 } as const;

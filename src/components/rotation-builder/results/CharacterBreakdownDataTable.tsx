@@ -18,6 +18,7 @@ import {
   rotationResultDataTableClassNames,
   rotationResultTableColumnLayout,
 } from './data-table.style';
+import { RelativeMagnitudeBar } from './RelativeMagnitudeBar';
 import { useCharacterBreakdown } from './useCharacterBreakdown';
 
 interface CharacterBreakdownDataTableProperties {
@@ -38,6 +39,7 @@ export const CharacterBreakdownDataTable = ({
     string | undefined
   >();
   const { rows } = useCharacterBreakdown({ mergedDamageDetails, totalDamage });
+  const maxDamage = Math.max(...rows.map((row) => row.totalDamage), 0);
   const selectedCharacter = rows.find(
     (row) => row.characterName === selectedCharacterName,
   );
@@ -143,6 +145,17 @@ export const CharacterBreakdownDataTable = ({
             expandedCharacters.has(row.original.characterName) && 'rotate-180',
           )}
         />
+      ),
+    },
+    {
+      id: 'magnitude',
+      header: () => {},
+      meta: {
+        headerClassName: rotationResultTableColumnLayout.magnitude,
+        cellClassName: rotationResultTableColumnLayout.magnitude,
+      },
+      cell: ({ row }) => (
+        <RelativeMagnitudeBar value={row.original.totalDamage} maxValue={maxDamage} />
       ),
     },
   ];

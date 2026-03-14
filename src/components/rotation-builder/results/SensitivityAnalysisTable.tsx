@@ -11,6 +11,7 @@ import type {
   ClientSensitivityAnalysisScenario,
 } from '@/services/rotation-calculator/client-output-adapter/adapt-rotation-result-to-client-output';
 
+import { RelativeMagnitudeBar } from './RelativeMagnitudeBar';
 import { formatPercentDelta, formatSignedDamage } from './result-chart.utilities';
 import { useSensitivityAnalysisBreakdown } from './useSensitivityAnalysisBreakdown';
 
@@ -29,7 +30,9 @@ const tableClassNames = {
   cell: 'py-compact',
 };
 
-const columns: Array<ColumnDef<ClientSensitivityAnalysisScenario>> = [
+const createColumns = (
+  maxDeltaMagnitude: number,
+): Array<ColumnDef<ClientSensitivityAnalysisScenario>> => [
   {
     id: 'scenario',
     header: 'Scenario',
@@ -88,6 +91,22 @@ const columns: Array<ColumnDef<ClientSensitivityAnalysisScenario>> = [
       >
         {formatPercentDelta(row.original.relativeDelta)}
       </Text>
+    ),
+  },
+  {
+    id: 'magnitude',
+    header: () => {},
+    meta: {
+      headerClassName: 'w-[6rem] min-w-[6rem]',
+      cellClassName: 'w-[6rem] min-w-[6rem]',
+    },
+    cell: ({ row }) => (
+      <RelativeMagnitudeBar
+        value={row.original.totalDamageDelta}
+        maxValue={maxDeltaMagnitude}
+        negative={row.original.totalDamageDelta < 0}
+        twoSided={true}
+      />
     ),
   },
 ];
@@ -183,13 +202,26 @@ export const SensitivityAnalysisTable = ({
             <Text variant="overline" tone="muted">
               {section.title}
             </Text>
-            <DataTable
-              columns={columns}
-              data={section.rows}
-              onRowClick={(row) => setSelectedScenarioId(row.id)}
-              emptyMessage={`No ${section.title.toLowerCase()} scenarios.`}
-              classNames={tableClassNames}
-            />
+            {/*
+             * Compare bars within each section so magnitude remains readable even when
+             * different scenario categories operate on different numeric ranges.
+             */}
+            {(() => {
+              const maxDeltaMagnitude = Math.max(
+                ...section.rows.map((row) => Math.abs(row.totalDamageDelta)),
+                0,
+              );
+
+              return (
+                <DataTable
+                  columns={createColumns(maxDeltaMagnitude)}
+                  data={section.rows}
+                  onRowClick={(row) => setSelectedScenarioId(row.id)}
+                  emptyMessage={`No ${section.title.toLowerCase()} scenarios.`}
+                  classNames={tableClassNames}
+                />
+              );
+            })()}
           </Stack>
         ))}
       </Stack>

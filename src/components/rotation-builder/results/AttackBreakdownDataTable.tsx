@@ -18,6 +18,7 @@ import {
   rotationResultDataTableClassNames,
   rotationResultTableColumnLayout,
 } from './data-table.style';
+import { RelativeMagnitudeBar } from './RelativeMagnitudeBar';
 import { useAttackBreakdown } from './useAttackBreakdown';
 
 type DamageDetail = Parameters<typeof AttackCalculationStatsBreakdown>[0]['detail'];
@@ -47,6 +48,7 @@ export const AttackBreakdownDataTable = ({
   };
 
   const { attackGroups } = useAttackBreakdown(mergedDamageDetails);
+  const maxDamage = Math.max(...attackGroups.map((group) => group.totalDamage), 0);
 
   const columns: Array<ColumnDef<AttackGroup>> = [
     {
@@ -155,6 +157,17 @@ export const AttackBreakdownDataTable = ({
             expandedGroups.has(row.original.attackIndex) && 'rotate-180',
           )}
         />
+      ),
+    },
+    {
+      id: 'magnitude',
+      header: () => {},
+      meta: {
+        headerClassName: rotationResultTableColumnLayout.magnitude,
+        cellClassName: rotationResultTableColumnLayout.magnitude,
+      },
+      cell: ({ row }) => (
+        <RelativeMagnitudeBar value={row.original.totalDamage} maxValue={maxDamage} />
       ),
     },
   ];

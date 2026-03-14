@@ -8,16 +8,12 @@ import { Attribute } from '@/types';
 
 import { BaseBuffCanvasItem, BuffCanvasItem } from './BuffCanvasItem';
 
-vi.mock('@/hooks/useIcons');
 vi.mock('@/hooks/useSelfBuffAlignment');
 vi.mock('@/hooks/useTeamAttackInstances');
 
-const { useCapabilityIcon, useEntityIcon } = await import('@/hooks/useIcons');
 const { useSelfBuffAlignment } = await import('@/hooks/useSelfBuffAlignment');
 const { useTeamAttackInstances } = await import('@/hooks/useTeamAttackInstances');
 
-const mockUseCapabilityIcon = vi.mocked(useCapabilityIcon);
-const mockUseEntityIcon = vi.mocked(useEntityIcon);
 const mockUseSelfBuffAlignment = vi.mocked(useSelfBuffAlignment);
 const mockUseTeamAttackInstances = vi.mocked(useTeamAttackInstances);
 
@@ -102,12 +98,6 @@ const makeBuff = (x: number, w: number, withStackConfig = false) => ({
 });
 
 beforeEach(() => {
-  mockUseCapabilityIcon.mockReturnValue({ data: undefined } as ReturnType<
-    typeof useCapabilityIcon
-  >);
-  mockUseEntityIcon.mockReturnValue({ data: undefined } as ReturnType<
-    typeof useEntityIcon
-  >);
   mockUseSelfBuffAlignment.mockReturnValue({
     isSelf: false,
     status: 'not-self',

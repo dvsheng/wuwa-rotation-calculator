@@ -1,6 +1,5 @@
 import { CircleUser } from 'lucide-react';
 
-import { useEntityIcon } from '@/hooks/useIcons';
 import { cn } from '@/lib/utils';
 
 import type { IconSize } from './CapabilityIcon';
@@ -30,18 +29,3 @@ export const CharacterIconDisplay = ({
     )}
   </div>
 );
-
-interface CharacterIconProperties {
-  characterEntityId?: number;
-  iconUrl?: string;
-  size?: IconSize;
-}
-
-export const CharacterIcon = ({
-  characterEntityId,
-  iconUrl,
-  size = 'medium',
-}: CharacterIconProperties) => {
-  const { data } = useEntityIcon(characterEntityId ?? -1, { enabled: !iconUrl });
-  return <CharacterIconDisplay url={iconUrl ?? data} size={size} />;
-};

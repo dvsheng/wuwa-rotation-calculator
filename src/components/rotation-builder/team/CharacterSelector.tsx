@@ -1,6 +1,6 @@
 import { useShallow } from 'zustand/react/shallow';
 
-import { EntityIcon } from '@/components/common/EntityIcon';
+import { EntityIconDisplay } from '@/components/common/EntityIcon';
 import { useCharacterEchoes } from '@/hooks/useCharacterEchoes';
 import { useEntityList } from '@/hooks/useEntityList';
 import { EntityType } from '@/services/game-data';
@@ -32,8 +32,8 @@ export const CharacterSelector = ({ index }: CharacterSelectorProperties) => {
     <SelectorLayout
       iconClassName="size-20"
       icon={
-        <EntityIcon
-          iconUrl={characterList.find((c) => c.id === character.id)?.iconUrl}
+        <EntityIconDisplay
+          url={characterList.find((c) => c.id === character.id)?.iconUrl}
           size="large"
           className="h-full w-full"
         />

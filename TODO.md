@@ -1,5 +1,3 @@
-export to sheet
-
 right click context menu on buff canvas
 
 skill templates

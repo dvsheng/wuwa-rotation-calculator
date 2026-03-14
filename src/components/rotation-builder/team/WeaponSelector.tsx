@@ -1,6 +1,6 @@
 import { isNil } from 'es-toolkit/predicate';
 
-import { EntityIcon } from '@/components/common/EntityIcon';
+import { EntityIconDisplay } from '@/components/common/EntityIcon';
 import { useEntityList } from '@/hooks/useEntityList';
 import type { ListWeaponsResponseItem } from '@/services/game-data';
 import { EntityType } from '@/services/game-data';
@@ -39,7 +39,7 @@ export const WeaponSelector = ({ index }: WeaponSelectorProperties) => {
 
   return (
     <SelectorLayout
-      icon={<EntityIcon iconUrl={selectedWeapon?.iconUrl} size="large" />}
+      icon={<EntityIconDisplay url={selectedWeapon?.iconUrl} size="large" />}
     >
       <EntitySelectionDialog
         items={filteredWeaponList}

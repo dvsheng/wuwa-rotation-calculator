@@ -1,4 +1,4 @@
-import { EntityIcon } from '@/components/common/EntityIcon';
+import { EntityIconDisplay } from '@/components/common/EntityIcon';
 import { useEntityList } from '@/hooks/useEntityList';
 import { EntityType } from '@/services/game-data';
 import { useStore } from '@/store';
@@ -24,9 +24,9 @@ export const PrimaryEchoSelector = ({ index }: PrimaryEchoSelectorProperties) =>
   const primaryEchoOptions = echoList.filter((_echo) =>
     _echo.sets.some((set) => selectedSetIds.has(set)),
   );
-
+  const echoIconUrl = echoList.find((s) => s.id === echo.id)?.iconUrl;
   return (
-    <SelectorLayout icon={<EntityIcon entityId={echo.id} size="large" />}>
+    <SelectorLayout icon={<EntityIconDisplay url={echoIconUrl} size="large" />}>
       <EntitySelectionDialog
         items={primaryEchoOptions}
         value={echo.id}

@@ -44,6 +44,7 @@ describe('useEntityList', () => {
         {
           id: 1,
           name: 'Aalto',
+          iconUrl: '/characters/aalto.png',
           weaponType: WeaponType.PISTOLS,
           rarity: 4,
           attribute: 'aero',
@@ -51,17 +52,40 @@ describe('useEntityList', () => {
         {
           id: 2,
           name: 'Rover',
+          iconUrl: '/characters/rover.png',
           weaponType: WeaponType.SWORD,
           rarity: 5,
           attribute: 'spectro',
         },
       ],
       weapons: [
-        { id: 10, name: 'Pistol A', weaponType: WeaponType.PISTOLS, rarity: 4 },
-        { id: 11, name: 'Sword A', weaponType: WeaponType.SWORD, rarity: 5 },
+        {
+          id: 10,
+          name: 'Pistol A',
+          iconUrl: '/weapons/pistol-a.png',
+          weaponType: WeaponType.PISTOLS,
+          rarity: 4,
+        },
+        {
+          id: 11,
+          name: 'Sword A',
+          iconUrl: '/weapons/sword-a.png',
+          weaponType: WeaponType.SWORD,
+          rarity: 5,
+        },
       ],
-      echoes: [{ id: 100, name: 'Echo A', cost: 3, sets: [1] }],
-      echoSets: [{ id: 200, gameId: 9001, name: 'Set A', tiers: [2, 5] }],
+      echoes: [
+        { id: 100, name: 'Echo A', iconUrl: '/echoes/echo-a.png', cost: 3, sets: [1] },
+      ],
+      echoSets: [
+        {
+          id: 200,
+          gameId: 9001,
+          name: 'Set A',
+          iconUrl: '/echo-sets/set-a.png',
+          tiers: [2, 5],
+        },
+      ],
     });
 
     const { result } = renderHook(
@@ -76,6 +100,7 @@ describe('useEntityList', () => {
         }),
         echoes: useEntityList({ entityType: EntityType.ECHO }),
         echoSets: useEntityList({ entityType: EntityType.ECHO_SET }),
+        allEntities: useEntityList({ entityType: undefined }),
       }),
       { wrapper },
     );
@@ -85,10 +110,19 @@ describe('useEntityList', () => {
       expect(result.current.weapons.data).toHaveLength(1);
       expect(result.current.echoes.data).toHaveLength(1);
       expect(result.current.echoSets.data).toHaveLength(1);
+      expect(result.current.allEntities.data).toHaveLength(6);
     });
 
     expect(result.current.characters.data[0]?.name).toBe('Rover');
     expect(result.current.weapons.data[0]?.name).toBe('Pistol A');
+    expect(result.current.allEntities.data.map((entity) => entity.iconUrl)).toEqual([
+      '/characters/aalto.png',
+      '/characters/rover.png',
+      '/weapons/pistol-a.png',
+      '/weapons/sword-a.png',
+      '/echoes/echo-a.png',
+      '/echo-sets/set-a.png',
+    ]);
     expect(mockListEntities).toHaveBeenCalledTimes(1);
   });
 });

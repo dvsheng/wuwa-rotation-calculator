@@ -1,6 +1,5 @@
 import { Sword } from 'lucide-react';
 
-import { useCapabilityIcon } from '@/hooks/useIcons';
 import { cn } from '@/lib/utils';
 
 export type IconSize = 'small' | 'medium' | 'large' | 'xlarge';
@@ -44,22 +43,3 @@ export const CapabilityIconDisplay = ({
     )}
   </div>
 );
-
-interface CapabilityIconProperties {
-  capabilityId?: number;
-  iconUrl?: string;
-  size?: IconSize;
-  className?: string;
-}
-
-export const CapabilityIcon = ({
-  capabilityId,
-  iconUrl,
-  size = 'medium',
-  className,
-}: CapabilityIconProperties) => {
-  const { data } = useCapabilityIcon(capabilityId ?? -1, { enabled: !iconUrl });
-  return (
-    <CapabilityIconDisplay url={iconUrl ?? data} size={size} className={className} />
-  );
-};

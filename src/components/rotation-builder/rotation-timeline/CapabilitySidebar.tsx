@@ -3,7 +3,7 @@ import { Info, SwatchBook } from 'lucide-react';
 import { useId, useState } from 'react';
 
 import { CapabilityHoverCard } from '@/components/common/CapabilityHoverCard';
-import { CapabilityIcon } from '@/components/common/CapabilityIcon';
+import { CapabilityIconDisplay } from '@/components/common/CapabilityIcon';
 import { DashboardSectionHeader } from '@/components/common/DashboardSectionHeader';
 import { sortAttackOrigins } from '@/components/rotation-builder/constants';
 import { Input } from '@/components/ui/input';
@@ -254,7 +254,7 @@ const CapabilityCard = ({
           'border-l-4',
         )}
       >
-        <CapabilityIcon iconUrl={capability.iconUrl} size="medium" />
+        <CapabilityIconDisplay url={capability.iconUrl} size="medium" />
         <Text as="div" variant="caption" className="line-clamp-3 text-center">
           {capability.name}
         </Text>

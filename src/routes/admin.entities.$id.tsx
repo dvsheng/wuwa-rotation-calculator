@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, createFileRoute } from '@tanstack/react-router';
-import { ArrowLeft, Database } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import { EntityIcon } from '@/components/common/EntityIcon';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { sortOriginsByAttackOrder } from '@/components/rotation-builder/constants';
 import {
@@ -26,7 +27,6 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import type { DatabaseFullCapability } from '@/db/schema';
-import { useIcons } from '@/hooks/useIcons';
 import { DatabaseCapabilitySchema } from '@/schemas/database';
 import { getAdminEntityDetails, updateAdminCapability } from '@/services/admin';
 import type { AttackOriginType } from '@/services/game-data';
@@ -150,12 +150,6 @@ function CapabilityEditor({ capability, entityId }: CapabilityEditorProperties) 
 function AdminEntityDetailsPage() {
   const { id } = Route.useParams();
   const entityId = Number.parseInt(id, 10);
-  const { data: entityIcons } = useIcons(
-    Number.isInteger(entityId) && entityId > 0
-      ? [{ id: entityId, type: 'entity' }]
-      : [],
-  );
-  const entityIconUrl = entityIcons?.[0]?.iconUrl;
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['admin-entity-details', entityId],
@@ -268,15 +262,7 @@ function AdminEntityDetailsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="gap-compact flex items-center">
-            {entityIconUrl ? (
-              <img
-                src={entityIconUrl}
-                alt={entityName}
-                className="h-8 w-8 rounded-sm"
-              />
-            ) : (
-              <Database className="h-5 w-5" />
-            )}
+            <EntityIcon entityId={entityId} size="large" />
             {entityName}
           </CardTitle>
         </CardHeader>

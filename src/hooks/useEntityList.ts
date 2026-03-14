@@ -19,7 +19,12 @@ type InferredListEntityResponse<T extends ListEntitiesRequest> =
         ? Array<ListEchoesResponseItem>
         : T['entityType'] extends typeof EntityType.ECHO_SET
           ? Array<ListEchoSetsResponseItem>
-          : never;
+          : Array<
+              | ListCharactersResponseItem
+              | ListWeaponsResponseItem
+              | ListEchoesResponseItem
+              | ListEchoSetsResponseItem
+            >;
 
 export const useEntityList = <T extends ListEntitiesRequest>(request: T) => {
   const query = useSuspenseQuery({
@@ -52,6 +57,14 @@ export const useEntityList = <T extends ListEntitiesRequest>(request: T) => {
       }
       case EntityType.ECHO_SET: {
         return query.data.echoSets;
+      }
+      default: {
+        return [
+          ...query.data.characters,
+          ...query.data.weapons,
+          ...query.data.echoes,
+          ...query.data.echoSets,
+        ];
       }
     }
   })();

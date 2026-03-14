@@ -50,6 +50,9 @@ export const ListEntitiesRequestSchema = z.discriminatedUnion('entityType', [
   z.object({
     entityType: z.literal(EntityType.ECHO_SET),
   }),
+  z.object({
+    entityType: z.undefined(),
+  }),
 ]);
 
 export type ListEntitiesRequest = z.infer<typeof ListEntitiesRequestSchema>;
@@ -68,22 +71,3 @@ export const GetEchoStatsRequestSchema = z.object({
 });
 
 export type GetEchoStatsRequest = z.infer<typeof GetEchoStatsRequestSchema>;
-
-// Icon Service Types
-export const IconRequestType = {
-  CAPABILITY: 'capability',
-  ENTITY: 'entity',
-} as const;
-
-export type IconRequestType = (typeof IconRequestType)[keyof typeof IconRequestType];
-
-export const IconRequestSchema = z.object({
-  id: z.number(),
-  type: z.enum(IconRequestType),
-});
-
-export type IconRequest = z.infer<typeof IconRequestSchema>;
-
-export const GetIconsRequestSchema = z.array(IconRequestSchema);
-
-export type GetIconsRequest = z.infer<typeof GetIconsRequestSchema>;

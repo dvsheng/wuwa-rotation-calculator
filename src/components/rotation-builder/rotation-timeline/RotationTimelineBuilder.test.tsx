@@ -24,8 +24,11 @@ const {
   capturedOnDragEnd,
   capturedOnDragMove,
   capturedOnDragOver,
+  capturedSidebarProperties,
   dragOverlaySource,
   mockIsSortable,
+  toastError,
+  toastSuccess,
 } = vi.hoisted(() => ({
   capturedAttackCanvasProperties: {
     current: undefined as { previewInsertIndex?: number } | undefined,
@@ -44,10 +47,20 @@ const {
   capturedOnDragOver: {
     current: undefined as ((event: any) => void) | undefined,
   },
+  capturedSidebarProperties: {
+    current: undefined as
+      | {
+          onClickAttack?: (attack: Capability) => void;
+          onClickBuff?: (buff: Capability) => void;
+        }
+      | undefined,
+  },
   dragOverlaySource: {
     current: undefined as any,
   },
   mockIsSortable: vi.fn(),
+  toastError: vi.fn(),
+  toastSuccess: vi.fn(),
 }));
 
 vi.mock('@dnd-kit/react', () => ({
@@ -86,6 +99,13 @@ vi.mock('@dnd-kit/react/sortable', () => ({
   isSortable: mockIsSortable,
 }));
 
+vi.mock('sonner', () => ({
+  toast: {
+    error: toastError,
+    success: toastSuccess,
+  },
+}));
+
 vi.mock('@/components/ui/resizable', () => ({
   ResizableHandle: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
   ResizablePanel: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
@@ -99,7 +119,13 @@ vi.mock('@/components/ui/separator', () => ({
 }));
 
 vi.mock('./CapabilitySidebar', () => ({
-  CapabilitySidebar: () => <div data-testid="capability-sidebar" />,
+  CapabilitySidebar: (properties: {
+    onClickAttack?: (attack: Capability) => void;
+    onClickBuff?: (buff: Capability) => void;
+  }) => {
+    capturedSidebarProperties.current = properties;
+    return <div data-testid="capability-sidebar" />;
+  },
 }));
 
 vi.mock('./RotationCanvasHeader', () => ({
@@ -211,8 +237,11 @@ describe('RotationBuilder', () => {
     capturedOnDragEnd.current = undefined;
     capturedOnDragMove.current = undefined;
     capturedOnDragOver.current = undefined;
+    capturedSidebarProperties.current = undefined;
     dragOverlaySource.current = undefined;
     mockIsSortable.mockReset().mockReturnValue(false);
+    toastError.mockReset();
+    toastSuccess.mockReset();
 
     addAttack = vi.fn();
     addBuff = vi.fn();
@@ -455,6 +484,7 @@ describe('RotationBuilder', () => {
     expect(addAttack).toHaveBeenCalledWith(attack, 1);
     expect(addBuff).not.toHaveBeenCalled();
     expect(reorderAttacks).not.toHaveBeenCalled();
+    expect(toastSuccess).toHaveBeenCalledWith('Attack added to the rotation timeline.');
   });
 
   it('adds buffs when a sidebar buff is dropped into the buff canvas', () => {
@@ -492,6 +522,75 @@ describe('RotationBuilder', () => {
     });
     expect(addAttack).not.toHaveBeenCalled();
     expect(reorderAttacks).not.toHaveBeenCalled();
+    expect(toastSuccess).toHaveBeenCalledWith('Buff added to the alignment canvas.');
+  });
+
+  it('shows a success toast when an attack is added from the palette', () => {
+    render(<RotationBuilder />);
+
+    const attack = makeCapability(30);
+    capturedSidebarProperties.current?.onClickAttack?.(attack);
+
+    expect(addAttack).toHaveBeenCalledWith(attack, undefined);
+    expect(toastSuccess).toHaveBeenCalledWith('Attack added to the rotation timeline.');
+  });
+
+  it('shows a success toast when a buff is added from the palette', () => {
+    render(<RotationBuilder />);
+
+    const buff = makeCapability(31);
+    capturedSidebarProperties.current?.onClickBuff?.(buff);
+
+    expect(addBuff).toHaveBeenCalledWith(buff, INITIAL_BUFF_LAYOUT);
+    expect(toastSuccess).toHaveBeenCalledWith('Buff added to the alignment canvas.');
+  });
+
+  it('shows an error toast when an attack is dropped on the buff canvas', () => {
+    render(<RotationBuilder />);
+
+    emitDragEnd({
+      canceled: false,
+      operation: {
+        source: {
+          type: SIDEBAR_ATTACK_DRAG_TYPE,
+          data: { kind: 'sidebar-capability', capability: makeCapability(40) },
+        },
+        target: {
+          id: BUFF_CANVAS_DROP_ID,
+          element: makeDropTargetElement(),
+        },
+      },
+    });
+
+    expect(addAttack).not.toHaveBeenCalled();
+    expect(addBuff).not.toHaveBeenCalled();
+    expect(toastError).toHaveBeenCalledWith(
+      'Attacks can only be dropped on the attack timeline.',
+    );
+  });
+
+  it('shows an error toast when a buff is dropped on the attack canvas', () => {
+    render(<RotationBuilder />);
+
+    emitDragEnd({
+      canceled: false,
+      operation: {
+        source: {
+          type: SIDEBAR_BUFF_DRAG_TYPE,
+          data: { kind: 'sidebar-capability', capability: makeCapability(41) },
+        },
+        target: {
+          id: ATTACK_CANVAS_DROP_ID,
+          element: makeDropTargetElement(),
+        },
+      },
+    });
+
+    expect(addAttack).not.toHaveBeenCalled();
+    expect(addBuff).not.toHaveBeenCalled();
+    expect(toastError).toHaveBeenCalledWith(
+      'Buffs can only be dropped on the buff alignment canvas.',
+    );
   });
 
   it('clamps attack insertion to the start and end of the canvas', () => {

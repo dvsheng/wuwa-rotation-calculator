@@ -8,6 +8,7 @@ import { absoluteStrategy } from 'react-grid-layout/core';
 import {
   BUFF_CANVAS_DROP_ID,
   BUFF_ROW_HEIGHT,
+  SIDEBAR_ATTACK_DRAG_TYPE,
   SIDEBAR_BUFF_DRAG_TYPE,
 } from '@/components/rotation-builder/rotation-timeline/constants';
 import { Container } from '@/components/ui/layout';
@@ -43,8 +44,11 @@ export const BuffCanvas = ({ previewLayout }: BuffCanvasProperties) => {
   const [isGridInteractable, setIsGridInteractable] = useState(true);
   const { ref, isDropTarget } = useDroppable<SidebarCapabilityDragData>({
     id: BUFF_CANVAS_DROP_ID,
-    accept: (source) => source.type === SIDEBAR_BUFF_DRAG_TYPE,
+    accept: (source) =>
+      source.type === SIDEBAR_ATTACK_DRAG_TYPE ||
+      source.type === SIDEBAR_BUFF_DRAG_TYPE,
   });
+  const isValidDropTarget = isDropTarget && !!previewLayout;
 
   const onLayoutChange = (layout: Layout) => {
     for (const item of layout) {
@@ -100,8 +104,8 @@ export const BuffCanvas = ({ previewLayout }: BuffCanvasProperties) => {
     <Container
       ref={ref}
       className={cn(
-        'flex min-h-200 flex-1 items-center justify-center',
-        isDropTarget && 'bg-accent/10',
+        'flex min-h-0 flex-1 items-center justify-center',
+        isValidDropTarget && 'bg-accent/10',
       )}
     >
       {buffs.length === 0 && !previewLayout && (

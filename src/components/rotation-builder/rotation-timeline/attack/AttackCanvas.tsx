@@ -3,6 +3,7 @@ import { useDroppable } from '@dnd-kit/react';
 import {
   ATTACK_CANVAS_DROP_ID,
   SIDEBAR_ATTACK_DRAG_TYPE,
+  SIDEBAR_BUFF_DRAG_TYPE,
 } from '@/components/rotation-builder/rotation-timeline/constants';
 import { Container, Row } from '@/components/ui/layout';
 import { Text } from '@/components/ui/typography';
@@ -22,10 +23,13 @@ export const AttackCanvas = ({ previewInsertIndex }: AttackCanvasProperties) => 
   const removeAttack = useStore((state) => state.removeAttack);
   const { ref, isDropTarget } = useDroppable<TimelineDragData>({
     id: ATTACK_CANVAS_DROP_ID,
-    accept: (source) => source.type === SIDEBAR_ATTACK_DRAG_TYPE,
+    accept: (source) =>
+      source.type === SIDEBAR_ATTACK_DRAG_TYPE ||
+      source.type === SIDEBAR_BUFF_DRAG_TYPE,
   });
 
   const hasPreview = previewInsertIndex !== undefined;
+  const isValidDropTarget = isDropTarget && hasPreview;
   const attackCards = attacks.flatMap((attack, index) => {
     const cards = [];
     if (previewInsertIndex === index) {
@@ -51,7 +55,7 @@ export const AttackCanvas = ({ previewInsertIndex }: AttackCanvasProperties) => 
       ref={ref}
       className={cn(
         'py-tight flex h-58 flex-1 items-center justify-center',
-        isDropTarget && 'bg-accent/10',
+        isValidDropTarget && 'bg-accent/10',
       )}
     >
       {attacks.length === 0 && !hasPreview && (

@@ -1,13 +1,29 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-const { mockUseDroppable, mockUseStore, mockUseTeamAttackInstances } = vi.hoisted(
-  () => ({
-    mockUseDroppable: vi.fn(),
-    mockUseStore: vi.fn(),
-    mockUseTeamAttackInstances: vi.fn(),
-  }),
-);
+import {
+  SIDEBAR_ATTACK_DRAG_TYPE,
+  SIDEBAR_BUFF_DRAG_TYPE,
+} from '@/components/rotation-builder/rotation-timeline/constants';
+
+const {
+  capturedDroppableProperties,
+  mockUseDroppable,
+  mockUseStore,
+  mockUseTeamAttackInstances,
+} = vi.hoisted(() => ({
+  capturedDroppableProperties: {
+    current: undefined as
+      | {
+          accept: (source: { type: string }) => boolean;
+          id: string;
+        }
+      | undefined,
+  },
+  mockUseDroppable: vi.fn(),
+  mockUseStore: vi.fn(),
+  mockUseTeamAttackInstances: vi.fn(),
+}));
 
 vi.mock('@dnd-kit/react', () => ({
   useDroppable: mockUseDroppable,
@@ -39,6 +55,36 @@ vi.mock('./AttackCanvasItem', () => ({
 const { AttackCanvas } = await import('./AttackCanvas');
 
 describe('AttackCanvas', () => {
+  it('registers the canvas as a droppable for both sidebar drag types', () => {
+    mockUseDroppable.mockImplementation((properties) => {
+      capturedDroppableProperties.current = properties;
+      return {
+        ref: vi.fn(),
+        isDropTarget: false,
+      };
+    });
+    mockUseTeamAttackInstances.mockReturnValue({
+      attacks: [],
+    });
+    mockUseStore.mockImplementation(
+      (selector: (state: { removeAttack: () => void }) => unknown) =>
+        selector({ removeAttack: vi.fn() }),
+    );
+
+    render(<AttackCanvas />);
+
+    expect(
+      capturedDroppableProperties.current?.accept({
+        type: SIDEBAR_ATTACK_DRAG_TYPE,
+      }),
+    ).toBe(true);
+    expect(
+      capturedDroppableProperties.current?.accept({
+        type: SIDEBAR_BUFF_DRAG_TYPE,
+      }),
+    ).toBe(true);
+  });
+
   it('renders the empty-state message without the attack row when there are no attacks or preview', () => {
     mockUseDroppable.mockReturnValue({
       ref: vi.fn(),

@@ -1,5 +1,6 @@
 import { DragDropProvider, DragOverlay } from '@dnd-kit/react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { INITIAL_BUFF_LAYOUT } from '@/components/rotation-builder/rotation-timeline/constants';
 import {
@@ -28,6 +29,20 @@ export const RotationBuilder = () => {
   const addBuff = useStore((state) => state.addBuff);
   const reorderAttacks = useStore((state) => state.reorderAttacks);
   const [sheetContainer, setSheetContainer] = useState<HTMLDivElement | undefined>();
+  const handleAddAttack = (
+    attack: Parameters<typeof addAttack>[0],
+    atIndex?: number,
+  ) => {
+    addAttack(attack, atIndex);
+    toast.success('Attack added to the rotation timeline.');
+  };
+  const handleAddBuff = (
+    buff: Parameters<typeof addBuff>[0],
+    layout: Parameters<typeof addBuff>[1],
+  ) => {
+    addBuff(buff, layout);
+    toast.success('Buff added to the alignment canvas.');
+  };
   const {
     attackPreviewInsertIndex,
     buffPreviewLayout,
@@ -36,9 +51,17 @@ export const RotationBuilder = () => {
     handleDragOver,
     handleDragStart,
   } = useRotationTimelineDnd({
-    addAttack,
-    addBuff,
+    addAttack: handleAddAttack,
+    addBuff: handleAddBuff,
     attackCount,
+    onInvalidDrop: (reason) => {
+      if (reason === 'attack-to-buff') {
+        toast.error('Attacks can only be dropped on the attack timeline.');
+        return;
+      }
+
+      toast.error('Buffs can only be dropped on the buff alignment canvas.');
+    },
     reorderAttacks,
   });
 
@@ -60,8 +83,8 @@ export const RotationBuilder = () => {
       <ResizablePanelGroup orientation="horizontal">
         <ResizablePanel defaultSize="25%">
           <CapabilitySidebar
-            onClickAttack={addAttack}
-            onClickBuff={(buff) => addBuff(buff, INITIAL_BUFF_LAYOUT)}
+            onClickAttack={handleAddAttack}
+            onClickBuff={(buff) => handleAddBuff(buff, INITIAL_BUFF_LAYOUT)}
           />
         </ResizablePanel>
         <ResizableHandle withHandle />

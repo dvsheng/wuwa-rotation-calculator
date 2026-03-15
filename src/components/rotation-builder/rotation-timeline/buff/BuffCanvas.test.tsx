@@ -2,17 +2,38 @@ import { render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import {
+  SIDEBAR_ATTACK_DRAG_TYPE,
+  SIDEBAR_BUFF_DRAG_TYPE,
+} from '@/components/rotation-builder/rotation-timeline/constants';
+
 import { BuffCanvas } from './BuffCanvas';
 
-const { mockUseTeamModifierInstances } = vi.hoisted(() => ({
-  mockUseTeamModifierInstances: vi.fn(),
-}));
+const { capturedDroppableProperties, mockUseTeamModifierInstances } = vi.hoisted(
+  () => ({
+    capturedDroppableProperties: {
+      current: undefined as
+        | {
+            accept: (source: { type: string }) => boolean;
+            id: string;
+          }
+        | undefined,
+    },
+    mockUseTeamModifierInstances: vi.fn(),
+  }),
+);
 
 vi.mock('@dnd-kit/react', () => ({
-  useDroppable: () => ({
-    ref: vi.fn(),
-    isDropTarget: false,
-  }),
+  useDroppable: (properties: {
+    accept: (source: { type: string }) => boolean;
+    id: string;
+  }) => {
+    capturedDroppableProperties.current = properties;
+    return {
+      ref: vi.fn(),
+      isDropTarget: false,
+    };
+  },
 }));
 
 vi.mock('react-grid-layout', () => ({
@@ -52,6 +73,21 @@ describe('BuffCanvas', () => {
         },
       ],
     });
+  });
+
+  it('registers the canvas as a droppable for both sidebar drag types', () => {
+    render(<BuffCanvas />);
+
+    expect(
+      capturedDroppableProperties.current?.accept({
+        type: SIDEBAR_ATTACK_DRAG_TYPE,
+      }),
+    ).toBe(true);
+    expect(
+      capturedDroppableProperties.current?.accept({
+        type: SIDEBAR_BUFF_DRAG_TYPE,
+      }),
+    ).toBe(true);
   });
 
   it('renders the empty-state message without the grid layout when there are no buffs or preview', () => {

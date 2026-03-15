@@ -100,7 +100,7 @@ export const BuffCanvas = ({ previewLayout }: BuffCanvasProperties) => {
     <Container
       ref={ref}
       className={cn(
-        'flex min-h-0 flex-1 items-center justify-center',
+        'flex min-h-200 flex-1 items-center justify-center',
         isDropTarget && 'bg-accent/10',
       )}
     >
@@ -109,29 +109,31 @@ export const BuffCanvas = ({ previewLayout }: BuffCanvasProperties) => {
           Drag buffs here to align with attacks
         </Text>
       )}
-      <Container className="px-panel flex items-start">
-        <GridLayout {...fullLayoutProperties}>
-          {buffs.map((buff) => (
-            <div key={buff.instanceId}>
-              <BuffCanvasItem
-                buff={buff}
-                onRemove={handleRemoveBuff}
-                isDialogClickable={!isInteracting}
-                onOpenChange={(isOpen: boolean) => setIsGridInteractable(!isOpen)}
-              />
-            </div>
-          ))}
-          {previewLayout ? (
-            <div key={BUFF_PREVIEW_ID}>
-              <BaseBuffCanvasItem
-                characterIconUrl={previewLayout.characterIconUrl}
-                iconUrl={previewLayout.iconUrl}
-                name={previewLayout.name}
-              />
-            </div>
-          ) : undefined}
-        </GridLayout>
-      </Container>
+      {buffs.length > 0 || previewLayout ? (
+        <Container className="px-panel flex items-start">
+          <GridLayout {...fullLayoutProperties}>
+            {buffs.map((buff) => (
+              <div key={buff.instanceId}>
+                <BuffCanvasItem
+                  buff={buff}
+                  onRemove={handleRemoveBuff}
+                  isDialogClickable={!isInteracting}
+                  onOpenChange={(isOpen: boolean) => setIsGridInteractable(!isOpen)}
+                />
+              </div>
+            ))}
+            {previewLayout ? (
+              <div key={BUFF_PREVIEW_ID}>
+                <BaseBuffCanvasItem
+                  characterIconUrl={previewLayout.characterIconUrl}
+                  iconUrl={previewLayout.iconUrl}
+                  name={previewLayout.name}
+                />
+              </div>
+            ) : undefined}
+          </GridLayout>
+        </Container>
+      ) : undefined}
     </Container>
   );
 };

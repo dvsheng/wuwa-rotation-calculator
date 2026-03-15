@@ -1,8 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BuffCanvas } from './BuffCanvas';
+
+const { mockUseTeamModifierInstances } = vi.hoisted(() => ({
+  mockUseTeamModifierInstances: vi.fn(),
+}));
 
 vi.mock('@dnd-kit/react', () => ({
   useDroppable: () => ({
@@ -29,13 +33,7 @@ vi.mock('@/hooks/useCanvasLayout', () => ({
 }));
 
 vi.mock('@/hooks/useTeamModifierInstances', () => ({
-  useTeamModifierInstances: () => ({
-    buffs: [
-      {
-        instanceId: 'buff-1',
-      },
-    ],
-  }),
+  useTeamModifierInstances: mockUseTeamModifierInstances,
 }));
 
 vi.mock('./BuffCanvasItem', () => ({
@@ -46,6 +44,31 @@ vi.mock('./BuffCanvasItem', () => ({
 }));
 
 describe('BuffCanvas', () => {
+  beforeEach(() => {
+    mockUseTeamModifierInstances.mockReturnValue({
+      buffs: [
+        {
+          instanceId: 'buff-1',
+        },
+      ],
+    });
+  });
+
+  it('renders the empty-state message without the grid layout when there are no buffs or preview', () => {
+    mockUseTeamModifierInstances.mockReturnValue({
+      buffs: [],
+    });
+
+    render(<BuffCanvas />);
+
+    expect(
+      screen.getByText('Drag buffs here to align with attacks'),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId('mock-grid-layout')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('buff-canvas-item')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('buff-drop-preview')).not.toBeInTheDocument();
+  });
+
   it('wraps the preview in a grid child container like real buff items', () => {
     const { getByTestId } = render(
       <BuffCanvas

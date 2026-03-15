@@ -39,6 +39,28 @@ vi.mock('./AttackCanvasItem', () => ({
 const { AttackCanvas } = await import('./AttackCanvas');
 
 describe('AttackCanvas', () => {
+  it('renders the empty-state message without the attack row when there are no attacks or preview', () => {
+    mockUseDroppable.mockReturnValue({
+      ref: vi.fn(),
+      isDropTarget: false,
+    });
+    mockUseTeamAttackInstances.mockReturnValue({
+      attacks: [],
+    });
+    mockUseStore.mockImplementation(
+      (selector: (state: { removeAttack: () => void }) => unknown) =>
+        selector({ removeAttack: vi.fn() }),
+    );
+
+    render(<AttackCanvas />);
+
+    expect(
+      screen.getByText('Drag attacks here to start building your rotation.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId('attack-canvas-item')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('attack-drop-preview')).not.toBeInTheDocument();
+  });
+
   it('renders the preview at the requested insert index', () => {
     mockUseDroppable.mockReturnValue({
       ref: vi.fn(),

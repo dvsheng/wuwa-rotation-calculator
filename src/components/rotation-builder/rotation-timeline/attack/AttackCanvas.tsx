@@ -59,9 +59,11 @@ export const AttackCanvas = ({ previewInsertIndex }: AttackCanvasProperties) => 
           Drag attacks here to start building your rotation.
         </Text>
       )}
-      <Row gap="tight" align="start" fullWidth className="px-panel">
-        {attackCards}
-      </Row>
+      {attacks.length > 0 || hasPreview ? (
+        <Row gap="tight" align="start" fullWidth className="px-panel">
+          {attackCards}
+        </Row>
+      ) : undefined}
     </Container>
   );
 };

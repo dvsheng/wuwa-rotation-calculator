@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { SavedRotation } from '@/schemas/library';
 
@@ -25,6 +26,15 @@ vi.mock('@tanstack/react-router', () => ({
   useNavigate: vi.fn(() => vi.fn()),
 }));
 
+vi.mock('@/store', () => ({
+  useStore: vi.fn(() => ({
+    setTeam: vi.fn(),
+    setEnemy: vi.fn(),
+    setAttacks: vi.fn(),
+    setBuffs: vi.fn(),
+  })),
+}));
+
 vi.mock('@/services/rotation-calculator/calculate-client-rotation-damage', () => ({
   calculateRotation: vi.fn(),
 }));
@@ -38,6 +48,15 @@ vi.mock('@/components/common/AssetIcon', () => ({
 }));
 
 const { useSession: mockUseSession } = await import('@/lib/auth-client');
+const { useNavigate: mockUseNavigate } = await import('@tanstack/react-router');
+const { useStore: mockUseStore } = await import('@/store');
+const { calculateRotation: mockCalculateRotation } =
+  await import('@/services/rotation-calculator/calculate-client-rotation-damage');
+const mockNavigate = vi.fn();
+const mockSetTeam = vi.fn();
+const mockSetEnemy = vi.fn();
+const mockSetAttacks = vi.fn();
+const mockSetBuffs = vi.fn();
 
 const mockRotation = {
   id: 1,
@@ -73,6 +92,20 @@ function wrapper({ children }: { children: ReactNode }) {
 }
 
 describe('SavedRotationCard', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(mockUseNavigate).mockReturnValue(mockNavigate);
+    vi.mocked(mockUseStore).mockReturnValue({
+      setTeam: mockSetTeam,
+      setEnemy: mockSetEnemy,
+      setAttacks: mockSetAttacks,
+      setBuffs: mockSetBuffs,
+    } as any);
+    vi.mocked(mockCalculateRotation).mockResolvedValue({
+      totalDamage: 123_456,
+    } as any);
+  });
+
   it('hides delete and overwrite buttons when logged in as a different user', async () => {
     vi.mocked(mockUseSession).mockReturnValue({
       data: {
@@ -101,7 +134,7 @@ describe('SavedRotationCard', () => {
     expect(screen.getByRole('button', { name: /load/i })).toBeInTheDocument();
   });
 
-  it('shows delete and overwrite buttons when logged in as the owner', async () => {
+  it('keeps the overwrite button hidden when logged in as the owner', async () => {
     vi.mocked(mockUseSession).mockReturnValue({
       data: {
         user: {
@@ -113,7 +146,38 @@ describe('SavedRotationCard', () => {
     const { SavedRotationCard } = await import('./SavedRotationCard');
     render(<SavedRotationCard rotation={mockRotation} />, { wrapper });
 
-    expect(screen.getByText('Overwrite')).toBeInTheDocument();
+    expect(screen.queryByText('Overwrite')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /load/i })).toBeInTheDocument();
+  });
+
+  it('loads the saved rotation, triggers calculation, and navigates home', async () => {
+    vi.mocked(mockUseSession).mockReturnValue({
+      data: {
+        user: {
+          id: 'owner-123',
+        },
+      },
+    } as any);
+
+    const { SavedRotationCard } = await import('./SavedRotationCard');
+    render(<SavedRotationCard rotation={mockRotation} />, { wrapper });
+
+    await userEvent.click(screen.getByRole('button', { name: /load/i }));
+
+    expect(mockSetTeam).toHaveBeenCalledWith(mockRotation.data.team);
+    expect(mockSetEnemy).toHaveBeenCalledWith(mockRotation.data.enemy);
+    expect(mockSetAttacks).toHaveBeenCalledWith(mockRotation.data.attacks);
+    expect(mockSetBuffs).toHaveBeenCalledWith(mockRotation.data.buffs);
+    await waitFor(() => {
+      expect(mockCalculateRotation).toHaveBeenCalledWith({
+        data: mockRotation.data,
+      });
+    });
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith({
+        to: '/',
+        search: { tab: 'results' },
+      });
+    });
   });
 });

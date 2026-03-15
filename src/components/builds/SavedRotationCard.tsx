@@ -1,7 +1,8 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { format } from 'date-fns';
 import { isNil } from 'es-toolkit/predicate';
-import { Play, Save } from 'lucide-react';
+import { Play } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -40,23 +41,41 @@ interface SavedRotationCardProperties {
 }
 
 export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { setTeam, setEnemy, setAttacks, setBuffs } = useStore();
-  const { deleteRotation, updateRotation, isDeleting, isUpdating } =
-    useRotationLibrary();
+  const { deleteRotation, isDeleting } = useRotationLibrary();
   const { data: session } = useSession();
-  const { team, enemy, attacks, buffs } = useStore();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isOverwriteDialogOpen, setIsOverwriteDialogOpen] = useState(false);
 
-  const handleLoad = () => {
+  const handleLoad = async () => {
     try {
       setTeam(rotation.data.team);
       setEnemy(rotation.data.enemy);
       setAttacks(rotation.data.attacks);
       setBuffs(rotation.data.buffs);
+
+      await queryClient.fetchQuery({
+        queryKey: [
+          'rotation-calculation',
+          rotation.data.team,
+          rotation.data.enemy,
+          rotation.data.attacks,
+          rotation.data.buffs,
+        ],
+        queryFn: () =>
+          calculateRotation({
+            data: {
+              team: rotation.data.team,
+              enemy: rotation.data.enemy,
+              attacks: rotation.data.attacks,
+              buffs: rotation.data.buffs,
+            },
+          }),
+      });
+
       toast.success(`Loaded rotation: ${rotation.name}`);
-      void navigate({ to: '/' });
+      void navigate({ to: '/', search: { tab: 'results' } });
     } catch (error) {
       console.error('Failed to load rotation:', error);
       toast.error('Failed to load rotation.');
@@ -71,28 +90,6 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
     } catch (error) {
       console.error('Failed to delete rotation:', error);
       toast.error('Failed to delete rotation.');
-    }
-  };
-
-  const handleOverwrite = async () => {
-    let totalDamage: number | undefined;
-    try {
-      const result = await calculateRotation({ data: { team, enemy, attacks, buffs } });
-      totalDamage = result.totalDamage;
-    } catch {
-      // best-effort
-    }
-    try {
-      await updateRotation({
-        id: rotation.id,
-        data: { team, enemy, attacks, buffs },
-        totalDamage,
-      });
-      toast.success(`Overwrote rotation: ${rotation.name}`);
-      setIsOverwriteDialogOpen(false);
-    } catch (error) {
-      console.error('Failed to overwrite rotation:', error);
-      toast.error('Failed to overwrite rotation.');
     }
   };
 
@@ -217,38 +214,7 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
         </div>
       </CardContent>
       <CardFooter className="gap-compact flex justify-end">
-        {isOwner && (
-          <Dialog open={isOverwriteDialogOpen} onOpenChange={setIsOverwriteDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Save className="mr-2 h-4 w-4" />
-                Overwrite
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Overwrite rotation?</DialogTitle>
-                <DialogDescription>
-                  This will replace the saved data in "{rotation.name}" with the current
-                  rotation.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setIsOverwriteDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button onClick={() => void handleOverwrite()} disabled={isUpdating}>
-                  Overwrite
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
-
-        <Button onClick={handleLoad} size="sm">
+        <Button onClick={() => void handleLoad()} size="sm">
           <Play className="mr-2 h-4 w-4" />
           Load
         </Button>

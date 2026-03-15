@@ -5,3 +5,5 @@ skill templates
 frost resolve is missing a modifier
 
 auto optimize
+
+swap out parameter configuration dialog with sidesheet

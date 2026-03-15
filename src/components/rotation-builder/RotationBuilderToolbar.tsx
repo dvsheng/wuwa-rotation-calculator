@@ -12,12 +12,14 @@ import { Row } from '../ui/layout';
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
 import { Text } from '../ui/typography';
 
+type RotationBuilderTab = 'team' | 'rotation' | 'results';
+
 export function RotationBuilderToolbar({
   selectedTab,
   setSelectedTab,
 }: {
-  selectedTab: string;
-  setSelectedTab: (tab: string) => void;
+  selectedTab: RotationBuilderTab;
+  setSelectedTab: (tab: RotationBuilderTab) => void;
 }) {
   const { data: result, isPlaceholderData } = useRotationCalculation();
 
@@ -31,7 +33,7 @@ export function RotationBuilderToolbar({
         <Tabs
           value={selectedTab}
           onValueChange={(value) => {
-            setSelectedTab(value);
+            setSelectedTab(value as RotationBuilderTab);
           }}
         >
           <TabsList>

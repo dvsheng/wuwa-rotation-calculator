@@ -10,9 +10,16 @@ import { Stack } from '../ui/layout';
 import { RotationBuilder } from './rotation-timeline/RotationTimelineBuilder';
 import { RotationBuilderToolbar } from './RotationBuilderToolbar';
 
-export const RotationBuilderContainer = () => {
-  const [selectedTab, setSelectedTab] = useState('team');
+interface RotationBuilderContainerProperties {
+  initialTab?: 'team' | 'rotation' | 'results';
+}
+
+export const RotationBuilderContainer = ({
+  initialTab = 'team',
+}: RotationBuilderContainerProperties) => {
+  const [selectedTab, setSelectedTab] = useState(initialTab);
   const { data: result } = useRotationCalculation();
+
   return (
     <Stack className="h-full min-h-0">
       <RotationBuilderToolbar

@@ -36,7 +36,9 @@ export const DashboardSectionHeader = ({
             {subtitle}
           </Text>
         )}
-        {description ? <InfoTooltip>{description}</InfoTooltip> : undefined}
+        {description ? (
+          <InfoTooltip contentClassName="max-w-80 p-3">{description}</InfoTooltip>
+        ) : undefined}
       </Row>
       {action}
     </Row>

@@ -105,6 +105,7 @@ interface CapabilitySidebarProperties {
 interface CapabilitySectionProperties {
   title: string;
   emptyMessage: string;
+  description?: React.ReactNode;
   legend?: Array<LegendItem>;
   legendAriaLabel?: string;
   children: React.ReactNode;
@@ -142,6 +143,7 @@ const matchesSearchText = (
 const CapabilitySection = ({
   title,
   emptyMessage,
+  description,
   legend,
   legendAriaLabel,
   children,
@@ -160,14 +162,34 @@ const CapabilitySection = ({
         </Text>
         {legend ? (
           <InfoTooltip ariaLabel={legendAriaLabel} contentClassName="max-w-64 p-3">
-            <div className="space-y-1">
-              {legend.map((entry) => (
-                <div key={entry.label} className="flex items-center gap-2">
-                  <span className={cn('size-2 rounded-sm', entry.colorClassName)} />
-                  <span>{entry.label}</span>
-                </div>
-              ))}
+            <div className="space-y-3">
+              {description ? (
+                <Text
+                  as="p"
+                  variant="bodySm"
+                  className="text-background leading-relaxed"
+                >
+                  {description}
+                </Text>
+              ) : undefined}
+              <div className="space-y-1">
+                {legend.map((entry) => (
+                  <div key={entry.label} className="flex items-center gap-2">
+                    <span className={cn('size-2 rounded-sm', entry.colorClassName)} />
+                    <span className="text-background">{entry.label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
+          </InfoTooltip>
+        ) : description ? (
+          <InfoTooltip
+            ariaLabel={`${title} section help`}
+            contentClassName="max-w-64 p-3"
+          >
+            <Text as="p" variant="bodySm" className="text-background leading-relaxed">
+              {description}
+            </Text>
           </InfoTooltip>
         ) : undefined}
       </Row>
@@ -288,7 +310,7 @@ export const CapabilitySidebar = ({
       <Stack className="border-border gap-y-tight h-fit border-b">
         <DashboardSectionHeader
           title="Palette"
-          description="Click or drag capabilities onto the canvas to add them to your rotation."
+          description="This is the action library for the current team. Search or filter the list, then click to add an item immediately or drag it into the matching canvas."
           icon={<SwatchBook />}
         />
         <Stack gap="tight" className="px-panel pb-panel">
@@ -318,8 +340,9 @@ export const CapabilitySidebar = ({
         <CapabilitySection
           title="Attacks"
           emptyMessage="No attacks available"
+          description="Use Attacks to build the rotation order. Click a card to add it or drag it into a specific spot on the top lane, then it becomes part of the timeline and contributes damage in Results."
           legend={ATTACK_COLOR_LEGEND}
-          legendAriaLabel="Attack color legend"
+          legendAriaLabel="Attack section help and color legend"
         >
           {Object.entries(attacksByCharacter).map(
             ([characterName, characterAttacks]) => {
@@ -348,8 +371,9 @@ export const CapabilitySidebar = ({
         <CapabilitySection
           title="Buffs"
           emptyMessage="No buffs available"
+          description="Use Buffs to place modifiers under the attacks they should influence. Click to add one with a default placement or drag it onto a specific span, then it will apply to the attacks covered by that layout."
           legend={BUFF_COLOR_LEGEND}
-          legendAriaLabel="Buff color legend"
+          legendAriaLabel="Buff section help and color legend"
         >
           {Object.entries(filteredBuffsByCharacter).map(
             ([characterName, characterBuffs]) => {

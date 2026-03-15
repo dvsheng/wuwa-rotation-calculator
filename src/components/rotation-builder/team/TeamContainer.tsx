@@ -15,7 +15,7 @@ export const TeamContainer = () => {
       <Stack className="border-border h-full min-w-0 flex-1 overflow-hidden border-r">
         <DashboardSectionHeader
           title="Team"
-          description="Configure your team, weapons, and echoes."
+          description="Build the team here by choosing each slot's character, weapon, echoes, and substats. Those choices set the stats and passives used everywhere else in the rotation."
           icon={<Users />}
         />
         <ScrollArea orientation="both" className="min-h-0 flex-1">
@@ -29,7 +29,7 @@ export const TeamContainer = () => {
       <Stack className="w-fit">
         <DashboardSectionHeader
           title="Enemy"
-          description="Set enemy level and elemental resistances."
+          description="Configure the target here by setting its level and elemental resistances. Those enemy values are applied to every damage instance in Results."
           icon={<Shield />}
         />
         <div className="p-component">

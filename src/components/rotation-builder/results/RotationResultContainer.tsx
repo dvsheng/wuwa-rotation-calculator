@@ -33,7 +33,7 @@ export const RotationResultContainer = () => {
           <DashboardSectionHeader
             title="Results"
             subtitle={`${result.attackCount} ${result.attackCount === 1 ? 'attack' : 'attacks'}`}
-            description="Calculated damage output for your current rotation."
+            description="Review the calculated output for the current build here. Use the tabs to switch between summary, per-attack, per-character, and sensitivity views."
             icon={<BarChart2 />}
           />
           <Stack gap="component" className="p-page min-h-0 flex-1">
@@ -110,7 +110,7 @@ export const RotationResultContainer = () => {
         <Stack className="w-xl">
           <DashboardSectionHeader
             title="Details"
-            description="Select a row in Results to inspect detailed stat contributions or perturbation deltas."
+            description="Use this inspector to drill into the row selected in Results. It updates with the detailed stat math, hit data, or scenario deltas behind that selection."
             icon={<ListTree />}
           />
           <ScrollArea className="min-h-0 flex-1">

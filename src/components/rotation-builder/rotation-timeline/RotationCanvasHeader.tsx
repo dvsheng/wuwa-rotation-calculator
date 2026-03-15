@@ -13,7 +13,7 @@ export const RotationCanvasHeader = () => {
     <DashboardSectionHeader
       title="Rotation"
       subtitle={`(${attacks.length} ${attacks.length === 1 ? 'attack' : 'attacks'}, ${buffs.length} ${buffs.length === 1 ? 'buff' : 'buffs'})`}
-      description="Drag attacks and buffs from the palette to build your timeline."
+      description="Build the timeline from left to right by ordering attacks on the top lane and aligning buffs underneath them. That layout determines which buffs affect which attacks when you calculate."
       icon={<Sword />}
       action={
         <Button variant="destructive" size="xs" onClick={clearAll}>

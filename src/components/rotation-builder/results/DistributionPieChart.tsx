@@ -79,7 +79,7 @@ export const DistributionPieChart = ({
 
   if (data.length === 0) {
     return (
-      <Stack align="center" className="min-h-72 justify-center rounded-lg border">
+      <Stack align="center" className="h-72 justify-center rounded-lg border">
         <Text variant="heading">{emptyTitle}</Text>
         <Text variant="bodySm" tone="muted">
           {emptyDescription}
@@ -91,7 +91,7 @@ export const DistributionPieChart = ({
   return (
     <ChartContainer
       config={chartConfig}
-      className="aspect-auto h-80 w-full justify-center"
+      className="aspect-auto h-72 w-full justify-center"
     >
       <PieChart margin={{ top: 20, right: 60, bottom: 20, left: 60 }}>
         <ChartTooltip

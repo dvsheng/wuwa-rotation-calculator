@@ -150,7 +150,7 @@ describe('SavedRotationCard', () => {
     expect(screen.getByRole('button', { name: /load/i })).toBeInTheDocument();
   });
 
-  it('loads the saved rotation, triggers calculation, and navigates home', async () => {
+  it('loads the saved rotation, triggers calculation, and navigates to create', async () => {
     vi.mocked(mockUseSession).mockReturnValue({
       data: {
         user: {
@@ -175,7 +175,7 @@ describe('SavedRotationCard', () => {
     });
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith({
-        to: '/',
+        to: '/create',
         search: { tab: 'results' },
       });
     });
@@ -202,7 +202,7 @@ describe('SavedRotationCard', () => {
     expect(mockSetBuffs).toHaveBeenCalledWith(mockRotation.data.buffs);
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith({
-        to: '/',
+        to: '/create',
         search: { tab: 'rotation' },
       });
     });

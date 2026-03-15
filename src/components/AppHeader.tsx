@@ -15,9 +15,11 @@ export const AppHeader = () => {
   useRouterState({ select: (state) => state.location.pathname });
   return (
     <header className="bg-background px-panel sticky top-0 z-20 flex h-14 items-center justify-between border-b">
-      <Text as="h1" variant="title" className="text-lg">
-        I.R.I.S. Rotation Inspector
-      </Text>
+      <Link to="/" className="min-w-0">
+        <Text as="h1" variant="title" className="text-lg">
+          I.R.I.S. Rotation Inspector
+        </Text>
+      </Link>
       <div className="flex items-center">
         <NavigationMenu viewport={false}>
           <NavigationMenuList>
@@ -43,7 +45,7 @@ export const AppHeader = () => {
             </NavigationMenuItem>
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
-                <Link to="/" className={navigationMenuTriggerStyle()}>
+                <Link to="/create" className={navigationMenuTriggerStyle()}>
                   <div className="gap-compact flex items-center">
                     <Calculator size={16} />
                     Create

@@ -18,6 +18,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Container, Stack } from '@/components/ui/layout';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -159,31 +161,33 @@ function AdminEntityDetailsPage() {
 
   if (!Number.isInteger(entityId) || entityId <= 0) {
     return (
-      <div className="p-page container mx-auto max-w-5xl">
+      <Container padding="page" className="max-w-5xl">
         <p className="text-destructive text-sm">Invalid entity ID.</p>
-      </div>
+      </Container>
     );
   }
 
   if (error instanceof Error) {
     return (
-      <div className="p-page container mx-auto max-w-5xl space-y-4">
-        <Link to="/admin/entities">
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Entities
-          </Button>
-        </Link>
-        <p className="text-destructive text-sm">{error.message}</p>
-      </div>
+      <Container padding="page" className="max-w-5xl">
+        <Stack gap="component">
+          <Link to="/admin/entities">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Entities
+            </Button>
+          </Link>
+          <p className="text-destructive text-sm">{error.message}</p>
+        </Stack>
+      </Container>
     );
   }
 
   if (isLoading || !data) {
     return (
-      <div className="p-page container mx-auto max-w-5xl">
+      <Container padding="page" className="max-w-5xl">
         <p className="text-muted-foreground text-sm">Loading entity details...</p>
-      </div>
+      </Container>
     );
   }
 
@@ -251,101 +255,111 @@ function AdminEntityDetailsPage() {
   const defaultOpenSkillValues = skills.map((skill) => `skill-${skill.id}`);
 
   return (
-    <div className="p-page container mx-auto max-w-6xl space-y-4">
-      <Link to="/admin/entities">
-        <Button variant="outline" size="sm">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Entities
-        </Button>
-      </Link>
+    <Container padding="page" className="h-full min-h-0 max-w-6xl">
+      <Stack gap="component" className="h-full min-h-0">
+        <Link to="/admin/entities">
+          <Button variant="outline" size="sm">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Entities
+          </Button>
+        </Link>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="gap-compact flex items-center">
-            <EntityIcon entityId={entityId} size="large" />
-            {entityName}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="gap-compact flex flex-wrap">
-          <Badge variant="outline">ID: {entityId}</Badge>
-          {entityGameId ? (
-            <Badge variant="outline">Game ID: {entityGameId}</Badge>
-          ) : undefined}
-          {entityType === undefined ? undefined : (
-            <Badge variant="outline" className="capitalize">
-              Type: {entityType.replace('_', ' ')}
-            </Badge>
-          )}
-        </CardContent>
-      </Card>
-
-      {skills.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No skills/capabilities found.</p>
-      ) : (
-        <Accordion
-          type="multiple"
-          defaultValue={defaultOpenSkillValues}
-          className="px-panel w-full rounded-md border"
-        >
-          {skills.map((skill) => (
-            <AccordionItem key={skill.id} value={`skill-${skill.id}`}>
-              <AccordionTrigger>
-                <div className="space-y-1 text-left">
-                  <div className="font-medium">{skill.name}</div>
-                  <div className="text-muted-foreground text-xs">
-                    {skill.originType} • {skill.capabilities.length} capabilities
-                  </div>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent>
-                {skill.description ? (
-                  <p className="text-muted-foreground mb-3 text-sm">
-                    {skill.description}
-                  </p>
+        <ScrollArea className="min-h-0 flex-1">
+          <Stack gap="component" className="pr-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="gap-compact flex items-center">
+                  <EntityIcon entityId={entityId} size="large" />
+                  {entityName}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="gap-compact flex flex-wrap">
+                <Badge variant="outline">ID: {entityId}</Badge>
+                {entityGameId ? (
+                  <Badge variant="outline">Game ID: {entityGameId}</Badge>
                 ) : undefined}
+                {entityType === undefined ? undefined : (
+                  <Badge variant="outline" className="capitalize">
+                    Type: {entityType.replace('_', ' ')}
+                  </Badge>
+                )}
+              </CardContent>
+            </Card>
 
-                <Accordion
-                  type="multiple"
-                  defaultValue={skill.capabilities.map(
-                    (capability) => `capability-${capability.capabilityId}`,
-                  )}
-                  className="px-panel w-full rounded-md border"
-                >
-                  {skill.capabilities.length === 0 ? (
-                    <p className="text-muted-foreground py-component text-sm">
-                      No capabilities found for this skill.
-                    </p>
-                  ) : (
-                    skill.capabilities.map((capability) => (
-                      <AccordionItem
-                        key={capability.capabilityId}
-                        value={`capability-${capability.capabilityId}`}
+            {skills.length === 0 ? (
+              <p className="text-muted-foreground text-sm">
+                No skills/capabilities found.
+              </p>
+            ) : (
+              <Accordion
+                type="multiple"
+                defaultValue={defaultOpenSkillValues}
+                className="px-panel w-full rounded-md border"
+              >
+                {skills.map((skill) => (
+                  <AccordionItem key={skill.id} value={`skill-${skill.id}`}>
+                    <AccordionTrigger>
+                      <div className="space-y-1 text-left">
+                        <div className="font-medium">{skill.name}</div>
+                        <div className="text-muted-foreground text-xs">
+                          {skill.originType} • {skill.capabilities.length} capabilities
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      {skill.description ? (
+                        <p className="text-muted-foreground mb-3 text-sm">
+                          {skill.description}
+                        </p>
+                      ) : undefined}
+
+                      <Accordion
+                        type="multiple"
+                        defaultValue={skill.capabilities.map(
+                          (capability) => `capability-${capability.capabilityId}`,
+                        )}
+                        className="px-panel w-full rounded-md border"
                       >
-                        <AccordionTrigger>
-                          <div className="gap-compact flex flex-wrap items-center text-left">
-                            <span className="font-medium">
-                              {capability.capabilityName}
-                            </span>
-                            <Badge variant="outline">{capability.capabilityType}</Badge>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <CapabilityEditor
-                            key={`${capability.capabilityId}:${JSON.stringify(capability.capabilityJson)}`}
-                            capability={capability}
-                            entityId={entityId}
-                          />
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))
-                  )}
-                </Accordion>
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      )}
-    </div>
+                        {skill.capabilities.length === 0 ? (
+                          <p className="text-muted-foreground py-component text-sm">
+                            No capabilities found for this skill.
+                          </p>
+                        ) : (
+                          skill.capabilities.map((capability) => (
+                            <AccordionItem
+                              key={capability.capabilityId}
+                              value={`capability-${capability.capabilityId}`}
+                            >
+                              <AccordionTrigger>
+                                <div className="gap-compact flex flex-wrap items-center text-left">
+                                  <span className="font-medium">
+                                    {capability.capabilityName}
+                                  </span>
+                                  <Badge variant="outline">
+                                    {capability.capabilityType}
+                                  </Badge>
+                                </div>
+                              </AccordionTrigger>
+                              <AccordionContent>
+                                <CapabilityEditor
+                                  key={`${capability.capabilityId}:${JSON.stringify(capability.capabilityJson)}`}
+                                  capability={capability}
+                                  entityId={entityId}
+                                />
+                              </AccordionContent>
+                            </AccordionItem>
+                          ))
+                        )}
+                      </Accordion>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            )}
+          </Stack>
+        </ScrollArea>
+      </Stack>
+    </Container>
   );
 }
 

@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as CreateRouteImport } from './routes/create'
 import { Route as BuildsRouteImport } from './routes/builds'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminEntitiesRouteImport } from './routes/admin.entities'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AdminEntitiesIdRouteImport } from './routes/admin.entities.$id'
 
+const CreateRoute = CreateRouteImport.update({
+  id: '/create',
+  path: '/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BuildsRoute = BuildsRouteImport.update({
   id: '/builds',
   path: '/builds',
@@ -44,6 +50,7 @@ const AdminEntitiesIdRoute = AdminEntitiesIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/builds': typeof BuildsRoute
+  '/create': typeof CreateRoute
   '/admin/entities': typeof AdminEntitiesRouteWithChildren
   '/admin/entities/$id': typeof AdminEntitiesIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/builds': typeof BuildsRoute
+  '/create': typeof CreateRoute
   '/admin/entities': typeof AdminEntitiesRouteWithChildren
   '/admin/entities/$id': typeof AdminEntitiesIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -59,6 +67,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/builds': typeof BuildsRoute
+  '/create': typeof CreateRoute
   '/admin/entities': typeof AdminEntitiesRouteWithChildren
   '/admin/entities/$id': typeof AdminEntitiesIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -68,6 +77,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/builds'
+    | '/create'
     | '/admin/entities'
     | '/admin/entities/$id'
     | '/api/auth/$'
@@ -75,6 +85,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/builds'
+    | '/create'
     | '/admin/entities'
     | '/admin/entities/$id'
     | '/api/auth/$'
@@ -82,6 +93,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/builds'
+    | '/create'
     | '/admin/entities'
     | '/admin/entities/$id'
     | '/api/auth/$'
@@ -90,12 +102,20 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BuildsRoute: typeof BuildsRoute
+  CreateRoute: typeof CreateRoute
   AdminEntitiesRoute: typeof AdminEntitiesRouteWithChildren
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/create': {
+      id: '/create'
+      path: '/create'
+      fullPath: '/create'
+      preLoaderRoute: typeof CreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/builds': {
       id: '/builds'
       path: '/builds'
@@ -149,6 +169,7 @@ const AdminEntitiesRouteWithChildren = AdminEntitiesRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BuildsRoute: BuildsRoute,
+  CreateRoute: CreateRoute,
   AdminEntitiesRoute: AdminEntitiesRouteWithChildren,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }

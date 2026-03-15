@@ -80,7 +80,7 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
         toast.success(`Loaded rotation: ${rotation.name}`, {
           id: toastId,
         });
-        void navigate({ to: '/', search: { tab: 'results' } });
+        void navigate({ to: '/create', search: { tab: 'results' } });
       } catch (error) {
         console.warn('Failed to fetch rotation results while loading build:', error);
         toast.warning(`Loaded rotation: ${rotation.name}`, {
@@ -88,7 +88,7 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
           description:
             'Rotation data loaded, but damage results could not be calculated.',
         });
-        void navigate({ to: '/', search: { tab: 'rotation' } });
+        void navigate({ to: '/create', search: { tab: 'rotation' } });
       }
     } catch (error) {
       console.error('Failed to load rotation:', error);

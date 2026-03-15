@@ -1,29 +1,40 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { z } from 'zod';
+import { Link, createFileRoute } from '@tanstack/react-router';
+import { ArrowRight } from 'lucide-react';
 
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { RotationBuilderContainer } from '@/components/rotation-builder/RotationBuilderContainer';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useStoreHydrated } from '@/store';
+import { Button } from '@/components/ui/button';
+import { Stack } from '@/components/ui/layout';
+import { Text } from '@/components/ui/typography';
 
-const homeSearchSchema = z.object({
-  tab: z.enum(['team', 'rotation', 'results']).optional(),
-});
-
-const RotationBuilderRoute = () => {
-  const hydrated = useStoreHydrated();
-  const searchParameters = Route.useSearch();
-  if (!hydrated) {
-    return <Skeleton className="h-full w-full" />;
-  }
+const LandingPage = () => {
   return (
-    <ErrorBoundary>
-      <RotationBuilderContainer initialTab={searchParameters.tab ?? 'team'} />
-    </ErrorBoundary>
+    <div className="from-background via-background to-accent/40 flex h-full min-h-0 flex-1 overflow-auto bg-linear-to-br">
+      <div className="mx-auto flex w-full max-w-3xl flex-1 items-center justify-center px-6 py-12">
+        <Stack gap="panel" align="center" className="text-center">
+          <Stack gap="component" align="center" className="max-w-2xl">
+            <Text as="h1" variant="display" className="text-5xl leading-tight">
+              Wuthering Waves Theorycrafting Helper
+            </Text>
+            <Text variant="body" tone="muted" className="text-lg leading-8">
+              Tooling to help you calculate teams and rotations in Wuthering Waves
+            </Text>
+          </Stack>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button asChild size="lg">
+              <Link to="/create">
+                Open Builder
+                <ArrowRight />
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link to="/builds">Browse Builds</Link>
+            </Button>
+          </div>
+        </Stack>
+      </div>
+    </div>
   );
 };
 
 export const Route = createFileRoute('/')({
-  validateSearch: homeSearchSchema,
-  component: RotationBuilderRoute,
+  component: LandingPage,
 });

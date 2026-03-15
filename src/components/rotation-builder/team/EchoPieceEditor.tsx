@@ -40,17 +40,16 @@ export const EchoPieceEditor = ({
   };
 
   return (
-    <Table className="w-full table-fixed">
+    <Table className="w-full table-fixed p-0">
       <TableBody>
         <TableRow>
           <TableCell>
-            <Row justify="center" gap="compact">
-              <Text as="span" className="w-fit whitespace-nowrap">
+            <Row justify="between" gap="compact">
+              <Text as="span" variant="bodySm" className="w-fit whitespace-nowrap">
                 Cost
               </Text>
-              <div className="flex-1"></div>
               <Select value={String(echo.cost)} onValueChange={handleCostChange}>
-                <SelectTrigger className="flex-1 justify-end border-transparent shadow-none">
+                <SelectTrigger className="flex-1 justify-end border-transparent p-0 shadow-none">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -64,10 +63,7 @@ export const EchoPieceEditor = ({
             </Row>
           </TableCell>
           <TableCell>
-            <Row>
-              <Text as="span" className="w-fit whitespace-nowrap">
-                Main Stat
-              </Text>
+            <Row fullWidth justify="end" gap="compact">
               <Select
                 value={echo.mainStatType}
                 onValueChange={(value) =>
@@ -77,7 +73,7 @@ export const EchoPieceEditor = ({
                   })
                 }
               >
-                <SelectTrigger className="flex-1 justify-end border-transparent shadow-none">
+                <SelectTrigger className="min-w-0 flex-1 justify-end border-transparent p-0 shadow-none">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

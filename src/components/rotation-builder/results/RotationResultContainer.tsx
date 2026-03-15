@@ -107,7 +107,7 @@ export const RotationResultContainer = () => {
         </Stack>
 
         <Separator orientation="vertical" className="self-stretch" />
-        <Stack className="w-xl">
+        <Stack className="w-md">
           <DashboardSectionHeader
             title="Details"
             description="Use this inspector to drill into the row selected in Results. It updates with the detailed stat math, hit data, or scenario deltas behind that selection."

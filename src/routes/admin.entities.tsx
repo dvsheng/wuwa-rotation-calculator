@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { DataTable } from '@/components/ui/data-table';
 import { Input } from '@/components/ui/input';
+import { Container, Stack } from '@/components/ui/layout';
 import {
   Select,
   SelectContent,
@@ -69,78 +70,84 @@ function AdminEntitiesPage() {
   }
 
   return (
-    <div className="p-page container mx-auto max-w-6xl space-y-4">
-      <div className="space-y-2">
-        <h2 className="gap-compact flex items-center text-2xl font-bold tracking-tight">
-          <Database className="h-6 w-6" /> Entities
-        </h2>
-        <p className="text-muted-foreground text-sm">
-          Filter by entity type and search by name.
-        </p>
-      </div>
+    <Container padding="page" className="h-full min-h-0 max-w-6xl">
+      <Stack gap="component" className="h-full min-h-0">
+        <div className="space-y-2">
+          <h2 className="gap-compact flex items-center text-2xl font-bold tracking-tight">
+            <Database className="h-6 w-6" /> Entities
+          </h2>
+          <p className="text-muted-foreground text-sm">
+            Filter by entity type and search by name.
+          </p>
+        </div>
 
-      <div className="gap-component grid">
-        <Select
-          value={searchParameters.entityType ?? 'all'}
-          onValueChange={(value) => {
-            void navigate({
-              to: '/admin/entities',
-              replace: true,
-              search: {
-                ...searchParameters,
-                entityType:
-                  value === 'all' ? undefined : z.enum(EntityType).parse(value),
-              },
-            });
+        <div className="gap-component grid">
+          <Select
+            value={searchParameters.entityType ?? 'all'}
+            onValueChange={(value) => {
+              void navigate({
+                to: '/admin/entities',
+                replace: true,
+                search: {
+                  ...searchParameters,
+                  entityType:
+                    value === 'all' ? undefined : z.enum(EntityType).parse(value),
+                },
+              });
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="All entity types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value={EntityType.CHARACTER}>Character</SelectItem>
+              <SelectItem value={EntityType.WEAPON}>Weapon</SelectItem>
+              <SelectItem value={EntityType.ECHO}>Echo</SelectItem>
+              <SelectItem value={EntityType.ECHO_SET}>Echo Set</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Input
+            value={searchParameters.search ?? ''}
+            placeholder="Search entity name..."
+            onChange={(event) => {
+              const value = event.target.value;
+              void navigate({
+                to: '/admin/entities',
+                replace: true,
+                search: {
+                  ...searchParameters,
+                  search: value.trim() ? value : undefined,
+                },
+              });
+            }}
+          />
+        </div>
+
+        {error instanceof Error && (
+          <div className="text-destructive p-panel rounded-md border text-sm">
+            {error.message}
+          </div>
+        )}
+
+        <DataTable
+          columns={columns}
+          data={data ?? []}
+          emptyMessage={isLoading ? 'Loading entities...' : 'No entities found.'}
+          classNames={{
+            wrapper: 'min-h-0 flex-1 overflow-hidden',
+            scrollArea: 'h-full',
           }}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="All entity types" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value={EntityType.CHARACTER}>Character</SelectItem>
-            <SelectItem value={EntityType.WEAPON}>Weapon</SelectItem>
-            <SelectItem value={EntityType.ECHO}>Echo</SelectItem>
-            <SelectItem value={EntityType.ECHO_SET}>Echo Set</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Input
-          value={searchParameters.search ?? ''}
-          placeholder="Search entity name..."
-          onChange={(event) => {
-            const value = event.target.value;
+          onRowClick={(row) => {
             void navigate({
-              to: '/admin/entities',
-              replace: true,
-              search: {
-                ...searchParameters,
-                search: value.trim() ? value : undefined,
-              },
+              to: '/admin/entities/$id',
+              params: { id: String(row.entity.id) },
             });
           }}
         />
-      </div>
-
-      {error instanceof Error && (
-        <div className="text-destructive p-panel rounded-md border text-sm">
-          {error.message}
-        </div>
-      )}
-
-      <DataTable
-        columns={columns}
-        data={data ?? []}
-        emptyMessage={isLoading ? 'Loading entities...' : 'No entities found.'}
-        onRowClick={(row) => {
-          void navigate({
-            to: '/admin/entities/$id',
-            params: { id: String(row.entity.id) },
-          });
-        }}
-      />
-    </div>
+      </Stack>
+    </Container>
   );
 }
 

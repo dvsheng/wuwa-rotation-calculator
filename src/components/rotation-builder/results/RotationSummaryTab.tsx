@@ -46,7 +46,7 @@ export const RotationSummaryTab = ({ result }: RotationSummaryTabProperties) => 
 
   return (
     <Stack gap="component" className="min-h-0 flex-1 overflow-y-auto">
-      <Grid gap="component" className="xl:grid-cols-2">
+      <Grid gap="component" className="grid-cols-2">
         <SummaryChartCard
           title="Damage by Character"
           description="Share of total rotation damage contributed by each character."

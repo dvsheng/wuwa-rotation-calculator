@@ -1,17 +1,29 @@
-right click context menu on buff canvas
+right click context menu on buff canvas (3 points)
 
-skill templates
+- expand to current characters attacks
+- remove
+- expand all
 
-frost resolve is missing a modifier
+skill templates (5 points)
 
-auto optimize
+frost resolve is missing a modifier (1 points)
 
-swap out parameter configuration dialog with sidesheet
+auto optimize (5 points)
 
-better tooltip descriptions
+make characters swappable (3 points)
 
-center placeholder text in rotation
+better tooltip descriptions (1 point across the entire rotation builder to desribe what sections do)
 
-add sonners in more places
+center placeholder text in Rotation tab when canvas are empty (1 point)
 
-lazy load certain pages
+fix min-width on buff canvas
+
+landing page with option to go to builds or create tabs (3 points)
+
+- landing page becomes index, current index becomes /create
+
+fix entity page not creating a scroll area
+xw
+lazy load tabs in rotation builder (3 points)
+
+look into view transitions (3 points)

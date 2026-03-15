@@ -157,7 +157,6 @@ const baseGetEntityByIdHandler = async <T extends GetEntityDetailsRequest>(
   options: T,
 ): Promise<GetEntityDetailsResponse<T>> => {
   // Query entity with all capabilities
-  console.log('fetching from db');
   const databaseCapabilities = await database
     .select()
     .from(fullCapabilities)

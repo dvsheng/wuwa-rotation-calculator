@@ -49,36 +49,52 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleLoad = async () => {
+    const toastId = toast.loading(`Loading rotation: ${rotation.name}`);
+
     try {
       setTeam(rotation.data.team);
       setEnemy(rotation.data.enemy);
       setAttacks(rotation.data.attacks);
       setBuffs(rotation.data.buffs);
 
-      await queryClient.fetchQuery({
-        queryKey: [
-          'rotation-calculation',
-          rotation.data.team,
-          rotation.data.enemy,
-          rotation.data.attacks,
-          rotation.data.buffs,
-        ],
-        queryFn: () =>
-          calculateRotation({
-            data: {
-              team: rotation.data.team,
-              enemy: rotation.data.enemy,
-              attacks: rotation.data.attacks,
-              buffs: rotation.data.buffs,
-            },
-          }),
-      });
+      try {
+        await queryClient.fetchQuery({
+          queryKey: [
+            'rotation-calculation',
+            rotation.data.team,
+            rotation.data.enemy,
+            rotation.data.attacks,
+            rotation.data.buffs,
+          ],
+          queryFn: () =>
+            calculateRotation({
+              data: {
+                team: rotation.data.team,
+                enemy: rotation.data.enemy,
+                attacks: rotation.data.attacks,
+                buffs: rotation.data.buffs,
+              },
+            }),
+        });
 
-      toast.success(`Loaded rotation: ${rotation.name}`);
-      void navigate({ to: '/', search: { tab: 'results' } });
+        toast.success(`Loaded rotation: ${rotation.name}`, {
+          id: toastId,
+        });
+        void navigate({ to: '/', search: { tab: 'results' } });
+      } catch (error) {
+        console.warn('Failed to fetch rotation results while loading build:', error);
+        toast.warning(`Loaded rotation: ${rotation.name}`, {
+          id: toastId,
+          description:
+            'Rotation data loaded, but damage results could not be calculated.',
+        });
+        void navigate({ to: '/', search: { tab: 'rotation' } });
+      }
     } catch (error) {
       console.error('Failed to load rotation:', error);
-      toast.error('Failed to load rotation.');
+      toast.error('Failed to load rotation.', {
+        id: toastId,
+      });
     }
   };
 

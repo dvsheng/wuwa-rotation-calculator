@@ -180,4 +180,31 @@ describe('SavedRotationCard', () => {
       });
     });
   });
+
+  it('navigates to rotation when result prefetch fails', async () => {
+    vi.mocked(mockUseSession).mockReturnValue({
+      data: {
+        user: {
+          id: 'owner-123',
+        },
+      },
+    } as any);
+    vi.mocked(mockCalculateRotation).mockRejectedValue(new Error('Calculation failed'));
+
+    const { SavedRotationCard } = await import('./SavedRotationCard');
+    render(<SavedRotationCard rotation={mockRotation} />, { wrapper });
+
+    await userEvent.click(screen.getByRole('button', { name: /load/i }));
+
+    expect(mockSetTeam).toHaveBeenCalledWith(mockRotation.data.team);
+    expect(mockSetEnemy).toHaveBeenCalledWith(mockRotation.data.enemy);
+    expect(mockSetAttacks).toHaveBeenCalledWith(mockRotation.data.attacks);
+    expect(mockSetBuffs).toHaveBeenCalledWith(mockRotation.data.buffs);
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith({
+        to: '/',
+        search: { tab: 'rotation' },
+      });
+    });
+  });
 });

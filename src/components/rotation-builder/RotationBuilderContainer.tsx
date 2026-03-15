@@ -19,16 +19,17 @@ export const RotationBuilderContainer = ({
 }: RotationBuilderContainerProperties) => {
   const [selectedTab, setSelectedTab] = useState(initialTab);
   const { data: result } = useRotationCalculation();
+  const effectiveTab = selectedTab === 'results' && !result ? 'rotation' : selectedTab;
 
   return (
     <Stack className="h-full min-h-0">
       <RotationBuilderToolbar
-        selectedTab={selectedTab}
+        selectedTab={effectiveTab}
         setSelectedTab={setSelectedTab}
       />
-      {selectedTab === 'team' && <TeamContainer />}
-      {selectedTab === 'rotation' && <RotationBuilder />}
-      {selectedTab === 'results' && result && (
+      {effectiveTab === 'team' && <TeamContainer />}
+      {effectiveTab === 'rotation' && <RotationBuilder />}
+      {effectiveTab === 'results' && result && (
         <ErrorBoundary>
           <RotationResultContainer />
         </ErrorBoundary>

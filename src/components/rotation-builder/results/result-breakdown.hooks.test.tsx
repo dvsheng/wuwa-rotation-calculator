@@ -139,6 +139,14 @@ describe('result breakdown hooks', () => {
       damageType: DamageType.RESONANCE_SKILL,
       damage: 600,
       pctOfCharacter: 60,
+      attacks: [
+        expect.objectContaining({
+          attackName: 'Sigrika Attack 1',
+          damage: 600,
+          pctOfCharacter: 60,
+          pctOfDamageType: 100,
+        }),
+      ],
     });
     expect(result.current.chartData.map((entry) => entry.label).toSorted()).toEqual([
       'Carlotta',

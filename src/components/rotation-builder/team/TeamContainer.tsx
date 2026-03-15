@@ -19,7 +19,7 @@ export const TeamContainer = () => {
           icon={<Users />}
         />
         <ScrollArea orientation="both" className="min-h-0 flex-1">
-          <Row gap="component" className="p-page justify-center">
+          <Row gap="component" align="start" className="p-page justify-center">
             {Array.from({ length: TEAM_SIZE }).map((_, index) => (
               <CharacterCard key={index} index={index} />
             ))}

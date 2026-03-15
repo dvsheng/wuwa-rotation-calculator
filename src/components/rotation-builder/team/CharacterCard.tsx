@@ -28,7 +28,7 @@ const CharacterCardHeaderSkeleton = () => (
 export const CharacterCard = ({ index }: CharacterCardProperties) => {
   return (
     <Card className="w-lg py-0">
-      <CardHeader className="py-compact bg-accent">
+      <CardHeader className="bg-accent pb-panel h-80">
         <Suspense fallback={<CharacterCardHeaderSkeleton />}>
           <CharacterSelector index={index} />
           <WeaponSelector index={index} />

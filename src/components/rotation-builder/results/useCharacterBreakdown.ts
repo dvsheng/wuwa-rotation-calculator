@@ -37,11 +37,38 @@ export const buildCharacterRows = ({
       const damageTypes = Object.entries(byType)
         .map(([damageType, typeItems]) => {
           const damage = sumBy(typeItems ?? [], (item) => item.detail.damage);
+          const byAttack = Object.groupBy(
+            typeItems ?? [],
+            (item) => item.detail.attackIndex,
+          );
+          const attacks = Object.entries(byAttack)
+            .map(([attackIndex, attackItems]) => {
+              const attackDamage = sumBy(
+                attackItems ?? [],
+                (item) => item.detail.damage,
+              );
+              const attackName =
+                attackItems?.[0]?.attack?.name ?? `Attack ${attackIndex}`;
+
+              return {
+                attackIndex: Number(attackIndex),
+                attackName,
+                damage: attackDamage,
+                pctOfCharacter:
+                  characterTotalDamage > 0
+                    ? (attackDamage / characterTotalDamage) * 100
+                    : 0,
+                pctOfDamageType: damage > 0 ? (attackDamage / damage) * 100 : 0,
+              };
+            })
+            .toSorted((left, right) => right.damage - left.damage);
+
           return {
             damageType,
             damage,
             pctOfCharacter:
               characterTotalDamage > 0 ? (damage / characterTotalDamage) * 100 : 0,
+            attacks,
           };
         })
         .toSorted((left, right) => right.damage - left.damage);

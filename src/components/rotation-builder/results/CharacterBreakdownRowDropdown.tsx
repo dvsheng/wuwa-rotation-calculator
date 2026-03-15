@@ -82,6 +82,15 @@ export const CharacterBreakdownRowDropdown = ({
               },
               cell: () => '',
             },
+            {
+              id: 'magnitude-spacer',
+              header: '',
+              meta: {
+                headerClassName: rotationResultTableColumnLayout.magnitude,
+                cellClassName: rotationResultTableColumnLayout.magnitude,
+              },
+              cell: () => '',
+            },
           ]}
           data={row.original.damageTypes}
           showHeader={false}

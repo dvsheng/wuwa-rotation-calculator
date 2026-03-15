@@ -272,20 +272,22 @@ describe('RotationResultContainer', () => {
     await userEvent.click(screen.getByRole('tab', { name: 'By Character' }));
     expect(
       screen.getByText(
-        "Click the info icon to view a character's damage-type pie chart.",
+        "Click the info icon to view a character's attack breakdown by damage type.",
       ),
     ).toBeInTheDocument();
 
     await userEvent.click(
-      screen.getAllByLabelText('Open character damage type pie chart')[0],
+      screen.getAllByLabelText('Open character attack breakdown')[0],
     );
 
     expect(
       screen.queryByText(
-        "Click the info icon to view a character's damage-type pie chart.",
+        "Click the info icon to view a character's attack breakdown by damage type.",
       ),
     ).not.toBeInTheDocument();
     expect(screen.getAllByText('Sigrika').length).toBeGreaterThan(1);
+    expect(screen.getAllByText('Basic Attack').length).toBeGreaterThan(1);
+    expect(screen.getByText('Sigrika Attack 1')).toBeInTheDocument();
   });
 
   it('renders the sensitivity tab and updates details when a row is selected', async () => {

@@ -122,6 +122,15 @@ export const AttackBreakdownRowDropdown = ({
       },
       cell: () => '',
     },
+    {
+      id: 'magnitude-spacer',
+      header: '',
+      meta: {
+        headerClassName: rotationResultTableColumnLayout.magnitude,
+        cellClassName: rotationResultTableColumnLayout.magnitude,
+      },
+      cell: () => '',
+    },
   ];
 
   return (

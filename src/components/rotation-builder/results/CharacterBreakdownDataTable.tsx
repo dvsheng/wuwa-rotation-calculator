@@ -12,7 +12,7 @@ import type { RotationResultMergedDamageDetail } from '@/hooks/useRotationCalcul
 import { cn } from '@/lib/utils';
 
 import type { CharacterBreakdownRow } from './character-breakdown.types';
-import { CharacterBreakdownPieChart } from './CharacterBreakdownPieChart';
+import { CharacterBreakdownDetails } from './CharacterBreakdownDetails';
 import { CharacterBreakdownRowDropdown } from './CharacterBreakdownRowDropdown';
 import {
   rotationResultDataTableClassNames,
@@ -116,7 +116,7 @@ export const CharacterBreakdownDataTable = ({
       cell: ({ row }) => (
         <div className="flex justify-end">
           <InfoTooltip
-            ariaLabel="Open character damage type pie chart"
+            ariaLabel="Open character attack breakdown"
             onClick={(event) => {
               event.stopPropagation();
               setSelectedCharacterName((previous) =>
@@ -126,7 +126,7 @@ export const CharacterBreakdownDataTable = ({
               );
             }}
           >
-            Open character damage type pie chart
+            Open character attack breakdown
           </InfoTooltip>
         </div>
       ),
@@ -191,7 +191,7 @@ export const CharacterBreakdownDataTable = ({
       />
       {inspectorPortalNode
         ? createPortal(
-            <CharacterBreakdownPieChart selectedCharacter={selectedCharacter} />,
+            <CharacterBreakdownDetails selectedCharacter={selectedCharacter} />,
             inspectorPortalNode,
           )
         : undefined}

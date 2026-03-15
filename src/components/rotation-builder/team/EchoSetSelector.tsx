@@ -52,12 +52,12 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
     setEchoSetRequirement(index, setIndex, String(availableTiers[0]));
   };
 
-  const echoSetUrl = echoSetList.find((s) => s.id === selectedEchoSets[0].id)?.iconUrl;
   return (
     <>
       {selectedEchoSets.map((set, setIndex) => {
         const selectedSetConfig = echoSetList.find((s) => s.id === set.id);
         const availableTiers = selectedSetConfig?.tiers || [2, 5];
+        const echoSetUrl = echoSetList.find((s) => s.id === set.id)?.iconUrl;
         return (
           <Stack fullWidth key={setIndex}>
             <SelectorLayout icon={<EntityIconDisplay url={echoSetUrl} size="medium" />}>

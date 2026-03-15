@@ -1,6 +1,6 @@
-import { useDraggable } from '@dnd-kit/react';
+import { useDragOperation, useDraggable } from '@dnd-kit/react';
 import { SwatchBook } from 'lucide-react';
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
 import { CapabilityHoverCard } from '@/components/common/CapabilityHoverCard';
 import { CapabilityIconDisplay } from '@/components/common/CapabilityIcon';
@@ -253,6 +253,8 @@ export const CapabilitySidebar = ({
 }: CapabilitySidebarProperties) => {
   const [selectedCharacter, setSelectedCharacter] = useState<string | undefined>();
   const [searchText, setSearchText] = useState('');
+  const paletteViewportReference = useRef<HTMLDivElement>(null);
+  const dragOperation = useDragOperation();
   const { attacks, buffs } = useTeamDetails();
   const characterNames = [
     ...new Set([
@@ -277,6 +279,19 @@ export const CapabilitySidebar = ({
     filteredBuffs,
     (buff) => buff.characterName,
   );
+  const orderedAttackCharacterNames = characterNames.filter(
+    (characterName) => (attacksByCharacter[characterName]?.length ?? 0) > 0,
+  );
+  const orderedBuffCharacterNames = characterNames.filter(
+    (characterName) => (filteredBuffsByCharacter[characterName]?.length ?? 0) > 0,
+  );
+
+  useEffect(() => {
+    if (dragOperation.source?.data.kind !== 'sidebar-capability') return;
+    if (paletteViewportReference.current) {
+      paletteViewportReference.current.scrollLeft = 0;
+    }
+  }, [dragOperation]);
 
   return (
     <Stack fullHeight fullWidth gap="component" className="bg-muted/30">
@@ -309,7 +324,7 @@ export const CapabilitySidebar = ({
         </ToggleGroup>
       </Stack>
       <Separator />
-      <ScrollArea className="min-h-0 flex-1">
+      <ScrollArea className="min-h-0 flex-1" viewportRef={paletteViewportReference}>
         <CapabilitySection
           title="Attacks"
           emptyMessage="No attacks available"
@@ -317,28 +332,28 @@ export const CapabilitySidebar = ({
           legend={ATTACK_COLOR_LEGEND}
           legendAriaLabel="Attack section help and color legend"
         >
-          {Object.entries(attacksByCharacter).map(
-            ([characterName, characterAttacks]) => {
-              // Sort by origin first, then by name
-              const orderedAttacks = (characterAttacks ?? []).toSorted(
-                (a, b) =>
-                  sortAttackOrigins(a.originType, b.originType) ||
-                  a.name.localeCompare(b.name),
-              );
-              return (
-                <CapabilityGroup key={`attack-${characterName}`} name={characterName}>
-                  {orderedAttacks.map((attack) => (
-                    <CapabilityCard
-                      key={attack.id}
-                      capability={attack}
-                      colorClassName={ATTACK_COLORS[attack.originType]}
-                      onClick={onClickAttack ? () => onClickAttack(attack) : undefined}
-                    />
-                  ))}
-                </CapabilityGroup>
-              );
-            },
-          )}
+          {orderedAttackCharacterNames.map((characterName) => {
+            const characterAttacks = attacksByCharacter[characterName] ?? [];
+            const orderedAttacks = characterAttacks.toSorted(
+              (a, b) =>
+                sortAttackOrigins(a.originType, b.originType) ||
+                a.name.localeCompare(b.name) ||
+                a.id - b.id,
+            );
+
+            return (
+              <CapabilityGroup key={`attack-${characterName}`} name={characterName}>
+                {orderedAttacks.map((attack) => (
+                  <CapabilityCard
+                    key={attack.id}
+                    capability={attack}
+                    colorClassName={ATTACK_COLORS[attack.originType]}
+                    onClick={onClickAttack ? () => onClickAttack(attack) : undefined}
+                  />
+                ))}
+              </CapabilityGroup>
+            );
+          })}
         </CapabilitySection>
 
         <CapabilitySection
@@ -348,40 +363,41 @@ export const CapabilitySidebar = ({
           legend={BUFF_COLOR_LEGEND}
           legendAriaLabel="Buff section help and color legend"
         >
-          {Object.entries(filteredBuffsByCharacter).map(
-            ([characterName, characterBuffs]) => {
-              const buffsByOrigin = Object.groupBy(
-                characterBuffs ?? [],
-                (buff) => buff.originType,
+          {orderedBuffCharacterNames.map((characterName) => {
+            const characterBuffs = filteredBuffsByCharacter[characterName] ?? [];
+            const buffsByOrigin = Object.groupBy(
+              characterBuffs,
+              (buff) => buff.originType,
+            );
+            const orderedBuffOrigins = BUFF_SKILL_ORDER.filter(
+              (origin) => buffsByOrigin[origin]?.length,
+            );
+            const remainingOrigins = (
+              Object.keys(buffsByOrigin) as Array<CapabilityOriginType>
+            ).filter((origin) => !BUFF_SKILL_ORDER.includes(origin));
+            const orderedBuffs = [...orderedBuffOrigins, ...remainingOrigins]
+              .flatMap((origin) => buffsByOrigin[origin] ?? [])
+              .toSorted(
+                (left, right) =>
+                  TARGET_ORDER.indexOf(left.target) -
+                    TARGET_ORDER.indexOf(right.target) ||
+                  left.name.localeCompare(right.name) ||
+                  left.id - right.id,
               );
-              const orderedBuffOrigins = BUFF_SKILL_ORDER.filter(
-                (origin) => buffsByOrigin[origin]?.length,
-              );
-              const remainingOrigins = (
-                Object.keys(buffsByOrigin) as Array<CapabilityOriginType>
-              ).filter((origin) => !BUFF_SKILL_ORDER.includes(origin));
-              const orderedBuffs = [...orderedBuffOrigins, ...remainingOrigins]
-                .flatMap((origin) => buffsByOrigin[origin] ?? [])
-                .toSorted(
-                  (left, right) =>
-                    TARGET_ORDER.indexOf(left.target) -
-                    TARGET_ORDER.indexOf(right.target),
-                );
 
-              return (
-                <CapabilityGroup key={`buff-${characterName}`} name={characterName}>
-                  {orderedBuffs.map((buff) => (
-                    <CapabilityCard
-                      key={buff.id}
-                      capability={buff}
-                      colorClassName={TARGET_COLORS[buff.target]}
-                      onClick={onClickBuff ? () => onClickBuff(buff) : undefined}
-                    />
-                  ))}
-                </CapabilityGroup>
-              );
-            },
-          )}
+            return (
+              <CapabilityGroup key={`buff-${characterName}`} name={characterName}>
+                {orderedBuffs.map((buff) => (
+                  <CapabilityCard
+                    key={buff.id}
+                    capability={buff}
+                    colorClassName={TARGET_COLORS[buff.target]}
+                    onClick={onClickBuff ? () => onClickBuff(buff) : undefined}
+                  />
+                ))}
+              </CapabilityGroup>
+            );
+          })}
         </CapabilitySection>
       </ScrollArea>
     </Stack>

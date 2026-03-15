@@ -18,12 +18,6 @@ lazy load tabs in rotation builder (3 points)
 
 look into view transitions (3 points)
 
-make enemy view hidable (3 points)
-
-add theming
-
-- separate bg between canvas and palette
-
 attack canvas should not be part of vertical scroll area
 
 update some pie charts to be icons with numbers instead

@@ -164,7 +164,7 @@ const CapabilityCardContent = ({
 
   return (
     <Stack gap="inset">
-      <Row justify="between" align="center" gap="inset">
+      <Row justify="between" gap="inset">
         <Text as="div" variant="bodySm" className="leading-trim font-semibold">
           {capability.name}
         </Text>
@@ -191,9 +191,6 @@ const CapabilityCardContent = ({
 };
 
 // ─── Cursor-following variant (floating-ui) ───────────────────────────────────
-
-const HOVER_CARD_CLASSES =
-  'bg-popover text-popover-foreground z-50 rounded-md border p-4 shadow-md';
 
 const CursorHoverCard = ({
   children,
@@ -248,7 +245,10 @@ const CursorHoverCard = ({
           <div
             ref={setFloatingReference}
             style={floatingStyles}
-            className={cn(HOVER_CARD_CLASSES, 'max-w-80', className)}
+            className={cn(
+              'bg-popover text-popover-foreground z-50 max-w-80 rounded-md border p-4 shadow-md',
+              className,
+            )}
           >
             {content}
           </div>

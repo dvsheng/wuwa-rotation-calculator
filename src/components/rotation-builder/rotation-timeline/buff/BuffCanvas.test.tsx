@@ -127,16 +127,16 @@ describe('BuffCanvas', () => {
     expect(previewWrapper).not.toHaveAttribute('data-testid', 'buff-drop-preview');
   });
 
-  it('keeps the buff lane vertically scrollable at the shared timeline width', () => {
+  it('keeps the buff lane at the shared timeline width without nesting a scroll area', () => {
     const { container } = render(<BuffCanvas />);
 
-    const scrollArea = container.querySelector('[data-slot="scroll-area"]');
     const grid = screen.getByTestId('mock-grid-layout');
-    const timelineLane = scrollArea?.parentElement as HTMLDivElement | null;
+    const timelineLane = grid.parentElement as HTMLDivElement | null;
 
-    expect(scrollArea).toBeInTheDocument();
-    expect(scrollArea).toHaveClass('flex-1');
     expect(grid).toBeInTheDocument();
     expect(timelineLane).toHaveStyle({ width: '640px' });
+    expect(
+      container.querySelector('[data-slot="scroll-area"]'),
+    ).not.toBeInTheDocument();
   });
 });

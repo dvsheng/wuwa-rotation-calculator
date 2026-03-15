@@ -27,12 +27,14 @@ interface AttackCanvasItemProperties {
   isDialogClickable: boolean;
 }
 
-interface BaseAttackCanvasItemProperties {
+interface BaseAttackCanvasItemProperties extends Omit<
+  React.ComponentProps<'div'>,
+  'ref' | 'itemRef'
+> {
   cardWrapper?: (card: ReactNode) => ReactNode;
   characterIconUrl?: string;
   iconUrl?: string;
   name?: string;
-  children?: ReactNode;
   itemRef?: (element: Element | null) => void;
   isDragging?: boolean;
 }
@@ -45,6 +47,7 @@ export const BaseAttackCanvasItem = ({
   children,
   itemRef,
   isDragging,
+  ...rest
 }: BaseAttackCanvasItemProperties) => {
   const card = (
     <Item
@@ -64,7 +67,7 @@ export const BaseAttackCanvasItem = ({
   );
 
   return (
-    <div data-testid="attack-sort-slot" ref={itemRef}>
+    <div data-testid="attack-sort-slot" ref={itemRef} {...rest}>
       {cardWrapper ? cardWrapper(card) : card}
     </div>
   );
@@ -102,9 +105,11 @@ export const AttackCanvasItem = ({
       cardWrapper={(card) => (
         <ParameterConfigurationDialog
           capability={attack}
-          isDialogClickable={isAttackConfigurable && isDialogClickable}
+          disabled={!(isAttackConfigurable && isDialogClickable)}
         >
-          <CapabilityHoverCard capability={attack}>{card}</CapabilityHoverCard>
+          <div className="contents">
+            <CapabilityHoverCard capability={attack}>{card}</CapabilityHoverCard>
+          </div>
         </ParameterConfigurationDialog>
       )}
       characterIconUrl={attack.characterIconUrl}

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -126,6 +126,30 @@ describe('BuffCanvasItem', () => {
   });
 
   describe('buffedAttacks passed to CanvasItem', () => {
+    it('opens the parameter dialog on the first click after hover activates', async () => {
+      const buff = makeBuff(1, 2, true);
+      useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
+
+      const { container } = render(
+        <BuffCanvasItem buff={buff} onRemove={() => {}} isDialogClickable={true} />,
+      );
+
+      const hoverWrapper = container.firstElementChild as HTMLElement | null;
+      expect(hoverWrapper).not.toBeNull();
+
+      fireEvent.mouseEnter(hoverWrapper!);
+      await act(async () => {});
+
+      const trigger = container.querySelector('[data-slot="sheet-trigger"]');
+      expect(trigger).not.toBeNull();
+
+      await userEvent.click(trigger as HTMLElement);
+
+      expect(
+        await screen.findByRole('button', { name: 'Save changes' }),
+      ).toBeInTheDocument();
+    });
+
     it('uses the names of attacks at buff positions as dialog labels when stack config is enabled', async () => {
       // buff at x=1, w=2 → covers MOCK_ATTACKS[1] ("Heavy Attack") and MOCK_ATTACKS[2] ("Basic Attack")
       const buff = makeBuff(1, 2, true);

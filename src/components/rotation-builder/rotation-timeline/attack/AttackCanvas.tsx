@@ -55,7 +55,7 @@ export const AttackCanvas = ({ previewInsertIndex }: AttackCanvasProperties) => 
   }
 
   return (
-    <Container className="py-trim h-58">
+    <Container className="bg-card py-trim sticky top-0 z-30 flex h-58 min-w-0">
       <div
         ref={ref}
         className={cn(

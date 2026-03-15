@@ -1,5 +1,6 @@
 import { isNil } from 'es-toolkit/predicate';
 import { AlertTriangle, Maximize2 } from 'lucide-react';
+import { useState } from 'react';
 
 import { CapabilityHoverCard } from '@/components/common/CapabilityHoverCard';
 import { CapabilityIconDisplay } from '@/components/common/CapabilityIcon';
@@ -35,13 +36,11 @@ interface BuffCanvasItemProperties {
   onOpenChange?: (isOpen: boolean) => void;
 }
 
-interface BaseBuffCanvasItemProperties {
+interface BaseBuffCanvasItemProperties extends React.ComponentProps<'div'> {
   characterIconUrl?: string;
   iconUrl?: string;
   name?: string;
-  children?: React.ReactNode;
   actions?: React.ReactNode;
-  className?: string;
 }
 
 export const BaseBuffCanvasItem = ({
@@ -51,8 +50,10 @@ export const BaseBuffCanvasItem = ({
   children,
   actions,
   className,
+  ...rest
 }: BaseBuffCanvasItemProperties) => (
   <Item
+    {...rest}
     className={cn(
       'border-border relative flex h-12 items-center gap-0 border px-0 py-0 select-none',
       className,
@@ -62,7 +63,7 @@ export const BaseBuffCanvasItem = ({
     {/* Left sticky: icons + name */}
     <Row
       align="center"
-      className="sticky left-0 h-full min-w-0 gap-4 overflow-hidden bg-inherit px-4"
+      className="sticky left-0 z-10 h-full min-w-0 gap-4 overflow-hidden bg-inherit px-4"
     >
       <ItemMedia>
         <EntityIconDisplay url={characterIconUrl} size="medium" />
@@ -75,11 +76,11 @@ export const BaseBuffCanvasItem = ({
       </Text>
     </Row>
     {/* Spacer */}
-    <div className="flex-1" />
+    <div className="relative z-10 flex-1" />
     {/* Right sticky: warning + actions */}
     <Row
       align="center"
-      className="gap-inset sticky right-0 h-full shrink-0 bg-inherit px-4"
+      className="gap-inset sticky right-0 z-10 h-full shrink-0 bg-inherit px-4"
     >
       <ItemActions>{actions}</ItemActions>
     </Row>
@@ -95,6 +96,13 @@ export const BuffCanvasItem = ({
   const updateBuffLayout = useStore((state) => state.updateBuffLayout);
   const { attacks } = useTeamAttackInstances();
   const alignment = useSelfBuffAlignment(buff);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleParameterConfigurationDialogOpenChange = (isOpen: boolean) => {
+    setIsDialogOpen(isOpen);
+    onOpenChange?.(isOpen);
+  };
+
   // Generate styling and segments based on target and alignment
   const getItemClassNameAndSegments = (): {
     itemClassName: string;
@@ -145,13 +153,14 @@ export const BuffCanvasItem = ({
   const isDialogDisabled = !isBuffConfigurable || !isDialogClickable;
 
   return (
-    <ParameterConfigurationDialog
-      capability={buff}
-      onOpenChange={onOpenChange}
-      isDialogClickable={!isDialogDisabled}
-      buffedAttacks={buffedAttacks}
-    >
-      <CapabilityHoverCard capability={buff} followCursor={true}>
+    <CapabilityHoverCard capability={buff} followCursor={!isDialogOpen}>
+      <ParameterConfigurationDialog
+        capability={buff}
+        disabled={isDialogDisabled}
+        buffedAttacks={buffedAttacks}
+        open={isDialogOpen}
+        onOpenChange={handleParameterConfigurationDialogOpenChange}
+      >
         <BaseBuffCanvasItem
           characterIconUrl={buff.characterIconUrl}
           iconUrl={buff.iconUrl}
@@ -184,18 +193,22 @@ export const BuffCanvasItem = ({
             </>
           }
         >
-          {segments.map((segment, index) => (
-            <div
-              key={index}
-              className="pointer-events-none absolute inset-y-0 -z-10 rounded-md bg-blue-100"
-              style={{
-                left: `${segment.start}%`,
-                width: `${segment.width}%`,
-              }}
-            />
-          ))}
+          {segments.length > 0 ? (
+            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-md">
+              {segments.map((segment, index) => (
+                <div
+                  key={index}
+                  className="absolute inset-y-0 bg-blue-100"
+                  style={{
+                    left: `${segment.start}%`,
+                    width: `${segment.width}%`,
+                  }}
+                />
+              ))}
+            </div>
+          ) : undefined}
         </BaseBuffCanvasItem>
-      </CapabilityHoverCard>
-    </ParameterConfigurationDialog>
+      </ParameterConfigurationDialog>
+    </CapabilityHoverCard>
   );
 };

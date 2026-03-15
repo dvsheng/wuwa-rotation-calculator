@@ -1,9 +1,7 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useState } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { RotationSectionSheetContainerContext } from '@/components/rotation-builder/rotation-timeline/RotationSectionSheetContainerContext';
 import { CapabilityType, OriginType } from '@/services/game-data';
 import { Attribute } from '@/types';
 
@@ -35,51 +33,35 @@ const capability = {
   ],
 };
 
-function TestHarness() {
-  const [rotationSection, setRotationSection] = useState<HTMLDivElement | undefined>();
-
-  return (
-    <div>
-      <div data-testid="nav-menu">Navigation menu</div>
-      <div data-testid="toolbar-buttons">Toolbar buttons</div>
-      <RotationSectionSheetContainerContext.Provider value={rotationSection}>
-        <div
-          ref={(node) => setRotationSection(node ?? undefined)}
-          data-testid="rotation-section"
-          className="relative h-96 overflow-hidden"
-        >
-          <ParameterConfigurationDialog capability={capability}>
-            <button type="button">Open configuration</button>
-          </ParameterConfigurationDialog>
-        </div>
-      </RotationSectionSheetContainerContext.Provider>
-    </div>
-  );
-}
-
 describe('ParameterConfigurationDialog', () => {
-  it('renders a contextual non-modal sheet inside the rotation section instead of covering sibling ui', async () => {
-    render(<TestHarness />);
+  it('opens the configuration sheet with its save controls', async () => {
+    render(
+      <ParameterConfigurationDialog capability={capability}>
+        <button type="button">Open configuration</button>
+      </ParameterConfigurationDialog>,
+    );
 
     await userEvent.click(screen.getByRole('button', { name: 'Open configuration' }));
 
-    const sheetContent = screen
-      .getByText('Configure Configure Me')
-      .closest<HTMLElement>('[data-slot="parameter-sheet"]');
-    const rotationSection = screen.getByTestId('rotation-section');
-    const navMenu = screen.getByTestId('nav-menu');
-    const toolbarButtons = screen.getByTestId('toolbar-buttons');
+    expect(screen.getByText('Configure Configure Me')).toBeInTheDocument();
+    expect(screen.getByText(capability.description)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save changes' })).toBeInTheDocument();
+    expect(document.querySelector('[data-slot="sheet-overlay"]')).toBeInTheDocument();
+  });
 
-    expect(sheetContent).toBeInTheDocument();
-    expect(sheetContent).toHaveClass('absolute');
-    expect(rotationSection).toContainElement(sheetContent);
-    expect(navMenu).not.toContainElement(sheetContent);
-    expect(toolbarButtons).not.toContainElement(sheetContent);
-    expect(
-      within(rotationSection).getByRole('button', { name: 'Save changes' }),
-    ).toBeInTheDocument();
-    expect(
-      document.querySelector('[data-slot="sheet-overlay"]'),
-    ).not.toBeInTheDocument();
+  it('notifies when the sheet closes after saving', async () => {
+    const onOpenChange = vi.fn();
+
+    render(
+      <ParameterConfigurationDialog capability={capability} onOpenChange={onOpenChange}>
+        <button type="button">Open configuration</button>
+      </ParameterConfigurationDialog>,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Open configuration' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 });

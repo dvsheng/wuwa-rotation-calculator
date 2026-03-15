@@ -98,6 +98,66 @@ describe('TimelinePanWrapper', () => {
     });
   });
 
+  it('updates chevron states as the viewport scroll position changes', async () => {
+    const { container } = render(
+      <TimelinePanWrapper step={120}>
+        <div>Timeline Content</div>
+      </TimelinePanWrapper>,
+    );
+    const scrollElement = container.querySelector(
+      '[data-slot="scroll-area-viewport"]',
+    ) as HTMLDivElement;
+    configureScrollElement(scrollElement);
+
+    const scrollByMock = vi.fn(
+      (argument1?: ScrollToOptions | number, _argument2?: number) => {
+        const left = typeof argument1 === 'number' ? argument1 : (argument1?.left ?? 0);
+        scrollElement.scrollLeft = Math.max(
+          0,
+          Math.min(
+            scrollElement.scrollLeft + left,
+            scrollElement.scrollWidth - scrollElement.clientWidth,
+          ),
+        );
+        scrollElement.dispatchEvent(new Event('scroll'));
+      },
+    );
+    scrollElement.scrollBy = scrollByMock as unknown as typeof scrollElement.scrollBy;
+
+    act(() => {
+      globalThis.dispatchEvent(new Event('resize'));
+      scrollElement.dispatchEvent(new Event('scroll'));
+    });
+
+    const leftChevron = screen.getByLabelText('Pan timeline left');
+    const rightChevron = screen.getByLabelText('Pan timeline right');
+
+    await waitFor(() => {
+      expect(leftChevron).toBeDisabled();
+      expect(rightChevron).toBeEnabled();
+    });
+
+    act(() => {
+      fireEvent.pointerDown(rightChevron);
+      fireEvent.pointerUp(rightChevron);
+    });
+
+    await waitFor(() => {
+      expect(leftChevron).toBeEnabled();
+      expect(rightChevron).toBeEnabled();
+    });
+
+    act(() => {
+      scrollElement.scrollLeft = scrollElement.scrollWidth - scrollElement.clientWidth;
+      scrollElement.dispatchEvent(new Event('scroll'));
+    });
+
+    await waitFor(() => {
+      expect(leftChevron).toBeEnabled();
+      expect(rightChevron).toBeDisabled();
+    });
+  });
+
   it('continuously pans when holding a chevron', () => {
     vi.useFakeTimers();
     setupRaf();

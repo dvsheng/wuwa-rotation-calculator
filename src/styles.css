@@ -243,7 +243,10 @@ code {
 }
 
 @utility grid-cols-auto-fit-28 {
-  grid-template-columns: repeat(auto-fill, minmax(min(7rem, 100%), 1fr)); /* 7rem = h-28 */
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(min(7rem, 100%), 1fr)
+  ); /* 7rem = h-28 */
 }
 
 /* Canvas component styles for rotation builder sections */
@@ -263,4 +266,55 @@ code {
   .canvas-empty-state {
     @apply mx-auto flex items-center justify-center;
   }
+}
+
+.react-grid-layout {
+  position: relative;
+  transition: height 200ms ease;
+}
+.react-grid-item {
+  transition: all 200ms ease;
+  transition-property: left, top;
+}
+/* Ensure direct child of grid item takes full height */
+.react-grid-item > div {
+  height: 100%;
+}
+.react-grid-item.cssTransforms {
+  transition-property: transform;
+}
+.react-grid-item.resizing {
+  transition: none;
+  z-index: 1;
+  will-change: width, height;
+}
+
+.react-grid-item.react-draggable-dragging {
+  transition: none;
+  z-index: 3;
+  will-change: transform;
+}
+
+.react-grid-item.dropping {
+  visibility: hidden;
+}
+
+.react-grid-placeholder {
+  background: var(--primary);
+  opacity: 0.1;
+  transition-duration: 100ms;
+  z-index: 2;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+  border-radius: var(--radius);
+}
+
+.react-grid-item {
+  /* overflow: clip clips children visually but does NOT create a scroll
+     container, so position: sticky on descendants still propagates to the
+     real scroll ancestor and works correctly. */
+  overflow: clip;
 }

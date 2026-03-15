@@ -1,25 +1,24 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/ui/layout';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
 
 interface TimelinePanWrapperProperties {
   children: React.ReactNode;
-  className?: string;
   step?: number;
 }
 
 const CHEVRON_HOLD_PAN_SPEED = 1800;
+const SCROLL_EDGE_TOLERANCE = 1;
 
 export const TimelinePanWrapper = ({
   children,
-  className,
   step = 280,
 }: TimelinePanWrapperProperties) => {
   const scrollReference = useRef<HTMLDivElement>(null);
+  const [scrollElement, setScrollElement] = useState<HTMLDivElement | undefined>();
   const holdTimeoutReference = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
@@ -30,19 +29,27 @@ export const TimelinePanWrapper = ({
   const [canPanRight, setCanPanRight] = useState(false);
 
   const updatePanButtons = () => {
-    const scrollElement = scrollReference.current;
-    if (!scrollElement) return;
+    const activeScrollElement = scrollReference.current;
+    if (!activeScrollElement) return;
 
     const maxScrollLeft = Math.max(
       0,
-      scrollElement.scrollWidth - scrollElement.clientWidth,
+      activeScrollElement.scrollWidth - activeScrollElement.clientWidth,
     );
-    setCanPanLeft(scrollElement.scrollLeft > 0);
-    setCanPanRight(scrollElement.scrollLeft < maxScrollLeft - 1);
+    const scrollLeft = Math.min(
+      maxScrollLeft,
+      Math.max(0, activeScrollElement.scrollLeft),
+    );
+    setCanPanLeft(scrollLeft > SCROLL_EDGE_TOLERANCE);
+    setCanPanRight(scrollLeft < maxScrollLeft - SCROLL_EDGE_TOLERANCE);
   };
 
+  const handleViewportReference = useCallback((node: HTMLDivElement | null) => {
+    scrollReference.current = node;
+    setScrollElement(node ?? undefined);
+  }, []);
+
   useEffect(() => {
-    const scrollElement = scrollReference.current;
     if (!scrollElement) return;
 
     requestAnimationFrame(updatePanButtons);
@@ -50,6 +57,10 @@ export const TimelinePanWrapper = ({
 
     const resizeObserver = new ResizeObserver(updatePanButtons);
     resizeObserver.observe(scrollElement);
+    const scrollContent = scrollElement.firstElementChild;
+    if (scrollContent instanceof HTMLElement) {
+      resizeObserver.observe(scrollContent);
+    }
     const mutationObserver = new MutationObserver(() => {
       requestAnimationFrame(updatePanButtons);
     });
@@ -66,11 +77,11 @@ export const TimelinePanWrapper = ({
       mutationObserver.disconnect();
       window.removeEventListener('resize', updatePanButtons);
     };
-  }, []);
+  }, [scrollElement]);
 
   useEffect(() => {
     requestAnimationFrame(updatePanButtons);
-  }, [children]);
+  }, [children, scrollElement]);
 
   const stopContinuousPan = () => {
     holdDirectionReference.current = undefined;
@@ -88,12 +99,13 @@ export const TimelinePanWrapper = ({
   useEffect(() => stopContinuousPan, []);
 
   const pan = (direction: 'left' | 'right', smooth = true) => {
-    const scrollElement = scrollReference.current;
-    if (!scrollElement) return;
-    scrollElement.scrollBy({
+    const activeScrollElement = scrollReference.current;
+    if (!activeScrollElement) return;
+    activeScrollElement.scrollBy({
       left: direction === 'left' ? -step : step,
       behavior: smooth ? 'smooth' : 'auto',
     });
+    requestAnimationFrame(updatePanButtons);
   };
 
   const startContinuousPan = (direction: 'left' | 'right') => {
@@ -102,16 +114,17 @@ export const TimelinePanWrapper = ({
 
     const tick = (timestamp: number) => {
       if (holdDirectionReference.current !== direction) return;
-      const scrollElement = scrollReference.current;
-      if (!scrollElement) return;
+      const activeScrollElement = scrollReference.current;
+      if (!activeScrollElement) return;
       const lastTimestamp = holdLastFrameTimeReference.current ?? timestamp;
       const deltaMs = Math.min(40, timestamp - lastTimestamp);
       holdLastFrameTimeReference.current = timestamp;
       const distance = (speed * deltaMs) / 1000;
-      scrollElement.scrollBy({
+      activeScrollElement.scrollBy({
         left: direction === 'left' ? -distance : distance,
         behavior: 'auto',
       });
+      updatePanButtons();
       holdFrameReference.current = requestAnimationFrame(tick);
     };
 
@@ -132,9 +145,7 @@ export const TimelinePanWrapper = ({
   };
 
   return (
-    <Container
-      className={cn('relative flex min-h-0 flex-col overflow-hidden', className)}
-    >
+    <Container className="relative h-full w-full">
       <Button
         type="button"
         variant="outline"
@@ -164,12 +175,11 @@ export const TimelinePanWrapper = ({
         <ChevronRight />
       </Button>
       <ScrollArea
-        orientation="horizontal"
-        className="min-h-0 flex-1"
-        viewportRef={scrollReference}
-        viewportClassName="h-full w-full"
+        orientation="both"
+        className="h-full w-full"
+        viewportRef={handleViewportReference}
       >
-        <div className="px-panel flex min-h-full min-w-max flex-col">{children}</div>
+        {children}
       </ScrollArea>
     </Container>
   );

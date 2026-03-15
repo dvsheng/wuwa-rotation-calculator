@@ -1,3 +1,4 @@
+import { RestrictToHorizontalAxis } from '@dnd-kit/abstract/modifiers';
 import { useSortable } from '@dnd-kit/react/sortable';
 import { isNil } from 'es-toolkit/predicate';
 import { AlertTriangle } from 'lucide-react';
@@ -49,12 +50,12 @@ export const BaseAttackCanvasItem = ({
     <Item
       variant="outline"
       size="sm"
-      className={cn('p-tight relative flex h-56 flex-col', isDragging && 'opacity-0')}
+      className={cn('p-trim relative flex h-56 flex-col', isDragging && 'opacity-0')}
       data-testid="attack-sort-card"
       style={{ width: COLUMN_WIDTH }}
     >
       <EntityIconDisplay url={characterIconUrl} size="large" />
-      <CapabilityIconDisplay url={iconUrl} size="medium" />
+      <CapabilityIconDisplay url={iconUrl} />
       <Text as="div" variant="caption" className="line-clamp-4 text-center">
         {name}
       </Text>
@@ -81,6 +82,7 @@ export const AttackCanvasItem = ({
     group: ATTACK_CANVAS_DROP_ID,
     type: ATTACK_SORTABLE_DRAG_TYPE,
     accept: ATTACK_SORTABLE_DRAG_TYPE,
+    modifiers: [RestrictToHorizontalAxis],
     data: {
       kind: 'canvas-attack',
       capability: attack,

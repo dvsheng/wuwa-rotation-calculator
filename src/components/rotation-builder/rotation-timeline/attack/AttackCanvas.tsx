@@ -4,6 +4,7 @@ import {
   ATTACK_CANVAS_DROP_ID,
   SIDEBAR_ATTACK_DRAG_TYPE,
   SIDEBAR_BUFF_DRAG_TYPE,
+  getTimelineWidth,
 } from '@/components/rotation-builder/rotation-timeline/constants';
 import { Container, Row } from '@/components/ui/layout';
 import { Text } from '@/components/ui/typography';
@@ -27,6 +28,9 @@ export const AttackCanvas = ({ previewInsertIndex }: AttackCanvasProperties) => 
       source.type === SIDEBAR_ATTACK_DRAG_TYPE ||
       source.type === SIDEBAR_BUFF_DRAG_TYPE,
   });
+  const timelineWidth = getTimelineWidth(
+    Math.max(attacks.length, (previewInsertIndex ?? -1) + 1),
+  );
 
   const hasPreview = previewInsertIndex !== undefined;
   const isValidDropTarget = isDropTarget && hasPreview;
@@ -51,23 +55,32 @@ export const AttackCanvas = ({ previewInsertIndex }: AttackCanvasProperties) => 
   }
 
   return (
-    <Container
-      ref={ref}
-      className={cn(
-        'py-tight flex h-58 flex-1 items-center justify-center',
-        isValidDropTarget && 'bg-accent/10',
-      )}
-    >
-      {attacks.length === 0 && !hasPreview && (
-        <Text variant="bodySm" tone="muted">
-          Drag attacks here to start building your rotation.
-        </Text>
-      )}
-      {attacks.length > 0 || hasPreview ? (
-        <Row gap="tight" align="start" fullWidth className="px-panel">
-          {attackCards}
-        </Row>
-      ) : undefined}
+    <Container className="py-trim h-58">
+      <div
+        ref={ref}
+        className={cn(
+          'flex h-full items-center justify-center',
+          isValidDropTarget && 'bg-accent/10',
+        )}
+        style={{ minWidth: timelineWidth, width: timelineWidth }}
+      >
+        {attacks.length === 0 && !hasPreview && (
+          <Text variant="bodySm" tone="muted">
+            Drag attacks here to start building your rotation.
+          </Text>
+        )}
+        {attacks.length > 0 || hasPreview ? (
+          <Row
+            data-testid="attack-canvas-row"
+            gap="trim"
+            align="start"
+            fullWidth
+            className="h-full"
+          >
+            {attackCards}
+          </Row>
+        ) : undefined}
+      </div>
     </Container>
   );
 };

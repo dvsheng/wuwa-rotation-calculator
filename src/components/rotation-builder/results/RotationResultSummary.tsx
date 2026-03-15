@@ -22,7 +22,7 @@ export const RotationResultSummary = ({
 }: RotationResultSummaryProperties) => {
   return (
     <Row justify="between" className="border-primary/10 pb-panel border-b">
-      <Stack gap="tight">
+      <Stack gap="trim">
         <Text variant="overline" tone="muted">
           Total Rotation Damage
         </Text>

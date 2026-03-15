@@ -28,12 +28,12 @@ export class ErrorBoundary extends Component<Properties, State> {
       }
       return (
         <Row
-          gap="tight"
+          gap="trim"
           align="start"
           className="border-destructive/20 bg-destructive/5 p-panel rounded-md border"
         >
           <AlertTriangle className="text-destructive mt-0.5 h-4 w-4 shrink-0" />
-          <Stack gap="tight">
+          <Stack gap="trim">
             <Text variant="label" tone="destructive">
               Something went wrong
             </Text>

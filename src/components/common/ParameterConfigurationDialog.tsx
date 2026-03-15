@@ -141,7 +141,7 @@ const ParameterConfigurationForm = ({
       </SheetHeader>
       <div className="gap-panel flex min-h-0 flex-1 flex-col overflow-y-auto">
         {canToggleView && (
-          <div className="pb-compact gap-component flex items-center justify-between border-b">
+          <div className="pb-inset gap-component flex items-center justify-between border-b">
             <Label className="font-medium">Configuration mode</Label>
             <ToggleGroup
               type="single"
@@ -172,10 +172,10 @@ const ParameterConfigurationForm = ({
                     }}
                   >
                     {(field) => (
-                      <div className="gap-x-panel gap-y-tight grid grid-cols-4 items-start">
+                      <div className="gap-x-panel gap-y-trim grid grid-cols-4 items-start">
                         <Label
                           htmlFor={field.name}
-                          className="pt-compact col-span-2 line-clamp-2 text-right text-xs"
+                          className="pt-inset col-span-2 line-clamp-2 text-right text-xs"
                         >
                           {attack.name}
                         </Label>
@@ -207,8 +207,8 @@ const ParameterConfigurationForm = ({
                 }}
               >
                 {(field) => (
-                  <div className="gap-x-panel gap-y-tight grid grid-cols-4 items-start">
-                    <Label htmlFor={field.name} className="pt-compact text-right">
+                  <div className="gap-x-panel gap-y-trim grid grid-cols-4 items-start">
+                    <Label htmlFor={field.name} className="pt-inset text-right">
                       {parameters.length > 1 ? `Value ${index + 1}` : 'Value'}
                     </Label>
                     <div className="col-span-3 space-y-1">

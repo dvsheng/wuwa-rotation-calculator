@@ -73,7 +73,7 @@ function AdminEntitiesPage() {
     <Container padding="page" className="h-full min-h-0 max-w-6xl">
       <Stack gap="component" className="h-full min-h-0">
         <div className="space-y-2">
-          <h2 className="gap-compact flex items-center text-2xl font-bold tracking-tight">
+          <h2 className="gap-inset tracking-trim flex items-center text-2xl font-bold">
             <Database className="h-6 w-6" /> Entities
           </h2>
           <p className="text-muted-foreground text-sm">

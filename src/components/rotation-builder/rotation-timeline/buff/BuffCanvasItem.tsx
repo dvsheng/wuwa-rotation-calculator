@@ -68,7 +68,7 @@ export const BaseBuffCanvasItem = ({
         <EntityIconDisplay url={characterIconUrl} size="medium" />
       </ItemMedia>
       <ItemMedia>
-        <CapabilityIconDisplay url={iconUrl} size="medium" />
+        <CapabilityIconDisplay url={iconUrl} />
       </ItemMedia>
       <Text variant="caption" className="min-w-0 truncate">
         {name}
@@ -79,7 +79,7 @@ export const BaseBuffCanvasItem = ({
     {/* Right sticky: warning + actions */}
     <Row
       align="center"
-      className="gap-compact sticky right-0 h-full shrink-0 bg-inherit px-4"
+      className="gap-inset sticky right-0 h-full shrink-0 bg-inherit px-4"
     >
       <ItemActions>{actions}</ItemActions>
     </Row>

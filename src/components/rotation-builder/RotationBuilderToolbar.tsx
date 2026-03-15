@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useRotationCalculation } from '@/hooks/useRotationCalculation';
 
 import { Badge } from '../ui/badge';
-import { Row } from '../ui/layout';
+import { Box, Row } from '../ui/layout';
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
 import { Text } from '../ui/typography';
 
@@ -24,12 +24,8 @@ export function RotationBuilderToolbar({
   const { data: result, isPlaceholderData } = useRotationCalculation();
 
   return (
-    <Row
-      align="center"
-      justify="between"
-      className="border-border bg-background px-panel h-12 shrink-0 border-b"
-    >
-      <Row gap="compact">
+    <Row align="center" justify="between" className="px-panel h-12 border-b">
+      <Row gap="inset">
         <Tabs
           value={selectedTab}
           onValueChange={(value) => {
@@ -38,20 +34,22 @@ export function RotationBuilderToolbar({
         >
           <TabsList>
             <TabsTrigger value="team">
-              <User size={14} /> Team
+              <User /> Team
             </TabsTrigger>
             <TabsTrigger value="rotation">
-              <Sword size={14} /> Rotation
+              <Sword /> Rotation
             </TabsTrigger>
             {result && (
               <TabsTrigger value="results">
-                <BarChart2 size={14} /> Results
+                <BarChart2 />
+                Results
+                <span className="bg-accent size-1.5 rounded-full" />
               </TabsTrigger>
             )}
           </TabsList>
         </Tabs>
         {result && (
-          <Row justify="center" align="center" gap="compact">
+          <Box gap="inset">
             <Text>Total Damage:</Text>
             <Text
               className={
@@ -63,22 +61,19 @@ export function RotationBuilderToolbar({
               {Math.round(result.totalDamage).toLocaleString()}
             </Text>
             {isPlaceholderData && (
-              <Badge className="bg-amber-500/15 text-amber-500">
+              <Badge className="bg-warning text-warning-foreground">
                 Outdated — Recalculate
               </Badge>
             )}
-          </Row>
+          </Box>
         )}
       </Row>
-
-      <Row align="center" gap="panel">
-        <ButtonGroup>
-          <Suspense fallback={<Skeleton className="h-8 w-36" />}>
-            <SaveRotationButton />
-          </Suspense>
-          <CalculateRotationButton onCalculated={() => setSelectedTab('results')} />
-        </ButtonGroup>
-      </Row>
+      <ButtonGroup>
+        <Suspense fallback={<Skeleton className="h-8 w-36" />}>
+          <SaveRotationButton />
+        </Suspense>
+        <CalculateRotationButton onCalculated={() => setSelectedTab('results')} />
+      </ButtonGroup>
     </Row>
   );
 }

@@ -16,23 +16,21 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
+  DropdownMenuGroup,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Row } from '@/components/ui/layout';
+import { Separator } from '@/components/ui/separator';
+import { Text } from '@/components/ui/typography';
 import { useRotationLibrary } from '@/hooks/useRotationLibrary';
 import type { SavedRotation } from '@/schemas/library';
 import { calculateRotation } from '@/services/rotation-calculator/calculate-client-rotation-damage';
 import { useStore } from '@/store';
 
-import { Row } from '../ui/layout';
-
 export function SaveRotationButton() {
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
-  const [saveAction, setSaveAction] = useState<'save' | 'update'>('save');
   const { rotations, updateRotation, isUpdating } = useRotationLibrary();
   const { team, enemy, attacks, buffs } = useStore();
 
@@ -41,6 +39,7 @@ export function SaveRotationButton() {
   );
 
   const handleUpdateRotation = async (rotation: SavedRotation) => {
+    // TODO: Use proper useMutation and useQuery for this
     try {
       let totalDamage: number | undefined;
       try {
@@ -69,7 +68,6 @@ export function SaveRotationButton() {
     <>
       <Row>
         <Button
-          data-role="save-main"
           size="sm"
           className="rounded-r-none"
           onClick={() => setIsSaveDialogOpen(true)}
@@ -77,44 +75,22 @@ export function SaveRotationButton() {
           <Save size={14} />
           Save Rotation
         </Button>
-        <div className="bg-primary-foreground w-px" />
+        <Separator orientation="vertical"></Separator>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              data-role="save-menu"
-              size="sm"
-              className="px-compact rounded-l-none"
-              aria-label="Save rotation options"
-            >
-              <ChevronDown size={14} />
+            <Button size="sm" className="rounded-l-none">
+              <ChevronDown />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Save Action</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuRadioGroup
-              value={saveAction}
-              onValueChange={(value) => {
-                const next = value as 'save' | 'update';
-                setSaveAction(next);
-                if (next === 'save') {
-                  setIsSaveDialogOpen(true);
-                  return;
-                }
-                if (rotations.length === 0) {
-                  toast.error('No saved rotations to update.');
-                  return;
-                }
-                setIsUpdateDialogOpen(true);
-              }}
-            >
-              <DropdownMenuRadioItem value="save">
+            <DropdownMenuGroup>
+              <DropdownMenuItem onClick={() => setIsSaveDialogOpen(true)}>
                 Save New Rotation
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="update" disabled={rotations.length === 0}>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsUpdateDialogOpen(true)}>
                 Update Existing Rotation
-              </DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </Row>
@@ -132,22 +108,22 @@ export function SaveRotationButton() {
               Select a saved rotation to overwrite with your current team and rotation.
             </DialogDescription>
           </DialogHeader>
-          <div className="max-h-72 space-y-2 overflow-y-auto">
-            {sortedRotations.map((rotation) => (
-              <Button
-                key={rotation.id}
-                variant="outline"
-                className="py-component h-auto w-full justify-between text-left"
-                disabled={isUpdating}
-                onClick={() => void handleUpdateRotation(rotation)}
-              >
-                <span className="truncate">{rotation.name}</span>
-                <span className="text-muted-foreground text-xs">
-                  {format(new Date(rotation.updatedAt), 'PPP p')}
-                </span>
-              </Button>
-            ))}
-          </div>
+          {sortedRotations.map((rotation) => (
+            <Button
+              key={rotation.id}
+              variant="outline"
+              className="w-full justify-between"
+              disabled={isUpdating}
+              onClick={() => void handleUpdateRotation(rotation)}
+            >
+              <Text as="span" className="truncate">
+                {rotation.name}
+              </Text>
+              <Text className="text-muted-foreground text-xs">
+                {format(new Date(rotation.updatedAt), 'PPP p')}
+              </Text>
+            </Button>
+          ))}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsUpdateDialogOpen(false)}>
               Cancel

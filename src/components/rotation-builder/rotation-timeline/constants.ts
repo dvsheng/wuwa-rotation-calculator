@@ -38,3 +38,9 @@ export const MIN_TIMELINE_COLUMNS = 20;
 
 /** Fixed height of a single attack card row in pixels */
 export const ATTACK_ROW_HEIGHT = 208;
+
+export const getTimelineColumnCount = (attackCount: number) =>
+  Math.max(attackCount, MIN_TIMELINE_COLUMNS);
+
+export const getTimelineWidth = (attackCount: number) =>
+  getTimelineColumnCount(attackCount) * COLUMN_STEP;

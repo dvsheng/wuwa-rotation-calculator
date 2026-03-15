@@ -54,7 +54,7 @@ export const CharacterBreakdownRowDropdown = ({
                 cellClassName: rotationResultTableColumnLayout.damage,
               },
               cell: ({ row: childRow }) => (
-                <LayoutRow gap="tight" className="justify-end text-right">
+                <LayoutRow gap="trim" className="justify-end text-right">
                   <div className="text-muted-foreground text-right font-mono">
                     ({childRow.original.pctOfCharacter.toFixed(1)}%)
                   </div>

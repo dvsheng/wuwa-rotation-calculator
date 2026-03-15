@@ -5,7 +5,7 @@ export const rotationResultDataTableClassNames = {
   headerCell:
     'sticky top-0 z-20 bg-muted/90 text-xs font-semibold tracking-wider uppercase backdrop-blur-sm',
   row: 'cursor-pointer transition-colors',
-  cell: 'py-compact',
+  cell: 'py-inset',
 };
 
 export const rotationResultTableColumnLayout = {

@@ -14,16 +14,20 @@ make characters swappable (3 points)
 
 better tooltip descriptions (1 point across the entire rotation builder to desribe what sections do)
 
-center placeholder text in Rotation tab when canvas are empty (1 point)
-
-fix min-width on buff canvas
-
-landing page with option to go to builds or create tabs (3 points)
-
-- landing page becomes index, current index becomes /create
-
-fix entity page not creating a scroll area
-xw
 lazy load tabs in rotation builder (3 points)
 
 look into view transitions (3 points)
+
+make enemy view hidable (3 points)
+
+add theming
+
+- separate bg between canvas and palette
+
+attack canvas should not be part of vertical scroll area
+
+update some pie charts to be icons with numbers instead
+
+damage type breakdown chart in summary
+
+hide details section in summary

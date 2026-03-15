@@ -23,7 +23,7 @@ const SummaryChartCard = ({
   description: string;
 }>) => (
   <Stack gap="component" className="bg-card rounded-lg border p-4">
-    <Stack gap="tight">
+    <Stack gap="trim">
       <Text variant="title">{title}</Text>
       <Text variant="bodySm" tone="muted">
         {description}

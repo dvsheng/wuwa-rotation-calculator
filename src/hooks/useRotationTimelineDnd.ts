@@ -8,10 +8,10 @@ import {
   BUFF_ROW_HEIGHT,
   COLUMN_STEP,
   INITIAL_BUFF_LAYOUT,
-  MIN_TIMELINE_COLUMNS,
   ROW_GAP,
   SIDEBAR_ATTACK_DRAG_TYPE,
   SIDEBAR_BUFF_DRAG_TYPE,
+  getTimelineColumnCount,
 } from '@/components/rotation-builder/rotation-timeline/constants';
 import type { Capability } from '@/schemas/rotation';
 
@@ -164,7 +164,7 @@ export const useRotationTimelineDnd = ({
   onInvalidDrop,
   reorderAttacks,
 }: UseRotationTimelineDndProperties) => {
-  const attackColumnCount = Math.max(attackCount, MIN_TIMELINE_COLUMNS);
+  const attackColumnCount = getTimelineColumnCount(attackCount);
   const [attackPreviewInsertIndex, setAttackPreviewInsertIndex] = useState<
     number | undefined
   >();

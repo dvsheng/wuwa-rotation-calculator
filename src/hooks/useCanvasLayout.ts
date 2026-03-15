@@ -2,6 +2,12 @@ import { merge } from 'es-toolkit/object';
 import { useEffect, useRef, useState } from 'react';
 import type { GridLayoutProps } from 'react-grid-layout';
 
+import {
+  ATTACK_ROW_HEIGHT,
+  COLUMN_MARGIN,
+  getTimelineColumnCount,
+  getTimelineWidth,
+} from '@/components/rotation-builder/rotation-timeline/constants';
 import { useStore } from '@/store';
 
 export const useCanvasLayout = (
@@ -13,17 +19,8 @@ export const useCanvasLayout = (
     undefined,
   );
 
-  const columnCount = Math.max(rotationAttackCount, 5);
-
-  // Calculate grid width based on column count for scrolling
-  // Each column is approximately 96px wide with 10px margin
-  const COLUMN_WIDTH = 96;
-  const MARGIN = 4;
-  const calculatedWidth = columnCount * (COLUMN_WIDTH + MARGIN);
-
-  // Use calculated width directly to avoid gradual resize animations
-  // The container will handle its own scrolling if needed
-  const width = calculatedWidth;
+  const columnCount = getTimelineColumnCount(rotationAttackCount);
+  const width = getTimelineWidth(rotationAttackCount);
 
   const {
     onDragStart: externalOnDragStart,
@@ -143,11 +140,11 @@ export const useCanvasLayout = (
     width,
     gridConfig: {
       cols: columnCount,
-      rowHeight: 208,
-      margin: [4, 4] as const,
+      rowHeight: ATTACK_ROW_HEIGHT,
+      margin: [COLUMN_MARGIN, COLUMN_MARGIN] as const,
     },
     style: {
-      minHeight: 208,
+      minHeight: ATTACK_ROW_HEIGHT,
     },
     dropConfig: { enabled: true },
     dragConfig: { enabled: true, bounded: true },

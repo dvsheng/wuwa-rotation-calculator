@@ -3,88 +3,137 @@ import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
-// Shared gap scale aligned to semantic spacing tokens
+// Shared variant maps — all layout primitives draw from the same pool
+
 const gapVariants = {
   none: '',
-  tight: 'gap-tight',
-  compact: 'gap-compact',
+  trim: 'gap-trim',
+  inset: 'gap-inset',
   component: 'gap-component',
   panel: 'gap-panel',
   page: 'gap-page',
 } as const;
 
+const alignVariants = {
+  start: 'items-start',
+  center: 'items-center',
+  end: 'items-end',
+  stretch: 'items-stretch',
+} as const;
+
+const justifyVariants = {
+  start: 'justify-start',
+  center: 'justify-center',
+  end: 'justify-end',
+  between: 'justify-between',
+} as const;
+
 // Stack — flex column container
+
 const stackVariants = cva('flex flex-col', {
   variants: {
     gap: gapVariants,
-    align: {
-      start: 'items-start',
-      center: 'items-center',
-      end: 'items-end',
-      stretch: 'items-stretch',
-    },
-    fullWidth: {
-      true: 'w-full',
-    },
+    align: alignVariants,
+    justify: justifyVariants,
+    fullWidth: { true: 'w-full' },
+    fullHeight: { true: 'h-full' },
   },
   defaultVariants: { gap: 'none' },
 });
 
-type StackProps = React.HTMLAttributes<HTMLDivElement> &
-  VariantProps<typeof stackVariants>;
+type StackProps = React.ComponentProps<'div'> & VariantProps<typeof stackVariants>;
 
-const Stack = React.forwardRef<HTMLDivElement, StackProps>(
-  ({ className, gap, align, fullWidth, ...props }, ref) => (
+function Stack({
+  className,
+  gap,
+  align,
+  justify,
+  fullWidth,
+  fullHeight,
+  ...props
+}: StackProps) {
+  return (
     <div
-      ref={ref}
-      className={cn(stackVariants({ gap, align, fullWidth }), className)}
+      className={cn(
+        stackVariants({ gap, align, justify, fullWidth, fullHeight }),
+        className,
+      )}
       {...props}
     />
-  ),
-);
+  );
+}
 Stack.displayName = 'Stack';
 
 // Row — flex row container
-const rowVariants = cva('flex', {
+
+const rowVariants = cva('flex flex-row', {
   variants: {
     gap: gapVariants,
     align: {
-      start: 'items-start',
-      center: 'items-center',
-      end: 'items-end',
+      ...alignVariants,
       baseline: 'items-baseline',
-      stretch: 'items-stretch',
     },
-    justify: {
-      start: 'justify-start',
-      center: 'justify-center',
-      end: 'justify-end',
-      between: 'justify-between',
-    },
-    fullWidth: {
-      true: 'w-full',
-    },
-    wrap: {
-      true: 'flex-wrap',
-    },
+    justify: justifyVariants,
+    fullWidth: { true: 'w-full' },
+    fullHeight: { true: 'h-full' },
+    wrap: { true: 'flex-wrap' },
   },
   defaultVariants: { gap: 'none', align: 'center' },
 });
 
-type RowProps = React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof rowVariants>;
+type RowProps = React.ComponentProps<'div'> & VariantProps<typeof rowVariants>;
 
-const Row = React.forwardRef<HTMLDivElement, RowProps>(
-  ({ className, gap, align, justify, fullWidth, wrap, ...props }, ref) => (
+function Row({
+  className,
+  gap,
+  align,
+  justify,
+  fullWidth,
+  fullHeight,
+  wrap,
+  ...props
+}: RowProps) {
+  return (
     <div
-      ref={ref}
-      className={cn(rowVariants({ gap, align, justify, fullWidth, wrap }), className)}
+      className={cn(
+        rowVariants({ gap, align, justify, fullWidth, fullHeight, wrap }),
+        className,
+      )}
       {...props}
     />
-  ),
-);
+  );
+}
 Row.displayName = 'Row';
 
+// Box — centered flex container
+
+const boxVariants = cva('flex items-center justify-center', {
+  variants: {
+    gap: gapVariants,
+    direction: {
+      row: 'flex-row',
+      col: 'flex-col',
+    },
+    fullWidth: { true: 'w-full' },
+    fullHeight: { true: 'h-full' },
+  },
+  defaultVariants: { gap: 'none' },
+});
+
+type BoxProps = React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof boxVariants>;
+
+function Box({ className, gap, direction, fullWidth, fullHeight, ...props }: BoxProps) {
+  return (
+    <div
+      className={cn(boxVariants({ gap, direction, fullWidth, fullHeight }), className)}
+      {...props}
+    />
+  );
+}
+Box.displayName = 'Box';
+
 // Container — page-level wrapper
+
 const containerVariants = cva('mx-auto w-full', {
   variants: {
     padding: {
@@ -95,34 +144,26 @@ const containerVariants = cva('mx-auto w-full', {
   defaultVariants: { padding: 'none' },
 });
 
-type ContainerProps = React.HTMLAttributes<HTMLDivElement> &
+type ContainerProps = React.ComponentProps<'div'> &
   VariantProps<typeof containerVariants>;
 
-const Container = React.forwardRef<HTMLDivElement, ContainerProps>(
-  ({ className, padding, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn(containerVariants({ padding }), className)}
-      {...props}
-    />
-  ),
-);
+function Container({ className, padding, ...props }: ContainerProps) {
+  return <div className={cn(containerVariants({ padding }), className)} {...props} />;
+}
 Container.displayName = 'Container';
 
 // Grid — generic grid container
+
 const gridVariants = cva('grid w-full', {
   variants: { gap: gapVariants },
   defaultVariants: { gap: 'panel' },
 });
 
-type GridProps = React.HTMLAttributes<HTMLDivElement> &
-  VariantProps<typeof gridVariants>;
+type GridProps = React.ComponentProps<'div'> & VariantProps<typeof gridVariants>;
 
-const Grid = React.forwardRef<HTMLDivElement, GridProps>(
-  ({ className, gap, ...props }, ref) => (
-    <div ref={ref} className={cn(gridVariants({ gap }), className)} {...props} />
-  ),
-);
+function Grid({ className, gap, ...props }: GridProps) {
+  return <div className={cn(gridVariants({ gap }), className)} {...props} />;
+}
 Grid.displayName = 'Grid';
 
-export { Container, Grid, Row, Stack };
+export { Box, Container, Grid, Row, Stack };

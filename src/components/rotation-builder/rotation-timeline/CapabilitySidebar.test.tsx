@@ -6,10 +6,25 @@ import { CapabilityType, OriginType, Target } from '@/services/game-data';
 
 import { CapabilitySidebar } from './CapabilitySidebar';
 
+const { mockUseDragOperation } = vi.hoisted(() => ({
+  mockUseDragOperation: vi.fn(() => ({
+    source: undefined as
+      | {
+          data: {
+            capability: any;
+            kind: string;
+          };
+        }
+      | undefined,
+    target: undefined as unknown,
+  })),
+}));
+
 vi.mock('@dnd-kit/react', () => ({
   useDraggable: vi.fn(() => ({
     ref: vi.fn(),
   })),
+  useDragOperation: mockUseDragOperation,
 }));
 
 vi.mock('@/hooks/useTeamDetails');
@@ -96,6 +111,10 @@ describe('CapabilitySidebar', () => {
   });
 
   beforeEach(() => {
+    mockUseDragOperation.mockReturnValue({
+      source: undefined,
+      target: undefined,
+    });
     mockUseTeamDetails.mockReturnValue({
       attacks: [],
       buffs: [],
@@ -165,5 +184,43 @@ describe('CapabilitySidebar', () => {
         feedback: 'clone',
       }),
     );
+  });
+
+  it('resets palette horizontal scroll while dragging a capability from the sidebar', () => {
+    mockUseTeamDetails.mockReturnValue({
+      attacks: [makeAttack(1, 'Basic Attack', OriginType.NORMAL_ATTACK)],
+      buffs: [],
+      isLoading: false,
+      isError: false,
+    });
+    const rendered = renderCapabilitySidebar();
+    const { container, rerender } = rendered;
+    const viewport = container.querySelector<HTMLElement>(
+      '[data-slot="scroll-area-viewport"]',
+    );
+
+    if (!viewport) {
+      throw new Error('Expected palette scroll viewport to exist');
+    }
+
+    viewport.scrollLeft = 96;
+
+    mockUseDragOperation.mockReturnValue({
+      source: {
+        data: {
+          kind: 'sidebar-capability',
+          capability: makeAttack(1, 'Basic Attack', OriginType.NORMAL_ATTACK),
+        },
+      },
+      target: undefined,
+    });
+
+    rerender(
+      <QueryClientProvider client={new QueryClient()}>
+        <CapabilitySidebar />
+      </QueryClientProvider>,
+    );
+
+    expect(viewport.scrollLeft).toBe(0);
   });
 });

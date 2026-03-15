@@ -76,14 +76,14 @@ const isDetailedAttack = (
 const AttackCapabilityContent = ({ capability }: { capability: DetailedAttack }) => {
   if (capability.damageInstances.length === 0) return;
   return (
-    <Stack gap="tight">
+    <Stack gap="trim">
       <Text as="div" variant="overline" tone="muted">
         Damage Instances
       </Text>
-      <Stack gap="tight">
+      <Stack gap="trim">
         {capability.damageInstances.map((di, index) => (
-          <Row key={index} gap="compact" className="w-full">
-            <Row gap="tight" className="min-w-0 flex-1">
+          <Row key={index} gap="inset" className="w-full">
+            <Row gap="trim" className="min-w-0 flex-1">
               <Text as="span" variant="caption" className="capitalize">
                 {di.attribute}
               </Text>
@@ -124,13 +124,13 @@ const ModifierCapabilityContent = ({
 }) => {
   if (capability.modifiedStats.length === 0) return;
   return (
-    <Stack gap="tight">
+    <Stack gap="trim">
       <Text as="div" variant="overline" tone="muted">
         Modified Stats
       </Text>
-      <Stack gap="tight">
+      <Stack gap="trim">
         {capability.modifiedStats.map((stat, index) => (
-          <Row key={index} gap="compact" className="w-full">
+          <Row key={index} gap="inset" className="w-full">
             <Text as="span" variant="overline" tone="muted" className="w-12">
               {TARGET_LABELS[stat.target]}
             </Text>
@@ -163,16 +163,12 @@ const CapabilityCardContent = ({
     : capability.modifiedStats.length > 0;
 
   return (
-    <Stack gap="compact" className="min-w-72">
-      <Row justify="between" align="start" gap="compact">
-        <Text as="div" variant="bodySm" className="leading-tight font-semibold">
+    <Stack gap="inset">
+      <Row justify="between" align="center" gap="inset">
+        <Text as="div" variant="bodySm" className="leading-trim font-semibold">
           {capability.name}
         </Text>
-        {isParameterized && (
-          <Badge className="bg-muted text-muted-foreground shrink-0 rounded-sm px-1.5 py-0.5 text-xs font-semibold tracking-wide uppercase">
-            Parameterized
-          </Badge>
-        )}
+        {isParameterized && <Badge>Parameterized</Badge>}
       </Row>
       {capability.parentName && (
         <Text variant="caption" tone="muted">

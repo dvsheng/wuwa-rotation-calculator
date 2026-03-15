@@ -44,7 +44,7 @@ export const EchoPieceEditor = ({
       <TableBody>
         <TableRow>
           <TableCell>
-            <Row justify="between" gap="compact">
+            <Row justify="between" gap="inset">
               <Text as="span" variant="bodySm" className="w-fit whitespace-nowrap">
                 Cost
               </Text>
@@ -63,7 +63,7 @@ export const EchoPieceEditor = ({
             </Row>
           </TableCell>
           <TableCell>
-            <Row fullWidth justify="end" gap="compact">
+            <Row fullWidth justify="end" gap="inset">
               <Select
                 value={echo.mainStatType}
                 onValueChange={(value) =>

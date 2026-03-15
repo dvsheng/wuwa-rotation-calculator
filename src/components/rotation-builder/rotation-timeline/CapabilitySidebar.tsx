@@ -9,8 +9,9 @@ import { InfoTooltip } from '@/components/common/InfoTooltip';
 import { sortAttackOrigins } from '@/components/rotation-builder/constants';
 import { Input } from '@/components/ui/input';
 import { Item } from '@/components/ui/item';
-import { Row, Stack } from '@/components/ui/layout';
+import { Grid, Row, Stack } from '@/components/ui/layout';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Text } from '@/components/ui/typography';
 import type { DetailedAttack, DetailedModifier } from '@/hooks/useTeamDetails';
@@ -145,62 +146,38 @@ const CapabilitySection = ({
   emptyMessage,
   description,
   legend,
-  legendAriaLabel,
   children,
 }: CapabilitySectionProperties) => {
-  const itemCount = Array.isArray(children)
-    ? children.filter(Boolean).length
-    : children
-      ? 1
-      : 0;
-
   return (
     <Stack>
-      <Row align="center" className="px-panel py-compact gap-2">
+      <Row align="center" className="px-panel gap-trim">
         <Text as="h3" variant="title" className="text-lg">
           {title}
         </Text>
         {legend ? (
-          <InfoTooltip ariaLabel={legendAriaLabel} contentClassName="max-w-64 p-3">
-            <div className="space-y-3">
-              {description ? (
-                <Text
-                  as="p"
-                  variant="bodySm"
-                  className="text-background leading-relaxed"
-                >
-                  {description}
-                </Text>
-              ) : undefined}
-              <div className="space-y-1">
-                {legend.map((entry) => (
-                  <div key={entry.label} className="flex items-center gap-2">
-                    <span className={cn('size-2 rounded-sm', entry.colorClassName)} />
-                    <span className="text-background">{entry.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+          <InfoTooltip>
+            <Stack gap="trim">
+              {description}
+              {legend.map((entry) => (
+                <Row key={entry.label} align="center" gap="trim">
+                  <span className={cn('size-2 rounded-sm', entry.colorClassName)} />
+                  {entry.label}
+                </Row>
+              ))}
+            </Stack>
           </InfoTooltip>
         ) : description ? (
-          <InfoTooltip
-            ariaLabel={`${title} section help`}
-            contentClassName="max-w-64 p-3"
-          >
-            <Text as="p" variant="bodySm" className="text-background leading-relaxed">
-              {description}
-            </Text>
-          </InfoTooltip>
+          <InfoTooltip ariaLabel={`${title} section help`}>{description}</InfoTooltip>
         ) : undefined}
       </Row>
-      {itemCount > 0 ? (
+      {children ? (
         <Stack>{children}</Stack>
       ) : (
         <Text
           as="div"
           variant="bodySm"
           tone="muted"
-          className="py-page flex items-center justify-center italic"
+          className="flex items-center justify-center italic"
         >
           {emptyMessage}
         </Text>
@@ -210,29 +187,23 @@ const CapabilitySection = ({
 };
 
 const CapabilityGroup = ({ name, children }: CapabilityGroupProperties) => {
-  const itemCount = Array.isArray(children)
-    ? children.filter(Boolean).length
-    : children
-      ? 1
-      : 0;
-
-  if (itemCount === 0) return;
+  if (!children) return;
 
   return (
-    <div className="p-component">
-      <div className="gap-tight mb-2.5 flex items-center">
+    <Stack gap="inset" className="p-component">
+      <Row align="center" className="gap-trim">
         <Text
           as="span"
           variant="overline"
           tone="muted"
-          className="shrink-0 font-bold tracking-widest"
+          className="font-bold tracking-widest"
         >
           {name}
         </Text>
-        <div className="bg-border h-px flex-1" />
-      </div>
-      <div className="grid-cols-auto-fit-28 gap-tight grid">{children}</div>
-    </div>
+        <Separator className="flex-1"></Separator>
+      </Row>
+      <Grid className="grid-cols-auto-fit-28 gap-trim">{children}</Grid>
+    </Stack>
   );
 };
 
@@ -243,7 +214,7 @@ const CapabilityCard = ({
   onClick,
 }: CapabilityCardProperties) => {
   const id = useId();
-  const { ref } = useDraggable<SidebarCapabilityDragData>({
+  const { ref, isDragging } = useDraggable<SidebarCapabilityDragData>({
     id,
     type: capability.capabilityType,
     feedback: 'clone',
@@ -258,14 +229,16 @@ const CapabilityCard = ({
         onClick={onClick}
         ref={ref}
         variant="outline"
+        size="xs"
         className={cn(
-          'gap-tight p-compact relative flex size-28 cursor-grab flex-col border shadow-sm active:cursor-grabbing',
+          'bg-background size-28 flex-col transition hover:shadow-sm active:cursor-grabbing',
           onClick && 'cursor-pointer',
+          isDragging && 'opacity-0',
           colorClassName,
           'border-l-4',
         )}
       >
-        <CapabilityIconDisplay url={capability.iconUrl} size="medium" />
+        <CapabilityIconDisplay url={capability.iconUrl} />
         <Text as="div" variant="caption" className="line-clamp-3 text-center">
           {capability.name}
         </Text>
@@ -278,7 +251,7 @@ export const CapabilitySidebar = ({
   onClickAttack,
   onClickBuff,
 }: CapabilitySidebarProperties) => {
-  const [selectedCharacters, setSelectedCharacters] = useState<Array<string>>([]);
+  const [selectedCharacter, setSelectedCharacter] = useState<string | undefined>();
   const [searchText, setSearchText] = useState('');
   const { attacks, buffs } = useTeamDetails();
   const characterNames = [
@@ -289,7 +262,7 @@ export const CapabilitySidebar = ({
   ].toSorted((left, right) => left.localeCompare(right));
 
   const matchesCharacterFilter = (characterName: string) =>
-    selectedCharacters.length === 0 || selectedCharacters.includes(characterName);
+    !selectedCharacter || characterName === selectedCharacter;
   const matchesCapabilityFilters = (capability: DetailedAttack | DetailedModifier) =>
     matchesCharacterFilter(capability.characterName) &&
     matchesSearchText(capability, searchText);
@@ -306,36 +279,36 @@ export const CapabilitySidebar = ({
   );
 
   return (
-    <Stack className="relative h-full min-h-0">
-      <Stack className="border-border gap-y-tight h-fit border-b">
-        <DashboardSectionHeader
-          title="Palette"
-          description="This is the action library for the current team. Search or filter the list, then click to add an item immediately or drag it into the matching canvas."
-          icon={<SwatchBook />}
+    <Stack fullHeight fullWidth gap="component" className="bg-muted/30">
+      <DashboardSectionHeader
+        title="Palette"
+        description="This is the action library for the current team. Search or filter the list, then click to add an item immediately or drag it into the matching canvas."
+        icon={<SwatchBook />}
+      />
+      <Stack gap="trim" className="px-panel">
+        <Text as="label" variant="overline" tone="muted">
+          Search
+        </Text>
+        <Input
+          value={searchText}
+          onChange={(event) => setSearchText(event.target.value)}
+          placeholder="Search capabilities"
         />
-        <Stack gap="tight" className="px-panel pb-panel">
-          <Text as="label" variant="overline" tone="muted">
-            Search
-          </Text>
-          <Input
-            value={searchText}
-            onChange={(event) => setSearchText(event.target.value)}
-            placeholder="Search capabilities"
-          />
-          <ToggleGroup
-            type="multiple"
-            value={selectedCharacters}
-            onValueChange={setSelectedCharacters}
-            size="sm"
-          >
-            {characterNames.map((characterName) => (
-              <ToggleGroupItem key={characterName} value={characterName} size={'sm'}>
-                {characterName}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-        </Stack>
+        <ToggleGroup
+          type="single"
+          value={selectedCharacter}
+          onValueChange={setSelectedCharacter}
+          size="sm"
+          className="w-fit"
+        >
+          {characterNames.map((characterName) => (
+            <ToggleGroupItem key={characterName} value={characterName}>
+              {characterName}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
       </Stack>
+      <Separator />
       <ScrollArea className="min-h-0 flex-1">
         <CapabilitySection
           title="Attacks"

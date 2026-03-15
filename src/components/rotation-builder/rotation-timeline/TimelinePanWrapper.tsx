@@ -133,14 +133,13 @@ export const TimelinePanWrapper = ({
 
   return (
     <Container
-      padding="none"
-      className={cn('relative flex min-h-0 flex-col', className)}
+      className={cn('relative flex min-h-0 flex-col overflow-hidden', className)}
     >
       <Button
         type="button"
         variant="outline"
         size="icon-lg"
-        className="absolute top-1/2 left-2 z-20 -translate-y-1/2 shadow-sm"
+        className="h-icon-lg absolute top-1/2 left-2 z-20 -translate-y-1/2 shadow-sm"
         onPointerDown={() => handlePointerDown('left')}
         onPointerUp={() => handlePointerEnd('left')}
         onPointerLeave={stopContinuousPan}
@@ -154,7 +153,7 @@ export const TimelinePanWrapper = ({
         type="button"
         variant="outline"
         size="icon-lg"
-        className="absolute top-1/2 right-2 z-20 -translate-y-1/2 shadow-sm"
+        className="h-icon-lg absolute top-1/2 right-2 z-20 -translate-y-1/2 shadow-sm"
         onPointerDown={() => handlePointerDown('right')}
         onPointerUp={() => handlePointerEnd('right')}
         onPointerLeave={stopContinuousPan}
@@ -165,12 +164,12 @@ export const TimelinePanWrapper = ({
         <ChevronRight />
       </Button>
       <ScrollArea
-        orientation="both"
-        viewportRef={scrollReference}
+        orientation="horizontal"
         className="min-h-0 flex-1"
-        viewportClassName="flex w-full h-full flex-col"
+        viewportRef={scrollReference}
+        viewportClassName="h-full w-full"
       >
-        {children}
+        <div className="px-panel flex min-h-full min-w-max flex-col">{children}</div>
       </ScrollArea>
     </Container>
   );

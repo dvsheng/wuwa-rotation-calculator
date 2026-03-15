@@ -64,7 +64,7 @@ export const SubstatSensitivityBarChart = ({
               formatter={(value, _name, item) => {
                 const payload = item.payload as SensitivityChartDatum;
                 return (
-                  <Stack gap="tight">
+                  <Stack gap="trim">
                     <Text variant="caption" tone="muted">
                       {payload.description}
                     </Text>

@@ -352,7 +352,7 @@ export const AttackCalculationStatsBreakdown = ({
   const characterGroups = buildCharContributors(characterStats, CHARACTER_STATS);
   const enemyGroups = buildEnemyContributors(enemyStats, ENEMY_STATS);
   return (
-    <Stack gap="compact" fullWidth className="p-panel">
+    <Stack gap="inset" fullWidth className="p-panel">
       <Text variant="heading" className="border-border border-b">
         Stat Breakdown
       </Text>
@@ -360,7 +360,7 @@ export const AttackCalculationStatsBreakdown = ({
         <Stack>
           <section>
             <SectionLabel>Damage Summary</SectionLabel>
-            <Stack className="gap-compact pb-component pr-10">
+            <Stack className="gap-inset pb-component pr-10">
               <StatValueRow
                 label="Motion Value"
                 value={`${(detail.motionValue * 100).toFixed(1)}%`}

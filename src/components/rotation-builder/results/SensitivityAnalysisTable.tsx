@@ -27,7 +27,7 @@ const tableClassNames = {
   headerCell:
     'bg-muted/90 text-xs font-semibold tracking-wider uppercase backdrop-blur-sm',
   row: 'cursor-pointer transition-colors',
-  cell: 'py-compact',
+  cell: 'py-inset',
 };
 
 const createColumns = (
@@ -131,7 +131,7 @@ const SensitivityAnalysisDetails = ({
 
   return (
     <Stack gap="component">
-      <Stack gap="tight">
+      <Stack gap="trim">
         <Text variant="overline" tone="muted">
           Sensitivity Scenario
         </Text>
@@ -140,7 +140,7 @@ const SensitivityAnalysisDetails = ({
           {scenario.description}
         </Text>
       </Stack>
-      <Stack gap="tight" className="rounded-lg border p-4">
+      <Stack gap="trim" className="rounded-lg border p-4">
         <Row justify="between">
           <Text variant="label">Baseline Damage</Text>
           <Text variant="bodySm" tabular={true} className="font-mono">
@@ -198,7 +198,7 @@ export const SensitivityAnalysisTable = ({
     <Fragment>
       <Stack gap="component" className="min-h-0 flex-1 overflow-y-auto">
         {sections.map((section) => (
-          <Stack key={section.category} gap="tight">
+          <Stack key={section.category} gap="trim">
             <Text variant="overline" tone="muted">
               {section.title}
             </Text>

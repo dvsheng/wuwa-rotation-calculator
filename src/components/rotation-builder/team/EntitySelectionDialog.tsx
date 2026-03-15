@@ -130,10 +130,10 @@ export const EntitySelectionDialog = ({
         {/* Filter Bar */}
         {hasFilters && (
           <Row
-            gap="compact"
+            gap="inset"
             align="center"
             wrap
-            className="px-component py-compact border-b"
+            className="px-component py-inset border-b"
           >
             <Filter className="h-4 w-4" />
             {shouldShowAttributeFilter && (

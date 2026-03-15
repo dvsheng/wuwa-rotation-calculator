@@ -12,6 +12,7 @@ import {
   SIDEBAR_BUFF_DRAG_TYPE,
 } from '@/components/rotation-builder/rotation-timeline/constants';
 import { Container } from '@/components/ui/layout';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Text } from '@/components/ui/typography';
 import { useCanvasLayout } from '@/hooks/useCanvasLayout';
 import { useTeamModifierInstances } from '@/hooks/useTeamModifierInstances';
@@ -91,53 +92,61 @@ export const BuffCanvas = ({ previewLayout }: BuffCanvasProperties) => {
     },
     dragConfig: { enabled: isGridInteractable },
     layout,
-    style: { minHeight: 400 },
+    style: { minHeight: 0 },
     positionStrategy: absoluteStrategy,
     onLayoutChange,
   });
+  const timelineWidth = fullLayoutProperties.width;
 
   const handleRemoveBuff = (instanceId: string) => {
     removeBuff(instanceId);
   };
 
   return (
-    <Container
-      ref={ref}
-      className={cn(
-        'flex min-h-0 flex-1 items-center justify-center',
-        isValidDropTarget && 'bg-accent/10',
-      )}
-    >
-      {buffs.length === 0 && !previewLayout && (
-        <Text variant="bodySm" tone="muted">
-          Drag buffs here to align with attacks
-        </Text>
-      )}
-      {buffs.length > 0 || previewLayout ? (
-        <Container className="px-panel flex items-start">
-          <GridLayout {...fullLayoutProperties}>
-            {buffs.map((buff) => (
-              <div key={buff.instanceId}>
-                <BuffCanvasItem
-                  buff={buff}
-                  onRemove={handleRemoveBuff}
-                  isDialogClickable={!isInteracting}
-                  onOpenChange={(isOpen: boolean) => setIsGridInteractable(!isOpen)}
-                />
-              </div>
-            ))}
-            {previewLayout ? (
-              <div key={BUFF_PREVIEW_ID}>
-                <BaseBuffCanvasItem
-                  characterIconUrl={previewLayout.characterIconUrl}
-                  iconUrl={previewLayout.iconUrl}
-                  name={previewLayout.name}
-                />
-              </div>
-            ) : undefined}
-          </GridLayout>
-        </Container>
-      ) : undefined}
+    <Container className="flex h-full flex-col overflow-hidden">
+      <div
+        ref={ref}
+        className={cn(
+          'flex h-full min-h-0 flex-col overflow-hidden',
+          isValidDropTarget && 'bg-accent/10',
+        )}
+        style={{ minWidth: timelineWidth, width: timelineWidth }}
+      >
+        {buffs.length === 0 && !previewLayout && (
+          <Text variant="bodySm" tone="muted" className="m-auto mt-10">
+            Drag buffs here to align with attacks
+          </Text>
+        )}
+        {buffs.length > 0 || previewLayout ? (
+          <ScrollArea
+            orientation="vertical"
+            className="min-h-0 flex-1"
+            viewportClassName="h-full min-h-0"
+          >
+            <GridLayout {...fullLayoutProperties}>
+              {buffs.map((buff) => (
+                <div key={buff.instanceId}>
+                  <BuffCanvasItem
+                    buff={buff}
+                    onRemove={handleRemoveBuff}
+                    isDialogClickable={!isInteracting}
+                    onOpenChange={(isOpen: boolean) => setIsGridInteractable(!isOpen)}
+                  />
+                </div>
+              ))}
+              {previewLayout ? (
+                <div key={BUFF_PREVIEW_ID}>
+                  <BaseBuffCanvasItem
+                    characterIconUrl={previewLayout.characterIconUrl}
+                    iconUrl={previewLayout.iconUrl}
+                    name={previewLayout.name}
+                  />
+                </div>
+              ) : undefined}
+            </GridLayout>
+          </ScrollArea>
+        ) : undefined}
+      </div>
     </Container>
   );
 };

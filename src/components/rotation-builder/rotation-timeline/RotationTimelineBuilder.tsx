@@ -88,7 +88,7 @@ export const RotationBuilder = () => {
           />
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize="75%" className="min-h-0">
+        <ResizablePanel defaultSize="75%" className="bg-card min-h-0 overflow-auto">
           <RotationSectionSheetContainerContext.Provider value={sheetContainer}>
             <div
               ref={(node) => setSheetContainer(node ?? undefined)}

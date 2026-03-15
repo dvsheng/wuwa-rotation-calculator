@@ -6,15 +6,15 @@ import { cn } from '@/lib/utils';
 const textVariants = cva('', {
   variants: {
     variant: {
-      display: 'text-4xl font-bold tracking-tight',
-      heading: 'text-xl font-semibold tracking-tight',
-      title: 'text-base font-semibold tracking-tight',
+      display: 'text-4xl font-bold tracking-trim',
+      heading: 'text-xl font-semibold tracking-trim',
+      title: 'text-base font-semibold tracking-trim',
       body: 'text-base',
       bodySm: 'text-sm',
       caption: 'text-xs',
       overline: 'text-xs font-semibold tracking-wider uppercase',
       label: 'text-sm font-medium',
-      stat: 'text-2xl font-semibold tracking-tight',
+      stat: 'text-2xl font-semibold tracking-trim',
     },
     tone: {
       default: 'text-foreground',

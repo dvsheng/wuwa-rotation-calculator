@@ -24,11 +24,11 @@ export const DashboardSectionHeader = ({
       justify="between"
       align="center"
       fullWidth
-      className="canvas-header border-border px-panel min-w-0 self-start border-b"
+      className="bg-background px-panel h-icon-md border-b"
     >
-      <Row align="center" gap="compact" className="min-w-0">
-        {icon ?? <div className="text-muted-foreground size-4">{icon}</div>}
-        <Text as="span" variant="heading" className="truncate">
+      <Row align="center" gap="inset" className="min-w-0">
+        {icon ?? <div className="text-muted-foreground size-icon-sm">{icon}</div>}
+        <Text as="span" variant="heading">
           {title}
         </Text>
         {subtitle ?? (
@@ -37,7 +37,7 @@ export const DashboardSectionHeader = ({
           </Text>
         )}
         {description ? (
-          <InfoTooltip contentClassName="max-w-80 p-3">{description}</InfoTooltip>
+          <InfoTooltip contentClassName="max-w-md">{description}</InfoTooltip>
         ) : undefined}
       </Row>
       {action}

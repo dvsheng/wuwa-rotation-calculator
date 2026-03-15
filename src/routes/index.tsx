@@ -11,11 +11,12 @@ const LandingPage = () => {
       <div className="mx-auto flex w-full max-w-3xl flex-1 items-center justify-center px-6 py-12">
         <Stack gap="panel" align="center" className="text-center">
           <Stack gap="component" align="center" className="max-w-2xl">
-            <Text as="h1" variant="display" className="text-5xl leading-tight">
-              Wuthering Waves Theorycrafting Helper
+            <Text as="h1" variant="display" className="leading-trim text-5xl">
+              I.R.I.S. Rotation Inspector
             </Text>
             <Text variant="body" tone="muted" className="text-lg leading-8">
-              Tooling to help you calculate teams and rotations in Wuthering Waves
+              Tooling to help calculate the efficacy of teams and rotations in Wuthering
+              Waves
             </Text>
           </Stack>
           <div className="flex flex-wrap justify-center gap-3">

@@ -268,12 +268,12 @@ function AdminEntityDetailsPage() {
           <Stack gap="component" className="pr-4">
             <Card>
               <CardHeader>
-                <CardTitle className="gap-compact flex items-center">
+                <CardTitle className="gap-inset flex items-center">
                   <EntityIcon entityId={entityId} size="large" />
                   {entityName}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="gap-compact flex flex-wrap">
+              <CardContent className="gap-inset flex flex-wrap">
                 <Badge variant="outline">ID: {entityId}</Badge>
                 {entityGameId ? (
                   <Badge variant="outline">Game ID: {entityGameId}</Badge>
@@ -331,7 +331,7 @@ function AdminEntityDetailsPage() {
                               value={`capability-${capability.capabilityId}`}
                             >
                               <AccordionTrigger>
-                                <div className="gap-compact flex flex-wrap items-center text-left">
+                                <div className="gap-inset flex flex-wrap items-center text-left">
                                   <span className="font-medium">
                                     {capability.capabilityName}
                                   </span>

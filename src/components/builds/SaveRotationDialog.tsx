@@ -19,6 +19,8 @@ import { useRotationLibrary } from '@/hooks/useRotationLibrary';
 import { calculateRotation } from '@/services/rotation-calculator/calculate-client-rotation-damage';
 import { useStore } from '@/store';
 
+import { Stack } from '../ui/layout';
+
 interface SaveRotationDialogProperties {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -30,6 +32,7 @@ export function SaveRotationDialog({
   onOpenChange,
   trigger,
 }: SaveRotationDialogProperties = {}) {
+  // TODO: Refactor to use useForm
   const [internalOpen, setInternalOpen] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -44,7 +47,6 @@ export function SaveRotationDialog({
       toast.error('Please enter a name for the rotation.');
       return;
     }
-
     try {
       let totalDamage: number | undefined;
       try {
@@ -91,39 +93,29 @@ export function SaveRotationDialog({
       }}
     >
       {resolvedTrigger && <DialogTrigger asChild>{resolvedTrigger}</DialogTrigger>}
-      <DialogContent className="sm:max-w-106.25">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Save Rotation</DialogTitle>
           <DialogDescription>
             Save your current team, enemy, and rotation configuration to the library.
           </DialogDescription>
         </DialogHeader>
-        <div className="gap-panel py-panel grid">
-          <div className="gap-panel grid grid-cols-4 items-center">
-            <Label htmlFor="name" className="text-right">
-              Name
-            </Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              className="col-span-3"
-              placeholder="My Awesome Rotation"
-            />
-          </div>
-          <div className="gap-panel grid grid-cols-4 items-center">
-            <Label htmlFor="description" className="text-right">
-              Description
-            </Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              className="col-span-3"
-              placeholder="Optional notes..."
-            />
-          </div>
-        </div>
+        <Stack gap="component">
+          <Label htmlFor="name">Name</Label>
+          <Input
+            id="name"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="My Awesome Rotation"
+          />
+          <Label htmlFor="description">Description</Label>
+          <Textarea
+            id="description"
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+            placeholder="Optional notes..."
+          />
+        </Stack>
         <DialogFooter>
           <Button type="submit" onClick={handleSave} disabled={isCreating}>
             {isCreating ? 'Saving...' : 'Save'}

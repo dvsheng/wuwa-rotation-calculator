@@ -1,7 +1,18 @@
 import { useForm } from '@tanstack/react-form';
+import { Shield } from 'lucide-react';
 
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Container, Stack } from '@/components/ui/layout';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import {
   Table,
   TableBody,
@@ -15,7 +26,13 @@ import { EnemySchema } from '@/schemas/enemy';
 import { useStore } from '@/store';
 import { Attribute } from '@/types';
 
-export const EnemyContainer = () => {
+const formatErrors = (errors: Array<{ message?: string } | string | undefined>) =>
+  errors
+    .map((error) => (typeof error === 'string' ? error : error?.message))
+    .filter(Boolean)
+    .join(', ');
+
+const EnemySheetForm = () => {
   const enemy = useStore((state) => state.enemy);
   const updateEnemy = useStore((state) => state.updateEnemy);
 
@@ -36,72 +53,100 @@ export const EnemyContainer = () => {
   });
 
   return (
-    <Stack gap="panel" className="w-96">
-      <form.Field
-        name="level"
-        children={(field) => (
-          <Stack gap="compact">
-            <Text variant="overline" tone="muted" as="label" htmlFor={field.name}>
-              Level
+    <Card className="mx-panel">
+      <CardContent>
+        <Stack gap="component">
+          <form.Field
+            name="level"
+            children={(field) => (
+              <Stack gap="inset">
+                <Text variant="overline" tone="muted">
+                  Level
+                </Text>
+                <Input
+                  id={field.name}
+                  type="number"
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => field.handleChange(Number(event.target.value))}
+                />
+                {field.state.meta.errors.length > 0 ? (
+                  <Text as="p" variant="bodySm" tone="destructive">
+                    {formatErrors(field.state.meta.errors)}
+                  </Text>
+                ) : undefined}
+              </Stack>
+            )}
+          />
+          <Stack gap="inset">
+            <Text variant="overline" tone="muted">
+              Attribute Resistances
             </Text>
-            <Input
-              id={field.name}
-              type="number"
-              value={field.state.value}
-              onBlur={field.handleBlur}
-              onChange={(event) => field.handleChange(Number(event.target.value))}
-            />
-            {field.state.meta.errors.length > 0 ? (
-              <Text as="p" variant="bodySm" tone="destructive">
-                {field.state.meta.errors.join(', ')}
-              </Text>
-            ) : undefined}
-          </Stack>
-        )}
-      />
-      <Text variant="overline" tone="muted">
-        Attribute Resistances
-      </Text>
-      <Container padding="none" className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Attribute</TableHead>
-              <TableHead className="w-36 text-right">Resistance (%)</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Object.values(Attribute).map((attribute) => (
-              <form.Field
-                key={attribute}
-                name={`resistances.${attribute}`}
-                children={(field) => (
+            <Container padding="none" className="rounded-md border">
+              <Table className="rounded-md border">
+                <TableHeader>
                   <TableRow>
-                    <TableCell className="capitalize">{attribute}</TableCell>
-                    <TableCell className="space-y-1 text-right">
-                      <Input
-                        id={field.name}
-                        type="number"
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(Number(event.target.value))
-                        }
-                        className="ml-auto w-24 text-right"
-                      />
-                      {field.state.meta.errors.length > 0 ? (
-                        <Text as="p" variant="bodySm" tone="destructive">
-                          {field.state.meta.errors.join(', ')}
-                        </Text>
-                      ) : undefined}
-                    </TableCell>
+                    <TableHead>Attribute</TableHead>
+                    <TableHead className="text-right">Resistance (%)</TableHead>
                   </TableRow>
-                )}
-              />
-            ))}
-          </TableBody>
-        </Table>
-      </Container>
-    </Stack>
+                </TableHeader>
+                <TableBody>
+                  {Object.values(Attribute).map((attribute) => (
+                    <form.Field
+                      key={attribute}
+                      name={`resistances.${attribute}`}
+                      children={(field) => (
+                        <TableRow>
+                          <TableCell className="capitalize">{attribute}</TableCell>
+                          <TableCell className="text-right">
+                            <Input
+                              id={field.name}
+                              type="number"
+                              value={field.state.value}
+                              onBlur={field.handleBlur}
+                              onChange={(event) =>
+                                field.handleChange(Number(event.target.value))
+                              }
+                              className="w-20 not-visited:text-right"
+                            />
+                            {field.state.meta.errors.length > 0 ? (
+                              <Text as="p" variant="bodySm" tone="destructive">
+                                {formatErrors(field.state.meta.errors)}
+                              </Text>
+                            ) : undefined}
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    />
+                  ))}
+                </TableBody>
+              </Table>
+            </Container>
+          </Stack>
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+};
+
+export const EnemySheet = () => {
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button type="button" variant="outline" size="sm">
+          <Shield />
+          Configure Enemy
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="right">
+        <SheetHeader>
+          <SheetTitle>Configure Enemy</SheetTitle>
+          <SheetDescription>
+            Set the enemy level and resistances to use in rotation calculations.
+          </SheetDescription>
+        </SheetHeader>
+        <EnemySheetForm />
+      </SheetContent>
+    </Sheet>
   );
 };

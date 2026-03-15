@@ -81,7 +81,7 @@ export const AttackBreakdownRowDropdown = ({
         return (
           <LayoutRow
             justify="end"
-            gap="tight"
+            gap="trim"
             className="text-muted-foreground text-right font-mono"
           >
             <Text variant="caption" tone="muted">

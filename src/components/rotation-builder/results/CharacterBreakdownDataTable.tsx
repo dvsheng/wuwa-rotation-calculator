@@ -70,7 +70,7 @@ export const CharacterBreakdownDataTable = ({
         cellClassName: rotationResultTableColumnLayout.attack,
       },
       cell: ({ row }) => (
-        <Row align="center" gap="tight" className="min-w-0">
+        <Row align="center" gap="trim" className="min-w-0">
           <CharacterIconDisplay url={row.original.iconUrl} size="small" />
           <Text as="span" variant="bodySm" tone="muted" className="truncate">
             {row.original.characterName}

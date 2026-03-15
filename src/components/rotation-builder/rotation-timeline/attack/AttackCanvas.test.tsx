@@ -124,14 +124,11 @@ describe('AttackCanvas', () => {
         selector({ removeAttack: vi.fn() }),
     );
 
-    const { container } = render(<AttackCanvas previewInsertIndex={1} />);
+    render(<AttackCanvas previewInsertIndex={1} />);
 
-    const row = container.querySelector('[class*="flex"]');
-    if (!row) {
-      throw new Error('Expected attack row to be rendered');
-    }
+    const row = screen.getByTestId('attack-canvas-row');
 
-    const children = within(row as HTMLElement).getAllByTestId(
+    const children = within(row).getAllByTestId(
       /attack-canvas-item|attack-drop-preview/,
     );
 

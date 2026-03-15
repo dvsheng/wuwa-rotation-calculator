@@ -1,7 +1,8 @@
 import { Link, useRouterState } from '@tanstack/react-router';
-import { Calculator, Database, Library } from 'lucide-react';
+import { Calculator, Database, Library, SunMoon } from 'lucide-react';
 
 import { LoginButton } from '@/components/auth/LoginButton';
+import { Button } from '@/components/ui/button';
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -10,9 +11,12 @@ import {
   navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
 import { Text } from '@/components/ui/typography';
+import { useTheme } from '@/hooks/useTheme';
 
 export const AppHeader = () => {
   useRouterState({ select: (state) => state.location.pathname });
+  const { toggleTheme } = useTheme();
+
   return (
     <header className="bg-background px-panel sticky top-0 z-20 flex h-14 items-center justify-between border-b">
       <Link to="/" className="min-w-0">
@@ -26,7 +30,7 @@ export const AppHeader = () => {
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
                 <Link to="/admin/entities" className={navigationMenuTriggerStyle()}>
-                  <div className="gap-compact flex items-center">
+                  <div className="gap-inset flex items-center">
                     <Database className="h-4 w-4" />
                     Entities
                   </div>
@@ -36,7 +40,7 @@ export const AppHeader = () => {
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
                 <Link to="/builds" className={navigationMenuTriggerStyle()}>
-                  <div className="gap-compact flex items-center">
+                  <div className="gap-inset flex items-center">
                     <Library className="h-4 w-4" />
                     Builds
                   </div>
@@ -46,7 +50,7 @@ export const AppHeader = () => {
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
                 <Link to="/create" className={navigationMenuTriggerStyle()}>
-                  <div className="gap-compact flex items-center">
+                  <div className="gap-inset flex items-center">
                     <Calculator size={16} />
                     Create
                   </div>
@@ -55,6 +59,16 @@ export const AppHeader = () => {
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="ml-1"
+          onClick={toggleTheme}
+          aria-label="Toggle dark mode"
+        >
+          <SunMoon className="size-4" />
+        </Button>
         <LoginButton />
       </div>
     </header>

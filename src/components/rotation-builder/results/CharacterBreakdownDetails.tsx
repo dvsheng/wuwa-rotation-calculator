@@ -24,7 +24,7 @@ export const CharacterBreakdownDetails = ({
 
   return (
     <Stack className="h-full min-h-0" gap="component">
-      <Row align="center" gap="tight">
+      <Row align="center" gap="trim">
         <CharacterIconDisplay url={selectedCharacter.iconUrl} size="small" />
         <Text variant="heading">{selectedCharacter.characterName}</Text>
       </Row>
@@ -33,10 +33,10 @@ export const CharacterBreakdownDetails = ({
         {selectedCharacter.damageTypes.map((damageType) => (
           <Stack
             key={damageType.damageType}
-            gap="tight"
+            gap="trim"
             className="rounded-lg border p-4"
           >
-            <Row justify="between" align="start" gap="tight">
+            <Row justify="between" align="start" gap="trim">
               <Stack gap="none" className="min-w-0">
                 <Text variant="label">{toDisplayName(damageType.damageType)}</Text>
                 <Text variant="caption" tone="muted" tabular={true}>
@@ -48,9 +48,9 @@ export const CharacterBreakdownDetails = ({
               </Text>
             </Row>
 
-            <Stack gap="tight">
+            <Stack gap="trim">
               {damageType.attacks.map((attack) => (
-                <Row key={attack.attackIndex} justify="between" gap="tight">
+                <Row key={attack.attackIndex} justify="between" gap="trim">
                   <Stack gap="none" className="min-w-0">
                     <Text variant="bodySm" className="truncate">
                       {attack.attackName}

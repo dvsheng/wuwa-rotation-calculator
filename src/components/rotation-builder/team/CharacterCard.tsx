@@ -28,7 +28,7 @@ const CharacterCardHeaderSkeleton = () => (
 export const CharacterCard = ({ index }: CharacterCardProperties) => {
   return (
     <Card className="w-md p-0">
-      <CardHeader className="bg-accent p-compact h-80">
+      <CardHeader className="bg-muted p-inset h-80">
         <Suspense fallback={<CharacterCardHeaderSkeleton />}>
           <CharacterSelector index={index} />
           <WeaponSelector index={index} />

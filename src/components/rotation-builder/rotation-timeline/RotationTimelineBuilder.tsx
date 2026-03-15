@@ -1,4 +1,5 @@
 import { DragDropProvider, DragOverlay } from '@dnd-kit/react';
+import { useState } from 'react';
 
 import { INITIAL_BUFF_LAYOUT } from '@/components/rotation-builder/rotation-timeline/constants';
 import {
@@ -18,6 +19,7 @@ import { BuffCanvas } from './buff/BuffCanvas';
 import { BaseBuffCanvasItem } from './buff/BuffCanvasItem';
 import { CapabilitySidebar } from './CapabilitySidebar';
 import { RotationCanvasHeader } from './RotationCanvasHeader';
+import { RotationSectionSheetContainerContext } from './RotationSectionSheetContainerContext';
 import { TimelinePanWrapper } from './TimelinePanWrapper';
 
 export const RotationBuilder = () => {
@@ -25,6 +27,7 @@ export const RotationBuilder = () => {
   const attackCount = useStore((state) => state.attacks.length);
   const addBuff = useStore((state) => state.addBuff);
   const reorderAttacks = useStore((state) => state.reorderAttacks);
+  const [sheetContainer, setSheetContainer] = useState<HTMLDivElement | undefined>();
   const {
     attackPreviewInsertIndex,
     buffPreviewLayout,
@@ -62,13 +65,21 @@ export const RotationBuilder = () => {
           />
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize="75%" className="flex flex-col">
-          <RotationCanvasHeader />
-          <TimelinePanWrapper className="min-h-0 min-w-0 flex-1">
-            <AttackCanvas previewInsertIndex={attackPreviewInsertIndex} />
-            <Separator />
-            <BuffCanvas previewLayout={buffPreviewLayout} />
-          </TimelinePanWrapper>
+        <ResizablePanel defaultSize="75%" className="min-h-0">
+          <RotationSectionSheetContainerContext.Provider value={sheetContainer}>
+            <div
+              ref={(node) => setSheetContainer(node ?? undefined)}
+              data-testid="rotation-section"
+              className="relative flex h-full min-h-0 flex-col"
+            >
+              <RotationCanvasHeader />
+              <TimelinePanWrapper className="min-h-0 min-w-0 flex-1">
+                <AttackCanvas previewInsertIndex={attackPreviewInsertIndex} />
+                <Separator />
+                <BuffCanvas previewLayout={buffPreviewLayout} />
+              </TimelinePanWrapper>
+            </div>
+          </RotationSectionSheetContainerContext.Provider>
         </ResizablePanel>
       </ResizablePanelGroup>
       <DragOverlay

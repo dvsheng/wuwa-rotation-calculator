@@ -1,20 +1,20 @@
 import { useForm } from '@tanstack/react-form';
+import { XIcon } from 'lucide-react';
+import { Dialog as DialogPrimitive } from 'radix-ui';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
+import { useRotationSectionSheetContainer } from '@/components/rotation-builder/rotation-timeline/RotationSectionSheetContainerContext';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
 import type { DetailedModifierInstance } from '@/hooks/useTeamModifierInstances';
@@ -25,9 +25,12 @@ import { useStore } from '@/store';
 interface ParameterConfigurationFormProperties {
   capability: DetailedAttackInstance | DetailedModifierInstance;
   buffedAttacks?: Array<DetailedAttackInstance>;
+  onSaved: () => void;
 }
 
-interface ParameterConfigurationDialogProperties extends ParameterConfigurationFormProperties {
+interface ParameterConfigurationDialogProperties {
+  capability: DetailedAttackInstance | DetailedModifierInstance;
+  buffedAttacks?: Array<DetailedAttackInstance>;
   children: ReactNode;
   onOpenChange?: (isOpen: boolean) => void;
   isDialogClickable?: boolean;
@@ -64,6 +67,7 @@ const ParameterInputHint = ({
 const ParameterConfigurationForm = ({
   capability,
   buffedAttacks = [],
+  onSaved,
 }: ParameterConfigurationFormProperties) => {
   const { description, name: title, parameters = [] } = capability;
   const stackCount = buffedAttacks.length;
@@ -78,6 +82,7 @@ const ParameterConfigurationForm = ({
       : updateBuffParameters;
   const onSubmit = (parameters_: Array<Parameter>) => {
     updateParameters(capability.instanceId, parameters_);
+    onSaved();
   };
 
   const form = useForm({
@@ -128,12 +133,12 @@ const ParameterConfigurationForm = ({
         event.stopPropagation();
         form.handleSubmit();
       }}
-      className="flex max-h-1/2 min-h-0 flex-1 flex-col"
+      className="gap-panel p-panel flex min-h-0 flex-1 flex-col"
     >
-      <DialogHeader>
-        <DialogTitle>Configure {title}</DialogTitle>
-        {description && <DialogDescription>{description}</DialogDescription>}
-      </DialogHeader>
+      <SheetHeader className="px-0 pt-0">
+        <SheetTitle>Configure {title}</SheetTitle>
+        {description && <SheetDescription>{description}</SheetDescription>}
+      </SheetHeader>
       <div className="gap-panel flex min-h-0 flex-1 flex-col overflow-y-auto">
         {canToggleView && (
           <div className="pb-compact gap-component flex items-center justify-between border-b">
@@ -227,11 +232,9 @@ const ParameterConfigurationForm = ({
           </div>
         ))}
       </div>
-      <DialogFooter className="pt-panel">
-        <DialogClose asChild>
-          <Button type="submit">Save changes</Button>
-        </DialogClose>
-      </DialogFooter>
+      <SheetFooter className="px-0 pb-0">
+        <Button type="submit">Save changes</Button>
+      </SheetFooter>
     </form>
   );
 };
@@ -244,6 +247,7 @@ export const ParameterConfigurationDialog = ({
   isDialogClickable = true,
 }: ParameterConfigurationDialogProperties) => {
   const [isOpen, setIsOpen] = useState(false);
+  const sheetContainer = useRotationSectionSheetContainer();
   const hasParameters = !!capability.parameters;
   const handleOpenChange = (_isOpen: boolean) => {
     if (!hasParameters) return;
@@ -252,17 +256,33 @@ export const ParameterConfigurationDialog = ({
     setIsOpen(_isOpen);
   };
 
+  const sheetContent = (
+    <DialogPrimitive.Content
+      data-slot="parameter-sheet"
+      className="bg-background absolute inset-y-0 right-0 z-50 flex h-full w-full max-w-2xl flex-col border-l shadow-lg"
+    >
+      <DialogPrimitive.Close className="ring-offset-background focus:ring-ring data-[state=open]:bg-secondary absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">
+        <XIcon className="size-4" />
+        <span className="sr-only">Close</span>
+      </DialogPrimitive.Close>
+      <ParameterConfigurationForm
+        capability={capability}
+        buffedAttacks={buffedAttacks}
+        onSaved={() => handleOpenChange(false)}
+      />
+    </DialogPrimitive.Content>
+  );
+
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
+    <DialogPrimitive.Root open={isOpen} onOpenChange={handleOpenChange} modal={false}>
+      <DialogPrimitive.Trigger asChild>
         <div>{children}</div>
-      </DialogTrigger>
-      <DialogContent className="flex max-h-screen flex-col sm:max-w-lg">
-        <ParameterConfigurationForm
-          capability={capability}
-          buffedAttacks={buffedAttacks}
-        />
-      </DialogContent>
-    </Dialog>
+      </DialogPrimitive.Trigger>
+      {isOpen
+        ? sheetContainer
+          ? createPortal(sheetContent, sheetContainer)
+          : sheetContent
+        : undefined}
+    </DialogPrimitive.Root>
   );
 };

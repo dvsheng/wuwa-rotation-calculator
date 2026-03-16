@@ -109,28 +109,26 @@ export const BuffCanvas = ({ width, previewLayout }: BuffCanvasProperties) => {
         isValidDropTarget && 'bg-accent/10',
       )}
     >
-      <div>
-        <GridLayout {...fullLayoutProperties} width={width}>
-          {buffs.map((buff) => (
-            <div key={buff.instanceId}>
-              <BuffCanvasItem
-                buff={buff}
-                onRemove={removeBuff}
-                isDialogClickable={!isInteracting}
-              />
-            </div>
-          ))}
-          {previewLayout ? (
-            <div key={BUFF_PREVIEW_ID}>
-              <BaseBuffCanvasItem
-                characterIconUrl={previewLayout.characterIconUrl}
-                iconUrl={previewLayout.iconUrl}
-                name={previewLayout.name}
-              />
-            </div>
-          ) : undefined}
-        </GridLayout>
-      </div>
+      <GridLayout {...fullLayoutProperties} width={width}>
+        {buffs.map((buff) => (
+          <div key={buff.instanceId}>
+            <BuffCanvasItem
+              buff={buff}
+              onRemove={removeBuff}
+              isDialogClickable={!isInteracting}
+            />
+          </div>
+        ))}
+        {previewLayout ? (
+          <div key={BUFF_PREVIEW_ID}>
+            <BaseBuffCanvasItem
+              characterIconUrl={previewLayout.characterIconUrl}
+              iconUrl={previewLayout.iconUrl}
+              name={previewLayout.name}
+            />
+          </div>
+        ) : undefined}
+      </GridLayout>
     </div>
   );
 };

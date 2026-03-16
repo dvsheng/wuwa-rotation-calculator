@@ -24,7 +24,7 @@ export const DashboardSectionHeader = ({
       justify="between"
       align="center"
       fullWidth
-      className="bg-background px-panel h-icon-md border-b"
+      className="bg-background px-panel h-icon-md shrink-0 border-b"
     >
       <Row align="center" gap="inset" className="min-w-0">
         {icon ?? <div className="text-muted-foreground size-icon-sm">{icon}</div>}

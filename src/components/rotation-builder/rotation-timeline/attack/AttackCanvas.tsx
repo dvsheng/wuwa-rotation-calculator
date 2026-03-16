@@ -61,23 +61,16 @@ export const AttackCanvas = ({ previewInsertIndex }: AttackCanvasProperties) => 
   }
 
   return (
-    <div className="py-trim sticky top-0 z-30 flex h-58 w-fit min-w-0">
-      <div
-        ref={ref}
-        className={cn(
-          'flex h-full w-fit items-center',
-          isValidDropTarget && 'bg-accent/10',
-        )}
-      >
-        <Row
-          data-testid="attack-canvas-row"
-          gap="trim"
-          justify="start"
-          className="w-fit"
-        >
-          {attackCards}
-        </Row>
-      </div>
+    <div
+      ref={ref}
+      className={cn(
+        'py-trim flex h-full w-fit items-center',
+        isValidDropTarget && 'bg-accent/10',
+      )}
+    >
+      <Row data-testid="attack-canvas-row" gap="trim" justify="start" className="w-fit">
+        {attackCards}
+      </Row>
     </div>
   );
 };

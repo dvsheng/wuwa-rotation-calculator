@@ -1,47 +1,26 @@
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import type { RotationResultMergedDamageDetail } from '@/hooks/useRotationCalculation';
-
-import { downloadRotationResultCsv } from './rotation-result-export.utilities';
 import { RotationResultSummary } from './RotationResultSummary';
 
-vi.mock('./rotation-result-export.utilities', () => ({
-  downloadRotationResultCsv: vi.fn(),
-}));
-
-const mockDownloadRotationResultCsv = vi.mocked(downloadRotationResultCsv);
-
 describe('RotationResultSummary', () => {
-  it('exports the merged damage details when the CSV button is clicked', async () => {
-    const user = userEvent.setup();
-    const mergedDamageDetails = [{}] as Array<RotationResultMergedDamageDetail>;
-
+  it('rounds and displays the total rotation damage', () => {
     render(
       <RotationResultSummary
-        totalDamage={123_456}
+        totalDamage={123_456.78}
         attackCount={3}
         damageInstanceCount={4}
-        mergedDamageDetails={mergedDamageDetails}
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Export CSV' }));
-
-    expect(mockDownloadRotationResultCsv).toHaveBeenCalledWith(mergedDamageDetails);
+    expect(screen.getByText('123,457')).toBeInTheDocument();
   });
 
-  it('disables CSV export when there are no damage instances to export', () => {
+  it('renders the attack and damage-instance counts', () => {
     render(
-      <RotationResultSummary
-        totalDamage={0}
-        attackCount={0}
-        damageInstanceCount={0}
-        mergedDamageDetails={[]}
-      />,
+      <RotationResultSummary totalDamage={0} attackCount={1} damageInstanceCount={2} />,
     );
 
-    expect(screen.getByRole('button', { name: 'Export CSV' })).toBeDisabled();
+    expect(screen.getByText('1 attack · 2 damage instances')).toBeInTheDocument();
   });
 });

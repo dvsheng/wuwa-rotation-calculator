@@ -52,6 +52,7 @@ export const AttackCanvas = ({ previewInsertIndex }: AttackCanvasProperties) => 
   return (
     <div
       ref={ref}
+      data-testid="attack-canvas"
       className={cn(
         'py-trim flex h-full w-full items-center',
         isValidDropTarget && 'bg-accent/10',

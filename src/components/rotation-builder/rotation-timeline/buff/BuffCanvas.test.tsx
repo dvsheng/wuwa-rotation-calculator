@@ -90,17 +90,15 @@ describe('BuffCanvas', () => {
     ).toBe(true);
   });
 
-  it('renders the empty-state message without the grid layout when there are no buffs or preview', () => {
+  it('keeps rendering the grid layout even when there are no buffs or preview', () => {
     mockUseTeamModifierInstances.mockReturnValue({
       buffs: [],
     });
 
     render(<BuffCanvas width={640} />);
 
-    expect(
-      screen.getByText('Drag buffs here to start building your rotation.'),
-    ).toBeInTheDocument();
-    expect(screen.queryByTestId('mock-grid-layout')).not.toBeInTheDocument();
+    expect(screen.getByTestId('buff-canvas')).toBeInTheDocument();
+    expect(screen.getByTestId('mock-grid-layout')).toBeInTheDocument();
     expect(screen.queryByTestId('buff-canvas-item')).not.toBeInTheDocument();
     expect(screen.queryByTestId('buff-drop-preview')).not.toBeInTheDocument();
   });
@@ -108,6 +106,7 @@ describe('BuffCanvas', () => {
   it('wraps the preview in a grid child container like real buff items', () => {
     const { getByTestId } = render(
       <BuffCanvas
+        width={640}
         previewLayout={{
           x: 2,
           y: 1,

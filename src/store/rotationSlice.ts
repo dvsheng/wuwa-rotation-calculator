@@ -44,6 +44,25 @@ export interface RotationSlice {
   clearForEntity: (entityId: number) => void;
 }
 
+type BuffLayout = Pick<ModifierInstance, 'x' | 'y' | 'w' | 'h'>;
+
+const layoutsOverlap = (left: BuffLayout, right: BuffLayout) =>
+  left.x < right.x + right.w &&
+  left.x + left.w > right.x &&
+  left.y < right.y + right.h &&
+  left.y + left.h > right.y;
+
+const findAvailableBuffLayout = (
+  existingBuffs: Array<ModifierInstance>,
+  desiredLayout: BuffLayout,
+) => {
+  let nextLayout = { ...desiredLayout };
+  while (existingBuffs.some((buff) => layoutsOverlap(buff, nextLayout))) {
+    nextLayout = { ...nextLayout, y: nextLayout.y + 1 };
+  }
+  return nextLayout;
+};
+
 export const createRotationSlice: StateCreator<
   RotationSlice & TeamSlice,
   [['zustand/immer', never], ['zustand/persist', unknown]],
@@ -69,7 +88,11 @@ export const createRotationSlice: StateCreator<
       for (const buff of state.buffs) {
         if (insertIndex < buff.x) {
           buff.x += 1;
-        } else if (insertIndex >= buff.x && insertIndex <= buff.x + buff.w) {
+          continue;
+        }
+
+        const occupiedBuffEnd = Math.min(state.attacks.length - 1, buff.x + buff.w);
+        if (insertIndex < occupiedBuffEnd) {
           buff.w += 1;
         }
       }
@@ -121,9 +144,10 @@ export const createRotationSlice: StateCreator<
 
   addBuff: (buff, position) =>
     set((state) => {
+      const layout = findAvailableBuffLayout(state.buffs, position);
       const newBuff = {
         ...buff,
-        ...position,
+        ...layout,
         instanceId: crypto.randomUUID(),
       };
       state.buffs.push(newBuff);

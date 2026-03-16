@@ -87,6 +87,7 @@ export const BuffCanvas = ({ width, previewLayout }: BuffCanvasProperties) => {
   return (
     <div
       ref={ref}
+      data-testid="buff-canvas"
       className={cn(
         // `overflow-x-clip` keeps wide grid content visually contained without
         // becoming the nearest horizontal scroll container, so sticky children

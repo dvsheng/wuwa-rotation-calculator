@@ -1,833 +1,612 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   ATTACK_CANVAS_DROP_ID,
-  ATTACK_SORTABLE_DRAG_TYPE,
   BUFF_CANVAS_DROP_ID,
   BUFF_ROW_HEIGHT,
+  COLUMN_MARGIN,
   COLUMN_STEP,
+  COLUMN_WIDTH,
   INITIAL_BUFF_LAYOUT,
-  ROW_GAP,
-  SIDEBAR_ATTACK_DRAG_TYPE,
-  SIDEBAR_BUFF_DRAG_TYPE,
 } from '@/components/rotation-builder/rotation-timeline/constants';
-import type { AttackInstance, Capability } from '@/schemas/rotation';
+import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import { useStore } from '@/store';
 
-import { RotationBuilder } from './RotationTimelineBuilder';
+import { buildRotationTimelineTeamDetails } from './RotationTimelineBuilder.test.fixtures';
 
-const {
-  capturedAttackCanvasProperties,
-  capturedBuffCanvasProperties,
-  capturedOnDragEnd,
-  capturedOnDragMove,
-  capturedOnDragOver,
-  capturedSidebarProperties,
-  dragOverlaySource,
-  mockIsSortable,
-  toastError,
-  toastSuccess,
-} = vi.hoisted(() => ({
-  capturedAttackCanvasProperties: {
-    current: undefined as { previewInsertIndex?: number } | undefined,
+const dndHarness = vi.hoisted(() => ({
+  dragEndHandler: {
+    current: undefined as ((event: unknown) => void) | undefined,
   },
-  capturedBuffCanvasProperties: {
-    current: undefined as
-      | { previewLayout?: { x: number; y: number; w: number; h: number } }
-      | undefined,
-  },
-  capturedOnDragEnd: {
-    current: undefined as ((event: any) => void) | undefined,
-  },
-  capturedOnDragMove: {
-    current: undefined as ((event: any) => void) | undefined,
-  },
-  capturedOnDragOver: {
-    current: undefined as ((event: any) => void) | undefined,
-  },
-  capturedSidebarProperties: {
-    current: undefined as
-      | {
-          onClickAttack?: (attack: Capability) => void;
-          onClickBuff?: (buff: Capability) => void;
-        }
-      | undefined,
-  },
-  dragOverlaySource: {
-    current: undefined as any,
-  },
-  mockIsSortable: vi.fn(),
-  toastError: vi.fn(),
-  toastSuccess: vi.fn(),
+  mockUseTeamDetails: vi.fn(),
+  sidebarSources: new Map<
+    number,
+    {
+      data: {
+        capability?: { id?: number };
+        kind?: string;
+      };
+      id: string;
+      type: string;
+    }
+  >(),
+}));
+
+vi.mock('@/hooks/useTeamDetails', () => ({
+  useTeamDetails: dndHarness.mockUseTeamDetails,
 }));
 
 vi.mock('@dnd-kit/react', () => ({
-  DragOverlay: ({
-    children,
-  }: {
-    children?: ReactNode | ((source: any) => ReactNode);
-  }) => (
-    <div data-testid="drag-overlay">
-      {typeof children === 'function'
-        ? dragOverlaySource.current
-          ? children(dragOverlaySource.current)
-          : undefined
-        : children}
-    </div>
-  ),
   DragDropProvider: ({
     children,
     onDragEnd,
-    onDragMove,
-    onDragOver,
   }: {
     children: ReactNode;
     onDragEnd?: (event: unknown) => void;
-    onDragMove?: (event: unknown) => void;
-    onDragOver?: (event: unknown) => void;
   }) => {
-    capturedOnDragEnd.current = onDragEnd as typeof capturedOnDragEnd.current;
-    capturedOnDragMove.current = onDragMove as typeof capturedOnDragMove.current;
-    capturedOnDragOver.current = onDragOver as typeof capturedOnDragOver.current;
+    dndHarness.dragEndHandler.current = onDragEnd;
     return <div data-testid="drag-drop-provider">{children}</div>;
   },
+  DragOverlay: () => <></>,
+  useDraggable: (properties: {
+    data: {
+      capability?: { id?: number };
+      kind?: string;
+    };
+    id: string;
+    type: string;
+  }) => {
+    const capabilityId = properties.data.capability?.id;
+    if (
+      properties.data.kind === 'sidebar-capability' &&
+      typeof capabilityId === 'number'
+    ) {
+      dndHarness.sidebarSources.set(capabilityId, properties);
+    }
+
+    return {
+      ref: vi.fn(),
+      isDragging: false,
+    };
+  },
+  useDroppable: () => ({
+    ref: vi.fn(),
+    isDropTarget: false,
+  }),
+  useDragOperation: () => ({
+    source: undefined,
+    target: undefined,
+  }),
 }));
 
 vi.mock('@dnd-kit/react/sortable', () => ({
-  isSortable: mockIsSortable,
+  isSortable: () => false,
+  useSortable: () => ({
+    isDragging: false,
+    ref: vi.fn(),
+  }),
 }));
 
-vi.mock('sonner', () => ({
-  toast: {
-    error: toastError,
-    success: toastSuccess,
-  },
-}));
-
-vi.mock('@/components/ui/resizable', () => ({
-  ResizableHandle: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
-  ResizablePanel: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
-  ResizablePanelGroup: ({ children }: { children?: ReactNode }) => (
-    <div>{children}</div>
-  ),
-}));
-
-vi.mock('@/components/ui/separator', () => ({
-  Separator: () => <div data-testid="separator" />,
-}));
-
-vi.mock('./CapabilitySidebar', () => ({
-  CapabilitySidebar: (properties: {
-    onClickAttack?: (attack: Capability) => void;
-    onClickBuff?: (buff: Capability) => void;
-  }) => {
-    capturedSidebarProperties.current = properties;
-    return <div data-testid="capability-sidebar" />;
-  },
-}));
-
-vi.mock('./RotationCanvasHeader', () => ({
-  RotationCanvasHeader: () => <div data-testid="rotation-canvas-header" />,
-}));
-
-vi.mock('./TimelinePanWrapper', () => ({
-  TimelinePanWrapper: ({ children }: { children?: ReactNode }) => (
-    <div data-testid="timeline-pan-wrapper">{children}</div>
-  ),
-}));
-
-vi.mock('./attack/AttackCanvas', () => ({
-  AttackCanvas: (properties: { previewInsertIndex?: number }) => {
-    capturedAttackCanvasProperties.current = properties;
-    return <div data-testid="attack-canvas" />;
-  },
-}));
-
-vi.mock('./buff/BuffCanvas', () => ({
-  BuffCanvas: (properties: {
-    previewLayout?: { x: number; y: number; w: number; h: number };
-  }) => {
-    capturedBuffCanvasProperties.current = properties;
-    return <div data-testid="buff-canvas" />;
-  },
-}));
-
-const makeCapability = (id: number): Capability => ({
-  id,
-  characterId: 1000 + id,
-  entityId: 2000 + id,
-  parameterValues: [],
-});
-
-const makeStoredAttack = (instanceId: string): AttackInstance => ({
-  instanceId,
-  id: 1,
-  characterId: 1,
-  parameterValues: [],
-});
-
-const makeDropTargetElement = (left = 100, top = 40, width = 800, height = 400) =>
-  ({
-    getBoundingClientRect: () => ({
-      left,
-      top,
+vi.mock('react-grid-layout', async () => {
+  const React = await import('react');
+  return {
+    __esModule: true,
+    default: ({
+      children,
+      className,
+      layout = [],
       width,
-      height,
-      right: left + width,
-      bottom: top + height,
-      x: left,
-      y: top,
-      toJSON: () => ({}),
+    }: {
+      children?: ReactNode;
+      className?: string;
+      layout?: Array<{ h: number; i: string; w: number; x: number; y: number }>;
+      width?: number;
+    }) => (
+      <div data-testid="buff-grid-layout" data-width={width} className={className}>
+        {React.Children.map(children, (child) => {
+          if (!React.isValidElement(child)) return child;
+
+          const childKey = String(child.key);
+          const gridItem = layout.find(
+            (item) => childKey === item.i || childKey.endsWith(item.i),
+          );
+
+          return (
+            <div
+              data-testid="buff-grid-item"
+              data-grid-h={gridItem?.h}
+              data-grid-id={gridItem?.i}
+              data-grid-w={gridItem?.w}
+              data-grid-x={gridItem?.x}
+              data-grid-y={gridItem?.y}
+              style={
+                gridItem
+                  ? {
+                      height: `${gridItem.h * BUFF_ROW_HEIGHT}px`,
+                      width: `${
+                        gridItem.w * COLUMN_WIDTH +
+                        Math.max(0, gridItem.w - 1) * COLUMN_MARGIN
+                      }px`,
+                    }
+                  : undefined
+              }
+            >
+              {child}
+            </div>
+          );
+        })}
+      </div>
+    ),
+    useContainerWidth: () => ({
+      containerRef: vi.fn(),
+      mounted: true,
+      width: 1440,
     }),
-  }) as unknown as Element;
-
-const makeShape = (left: number, top: number, width = 80, height = 40) => ({
-  current: {
-    boundingRectangle: {
-      left,
-      top,
-      width,
-      height,
-    },
-  },
+  };
 });
+
+const { RotationBuilder } = await import('./RotationTimelineBuilder');
+
+const makeStoredAttack = ({
+  characterId,
+  id,
+  instanceId,
+}: {
+  characterId: number;
+  id: number;
+  instanceId: string;
+}): AttackInstance => ({
+  characterId,
+  id,
+  instanceId,
+  parameterValues: [],
+});
+
+const makeStoredBuff = ({
+  characterId,
+  h = 1,
+  id,
+  instanceId,
+  w,
+  x,
+  y,
+}: {
+  characterId: number;
+  h?: number;
+  id: number;
+  instanceId: string;
+  w: number;
+  x: number;
+  y: number;
+}): ModifierInstance => ({
+  characterId,
+  h,
+  id,
+  instanceId,
+  parameterValues: [],
+  w,
+  x,
+  y,
+});
+
+const makeDropTargetBounds = ({
+  height = 320,
+  left = 100,
+  top = 40,
+  width = 960,
+}: {
+  height?: number;
+  left?: number;
+  top?: number;
+  width?: number;
+}) => ({
+  bottom: top + height,
+  height,
+  left,
+  right: left + width,
+  toJSON: () => ({}),
+  top,
+  width,
+  x: left,
+  y: top,
+});
+
+const renderRotationBuilder = (properties?: {
+  attacks?: Array<AttackInstance>;
+  buffs?: Array<ModifierInstance>;
+}) => {
+  useStore.setState({
+    attacks: properties?.attacks ?? [],
+    buffs: properties?.buffs ?? [],
+  } as Partial<ReturnType<typeof useStore.getState>>);
+
+  return render(<RotationBuilder />);
+};
 
 const emitDragEnd = (event: unknown) => {
-  if (!capturedOnDragEnd.current) {
-    throw new Error('Expected RotationBuilder to register an onDragEnd handler');
+  if (!dndHarness.dragEndHandler.current) {
+    throw new Error('Expected the rotation builder to register an onDragEnd handler');
   }
 
   act(() => {
-    capturedOnDragEnd.current?.(event);
+    dndHarness.dragEndHandler.current?.(event);
   });
 };
 
-const emitDragOver = (event: unknown) => {
-  if (!capturedOnDragOver.current) {
-    throw new Error('Expected RotationBuilder to register an onDragOver handler');
+const getSidebarSource = (capabilityId: number) => {
+  const source = dndHarness.sidebarSources.get(capabilityId);
+  if (!source) {
+    throw new Error(`Expected sidebar drag source for capability ${capabilityId}`);
   }
 
-  act(() => {
-    capturedOnDragOver.current?.(event);
+  return source;
+};
+
+const setElementRect = (
+  element: Element,
+  properties?: {
+    height?: number;
+    left?: number;
+    top?: number;
+    width?: number;
+  },
+) => {
+  Object.defineProperty(element, 'getBoundingClientRect', {
+    configurable: true,
+    value: () => makeDropTargetBounds(properties ?? {}),
   });
 };
 
-const emitDragMove = (event: unknown) => {
-  if (!capturedOnDragMove.current) {
-    throw new Error('Expected RotationBuilder to register an onDragMove handler');
+const getAttackCanvasNames = () =>
+  within(screen.getByTestId('attack-canvas-row'))
+    .getAllByTestId('attack-canvas-item-name')
+    .map((item) => item.textContent.trim());
+
+const getBuffGridItem = (name: string) => {
+  const label = within(screen.getByTestId('buff-canvas')).getByText(name);
+  const gridItem = label.closest('[data-testid="buff-grid-item"]');
+  if (!(gridItem instanceof HTMLDivElement)) {
+    throw new TypeError(`Expected a grid item wrapper for buff "${name}"`);
   }
 
-  act(() => {
-    capturedOnDragMove.current?.(event);
-  });
+  return gridItem;
+};
+
+const expectBuffLayoutsNotToOverlap = () => {
+  const buffs = useStore.getState().buffs;
+  for (const [index, left] of buffs.entries()) {
+    for (const right of buffs.slice(index + 1)) {
+      const overlaps =
+        left.x < right.x + right.w &&
+        left.x + left.w > right.x &&
+        left.y < right.y + right.h &&
+        left.y + left.h > right.y;
+
+      expect(overlaps).toBe(false);
+    }
+  }
 };
 
 describe('RotationBuilder', () => {
-  let addAttack: ReturnType<typeof vi.fn>;
-  let addBuff: ReturnType<typeof vi.fn>;
-  let reorderAttacks: ReturnType<typeof vi.fn>;
-
   beforeEach(() => {
     localStorage.clear();
     useStore.persist.clearStorage();
-    capturedAttackCanvasProperties.current = undefined;
-    capturedBuffCanvasProperties.current = undefined;
-    capturedOnDragEnd.current = undefined;
-    capturedOnDragMove.current = undefined;
-    capturedOnDragOver.current = undefined;
-    capturedSidebarProperties.current = undefined;
-    dragOverlaySource.current = undefined;
-    mockIsSortable.mockReset().mockReturnValue(false);
-    toastError.mockReset();
-    toastSuccess.mockReset();
-
-    addAttack = vi.fn();
-    addBuff = vi.fn();
-    reorderAttacks = vi.fn();
-
+    dndHarness.dragEndHandler.current = undefined;
+    dndHarness.sidebarSources.clear();
+    dndHarness.mockUseTeamDetails
+      .mockReset()
+      .mockReturnValue(buildRotationTimelineTeamDetails());
     useStore.setState({
       attacks: [],
       buffs: [],
-      addAttack,
-      addBuff,
-      reorderAttacks,
     } as Partial<ReturnType<typeof useStore.getState>>);
   });
 
-  it('shows an attack drop preview while dragging over the attack canvas', () => {
-    useStore.setState({
+  describe.each([
+    {
+      attacks: [] as Array<AttackInstance>,
+      buffs: [] as Array<ModifierInstance>,
+      name: 'empty canvases',
+    },
+    {
       attacks: [
-        makeStoredAttack('attack-1'),
-        makeStoredAttack('attack-2'),
-        makeStoredAttack('attack-3'),
+        makeStoredAttack({
+          characterId: 484,
+          id: 608,
+          instanceId: 'attack-shorekeeper-basic-1',
+        }),
       ],
-    } as Partial<ReturnType<typeof useStore.getState>>);
-
-    render(<RotationBuilder />);
-
-    emitDragOver({
-      operation: {
-        source: {
-          type: SIDEBAR_ATTACK_DRAG_TYPE,
-          data: { kind: 'sidebar-capability', capability: makeCapability(20) },
-        },
-        target: {
-          id: ATTACK_CANVAS_DROP_ID,
-          element: makeDropTargetElement(),
-        },
-        shape: makeShape(248, 60),
-      },
-    });
-
-    expect(capturedAttackCanvasProperties.current).toEqual({
-      previewInsertIndex: 2,
-    });
-    expect(capturedBuffCanvasProperties.current).toEqual({
-      previewLayout: undefined,
-    });
-  });
-
-  it('updates the attack drop preview continuously while dragging within the same canvas', () => {
-    useStore.setState({
-      attacks: [
-        makeStoredAttack('attack-1'),
-        makeStoredAttack('attack-2'),
-        makeStoredAttack('attack-3'),
-        makeStoredAttack('attack-4'),
+      buffs: [
+        makeStoredBuff({
+          characterId: 484,
+          id: 1137,
+          instanceId: 'buff-shorekeeper-binary-butterfly',
+          w: 4,
+          x: 8,
+          y: 0,
+        }),
       ],
-    } as Partial<ReturnType<typeof useStore.getState>>);
+      name: 'non-empty canvases',
+    },
+  ])('with $name', ({ attacks, buffs }) => {
+    it('adds a clicked buff from the sidebar to the buff canvas', async () => {
+      const user = userEvent.setup();
+      renderRotationBuilder({ attacks, buffs });
 
-    render(<RotationBuilder />);
+      await user.click(screen.getByTestId('sidebar-capability-card-1060'));
 
-    const targetElement = makeDropTargetElement();
-    const source = {
-      type: SIDEBAR_ATTACK_DRAG_TYPE,
-      data: { kind: 'sidebar-capability', capability: makeCapability(22) },
-    };
+      expect(
+        within(screen.getByTestId('buff-canvas')).getByText('Syntony Field'),
+      ).toBeInTheDocument();
+    });
 
-    emitDragOver({
-      operation: {
-        source,
-        target: {
-          id: ATTACK_CANVAS_DROP_ID,
-          element: targetElement,
+    it('adds a clicked attack from the sidebar to the end of the attack canvas', async () => {
+      const user = userEvent.setup();
+      renderRotationBuilder({ attacks, buffs });
+
+      await user.click(screen.getByTestId('sidebar-capability-card-238'));
+
+      const attackNames = getAttackCanvasNames();
+
+      expect(attackNames.at(-1)).toBe('Optimal Solution');
+      expect(useStore.getState().attacks.at(-1)).toMatchObject({
+        characterId: 463,
+        id: 238,
+      });
+    });
+
+    it('adds a buff when it is dragged from the sidebar to the buff canvas', () => {
+      renderRotationBuilder({ attacks, buffs });
+      const buffCanvas = screen.getByTestId('buff-canvas');
+      setElementRect(buffCanvas, { width: 1440 });
+
+      emitDragEnd({
+        canceled: false,
+        nativeEvent: new MouseEvent('pointerup', {
+          clientX: 320,
+          clientY: 92,
+        }),
+        operation: {
+          source: getSidebarSource(1060),
+          target: {
+            element: buffCanvas,
+            id: BUFF_CANVAS_DROP_ID,
+          },
         },
-        shape: makeShape(248, 60),
-      },
+      });
+
+      expect(within(buffCanvas).getByText('Syntony Field')).toBeInTheDocument();
     });
 
-    expect(capturedAttackCanvasProperties.current).toEqual({
-      previewInsertIndex: 2,
-    });
+    it('does not add an attack when it is dragged from the sidebar to the buff canvas', () => {
+      renderRotationBuilder({ attacks, buffs });
+      const buffCanvas = screen.getByTestId('buff-canvas');
+      setElementRect(buffCanvas, { width: 1440 });
+      const startingAttackCount = useStore.getState().attacks.length;
 
-    emitDragMove({
-      nativeEvent: new MouseEvent('pointermove', {
-        clientX: 470,
-        clientY: 60,
-      }),
-      operation: {
-        source,
-        target: {
-          id: ATTACK_CANVAS_DROP_ID,
-          element: targetElement,
+      emitDragEnd({
+        canceled: false,
+        nativeEvent: new MouseEvent('pointerup', {
+          clientX: 320,
+          clientY: 92,
+        }),
+        operation: {
+          source: getSidebarSource(238),
+          target: {
+            element: buffCanvas,
+            id: BUFF_CANVAS_DROP_ID,
+          },
         },
-        shape: makeShape(248, 60),
-      },
+      });
+
+      expect(useStore.getState().attacks).toHaveLength(startingAttackCount);
+      expect(
+        within(buffCanvas).queryByText('Optimal Solution'),
+      ).not.toBeInTheDocument();
     });
 
-    expect(capturedAttackCanvasProperties.current).toEqual({
-      previewInsertIndex: 4,
+    it('adds an attack when it is dragged from the sidebar to the attack canvas', () => {
+      renderRotationBuilder({ attacks, buffs });
+      const attackCanvas = screen.getByTestId('attack-canvas');
+      setElementRect(attackCanvas, { width: 1440 });
+
+      emitDragEnd({
+        canceled: false,
+        nativeEvent: new MouseEvent('pointerup', {
+          clientX: 1320,
+          clientY: 92,
+        }),
+        operation: {
+          source: getSidebarSource(238),
+          target: {
+            element: attackCanvas,
+            id: ATTACK_CANVAS_DROP_ID,
+          },
+        },
+      });
+
+      expect(getAttackCanvasNames().at(-1)).toBe('Optimal Solution');
+    });
+
+    it('does not add a buff when it is dragged from the sidebar to the attack canvas', () => {
+      renderRotationBuilder({ attacks, buffs });
+      const attackCanvas = screen.getByTestId('attack-canvas');
+      setElementRect(attackCanvas, { width: 1440 });
+      const startingBuffCount = useStore.getState().buffs.length;
+
+      emitDragEnd({
+        canceled: false,
+        nativeEvent: new MouseEvent('pointerup', {
+          clientX: 1320,
+          clientY: 92,
+        }),
+        operation: {
+          source: getSidebarSource(1060),
+          target: {
+            element: attackCanvas,
+            id: ATTACK_CANVAS_DROP_ID,
+          },
+        },
+      });
+
+      expect(useStore.getState().buffs).toHaveLength(startingBuffCount);
+      expect(
+        within(screen.getByTestId('attack-canvas')).queryByText('Syntony Field'),
+      ).not.toBeInTheDocument();
     });
   });
 
-  it('shows a buff drop preview while dragging over the buff canvas and clears it on drag end', () => {
-    useStore.setState({
-      attacks: Array.from({ length: 8 }, (_, index) =>
-        makeStoredAttack(`attack-${index + 1}`),
-      ),
-    } as Partial<ReturnType<typeof useStore.getState>>);
-
-    render(<RotationBuilder />);
-
-    emitDragOver({
-      operation: {
-        source: {
-          type: SIDEBAR_BUFF_DRAG_TYPE,
-          data: { kind: 'sidebar-capability', capability: makeCapability(21) },
-        },
-        target: {
-          id: BUFF_CANVAS_DROP_ID,
-          element: makeDropTargetElement(100, 40, 800),
-        },
-        shape: makeShape(455, 152),
-      },
-    });
-
-    expect(capturedBuffCanvasProperties.current).toEqual({
-      previewLayout: {
-        ...INITIAL_BUFF_LAYOUT,
-        x: 2,
-        y: 2,
-      },
-    });
-    expect(capturedAttackCanvasProperties.current).toEqual({
-      previewInsertIndex: undefined,
-    });
-
-    emitDragEnd({
-      canceled: true,
-      operation: {
-        source: undefined,
-        target: undefined,
-      },
-    });
-
-    expect(capturedAttackCanvasProperties.current).toEqual({
-      previewInsertIndex: undefined,
-    });
-    expect(capturedBuffCanvasProperties.current).toEqual({
-      previewLayout: undefined,
-    });
-  });
-
-  it('updates the buff drop preview continuously while dragging within the same canvas', () => {
-    useStore.setState({
-      attacks: Array.from({ length: 8 }, (_, index) =>
-        makeStoredAttack(`attack-${index + 1}`),
-      ),
-    } as Partial<ReturnType<typeof useStore.getState>>);
-
-    render(<RotationBuilder />);
-
-    const targetElement = makeDropTargetElement(100, 40, 800);
-    const source = {
-      type: SIDEBAR_BUFF_DRAG_TYPE,
-      data: { kind: 'sidebar-capability', capability: makeCapability(23) },
-    };
-
-    emitDragOver({
-      operation: {
-        source,
-        target: {
-          id: BUFF_CANVAS_DROP_ID,
-          element: targetElement,
-        },
-        shape: makeShape(220, 90),
-      },
-    });
-
-    expect(capturedBuffCanvasProperties.current).toEqual({
-      previewLayout: {
-        ...INITIAL_BUFF_LAYOUT,
-        x: 1,
-        y: 1,
-      },
-    });
-
-    emitDragMove({
-      nativeEvent: new MouseEvent('pointermove', {
-        clientX: 470,
-        clientY: 170,
-      }),
-      operation: {
-        source,
-        target: {
-          id: BUFF_CANVAS_DROP_ID,
-          element: targetElement,
-        },
-        shape: makeShape(220, 90),
-      },
-    });
-
-    expect(capturedBuffCanvasProperties.current).toEqual({
-      previewLayout: {
-        ...INITIAL_BUFF_LAYOUT,
-        x: 2,
-        y: 2,
-      },
-    });
-  });
-
-  it('adds attacks when a sidebar attack is dropped into the attack canvas', () => {
-    useStore.setState({
-      attacks: [
-        makeStoredAttack('attack-1'),
-        makeStoredAttack('attack-2'),
-        makeStoredAttack('attack-3'),
-        makeStoredAttack('attack-4'),
+  describe.each([
+    {
+      buffs: [] as Array<ModifierInstance>,
+      name: 'from an empty buff canvas',
+    },
+    {
+      buffs: [
+        makeStoredBuff({
+          characterId: 484,
+          id: 1137,
+          instanceId: 'buff-binary-butterfly',
+          w: INITIAL_BUFF_LAYOUT.w,
+          x: 0,
+          y: 0,
+        }),
       ],
-    } as Partial<ReturnType<typeof useStore.getState>>);
+      name: 'from a non-empty buff canvas',
+    },
+  ])('multiple clicked buffs $name', ({ buffs }) => {
+    it('does not overlay the added buffs on top of each other', async () => {
+      const user = userEvent.setup();
+      renderRotationBuilder({ buffs });
 
-    render(<RotationBuilder />);
+      await user.click(screen.getByTestId('sidebar-capability-card-1060'));
+      await user.click(screen.getByTestId('sidebar-capability-card-1061'));
 
-    const attack = makeCapability(1);
-    const targetElement = makeDropTargetElement();
-
-    emitDragEnd({
-      canceled: false,
-      nativeEvent: new MouseEvent('pointerup', {
-        clientX: 230,
-        clientY: 80,
-      }),
-      operation: {
-        source: {
-          type: SIDEBAR_ATTACK_DRAG_TYPE,
-          data: { kind: 'sidebar-capability', capability: attack },
-        },
-        target: { id: ATTACK_CANVAS_DROP_ID, element: targetElement },
-      },
+      expectBuffLayoutsNotToOverlap();
+      expect(getBuffGridItem('Syntony Field').dataset.gridY).toBeDefined();
+      expect(getBuffGridItem('High Syntony Field').dataset.gridY).toBeDefined();
     });
-
-    expect(addAttack).toHaveBeenCalledTimes(1);
-    expect(addAttack).toHaveBeenCalledWith(attack, 1);
-    expect(addBuff).not.toHaveBeenCalled();
-    expect(reorderAttacks).not.toHaveBeenCalled();
-    expect(toastSuccess).toHaveBeenCalledWith('Attack added to the rotation timeline.');
   });
 
-  it('adds buffs when a sidebar buff is dropped into the buff canvas', () => {
-    useStore.setState({
-      attacks: Array.from({ length: 8 }, (_, index) =>
-        makeStoredAttack(`attack-${index + 1}`),
-      ),
-    } as Partial<ReturnType<typeof useStore.getState>>);
+  it('keeps a newly added buff at the width of six attacks while the first six attacks are appended', async () => {
+    const user = userEvent.setup();
+    renderRotationBuilder();
 
-    render(<RotationBuilder />);
+    await user.click(screen.getByTestId('sidebar-capability-card-1060'));
 
-    const buff = makeCapability(2);
-    const targetElement = makeDropTargetElement();
+    const buffGridItem = getBuffGridItem('Syntony Field');
+    const initialWidth = Number.parseFloat(buffGridItem.style.width);
 
-    emitDragEnd({
-      canceled: false,
-      nativeEvent: new MouseEvent('pointerup', {
-        clientX: 320,
-        clientY: 160,
-      }),
-      operation: {
-        source: {
-          type: SIDEBAR_BUFF_DRAG_TYPE,
-          data: { kind: 'sidebar-capability', capability: buff },
-        },
-        target: { id: BUFF_CANVAS_DROP_ID, element: targetElement },
-      },
+    expect(useStore.getState().buffs[0]).toMatchObject({
+      w: INITIAL_BUFF_LAYOUT.w,
+      x: INITIAL_BUFF_LAYOUT.x,
+      y: INITIAL_BUFF_LAYOUT.y,
     });
+    expect(initialWidth).toBe(
+      COLUMN_WIDTH * INITIAL_BUFF_LAYOUT.w +
+        COLUMN_MARGIN * (INITIAL_BUFF_LAYOUT.w - 1),
+    );
 
-    expect(addBuff).toHaveBeenCalledTimes(1);
-    expect(addBuff).toHaveBeenCalledWith(buff, {
-      ...INITIAL_BUFF_LAYOUT,
-      x: Math.floor((320 - 100) / COLUMN_STEP),
-      y: Math.floor((160 - 40) / (BUFF_ROW_HEIGHT + ROW_GAP)),
+    for (let index = 0; index < 6; index += 1) {
+      await user.click(screen.getByTestId('sidebar-capability-card-227'));
+    }
+
+    expect(useStore.getState().attacks).toHaveLength(6);
+    expect(useStore.getState().buffs[0]).toMatchObject({
+      w: INITIAL_BUFF_LAYOUT.w,
+      x: INITIAL_BUFF_LAYOUT.x,
+      y: INITIAL_BUFF_LAYOUT.y,
     });
-    expect(addAttack).not.toHaveBeenCalled();
-    expect(reorderAttacks).not.toHaveBeenCalled();
-    expect(toastSuccess).toHaveBeenCalledWith('Buff added to the alignment canvas.');
-  });
-
-  it('shows a success toast when an attack is added from the palette', () => {
-    render(<RotationBuilder />);
-
-    const attack = makeCapability(30);
-    capturedSidebarProperties.current?.onClickAttack?.(attack);
-
-    expect(addAttack).toHaveBeenCalledWith(attack, undefined);
-    expect(toastSuccess).toHaveBeenCalledWith('Attack added to the rotation timeline.');
-  });
-
-  it('shows a success toast when a buff is added from the palette', () => {
-    render(<RotationBuilder />);
-
-    const buff = makeCapability(31);
-    capturedSidebarProperties.current?.onClickBuff?.(buff);
-
-    expect(addBuff).toHaveBeenCalledWith(buff, INITIAL_BUFF_LAYOUT);
-    expect(toastSuccess).toHaveBeenCalledWith('Buff added to the alignment canvas.');
-  });
-
-  it('shows an error toast when an attack is dropped on the buff canvas', () => {
-    render(<RotationBuilder />);
-
-    emitDragEnd({
-      canceled: false,
-      operation: {
-        source: {
-          type: SIDEBAR_ATTACK_DRAG_TYPE,
-          data: { kind: 'sidebar-capability', capability: makeCapability(40) },
-        },
-        target: {
-          id: BUFF_CANVAS_DROP_ID,
-          element: makeDropTargetElement(),
-        },
-      },
-    });
-
-    expect(addAttack).not.toHaveBeenCalled();
-    expect(addBuff).not.toHaveBeenCalled();
-    expect(toastError).toHaveBeenCalledWith(
-      'Attacks can only be dropped on the attack timeline.',
+    expect(Number.parseFloat(getBuffGridItem('Syntony Field').style.width)).toBe(
+      initialWidth,
     );
   });
 
-  it('shows an error toast when a buff is dropped on the attack canvas', () => {
-    render(<RotationBuilder />);
+  it('centers both empty canvas messages within their larger overlay containers', () => {
+    renderRotationBuilder();
 
-    emitDragEnd({
-      canceled: false,
-      operation: {
-        source: {
-          type: SIDEBAR_BUFF_DRAG_TYPE,
-          data: { kind: 'sidebar-capability', capability: makeCapability(41) },
-        },
-        target: {
-          id: ATTACK_CANVAS_DROP_ID,
-          element: makeDropTargetElement(),
-        },
-      },
-    });
-
-    expect(addAttack).not.toHaveBeenCalled();
-    expect(addBuff).not.toHaveBeenCalled();
-    expect(toastError).toHaveBeenCalledWith(
-      'Buffs can only be dropped on the buff alignment canvas.',
+    expect(screen.getByTestId('attack-empty-state')).toHaveClass(
+      'absolute',
+      'inset-0',
+      'flex',
+      'items-center',
+      'justify-center',
+    );
+    expect(screen.getByTestId('buff-empty-state')).toHaveClass(
+      'absolute',
+      'inset-0',
+      'flex',
+      'items-center',
+      'justify-center',
     );
   });
 
-  it('clamps attack insertion to the start and end of the canvas', () => {
-    useStore.setState({
-      attacks: [
-        makeStoredAttack('attack-1'),
-        makeStoredAttack('attack-2'),
-        makeStoredAttack('attack-3'),
+  it('drops a buff into a later row when the default placement is already occupied', async () => {
+    const user = userEvent.setup();
+    renderRotationBuilder({
+      buffs: [
+        makeStoredBuff({
+          characterId: 484,
+          id: 1137,
+          instanceId: 'existing-buff',
+          w: INITIAL_BUFF_LAYOUT.w,
+          x: INITIAL_BUFF_LAYOUT.x,
+          y: INITIAL_BUFF_LAYOUT.y,
+        }),
       ],
-    } as Partial<ReturnType<typeof useStore.getState>>);
+    });
 
-    render(<RotationBuilder />);
+    await user.click(screen.getByTestId('sidebar-capability-card-1060'));
 
-    const attack = makeCapability(9);
-    const targetElement = makeDropTargetElement();
+    expect(useStore.getState().buffs).toHaveLength(2);
+    expect(useStore.getState().buffs[1]).toMatchObject({
+      w: INITIAL_BUFF_LAYOUT.w,
+      x: INITIAL_BUFF_LAYOUT.x,
+      y: 1,
+    });
+  });
+
+  it('uses the buff drop coordinates to place a dragged buff in the expected column and row', () => {
+    renderRotationBuilder({
+      attacks: [
+        makeStoredAttack({
+          characterId: 463,
+          id: 227,
+          instanceId: 'attack-1',
+        }),
+        makeStoredAttack({
+          characterId: 463,
+          id: 238,
+          instanceId: 'attack-2',
+        }),
+      ],
+    });
+    const buffCanvas = screen.getByTestId('buff-canvas');
+    setElementRect(buffCanvas, { width: 1440 });
 
     emitDragEnd({
       canceled: false,
       nativeEvent: new MouseEvent('pointerup', {
-        clientX: 20,
-        clientY: 80,
+        clientX: 470,
+        clientY: 145,
       }),
       operation: {
-        source: {
-          type: SIDEBAR_ATTACK_DRAG_TYPE,
-          data: { kind: 'sidebar-capability', capability: attack },
-        },
-        target: { id: ATTACK_CANVAS_DROP_ID, element: targetElement },
-      },
-    });
-
-    emitDragEnd({
-      canceled: false,
-      nativeEvent: new MouseEvent('pointerup', {
-        clientX: 2000,
-        clientY: 80,
-      }),
-      operation: {
-        source: {
-          type: SIDEBAR_ATTACK_DRAG_TYPE,
-          data: { kind: 'sidebar-capability', capability: attack },
-        },
-        target: { id: ATTACK_CANVAS_DROP_ID, element: targetElement },
-      },
-    });
-
-    expect(addAttack).toHaveBeenNthCalledWith(1, attack, 0);
-    expect(addAttack).toHaveBeenNthCalledWith(2, attack, 3);
-  });
-
-  it('uses the dragged shape center when no native event is available for attack drops', () => {
-    useStore.setState({
-      attacks: [
-        makeStoredAttack('attack-1'),
-        makeStoredAttack('attack-2'),
-        makeStoredAttack('attack-3'),
-        makeStoredAttack('attack-4'),
-      ],
-    } as Partial<ReturnType<typeof useStore.getState>>);
-
-    render(<RotationBuilder />);
-
-    const attack = makeCapability(10);
-    const targetElement = makeDropTargetElement();
-
-    emitDragEnd({
-      canceled: false,
-      operation: {
-        source: {
-          type: SIDEBAR_ATTACK_DRAG_TYPE,
-          data: { kind: 'sidebar-capability', capability: attack },
-        },
-        target: { id: ATTACK_CANVAS_DROP_ID, element: targetElement },
-        shape: makeShape(345, 60),
-      },
-    });
-
-    expect(addAttack).toHaveBeenCalledWith(attack, 3);
-  });
-
-  it('reorders attacks within the attack canvas using sortable indices', () => {
-    render(<RotationBuilder />);
-
-    mockIsSortable.mockReturnValueOnce(true);
-
-    emitDragEnd({
-      canceled: false,
-      operation: {
-        source: {
-          type: ATTACK_SORTABLE_DRAG_TYPE,
-          initialGroup: ATTACK_CANVAS_DROP_ID,
-          initialIndex: 3,
-          group: ATTACK_CANVAS_DROP_ID,
-          index: 1,
-          data: { kind: 'canvas-attack', instanceId: 'attack-4' },
-        },
+        source: getSidebarSource(1061),
         target: {
-          id: 'attack-2',
+          element: buffCanvas,
+          id: BUFF_CANVAS_DROP_ID,
         },
       },
     });
 
-    expect(reorderAttacks).toHaveBeenCalledTimes(1);
-    expect(reorderAttacks).toHaveBeenCalledWith(3, 1);
-    expect(addAttack).not.toHaveBeenCalled();
-    expect(addBuff).not.toHaveBeenCalled();
-  });
-
-  it('renders a drag overlay preview for sidebar capability drags', () => {
-    dragOverlaySource.current = {
-      type: SIDEBAR_ATTACK_DRAG_TYPE,
-      data: {
-        kind: 'sidebar-capability',
-        capability: {
-          ...makeCapability(30),
-          name: 'Basic Attack',
-          iconUrl: '/attack.png',
-          characterIconUrl: '/character.png',
-        },
-      },
-    };
-
-    render(<RotationBuilder />);
-
-    expect(screen.getByTestId('drag-overlay')).toHaveTextContent('Basic Attack');
-  });
-
-  it('ignores non-sidebar buff interactions after insertion so RGL owns them', () => {
-    useStore.setState({
-      attacks: Array.from({ length: 8 }, (_, index) =>
-        makeStoredAttack(`attack-${index + 1}`),
-      ),
-    } as Partial<ReturnType<typeof useStore.getState>>);
-
-    render(<RotationBuilder />);
-
-    const buff = makeCapability(3);
-    const targetElement = makeDropTargetElement(100, 40, 800);
-
-    emitDragEnd({
-      canceled: false,
-      nativeEvent: new MouseEvent('pointerup', {
-        clientX: 420,
-        clientY: 92,
-      }),
-      operation: {
-        source: {
-          type: SIDEBAR_BUFF_DRAG_TYPE,
-          data: { kind: 'sidebar-capability', capability: buff },
-        },
-        target: { id: BUFF_CANVAS_DROP_ID, element: targetElement },
-      },
-    });
-
-    emitDragEnd({
-      canceled: false,
-      operation: {
-        source: {
-          type: 'grid-buff',
-          data: { kind: 'grid-buff', instanceId: 'buff-1' },
-        },
-        target: { id: BUFF_CANVAS_DROP_ID, element: targetElement },
-      },
-    });
-
-    expect(addBuff).toHaveBeenCalledTimes(1);
-    expect(addBuff).toHaveBeenCalledWith(buff, {
-      ...INITIAL_BUFF_LAYOUT,
-      x: 2,
-      y: Math.floor((92 - 40) / (BUFF_ROW_HEIGHT + ROW_GAP)),
-    });
-    expect(addAttack).not.toHaveBeenCalled();
-    expect(reorderAttacks).not.toHaveBeenCalled();
-  });
-
-  it('clamps initial buff placement so a new buff stays within the grid width', () => {
-    useStore.setState({
-      attacks: Array.from({ length: 6 }, (_, index) =>
-        makeStoredAttack(`attack-${index + 1}`),
-      ),
-    } as Partial<ReturnType<typeof useStore.getState>>);
-
-    render(<RotationBuilder />);
-
-    const buff = makeCapability(11);
-    const targetElement = makeDropTargetElement(100, 40, 600);
-
-    emitDragEnd({
-      canceled: false,
-      nativeEvent: new MouseEvent('pointerup', {
-        clientX: 2000,
-        clientY: 45,
-      }),
-      operation: {
-        source: {
-          type: SIDEBAR_BUFF_DRAG_TYPE,
-          data: { kind: 'sidebar-capability', capability: buff },
-        },
-        target: { id: BUFF_CANVAS_DROP_ID, element: targetElement },
-      },
-    });
-
-    expect(addBuff).toHaveBeenCalledWith(buff, {
-      ...INITIAL_BUFF_LAYOUT,
-      x: 0,
-      y: 0,
-    });
-  });
-
-  it('uses the dragged shape center when no native event is available for buff drops', () => {
-    useStore.setState({
-      attacks: Array.from({ length: 9 }, (_, index) =>
-        makeStoredAttack(`attack-${index + 1}`),
-      ),
-    } as Partial<ReturnType<typeof useStore.getState>>);
-
-    render(<RotationBuilder />);
-
-    const buff = makeCapability(12);
-    const targetElement = makeDropTargetElement(100, 40, 900);
-
-    emitDragEnd({
-      canceled: false,
-      operation: {
-        source: {
-          type: SIDEBAR_BUFF_DRAG_TYPE,
-          data: { kind: 'sidebar-capability', capability: buff },
-        },
-        target: { id: BUFF_CANVAS_DROP_ID, element: targetElement },
-        shape: makeShape(455, 152),
-      },
-    });
-
-    expect(addBuff).toHaveBeenCalledWith(buff, {
-      ...INITIAL_BUFF_LAYOUT,
-      x: 3,
-      y: 2,
+    expect(useStore.getState().buffs[0]).toMatchObject({
+      h: 1,
+      w: INITIAL_BUFF_LAYOUT.w,
+      x: Math.floor((470 - 100) / COLUMN_STEP),
+      y: Math.floor((145 - 40) / (BUFF_ROW_HEIGHT + 4)),
     });
   });
 });

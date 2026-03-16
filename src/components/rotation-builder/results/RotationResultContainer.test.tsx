@@ -230,8 +230,8 @@ describe('RotationResultContainer', () => {
     );
     expect(screen.getByText('Damage by Character')).toBeInTheDocument();
     expect(screen.getByText('Skill Origin Distribution')).toBeInTheDocument();
+    expect(screen.getByText('Damage by Type')).toBeInTheDocument();
     expect(screen.getByText('Substat Sensitivity')).toBeInTheDocument();
-    expect(screen.getByText('Summary Selected')).toBeInTheDocument();
   });
 
   it('renders summary empty states when no summary data exists', () => {
@@ -242,11 +242,12 @@ describe('RotationResultContainer', () => {
 
     render(<RotationResultContainer />);
 
-    expect(
-      screen.getByText('No character damage data is available for this rotation.'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('No character damage data available.')).toBeInTheDocument();
     expect(
       screen.getByText('Team slot 1 has no recorded damage in this rotation.'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('No damage type data is available for this rotation.'),
     ).toBeInTheDocument();
     expect(
       screen.getByText(

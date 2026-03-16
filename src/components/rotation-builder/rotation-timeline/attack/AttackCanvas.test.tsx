@@ -85,7 +85,7 @@ describe('AttackCanvas', () => {
     ).toBe(true);
   });
 
-  it('renders the empty-state message without the attack row when there are no attacks or preview', () => {
+  it('keeps rendering the attack row even when there are no attacks or preview', () => {
     mockUseDroppable.mockReturnValue({
       ref: vi.fn(),
       isDropTarget: false,
@@ -100,9 +100,8 @@ describe('AttackCanvas', () => {
 
     render(<AttackCanvas />);
 
-    expect(
-      screen.getByText('Drag attacks here to start building your rotation.'),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId('attack-canvas')).toBeInTheDocument();
+    expect(screen.getByTestId('attack-canvas-row')).toBeEmptyDOMElement();
     expect(screen.queryByTestId('attack-canvas-item')).not.toBeInTheDocument();
     expect(screen.queryByTestId('attack-drop-preview')).not.toBeInTheDocument();
   });

@@ -221,7 +221,7 @@ describe('useStore - rotation slice', () => {
       expect(buff.w).toBe(3);
     });
 
-    it('expands buff when inserting one past its end', () => {
+    it('does not expand buff when inserting into future columns just past its occupied end', () => {
       // attacks: [a0, a1, a2, a3], buff covers [0,1] (x=0, w=2)
       useStore.setState({
         attacks: ['a0', 'a1', 'a2', 'a3'].map((id) => makeAttack(id)),
@@ -233,7 +233,7 @@ describe('useStore - rotation slice', () => {
 
       const buff = useStore.getState().buffs[0];
       expect(buff.x).toBe(0);
-      expect(buff.w).toBe(3);
+      expect(buff.w).toBe(2);
     });
 
     it('does not change buff when appending to end', () => {

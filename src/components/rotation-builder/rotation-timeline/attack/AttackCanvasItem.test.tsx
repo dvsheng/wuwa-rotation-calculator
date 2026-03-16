@@ -67,7 +67,7 @@ describe('AttackCanvasItem', () => {
       />,
     );
 
-    const slot = screen.getByTestId('attack-sort-slot');
+    const slot = screen.getByTestId('attack-canvas-item');
     const card = screen.getByTestId('attack-sort-card');
 
     expect(container.firstElementChild).toBe(slot);

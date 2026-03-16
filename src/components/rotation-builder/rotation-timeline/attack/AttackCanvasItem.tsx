@@ -60,14 +60,14 @@ export const BaseAttackCanvasItem = ({
       <EntityIconDisplay url={characterIconUrl} size="large" />
       <CapabilityIconDisplay url={iconUrl} />
       <Text as="div" variant="caption" className="line-clamp-4 text-center">
-        {name}
+        <span data-testid="attack-canvas-item-name">{name}</span>
       </Text>
       {children}
     </Item>
   );
 
   return (
-    <div data-testid="attack-sort-slot" ref={itemRef} {...rest}>
+    <div data-testid="attack-canvas-item" ref={itemRef} {...rest}>
       {cardWrapper ? cardWrapper(card) : card}
     </div>
   );

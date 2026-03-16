@@ -54,6 +54,7 @@ export const BaseBuffCanvasItem = ({
 }: BaseBuffCanvasItemProperties) => (
   <Item
     {...rest}
+    data-testid="buff-canvas-item"
     className={cn(
       'border-border relative flex h-12 items-center gap-0 border px-0 py-0 select-none',
       className,
@@ -71,7 +72,11 @@ export const BaseBuffCanvasItem = ({
       <ItemMedia>
         <CapabilityIconDisplay url={iconUrl} />
       </ItemMedia>
-      <Text variant="caption" className="min-w-0 truncate">
+      <Text
+        variant="caption"
+        className="min-w-0 truncate"
+        data-testid="buff-canvas-item-name"
+      >
         {name}
       </Text>
     </Row>

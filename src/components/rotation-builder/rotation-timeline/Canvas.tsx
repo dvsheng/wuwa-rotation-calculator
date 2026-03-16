@@ -54,7 +54,10 @@ export const Canvas = ({
               <AttackCanvas previewInsertIndex={attackPreviewInsertIndex} />
             </div>
             {attacksEmpty && (
-              <div className="text-muted-foreground pointer-events-none absolute inset-0 flex items-center justify-center text-sm">
+              <div
+                data-testid="attack-empty-state"
+                className="text-muted-foreground pointer-events-none absolute inset-0 flex items-center justify-center text-sm"
+              >
                 No attacks to display. Drag or click an attack in the palette to add it
                 here.
               </div>
@@ -70,7 +73,10 @@ export const Canvas = ({
              */}
             {mounted && <BuffCanvas previewLayout={buffPreviewLayout} width={width} />}
             {buffsEmpty && (
-              <div className="text-muted-foreground pointer-events-none absolute inset-0 flex items-center justify-center text-sm">
+              <div
+                data-testid="buff-empty-state"
+                className="text-muted-foreground pointer-events-none absolute inset-0 flex items-center justify-center text-sm"
+              >
                 No buffs to display. Drag or click a buff in the palette to add it here.
               </div>
             )}

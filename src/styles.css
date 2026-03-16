@@ -232,3 +232,59 @@ code {
     minmax(min(7rem, 100%), 1fr)
   ); /* 7rem = h-28 */
 }
+
+/* Page-level view transitions (TanStack Router) */
+@keyframes slide-in-from-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slide-out-to-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+@keyframes slide-in-from-left {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slide-out-to-right {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
+/* Suppress default root crossfade — only main-content should animate */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+/* slide-left: navigating forward */
+html:active-view-transition-type(slide-left) {
+  &::view-transition-old(main-content) {
+    animation: slide-out-to-left 250ms ease-in-out both;
+  }
+  &::view-transition-new(main-content) {
+    animation: slide-in-from-right 250ms ease-in-out both;
+  }
+}
+
+/* slide-right: navigating back */
+html:active-view-transition-type(slide-right) {
+  &::view-transition-old(main-content) {
+    animation: slide-out-to-right 250ms ease-in-out both;
+  }
+  &::view-transition-new(main-content) {
+    animation: slide-in-from-left 250ms ease-in-out both;
+  }
+}
+
+/* Tab transitions (in-page, class-based) */
+.slide-left-enter {
+  animation: slide-in-from-right 200ms ease-out both;
+}
+
+.slide-right-enter {
+  animation: slide-in-from-left 200ms ease-out both;
+}

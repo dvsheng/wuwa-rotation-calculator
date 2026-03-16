@@ -14,7 +14,10 @@ export function AppShell({ children }: AppShellProperties) {
     <TooltipProvider delayDuration={100}>
       <Stack className="h-screen overflow-hidden">
         <AppHeader />
-        <main className="h-full min-h-0 flex-1">{children}</main>
+        {/* eslint-disable-next-line tailwindcss/no-arbitrary-value */}
+        <main className="h-full min-h-0 flex-1 [view-transition-name:main-content]">
+          {children}
+        </main>
       </Stack>
     </TooltipProvider>
   );

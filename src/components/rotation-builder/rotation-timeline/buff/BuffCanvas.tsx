@@ -2,7 +2,6 @@ import { useDroppable } from '@dnd-kit/react';
 import type { Ref } from 'react';
 import type { Layout } from 'react-grid-layout';
 import GridLayout from 'react-grid-layout';
-import { absoluteStrategy } from 'react-grid-layout/core';
 
 import {
   BUFF_CANVAS_DROP_ID,
@@ -10,8 +9,6 @@ import {
   SIDEBAR_ATTACK_DRAG_TYPE,
   SIDEBAR_BUFF_DRAG_TYPE,
 } from '@/components/rotation-builder/rotation-timeline/constants';
-import { Box } from '@/components/ui/layout';
-import { Text } from '@/components/ui/typography';
 import { useCanvasLayout } from '@/hooks/useCanvasLayout';
 import { useTeamModifierInstances } from '@/hooks/useTeamModifierInstances';
 import { cn } from '@/lib/utils';
@@ -83,21 +80,10 @@ export const BuffCanvas = ({ width, previewLayout }: BuffCanvasProperties) => {
       })),
       ...(previewLayout ? [{ i: BUFF_PREVIEW_ID, ...previewLayout }] : []),
     ],
-    positionStrategy: absoluteStrategy,
     onLayoutChange,
   });
 
   const isValidDropTarget = isDropTarget && !!previewLayout;
-
-  if (buffs.length === 0 && !previewLayout) {
-    return (
-      <Box fullWidth fullHeight>
-        <Text variant="bodySm" tone="muted">
-          Drag buffs here to start building your rotation.
-        </Text>
-      </Box>
-    );
-  }
   return (
     <div
       ref={ref}
@@ -105,11 +91,11 @@ export const BuffCanvas = ({ width, previewLayout }: BuffCanvasProperties) => {
         // `overflow-x-clip` keeps wide grid content visually contained without
         // becoming the nearest horizontal scroll container, so sticky children
         // inside buff items still track the outer timeline scroll.
-        'overflow-x-clip',
+        'flex min-h-0 flex-1 flex-col overflow-x-clip',
         isValidDropTarget && 'bg-accent/10',
       )}
     >
-      <GridLayout {...fullLayoutProperties} width={width}>
+      <GridLayout {...fullLayoutProperties} width={width} className="min-h-0 flex-1">
         {buffs.map((buff) => (
           <div key={buff.instanceId}>
             <BuffCanvasItem

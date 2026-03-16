@@ -2,7 +2,10 @@ import { merge } from 'es-toolkit/object';
 import { useEffect, useRef, useState } from 'react';
 import type { GridLayoutProps } from 'react-grid-layout';
 
-import { COLUMN_MARGIN } from '@/components/rotation-builder/rotation-timeline/constants';
+import {
+  BUFF_LENGTH_ON_ADD,
+  COLUMN_MARGIN,
+} from '@/components/rotation-builder/rotation-timeline/constants';
 import { useStore } from '@/store';
 
 export const useCanvasLayout = (
@@ -130,7 +133,7 @@ export const useCanvasLayout = (
   // Base layout config without event handlers
   const baseLayoutConfig: Partial<GridLayoutProps> = {
     gridConfig: {
-      cols: attacks.length,
+      cols: Math.max(attacks.length, BUFF_LENGTH_ON_ADD),
       margin: [COLUMN_MARGIN, COLUMN_MARGIN] as const,
     },
     dropConfig: { enabled: true },

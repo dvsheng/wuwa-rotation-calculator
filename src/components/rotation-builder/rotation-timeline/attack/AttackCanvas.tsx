@@ -5,8 +5,7 @@ import {
   SIDEBAR_ATTACK_DRAG_TYPE,
   SIDEBAR_BUFF_DRAG_TYPE,
 } from '@/components/rotation-builder/rotation-timeline/constants';
-import { Box, Row } from '@/components/ui/layout';
-import { Text } from '@/components/ui/typography';
+import { Row } from '@/components/ui/layout';
 import { useTeamAttackInstances } from '@/hooks/useTeamAttackInstances';
 import { cn } from '@/lib/utils';
 import { useStore } from '@/store';
@@ -50,25 +49,20 @@ export const AttackCanvas = ({ previewInsertIndex }: AttackCanvasProperties) => 
     attackCards.push(<BaseAttackCanvasItem key="attack-drop-preview" />);
   }
 
-  if (attackCards.length === 0) {
-    return (
-      <Box className="h-58 w-full">
-        <Text variant="bodySm" tone="muted">
-          Drag attacks here to start building your rotation.
-        </Text>
-      </Box>
-    );
-  }
-
   return (
     <div
       ref={ref}
       className={cn(
-        'py-trim flex h-full w-fit items-center',
+        'py-trim flex h-full w-full items-center',
         isValidDropTarget && 'bg-accent/10',
       )}
     >
-      <Row data-testid="attack-canvas-row" gap="trim" justify="start" className="w-fit">
+      <Row
+        data-testid="attack-canvas-row"
+        gap="trim"
+        justify="start"
+        className="h-56 w-fit"
+      >
         {attackCards}
       </Row>
     </div>

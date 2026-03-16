@@ -4,9 +4,8 @@ import {
   ATTACK_CANVAS_DROP_ID,
   SIDEBAR_ATTACK_DRAG_TYPE,
   SIDEBAR_BUFF_DRAG_TYPE,
-  getTimelineWidth,
 } from '@/components/rotation-builder/rotation-timeline/constants';
-import { Container, Row } from '@/components/ui/layout';
+import { Box, Row } from '@/components/ui/layout';
 import { Text } from '@/components/ui/typography';
 import { useTeamAttackInstances } from '@/hooks/useTeamAttackInstances';
 import { cn } from '@/lib/utils';
@@ -28,9 +27,6 @@ export const AttackCanvas = ({ previewInsertIndex }: AttackCanvasProperties) => 
       source.type === SIDEBAR_ATTACK_DRAG_TYPE ||
       source.type === SIDEBAR_BUFF_DRAG_TYPE,
   });
-  const timelineWidth = getTimelineWidth(
-    Math.max(attacks.length, (previewInsertIndex ?? -1) + 1),
-  );
 
   const hasPreview = previewInsertIndex !== undefined;
   const isValidDropTarget = isDropTarget && hasPreview;
@@ -54,33 +50,34 @@ export const AttackCanvas = ({ previewInsertIndex }: AttackCanvasProperties) => 
     attackCards.push(<BaseAttackCanvasItem key="attack-drop-preview" />);
   }
 
+  if (attackCards.length === 0) {
+    return (
+      <Box className="h-58 w-full">
+        <Text variant="bodySm" tone="muted">
+          Drag attacks here to start building your rotation.
+        </Text>
+      </Box>
+    );
+  }
+
   return (
-    <Container className="bg-card py-trim sticky top-0 z-30 flex h-58 min-w-0">
+    <div className="py-trim sticky top-0 z-30 flex h-58 w-fit min-w-0">
       <div
         ref={ref}
         className={cn(
-          'flex h-full items-center justify-center',
+          'flex h-full w-fit items-center',
           isValidDropTarget && 'bg-accent/10',
         )}
-        style={{ minWidth: timelineWidth, width: timelineWidth }}
       >
-        {attacks.length === 0 && !hasPreview && (
-          <Text variant="bodySm" tone="muted">
-            Drag attacks here to start building your rotation.
-          </Text>
-        )}
-        {attacks.length > 0 || hasPreview ? (
-          <Row
-            data-testid="attack-canvas-row"
-            gap="trim"
-            align="start"
-            fullWidth
-            className="h-full"
-          >
-            {attackCards}
-          </Row>
-        ) : undefined}
+        <Row
+          data-testid="attack-canvas-row"
+          gap="trim"
+          justify="start"
+          className="w-fit"
+        >
+          {attackCards}
+        </Row>
       </div>
-    </Container>
+    </div>
   );
 };

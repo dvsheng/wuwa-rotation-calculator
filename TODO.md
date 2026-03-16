@@ -18,10 +18,6 @@ lazy load tabs in rotation builder (3 points)
 
 look into view transitions (3 points)
 
-attack canvas should not be part of vertical scroll area
+reimplement scroll arrow in a headless way
 
-update some pie charts to be icons with numbers instead
-
-damage type breakdown chart in summary
-
-hide details section in summary
+clean up the empty states for these, maybe need to change props around

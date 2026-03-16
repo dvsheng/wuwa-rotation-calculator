@@ -7,19 +7,16 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from '@/components/ui/resizable';
-import { Separator } from '@/components/ui/separator';
 import { useRotationTimelineDnd } from '@/hooks/useRotationTimelineDnd';
 import { CapabilityType } from '@/services/game-data';
 import { useStore } from '@/store';
 import type { TimelineDragData } from '@/types/dnd';
 
-import { AttackCanvas } from './attack/AttackCanvas';
 import { BaseAttackCanvasItem } from './attack/AttackCanvasItem';
-import { BuffCanvas } from './buff/BuffCanvas';
 import { BaseBuffCanvasItem } from './buff/BuffCanvasItem';
+import { Canvas } from './Canvas';
 import { CapabilitySidebar } from './CapabilitySidebar';
 import { RotationCanvasHeader } from './RotationCanvasHeader';
-import { TimelinePanWrapper } from './TimelinePanWrapper';
 
 export const RotationBuilder = () => {
   const addAttack = useStore((state) => state.addAttack);
@@ -85,13 +82,12 @@ export const RotationBuilder = () => {
           />
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize="75%" className="bg-card h-full w-full">
+        <ResizablePanel defaultSize="75%" className="flex h-full w-full flex-col">
           <RotationCanvasHeader />
-          <TimelinePanWrapper>
-            <AttackCanvas previewInsertIndex={attackPreviewInsertIndex} />
-            <Separator />
-            <BuffCanvas previewLayout={buffPreviewLayout} />
-          </TimelinePanWrapper>
+          <Canvas
+            attackPreviewInsertIndex={attackPreviewInsertIndex}
+            buffPreviewLayout={buffPreviewLayout}
+          />
         </ResizablePanel>
       </ResizablePanelGroup>
       <DragOverlay
@@ -100,17 +96,12 @@ export const RotationBuilder = () => {
       >
         {(source) => {
           const { capability } = source.data;
-          if (capability.capabilityType === CapabilityType.ATTACK) {
-            return (
-              <BaseAttackCanvasItem
-                name={capability.name}
-                iconUrl={capability.iconUrl}
-                characterIconUrl={capability.characterIconUrl}
-              />
-            );
-          }
+          const CanvasItem =
+            capability.capabilityType === CapabilityType.ATTACK
+              ? BaseAttackCanvasItem
+              : BaseBuffCanvasItem;
           return (
-            <BaseBuffCanvasItem
+            <CanvasItem
               name={capability.name}
               iconUrl={capability.iconUrl}
               characterIconUrl={capability.characterIconUrl}

@@ -1,5 +1,4 @@
 import { useDroppable } from '@dnd-kit/react';
-import { useState } from 'react';
 import type { Ref } from 'react';
 import type { Layout } from 'react-grid-layout';
 import GridLayout from 'react-grid-layout';
@@ -11,7 +10,7 @@ import {
   SIDEBAR_ATTACK_DRAG_TYPE,
   SIDEBAR_BUFF_DRAG_TYPE,
 } from '@/components/rotation-builder/rotation-timeline/constants';
-import { Container } from '@/components/ui/layout';
+import { Box } from '@/components/ui/layout';
 import { Text } from '@/components/ui/typography';
 import { useCanvasLayout } from '@/hooks/useCanvasLayout';
 import { useTeamModifierInstances } from '@/hooks/useTeamModifierInstances';
@@ -32,46 +31,31 @@ interface BuffPreviewLayout {
 }
 
 interface BuffCanvasProperties {
+  width: number;
   previewLayout?: BuffPreviewLayout;
 }
 
 const BUFF_PREVIEW_ID = '__buff-drop-preview__';
 
-export const BuffCanvas = ({ previewLayout }: BuffCanvasProperties) => {
+export const BuffCanvas = ({ width, previewLayout }: BuffCanvasProperties) => {
   const { buffs } = useTeamModifierInstances();
   const removeBuff = useStore((state) => state.removeBuff);
   const updateBuffLayout = useStore((state) => state.updateBuffLayout);
-  const [isGridInteractable, setIsGridInteractable] = useState(true);
   const { ref, isDropTarget } = useDroppable<SidebarCapabilityDragData>({
     id: BUFF_CANVAS_DROP_ID,
     accept: (source) =>
       source.type === SIDEBAR_ATTACK_DRAG_TYPE ||
       source.type === SIDEBAR_BUFF_DRAG_TYPE,
   });
-  const isValidDropTarget = isDropTarget && !!previewLayout;
-
   const onLayoutChange = (layout: Layout) => {
     for (const item of layout) {
       if (item.i === BUFF_PREVIEW_ID) continue;
       updateBuffLayout(item.i, { x: item.x, y: item.y, w: item.w, h: item.h });
     }
   };
-
-  const layout = [
-    ...buffs.map((buff) => ({
-      i: buff.instanceId,
-      x: buff.x,
-      y: buff.y,
-      w: buff.w,
-      h: buff.h,
-    })),
-    ...(previewLayout ? [{ i: BUFF_PREVIEW_ID, ...previewLayout }] : []),
-  ];
-
   const { layout: fullLayoutProperties, isInteracting } = useCanvasLayout({
     gridConfig: { rowHeight: BUFF_ROW_HEIGHT },
     resizeConfig: {
-      enabled: isGridInteractable,
       handles: ['e', 'w'],
       // Render handles as styled React elements rather than CSS-positioned divs.
       // react-grid-layout types this ref generically as Ref<HTMLElement>; the cast
@@ -89,59 +73,64 @@ export const BuffCanvas = ({ previewLayout }: BuffCanvasProperties) => {
         />
       ),
     },
-    dragConfig: { enabled: isGridInteractable },
-    layout,
-    style: { minHeight: 400 },
+    layout: [
+      ...buffs.map((buff) => ({
+        i: buff.instanceId,
+        x: buff.x,
+        y: buff.y,
+        w: buff.w,
+        h: buff.h,
+      })),
+      ...(previewLayout ? [{ i: BUFF_PREVIEW_ID, ...previewLayout }] : []),
+    ],
     positionStrategy: absoluteStrategy,
     onLayoutChange,
   });
-  const timelineWidth = fullLayoutProperties.width;
 
-  const handleRemoveBuff = (instanceId: string) => {
-    removeBuff(instanceId);
-  };
+  const isValidDropTarget = isDropTarget && !!previewLayout;
 
+  if (buffs.length === 0 && !previewLayout) {
+    return (
+      <Box fullWidth fullHeight>
+        <Text variant="bodySm" tone="muted">
+          Drag buffs here to start building your rotation.
+        </Text>
+      </Box>
+    );
+  }
   return (
-    <Container
+    <div
       ref={ref}
       className={cn(
-        'flex min-h-0 flex-1 items-center justify-center',
+        // `overflow-x-clip` keeps wide grid content visually contained without
+        // becoming the nearest horizontal scroll container, so sticky children
+        // inside buff items still track the outer timeline scroll.
+        'overflow-x-clip',
         isValidDropTarget && 'bg-accent/10',
       )}
     >
-      {buffs.length === 0 && !previewLayout && (
-        <Text variant="bodySm" tone="muted">
-          Drag buffs here to align with attacks
-        </Text>
-      )}
-      {buffs.length > 0 || previewLayout ? (
-        <Container
-          className="flex items-start"
-          style={{ minWidth: timelineWidth, width: timelineWidth }}
-        >
-          <GridLayout {...fullLayoutProperties}>
-            {buffs.map((buff) => (
-              <div key={buff.instanceId}>
-                <BuffCanvasItem
-                  buff={buff}
-                  onRemove={handleRemoveBuff}
-                  isDialogClickable={!isInteracting}
-                  onOpenChange={(isOpen: boolean) => setIsGridInteractable(!isOpen)}
-                />
-              </div>
-            ))}
-            {previewLayout ? (
-              <div key={BUFF_PREVIEW_ID}>
-                <BaseBuffCanvasItem
-                  characterIconUrl={previewLayout.characterIconUrl}
-                  iconUrl={previewLayout.iconUrl}
-                  name={previewLayout.name}
-                />
-              </div>
-            ) : undefined}
-          </GridLayout>
-        </Container>
-      ) : undefined}
-    </Container>
+      <div>
+        <GridLayout {...fullLayoutProperties} width={width}>
+          {buffs.map((buff) => (
+            <div key={buff.instanceId}>
+              <BuffCanvasItem
+                buff={buff}
+                onRemove={removeBuff}
+                isDialogClickable={!isInteracting}
+              />
+            </div>
+          ))}
+          {previewLayout ? (
+            <div key={BUFF_PREVIEW_ID}>
+              <BaseBuffCanvasItem
+                characterIconUrl={previewLayout.characterIconUrl}
+                iconUrl={previewLayout.iconUrl}
+                name={previewLayout.name}
+              />
+            </div>
+          ) : undefined}
+        </GridLayout>
+      </div>
+    </div>
   );
 };

@@ -2,25 +2,17 @@ import { merge } from 'es-toolkit/object';
 import { useEffect, useRef, useState } from 'react';
 import type { GridLayoutProps } from 'react-grid-layout';
 
-import {
-  ATTACK_ROW_HEIGHT,
-  COLUMN_MARGIN,
-  getTimelineColumnCount,
-  getTimelineWidth,
-} from '@/components/rotation-builder/rotation-timeline/constants';
+import { COLUMN_MARGIN } from '@/components/rotation-builder/rotation-timeline/constants';
 import { useStore } from '@/store';
 
 export const useCanvasLayout = (
   partialProperties?: Partial<Omit<GridLayoutProps, 'children'>>,
 ) => {
-  const rotationAttackCount = useStore((state) => state.attacks.length);
   const [isInteracting, setIsInteracting] = useState(false);
   const interactionTimeoutReference = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
-
-  const columnCount = getTimelineColumnCount(rotationAttackCount);
-  const width = getTimelineWidth(rotationAttackCount);
+  const attacks = useStore((state) => state.attacks);
 
   const {
     onDragStart: externalOnDragStart,
@@ -136,22 +128,15 @@ export const useCanvasLayout = (
   }, [isInteracting]);
 
   // Base layout config without event handlers
-  const baseLayoutConfig = {
-    width,
+  const baseLayoutConfig: Partial<GridLayoutProps> = {
     gridConfig: {
-      cols: columnCount,
-      rowHeight: ATTACK_ROW_HEIGHT,
+      cols: attacks.length,
       margin: [COLUMN_MARGIN, COLUMN_MARGIN] as const,
-    },
-    style: {
-      minHeight: ATTACK_ROW_HEIGHT,
     },
     dropConfig: { enabled: true },
     dragConfig: { enabled: true, bounded: true },
   };
-
   const mergedLayoutConfig = merge(baseLayoutConfig, layoutProperties);
-
   const layout = {
     ...mergedLayoutConfig,
     onDragStart: handleDragStart,
@@ -159,7 +144,6 @@ export const useCanvasLayout = (
     onResizeStart: handleResizeStart,
     onResizeStop: handleResizeStop,
   };
-
   return {
     layout,
     isInteracting,

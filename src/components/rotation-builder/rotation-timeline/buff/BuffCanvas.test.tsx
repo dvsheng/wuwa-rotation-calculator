@@ -76,7 +76,7 @@ describe('BuffCanvas', () => {
   });
 
   it('registers the canvas as a droppable for both sidebar drag types', () => {
-    render(<BuffCanvas />);
+    render(<BuffCanvas width={640} />);
 
     expect(
       capturedDroppableProperties.current?.accept({
@@ -95,10 +95,10 @@ describe('BuffCanvas', () => {
       buffs: [],
     });
 
-    render(<BuffCanvas />);
+    render(<BuffCanvas width={640} />);
 
     expect(
-      screen.getByText('Drag buffs here to align with attacks'),
+      screen.getByText('Drag buffs here to start building your rotation.'),
     ).toBeInTheDocument();
     expect(screen.queryByTestId('mock-grid-layout')).not.toBeInTheDocument();
     expect(screen.queryByTestId('buff-canvas-item')).not.toBeInTheDocument();
@@ -127,16 +127,23 @@ describe('BuffCanvas', () => {
     expect(previewWrapper).not.toHaveAttribute('data-testid', 'buff-drop-preview');
   });
 
-  it('keeps the buff lane at the shared timeline width without nesting a scroll area', () => {
-    const { container } = render(<BuffCanvas />);
+  it('renders the buff lane without nesting a scroll area', () => {
+    const { container } = render(<BuffCanvas width={640} />);
 
     const grid = screen.getByTestId('mock-grid-layout');
-    const timelineLane = grid.parentElement as HTMLDivElement | null;
 
     expect(grid).toBeInTheDocument();
-    expect(timelineLane).toHaveStyle({ width: '640px' });
     expect(
       container.querySelector('[data-slot="scroll-area"]'),
     ).not.toBeInTheDocument();
+  });
+
+  it('does not create an intermediate horizontal scroll container that would break sticky buff chrome', () => {
+    const { container } = render(<BuffCanvas width={640} />);
+
+    const scrollLane = container.firstElementChild as HTMLDivElement | null;
+
+    expect(scrollLane).toHaveClass('overflow-x-clip');
+    expect(scrollLane).not.toHaveClass('overflow-x-hidden');
   });
 });

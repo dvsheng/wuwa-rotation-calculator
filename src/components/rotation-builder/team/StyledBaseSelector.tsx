@@ -62,9 +62,9 @@ export const SelectorSkeleton = ({
 }: {
   withSecondary?: boolean;
 }) => (
-  <SelectorLayout icon={<Skeleton className="size-10" />}>
-    <Skeleton className="h-9 flex-1" />
-    {withSecondary && <Skeleton className="h-9 w-20 shrink-0" />}
+  <SelectorLayout icon={<Skeleton className="bg-muted size-10" />}>
+    <Skeleton className="bg-muted h-9 flex-1" />
+    {withSecondary && <Skeleton className="bg-muted h-9 w-20 shrink-0" />}
   </SelectorLayout>
 );
 

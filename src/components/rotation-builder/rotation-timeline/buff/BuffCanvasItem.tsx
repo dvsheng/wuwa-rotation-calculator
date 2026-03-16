@@ -23,10 +23,10 @@ import { Target } from '@/services/game-data';
 import { useStore } from '@/store';
 
 const TARGET_COLORS: Record<Target, string> = {
-  [Target.SELF]: 'bg-blue-100',
-  [Target.TEAM]: 'bg-green-100',
-  [Target.ACTIVE_CHARACTER]: 'bg-amber-100',
-  [Target.ENEMY]: 'bg-red-100',
+  [Target.SELF]: 'bg-chart-1/20',
+  [Target.TEAM]: 'bg-chart-2/20',
+  [Target.ACTIVE_CHARACTER]: 'bg-chart-3/20',
+  [Target.ENEMY]: 'bg-destructive/20',
 };
 
 interface BuffCanvasItemProperties {
@@ -63,7 +63,7 @@ export const BaseBuffCanvasItem = ({
     {/* Left sticky: icons + name */}
     <Row
       align="center"
-      className="sticky left-0 z-10 h-full min-w-0 gap-4 overflow-hidden bg-inherit px-4"
+      className="sticky left-0 z-10 h-full min-w-0 gap-4 overflow-hidden px-4"
     >
       <ItemMedia>
         <EntityIconDisplay url={characterIconUrl} size="medium" />
@@ -78,10 +78,7 @@ export const BaseBuffCanvasItem = ({
     {/* Spacer */}
     <div className="relative z-10 flex-1" />
     {/* Right sticky: warning + actions */}
-    <Row
-      align="center"
-      className="gap-inset sticky right-0 z-10 h-full shrink-0 bg-inherit px-4"
-    >
+    <Row align="center" className="gap-inset sticky right-0 z-10 h-full shrink-0 px-4">
       <ItemActions>{actions}</ItemActions>
     </Row>
   </Item>
@@ -117,7 +114,10 @@ export const BuffCanvasItem = ({
     switch (alignment.status) {
       case 'all-aligned': {
         // Fully aligned: solid fill
-        return { itemClassName: TARGET_COLORS[Target.SELF], segments: [] };
+        return {
+          itemClassName: TARGET_COLORS[Target.SELF],
+          segments: [],
+        };
       }
       case 'all-misaligned': {
         // Fully misaligned: outline only
@@ -132,7 +132,10 @@ export const BuffCanvasItem = ({
         };
       }
       default: {
-        return { itemClassName: TARGET_COLORS[buff.target], segments: [] };
+        return {
+          itemClassName: TARGET_COLORS[buff.target],
+          segments: [],
+        };
       }
     }
   };
@@ -198,7 +201,7 @@ export const BuffCanvasItem = ({
               {segments.map((segment, index) => (
                 <div
                   key={index}
-                  className="absolute inset-y-0 bg-blue-100"
+                  className={cn('absolute inset-y-0', TARGET_COLORS[Target.SELF])}
                   style={{
                     left: `${segment.start}%`,
                     width: `${segment.width}%`,

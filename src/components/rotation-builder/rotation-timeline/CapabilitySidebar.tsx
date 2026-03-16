@@ -23,31 +23,31 @@ import type { OriginType as CapabilityOriginType } from '@/services/game-data';
 import type { SidebarCapabilityDragData } from '@/types/dnd';
 
 const ATTACK_COLORS: Record<CapabilityOriginType, string> = {
-  'Normal Attack': 'border-l-slate-400',
-  'Resonance Skill': 'border-l-sky-400',
-  'Resonance Liberation': 'border-l-violet-400',
-  'Forte Circuit': 'border-l-amber-400',
-  'Intro Skill': 'border-l-lime-400',
-  'Outro Skill': 'border-l-emerald-400',
-  'Tune Break': 'border-l-cyan-400',
-  Echo: 'border-l-orange-400',
-  Weapon: 'border-l-indigo-400',
-  'Echo Set': 'border-l-fuchsia-400',
-  s1: 'border-l-yellow-400',
-  s2: 'border-l-yellow-400',
-  s3: 'border-l-yellow-400',
-  s4: 'border-l-yellow-400',
-  s5: 'border-l-yellow-400',
-  s6: 'border-l-yellow-400',
-  'Inherent Skill': 'border-l-yellow-400',
-  'Base Stats': 'border-l-yellow-400',
+  'Normal Attack': 'border-l-chart-1',
+  'Resonance Skill': 'border-l-chart-2',
+  'Resonance Liberation': 'border-l-chart-3',
+  'Forte Circuit': 'border-l-chart-4',
+  'Intro Skill': 'border-l-chart-5',
+  'Outro Skill': 'border-l-chart-1/50',
+  'Tune Break': 'border-l-chart-2/50',
+  Echo: 'border-l-chart-3/50',
+  Weapon: 'border-l-chart-4/50',
+  'Echo Set': 'border-l-chart-5/50',
+  s1: 'border-l-chart-1/30',
+  s2: 'border-l-chart-1/30',
+  s3: 'border-l-chart-1/30',
+  s4: 'border-l-chart-1/30',
+  s5: 'border-l-chart-1/30',
+  s6: 'border-l-chart-1/30',
+  'Inherent Skill': 'border-l-chart-2/30',
+  'Base Stats': 'border-l-chart-3/30',
 };
 
 const TARGET_COLORS: Record<Target, string> = {
-  [Target.SELF]: 'border-l-blue-400',
-  [Target.TEAM]: 'border-l-green-400',
-  [Target.ACTIVE_CHARACTER]: 'border-l-amber-400',
-  [Target.ENEMY]: 'border-l-red-400',
+  [Target.SELF]: 'border-l-chart-1',
+  [Target.TEAM]: 'border-l-chart-2',
+  [Target.ACTIVE_CHARACTER]: 'border-l-chart-3',
+  [Target.ENEMY]: 'border-l-destructive',
 };
 
 interface LegendItem {
@@ -56,25 +56,25 @@ interface LegendItem {
 }
 
 const ATTACK_COLOR_LEGEND: Array<LegendItem> = [
-  { label: 'Normal Attack', colorClassName: 'bg-slate-400' },
-  { label: 'Resonance Skill', colorClassName: 'bg-sky-400' },
-  { label: 'Resonance Liberation', colorClassName: 'bg-violet-400' },
-  { label: 'Forte Circuit', colorClassName: 'bg-amber-400' },
-  { label: 'Intro Skill', colorClassName: 'bg-lime-400' },
-  { label: 'Outro Skill', colorClassName: 'bg-emerald-400' },
-  { label: 'Tune Break', colorClassName: 'bg-cyan-400' },
-  { label: 'Echo', colorClassName: 'bg-orange-400' },
-  { label: 'Weapon', colorClassName: 'bg-indigo-400' },
-  { label: 'Echo Set', colorClassName: 'bg-fuchsia-400' },
-  { label: 'Inherent Skill', colorClassName: 'bg-yellow-400' },
-  { label: 'Base Stats', colorClassName: 'bg-yellow-400' },
+  { label: 'Normal Attack', colorClassName: 'bg-chart-1' },
+  { label: 'Resonance Skill', colorClassName: 'bg-chart-2' },
+  { label: 'Resonance Liberation', colorClassName: 'bg-chart-3' },
+  { label: 'Forte Circuit', colorClassName: 'bg-chart-4' },
+  { label: 'Intro Skill', colorClassName: 'bg-chart-5' },
+  { label: 'Outro Skill', colorClassName: 'bg-chart-1' },
+  { label: 'Tune Break', colorClassName: 'bg-chart-2' },
+  { label: 'Echo', colorClassName: 'bg-chart-3' },
+  { label: 'Weapon', colorClassName: 'bg-chart-4' },
+  { label: 'Echo Set', colorClassName: 'bg-chart-5' },
+  { label: 'Inherent Skill', colorClassName: 'bg-chart-1' },
+  { label: 'Base Stats', colorClassName: 'bg-chart-2' },
 ];
 
 const BUFF_COLOR_LEGEND: Array<LegendItem> = [
-  { label: 'Self Target', colorClassName: 'bg-blue-400' },
-  { label: 'Team Target', colorClassName: 'bg-green-400' },
-  { label: 'Active Character Target', colorClassName: 'bg-amber-400' },
-  { label: 'Enemy Target', colorClassName: 'bg-red-400' },
+  { label: 'Self Target', colorClassName: 'bg-chart-1' },
+  { label: 'Team Target', colorClassName: 'bg-chart-2' },
+  { label: 'Active Character Target', colorClassName: 'bg-chart-3' },
+  { label: 'Enemy Target', colorClassName: 'bg-chart-4' },
 ];
 
 const BUFF_SKILL_ORDER: Array<CapabilityOriginType> = [

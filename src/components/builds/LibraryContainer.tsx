@@ -21,7 +21,7 @@ export function LibraryContainer() {
       </Row>
       <ScrollArea className="min-h-0 flex-1">
         {rotations.length === 0 ? (
-          <Card className="animate-in fade-in-50 border-dashed">
+          <Card>
             <CardHeader className="items-center text-center">
               <Row gap="component">
                 <Library className="h-10 w-10 opacity-20" />

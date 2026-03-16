@@ -119,50 +119,43 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
     value: rotation.data.enemy.resistances[attribute],
   }));
   return (
-    <Card className="w-full">
+    <Card>
       <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <CardTitle>{rotation.name}</CardTitle>
-            <CardDescription>
-              Last updated: {format(new Date(rotation.updatedAt), 'PPP p')}
-            </CardDescription>
-          </div>
-          {isOwner && (
-            <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-              <DialogTrigger asChild>
-                <TrashButton
-                  stopPropagation={false}
-                  onRemove={() => setIsDeleteDialogOpen(true)}
-                />
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Are you sure?</DialogTitle>
-                  <DialogDescription>
-                    This action cannot be undone. This will permanently delete the
-                    rotation "{rotation.name}".
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsDeleteDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => void handleDelete()}
-                    disabled={isDeleting}
-                  >
-                    Delete
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          )}
-        </div>
+        <CardTitle>{rotation.name}</CardTitle>
+        <CardDescription>
+          Last updated: {format(new Date(rotation.updatedAt), 'PPP p')}
+        </CardDescription>
+        {isOwner && (
+          <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <DialogTrigger asChild>
+              <TrashButton
+                stopPropagation={false}
+                onRemove={() => setIsDeleteDialogOpen(true)}
+              />
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Are you sure?</DialogTitle>
+                <DialogDescription>
+                  This action cannot be undone. This will permanently delete the
+                  rotation "{rotation.name}".
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => void handleDelete()}
+                  disabled={isDeleting}
+                >
+                  Delete
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
       </CardHeader>
       <CardContent>
         <Text variant="bodySm" tone="muted">

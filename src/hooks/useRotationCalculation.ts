@@ -1,5 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { compact } from 'es-toolkit/array';
 
+import type { AttackDamageInstance } from '@/services/game-data';
 import { calculateRotation } from '@/services/rotation-calculator/calculate-client-rotation-damage';
 import type { ClientRotationResult } from '@/services/rotation-calculator/client-output-adapter/adapt-rotation-result-to-client-output';
 import { useStore } from '@/store';
@@ -9,10 +11,9 @@ import { useTeamAttackInstances } from './useTeamAttackInstances';
 
 type DamageDetail = ClientRotationResult['damageDetails'][number];
 
-export interface RotationResultMergedDamageDetail {
-  detail: DamageDetail;
-  attack: DetailedAttackInstance | undefined;
-}
+export type RotationResultMergedDamageDetail = DamageDetail &
+  DetailedAttackInstance &
+  AttackDamageInstance;
 
 export type RotationCalculationResult = ClientRotationResult & {
   mergedDamageDetails: Array<RotationResultMergedDamageDetail>;
@@ -48,15 +49,22 @@ export const useRotationCalculation = () => {
     resolvedAttacks.map((attack) => [attack.instanceId, attack]),
   );
   const mergedDamageDetails =
-    calculationQuery.data?.damageDetails.map((detail) => {
-      const attack = attackMap.get(attacks[detail.attackIndex]?.instanceId);
-      return {
-        detail,
-        attack,
-      };
-    }) ?? [];
+    calculationQuery.status === 'success'
+      ? compact(
+          calculationQuery.data.damageDetails.map((detail) => {
+            const attack = attackMap.get(attacks[detail.attackIndex]?.instanceId);
+            if (!attack) return;
+            const damageInstance = attack.damageInstances[detail.damageInstanceIndex];
+            return {
+              ...attack,
+              ...damageInstance,
+              ...detail,
+            };
+          }),
+        )
+      : [];
   const attackCount = new Set(
-    mergedDamageDetails.map((mergedDetail) => mergedDetail.detail.attackIndex),
+    mergedDamageDetails.map((mergedDetail) => mergedDetail.attackIndex),
   ).size;
 
   return {

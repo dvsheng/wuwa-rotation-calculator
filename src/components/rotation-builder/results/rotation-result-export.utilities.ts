@@ -309,21 +309,19 @@ export const buildRotationResultExportRows = (
 ): Array<Record<string, CsvCell>> => {
   const hitCountPerAttack = new Map<number, number>();
 
-  return mergedDamageDetails.map(({ detail, attack }) => {
+  return mergedDamageDetails.map((detail) => {
     const hitIndex = hitCountPerAttack.get(detail.attackIndex) ?? 0;
     hitCountPerAttack.set(detail.attackIndex, hitIndex + 1);
-
-    const damageInstance = attack?.damageInstances[hitIndex];
     const row: Record<string, CsvCell> = {
       attack_number: detail.attackIndex + 1,
       hit_number: hitIndex + 1,
-      character_name: attack?.characterName ?? '',
-      capability_id: attack?.id,
-      parent_name: attack?.parentName ?? '',
-      attack_name: attack?.name ?? '',
-      origin_type: attack?.originType ?? '',
-      attribute: damageInstance?.attribute ?? '',
-      damage_type: damageInstance?.damageType ?? '',
+      character_name: detail.characterName,
+      capability_id: detail.id,
+      parent_name: detail.parentName,
+      attack_name: detail.name,
+      origin_type: detail.originType,
+      attribute: detail.attribute,
+      damage_type: detail.damageType,
       scaling_stat: detail.scalingStat,
       motion_value_percent: roundToOneDecimal(detail.motionValue * 100),
       attack_scaling_property_value:

@@ -99,7 +99,7 @@ export const RotationResultContainer = () => {
                 className="flex min-h-0 w-full overflow-hidden"
               >
                 <CharacterBreakdownDataTable
-                  mergedDamageDetails={result.mergedDamageDetails}
+                  result={result.mergedDamageDetails}
                   totalDamage={result.totalDamage}
                   inspectorPortalNode={inspectorPortalNode}
                 />

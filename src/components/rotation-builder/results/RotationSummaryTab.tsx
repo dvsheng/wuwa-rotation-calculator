@@ -8,13 +8,15 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Grid, Stack } from '@/components/ui/layout';
+import { useCharacterByTeamSlotNumber } from '@/hooks/useCharacter';
 import type { RotationCalculationResult } from '@/hooks/useRotationCalculation';
+import { getChartColorByIndex } from '@/lib/utils';
 
 import { CharacterDamageSummaryRow } from './CharacterDamageSummaryRow';
 import { DistributionPieChart } from './DistributionPieChart';
+import { getRotationResultBreakdown } from './get-rotation-result-breakdown';
+import type { DistributionChartDatum } from './result-breakdown.types';
 import { SubstatSensitivityBarChart } from './SubstatSensitivityBarChart';
-import { useDamageTypeBreakdown } from './useDamageTypeBreakdown';
-import { useFirstCharacterSkillOriginDistribution } from './useFirstCharacterSkillOriginDistribution';
 import { useSensitivityAnalysisBreakdown } from './useSensitivityAnalysisBreakdown';
 
 interface RotationSummaryTabProperties {
@@ -38,14 +40,41 @@ const SummaryChartCard = ({
   </Card>
 );
 
+const toPieChartData = (
+  data: ReturnType<typeof getRotationResultBreakdown>,
+): Array<DistributionChartDatum> => {
+  return data.map((row, index) => ({
+    id: row.groupValue,
+    label: row.groupValue,
+    value: row.damage,
+    percentage: row.percentage,
+    fill: getChartColorByIndex(index),
+  }));
+};
+
 export const RotationSummaryTab = ({ result }: RotationSummaryTabProperties) => {
   const { substatChartData } = useSensitivityAnalysisBreakdown(
     result.sensitivityAnalysis,
   );
-  const { characterName, chartData: originDistributionChartData } =
-    useFirstCharacterSkillOriginDistribution(result.mergedDamageDetails);
-  const { chartData: damageTypeChartData } = useDamageTypeBreakdown(
-    result.mergedDamageDetails,
+  const character = useCharacterByTeamSlotNumber(0);
+  if (!character) {
+    return;
+  }
+  const skillOriginData = toPieChartData(
+    getRotationResultBreakdown({
+      data: result.mergedDamageDetails,
+      groupKey: 'originType',
+      characterIndex: 0,
+      bucketBelow: 5,
+    }),
+  );
+  const damageTypeData = toPieChartData(
+    getRotationResultBreakdown({
+      data: result.mergedDamageDetails,
+      groupKey: 'damageType',
+      characterIndex: 0,
+      bucketBelow: 4,
+    }),
   );
 
   return (
@@ -64,13 +93,13 @@ export const RotationSummaryTab = ({ result }: RotationSummaryTabProperties) => 
         <SummaryChartCard
           title="Skill Origin Distribution"
           description={
-            characterName
-              ? `${characterName}'s damage split by skill origin type.`
+            character.name
+              ? `${character.name}'s damage split by skill origin type.`
               : 'Team slot 1 damage split by skill origin type.'
           }
         >
           <DistributionPieChart
-            data={originDistributionChartData}
+            data={skillOriginData}
             emptyTitle="Skill Origin Distribution"
             emptyDescription="Team slot 1 has no recorded damage in this rotation."
           />
@@ -81,7 +110,7 @@ export const RotationSummaryTab = ({ result }: RotationSummaryTabProperties) => 
           description="Total rotation damage split by damage type across all characters."
         >
           <DistributionPieChart
-            data={damageTypeChartData}
+            data={damageTypeData}
             emptyTitle="Damage Type Breakdown"
             emptyDescription="No damage type data is available for this rotation."
           />

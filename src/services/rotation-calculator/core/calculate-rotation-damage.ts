@@ -11,18 +11,19 @@ export const calculateRotationDamage = <T extends {} = {}>(
 ): RotationResult<T> => {
   const flattenedDamageInstances = rotation.attacks.flatMap(
     ({ attack, modifiers }, attackIndex) => {
-      return attack.damageInstances.map((instance) => ({
+      return attack.damageInstances.map((instance, index) => ({
         instance: {
           ...instance,
           characterIndex: attack.characterIndex,
         },
         modifiers,
         attackIndex: attackIndex,
+        damageInstanceIndex: index,
       }));
     },
   );
   return flattenedDamageInstances.reduce(
-    (reducer, { instance, modifiers, attackIndex }) => {
+    (reducer, { instance, modifiers, ...instanceMetadata }) => {
       const [teamWithModifiers, enemyWithModifiers] = applyModifiers(
         rotation.team,
         rotation.enemy,
@@ -53,10 +54,8 @@ export const calculateRotationDamage = <T extends {} = {}>(
           ...reducer.damageDetails,
           {
             ...inputs,
-            attackIndex,
-            characterIndex: instance.characterIndex,
-            scalingStat: instance.scalingStat,
-            motionValue: instance.motionValue,
+            ...instance,
+            ...instanceMetadata,
             damage: result,
             teamDetails: filteredTeam.map((character) => character.stats),
             enemyDetails: filteredEnemy.stats,

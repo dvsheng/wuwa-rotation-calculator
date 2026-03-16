@@ -25,6 +25,7 @@ export interface RotationResult<T extends {} = {}> {
   damageDetails: Array<
     CalculateDamageProperties & {
       attackIndex: number;
+      damageInstanceIndex: number;
       /** Index of the character in the team (0–2) that dealt this damage. */
       characterIndex: number;
       scalingStat: AttackScalingProperty;

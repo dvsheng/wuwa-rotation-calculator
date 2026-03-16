@@ -1,5 +1,4 @@
 import { AttackScalingProperty, CharacterStat, EnemyStat } from '@/types';
-import type { CharacterStats, EnemyStats } from '@/types';
 
 import type { StatMeta } from '../client-input-adapter/adapt-client-input-to-rotation';
 import { getAttackScalingType } from '../core/type-converters';
@@ -16,20 +15,13 @@ export type ClientCharacterStats = Partial<
 
 export type ClientEnemyStats = Partial<Record<EnemyStat | 'level', number>>;
 
-export interface ClientDamageDetail {
-  attackIndex: number;
-  characterIndex: number;
-  scalingStat: AttackScalingProperty;
-  motionValue: number;
-  damage: number;
-  baseDamage: number;
+export type ClientDamageDetail = Omit<
+  RotationResult<StatMeta>['damageDetails'][number],
+  'character' | 'enemy'
+> & {
   character: ClientCharacterStats;
   enemy: ClientEnemyStats;
-  /** Full tagged stat arrays for each team member after modifier application and tag filtering. */
-  teamDetails: Array<CharacterStats<StatMeta>>;
-  /** Full tagged stat arrays for the enemy after modifier application and tag filtering. */
-  enemyDetails: EnemyStats<StatMeta>;
-}
+};
 
 export const SensitivityAnalysisCategory = {
   SUBSTAT_ROLL: 'substatRoll',
@@ -167,21 +159,8 @@ export const adaptRotationResultToClientOutput = (
 ): ClientRotationCalculationOutput => ({
   totalDamage: result.totalDamage,
   damageDetails: result.damageDetails.map((detail) => ({
-    attackIndex: detail.attackIndex,
-    characterIndex: detail.characterIndex,
-    scalingStat: detail.scalingStat,
-    motionValue: detail.motionValue,
-    damage: detail.damage,
-    baseDamage: detail.baseDamage,
-    character: filterCharacterStats(
-      detail.character as unknown as Record<string, number>,
-      detail.scalingStat,
-    ),
-    enemy: filterEnemyStats(
-      detail.enemy as unknown as Record<string, number>,
-      detail.scalingStat,
-    ),
-    teamDetails: detail.teamDetails,
-    enemyDetails: detail.enemyDetails,
+    ...detail,
+    character: filterCharacterStats(detail.character, detail.scalingStat),
+    enemy: filterEnemyStats(detail.enemy, detail.scalingStat),
   })),
 });

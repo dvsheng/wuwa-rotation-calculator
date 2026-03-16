@@ -10,16 +10,18 @@ export type { IconSize } from './CapabilityIcon';
 interface CharacterIconDisplayProperties {
   url?: string;
   size?: IconSize;
+  className?: string;
 }
 
 export const CharacterIconDisplay = ({
   url,
   size = 'medium',
+  className,
 }: CharacterIconDisplayProperties) => (
   <div
     className={cn(
       'flex items-center justify-center overflow-hidden rounded-full bg-transparent',
-      SIZE_CLASSES[size],
+      className ?? SIZE_CLASSES[size],
     )}
   >
     {url ? (

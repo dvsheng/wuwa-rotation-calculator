@@ -8,24 +8,28 @@ export const buildAttackGroups = (
   const groupMap = new Map<number, AttackGroup>();
   const hitCountPerAttack = new Map<number, number>();
 
-  for (const { detail, attack } of mergedDamageDetails) {
-    const characterName = attack?.characterName ?? '';
-    const hitIndex = hitCountPerAttack.get(detail.attackIndex) ?? 0;
-    hitCountPerAttack.set(detail.attackIndex, hitIndex + 1);
+  for (const damageInstance of mergedDamageDetails) {
+    const characterName = damageInstance.characterName;
+    const hitIndex = hitCountPerAttack.get(damageInstance.attackIndex) ?? 0;
+    hitCountPerAttack.set(damageInstance.attackIndex, hitIndex + 1);
 
-    const existingGroup = groupMap.get(detail.attackIndex);
+    const existingGroup = groupMap.get(damageInstance.attackIndex);
     if (existingGroup) {
-      existingGroup.hits.push({ hitIndex, detail, damage: detail.damage });
-      existingGroup.totalDamage += detail.damage;
+      existingGroup.hits.push({
+        hitIndex,
+        detail: damageInstance,
+        damage: damageInstance.damage,
+      });
+      existingGroup.totalDamage += damageInstance.damage;
       continue;
     }
 
-    groupMap.set(detail.attackIndex, {
-      attackIndex: detail.attackIndex,
-      attack,
+    groupMap.set(damageInstance.attackIndex, {
+      attackIndex: damageInstance.attackIndex,
+      attack: damageInstance,
       characterName,
-      hits: [{ hitIndex, detail, damage: detail.damage }],
-      totalDamage: detail.damage,
+      hits: [{ hitIndex, detail: damageInstance, damage: damageInstance.damage }],
+      totalDamage: damageInstance.damage,
     });
   }
 

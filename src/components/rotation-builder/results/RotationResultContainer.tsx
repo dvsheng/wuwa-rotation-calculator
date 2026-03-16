@@ -1,8 +1,8 @@
-import { AlertCircle, BarChart2, ListTree } from 'lucide-react';
+import { AlertCircle, BarChart2, Download, ListTree } from 'lucide-react';
 import { useState } from 'react';
-import { createPortal } from 'react-dom';
 
 import { DashboardSectionHeader } from '@/components/common/DashboardSectionHeader';
+import { Button } from '@/components/ui/button';
 import { Container, Row, Stack } from '@/components/ui/layout';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -12,6 +12,7 @@ import { useRotationCalculation } from '@/hooks/useRotationCalculation';
 
 import { AttackBreakdownDataTable } from './AttackBreakdownDataTable';
 import { CharacterBreakdownDataTable } from './CharacterBreakdownDataTable';
+import { downloadRotationResultCsv } from './rotation-result-export.utilities';
 import { RotationResultSummary } from './RotationResultSummary';
 import { RotationSummaryTab } from './RotationSummaryTab';
 import { SensitivityAnalysisTable } from './SensitivityAnalysisTable';
@@ -35,6 +36,17 @@ export const RotationResultContainer = () => {
             subtitle={`${result.attackCount} ${result.attackCount === 1 ? 'attack' : 'attacks'}`}
             description="Review the calculated output for the current build here. Use the tabs to switch between summary, per-attack, per-character, and sensitivity views."
             icon={<BarChart2 />}
+            action={
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => downloadRotationResultCsv(result.mergedDamageDetails)}
+                disabled={result.mergedDamageDetails.length === 0}
+              >
+                <Download />
+                Export as CSV
+              </Button>
+            }
           />
           <Stack gap="component" className="p-page min-h-0 flex-1">
             {isStale && (
@@ -55,7 +67,6 @@ export const RotationResultContainer = () => {
               totalDamage={result.totalDamage}
               attackCount={result.attackCount}
               damageInstanceCount={result.damageDetails.length}
-              mergedDamageDetails={result.mergedDamageDetails}
             />
             <Tabs
               value={selectedTab}
@@ -106,33 +117,25 @@ export const RotationResultContainer = () => {
           </Stack>
         </Stack>
 
-        <Separator orientation="vertical" className="self-stretch" />
-        <Stack className="w-md">
-          <DashboardSectionHeader
-            title="Details"
-            description="Use this inspector to drill into the row selected in Results. It updates with the detailed stat math, hit data, or scenario deltas behind that selection."
-            icon={<ListTree />}
-          />
-          <ScrollArea className="min-h-0 flex-1">
-            <Stack
-              ref={(node) => setInspectorPortalNode(node ?? undefined)}
-              className="p-page"
-            />
-          </ScrollArea>
-        </Stack>
+        {selectedTab !== 'summary' && (
+          <>
+            <Separator orientation="vertical" className="self-stretch" />
+            <Stack className="w-md">
+              <DashboardSectionHeader
+                title="Details"
+                description="Use this inspector to drill into the row selected in Results. It updates with the detailed stat math, hit data, or scenario deltas behind that selection."
+                icon={<ListTree />}
+              />
+              <ScrollArea className="min-h-0 flex-1">
+                <Stack
+                  ref={(node) => setInspectorPortalNode(node ?? undefined)}
+                  className="p-page"
+                />
+              </ScrollArea>
+            </Stack>
+          </>
+        )}
       </Row>
-      {inspectorPortalNode && selectedTab === 'summary'
-        ? createPortal(
-            <Stack align="center" className="h-full justify-center">
-              <Text variant="heading">Summary Selected</Text>
-              <Text variant="bodySm" tone="muted" className="text-center">
-                Switch to By Attack, By Character, or Sensitivity to inspect detailed
-                result rows here.
-              </Text>
-            </Stack>,
-            inspectorPortalNode,
-          )
-        : undefined}
     </Container>
   );
 };

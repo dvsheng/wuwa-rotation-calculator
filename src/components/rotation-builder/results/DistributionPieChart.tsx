@@ -91,7 +91,7 @@ export const DistributionPieChart = ({
   return (
     <ChartContainer
       config={chartConfig}
-      className="aspect-auto h-72 w-full justify-center"
+      className="aspect-auto h-80 w-full justify-center"
     >
       <PieChart margin={{ top: 20, right: 60, bottom: 20, left: 60 }}>
         <ChartTooltip

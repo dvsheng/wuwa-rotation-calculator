@@ -24,7 +24,7 @@ export function RotationBuilderToolbar({
   const { data: result, isPlaceholderData } = useRotationCalculation();
 
   return (
-    <Row align="center" justify="between" className="px-panel h-12 border-b">
+    <Row align="center" justify="between" className="px-panel h-14 shrink-0 border-b">
       <Row gap="inset">
         <Tabs
           value={selectedTab}

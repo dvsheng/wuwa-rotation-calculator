@@ -1,3 +1,13 @@
+import {
+  arrange,
+  desc,
+  filter,
+  groupBy,
+  map,
+  sum,
+  summarize,
+  tidy,
+} from '@tidyjs/tidy';
 import type { PropsWithChildren } from 'react';
 
 import {
@@ -9,15 +19,78 @@ import {
 } from '@/components/ui/card';
 import { Grid, Stack } from '@/components/ui/layout';
 import { useCharacterByTeamSlotNumber } from '@/hooks/useCharacter';
-import type { RotationCalculationResult } from '@/hooks/useRotationCalculation';
+import type {
+  RotationCalculationResult,
+  RotationResultMergedDamageDetail,
+} from '@/hooks/useRotationCalculation';
 import { getChartColorByIndex } from '@/lib/utils';
 
 import { CharacterDamageSummaryRow } from './CharacterDamageSummaryRow';
 import { DistributionPieChart } from './DistributionPieChart';
-import { getRotationResultBreakdown } from './get-rotation-result-breakdown';
 import type { DistributionChartDatum } from './result-breakdown.types';
+import { substatSensitivityChartData } from './sensitivity-pipelines';
 import { SubstatSensitivityBarChart } from './SubstatSensitivityBarChart';
-import { useSensitivityAnalysisBreakdown } from './useSensitivityAnalysisBreakdown';
+
+// ---------------------------------------------------------------------------
+// Chart-specific pipeline: damageDistribution
+// ---------------------------------------------------------------------------
+
+type DamageRow = RotationResultMergedDamageDetail;
+
+interface DamageDistributionRow {
+  groupValue: string;
+  damage: number;
+  percentage: number;
+}
+
+const damageDistribution = <TKey extends keyof DamageRow & string>(
+  data: Array<DamageRow>,
+  groupKey: TKey,
+  filterFunction?: (d: DamageRow) => boolean,
+  topN?: number,
+): Array<DamageDistributionRow> => {
+  const filtered = filterFunction ? tidy(data, filter(filterFunction)) : data;
+
+  const totalDamage =
+    tidy(filtered, summarize({ damage: sum('damage') }))[0]?.damage ?? 0;
+
+  const grouped = tidy(
+    filtered,
+    groupBy(groupKey, [summarize({ damage: sum('damage') })]),
+    arrange([desc('damage')]),
+    map((row: Record<string, unknown>) => ({
+      groupValue: String(row[groupKey]),
+      damage: row.damage as number,
+    })),
+  );
+
+  const cutoff = topN ?? grouped.length;
+  const top = grouped.slice(0, cutoff);
+  const rest = grouped.slice(cutoff);
+  const otherDamage = rest.reduce((accumulator, r) => accumulator + r.damage, 0);
+  const rows =
+    otherDamage > 0 ? [...top, { groupValue: 'Other', damage: otherDamage }] : top;
+
+  return rows.map((row) => ({
+    ...row,
+    percentage: totalDamage === 0 ? 0 : (row.damage / totalDamage) * 100,
+  }));
+};
+
+const toPieChartData = (
+  data: Array<DamageDistributionRow>,
+): Array<DistributionChartDatum> =>
+  data.map((row, index) => ({
+    id: row.groupValue,
+    label: row.groupValue,
+    value: row.damage,
+    percentage: row.percentage,
+    fill: getChartColorByIndex(index),
+  }));
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 interface RotationSummaryTabProperties {
   result: RotationCalculationResult;
@@ -40,41 +113,19 @@ const SummaryChartCard = ({
   </Card>
 );
 
-const toPieChartData = (
-  data: ReturnType<typeof getRotationResultBreakdown>,
-): Array<DistributionChartDatum> => {
-  return data.map((row, index) => ({
-    id: row.groupValue,
-    label: row.groupValue,
-    value: row.damage,
-    percentage: row.percentage,
-    fill: getChartColorByIndex(index),
-  }));
-};
+const isCharacterZero = (d: DamageRow) => d.characterIndex === 0;
 
 export const RotationSummaryTab = ({ result }: RotationSummaryTabProperties) => {
-  const { substatChartData } = useSensitivityAnalysisBreakdown(
-    result.sensitivityAnalysis,
-  );
+  const substatChartData = substatSensitivityChartData(result.sensitivityAnalysis);
   const character = useCharacterByTeamSlotNumber(0);
   if (!character) {
     return;
   }
   const skillOriginData = toPieChartData(
-    getRotationResultBreakdown({
-      data: result.mergedDamageDetails,
-      groupKey: 'originType',
-      characterIndex: 0,
-      bucketBelow: 5,
-    }),
+    damageDistribution(result.mergedDamageDetails, 'originType', isCharacterZero, 5),
   );
   const damageTypeData = toPieChartData(
-    getRotationResultBreakdown({
-      data: result.mergedDamageDetails,
-      groupKey: 'damageType',
-      characterIndex: 0,
-      bucketBelow: 4,
-    }),
+    damageDistribution(result.mergedDamageDetails, 'damageType', isCharacterZero, 4),
   );
 
   return (

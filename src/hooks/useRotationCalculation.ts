@@ -1,6 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { compact } from 'es-toolkit/array';
 
+import { attackCount as countDistinctAttacks } from '@/components/rotation-builder/results/result-pipelines';
 import type { AttackDamageInstance } from '@/services/game-data';
 import { calculateRotation } from '@/services/rotation-calculator/calculate-client-rotation-damage';
 import type { ClientRotationResult } from '@/services/rotation-calculator/client-output-adapter/adapt-rotation-result-to-client-output';
@@ -78,17 +79,13 @@ export const useRotationCalculation = () => {
           }),
         )
       : [];
-  const attackCount = new Set(
-    mergedDamageDetails.map((mergedDetail) => mergedDetail.attackIndex),
-  ).size;
-
   return {
     ...calculationQuery,
     data: calculationQuery.data
       ? ({
           ...calculationQuery.data,
           mergedDamageDetails,
-          attackCount,
+          attackCount: countDistinctAttacks(mergedDamageDetails),
         } satisfies RotationCalculationResult)
       : undefined,
   };

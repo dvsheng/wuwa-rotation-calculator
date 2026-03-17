@@ -13,7 +13,7 @@ import type {
 
 import { RelativeMagnitudeBar } from './RelativeMagnitudeBar';
 import { formatPercentDelta, formatSignedDamage } from './result-chart.utilities';
-import { useSensitivityAnalysisBreakdown } from './useSensitivityAnalysisBreakdown';
+import { sensitivitySections as buildSensitivitySections } from './sensitivity-pipelines';
 
 interface SensitivityAnalysisTableProperties {
   sensitivityAnalysis: ClientSensitivityAnalysis;
@@ -189,7 +189,7 @@ export const SensitivityAnalysisTable = ({
   inspectorPortalNode,
 }: SensitivityAnalysisTableProperties) => {
   const [selectedScenarioId, setSelectedScenarioId] = useState<string | undefined>();
-  const { sections } = useSensitivityAnalysisBreakdown(sensitivityAnalysis);
+  const sections = buildSensitivitySections(sensitivityAnalysis);
   const selectedScenario = sensitivityAnalysis.scenarios.find(
     (scenario) => scenario.id === selectedScenarioId,
   );

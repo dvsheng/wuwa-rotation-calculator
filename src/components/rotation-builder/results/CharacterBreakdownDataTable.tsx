@@ -1,5 +1,4 @@
 import type { ColumnDef } from '@tanstack/react-table';
-import { compact } from 'es-toolkit/array';
 import { ChevronDown } from 'lucide-react';
 import { Fragment, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -9,7 +8,6 @@ import { InfoTooltip } from '@/components/common/InfoTooltip';
 import { DataTable } from '@/components/ui/data-table';
 import { Row, Stack } from '@/components/ui/layout';
 import { Text } from '@/components/ui/typography';
-import { useTeamCharacters } from '@/hooks/useCharacter';
 import type { RotationResultMergedDamageDetail } from '@/hooks/useRotationCalculation';
 import { cn } from '@/lib/utils';
 
@@ -20,8 +18,8 @@ import {
   rotationResultDataTableClassNames,
   rotationResultTableColumnLayout,
 } from './data-table.style';
-import { getRotationResultBreakdown } from './get-rotation-result-breakdown';
 import { RelativeMagnitudeBar } from './RelativeMagnitudeBar';
+import { characterBreakdown } from './result-pipelines';
 
 interface CharacterBreakdownDataTableProperties {
   result: Array<RotationResultMergedDamageDetail>;
@@ -36,54 +34,11 @@ export const CharacterBreakdownDataTable = ({
   const [expandedCharacters, setExpandedCharacters] = useState<Set<string>>(
     new Set(result.map((row) => row.characterName)),
   );
-  const characters = useTeamCharacters();
   const [selectedCharacterName, setSelectedCharacterName] = useState<
     string | undefined
   >();
 
-  const rows: Array<CharacterBreakdownRow> = compact(
-    getRotationResultBreakdown({
-      data: result,
-      groupKey: 'characterId',
-    }).map((row) => {
-      const character = characters.find(
-        (char) => char.id === Number.parseInt(row.groupValue),
-      );
-      if (!character) return;
-      const characterIndex = characters.findIndex(
-        (char) => char.id === Number.parseInt(row.groupValue),
-      );
-      return {
-        characterName: character.name ?? '',
-        iconUrl: character.iconUrl,
-        totalDamage: row.damage,
-        pctOfTotal: row.percentage,
-        damageTypes: getRotationResultBreakdown({
-          data: result,
-          characterIndex,
-          groupKey: 'damageType',
-        }).map((damageTypeRow) => ({
-          damageType: damageTypeRow.groupValue,
-          damage: damageTypeRow.damage,
-          pctOfCharacter: damageTypeRow.percentage,
-          attacks: getRotationResultBreakdown({
-            data: result,
-            characterIndex,
-            damageType: damageTypeRow.groupValue,
-            groupKey: 'name',
-          }).map((attackRow) => {
-            return {
-              attackIndex: Number.parseInt(attackRow.groupValue),
-              attackName: attackRow.groupValue,
-              damage: attackRow.damage,
-              pctOfDamageType: attackRow.percentage,
-              pctOfCharacter: attackRow.percentage,
-            };
-          }),
-        })),
-      };
-    }),
-  );
+  const rows = characterBreakdown(result);
   const maxDamage = Math.max(...rows.map((row) => row.totalDamage), 0);
   const selectedCharacter = selectedCharacterName
     ? rows.find((row) => row.characterName === selectedCharacterName)

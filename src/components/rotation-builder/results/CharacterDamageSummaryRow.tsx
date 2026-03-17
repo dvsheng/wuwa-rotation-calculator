@@ -1,10 +1,9 @@
 import { CharacterIconDisplay } from '@/components/common/CharacterIcon';
 import { Row, Stack } from '@/components/ui/layout';
 import { Text } from '@/components/ui/typography';
-import { useTeamCharacters } from '@/hooks/useCharacter';
 import type { RotationResultMergedDamageDetail } from '@/hooks/useRotationCalculation';
 
-import { getRotationResultBreakdown } from './get-rotation-result-breakdown';
+import { characterBreakdown } from './result-pipelines';
 
 interface CharacterDamageSummaryRowProperties {
   mergedDamageDetails: Array<RotationResultMergedDamageDetail>;
@@ -14,11 +13,7 @@ interface CharacterDamageSummaryRowProperties {
 export const CharacterDamageSummaryRow = ({
   mergedDamageDetails,
 }: CharacterDamageSummaryRowProperties) => {
-  const characters = useTeamCharacters();
-  const data = getRotationResultBreakdown({
-    data: mergedDamageDetails,
-    groupKey: 'characterId',
-  });
+  const data = characterBreakdown(mergedDamageDetails);
 
   if (data.length === 0) {
     return (
@@ -32,41 +27,38 @@ export const CharacterDamageSummaryRow = ({
 
   return (
     <Row gap="component" justify="center" className="py-4">
-      {data.map((row) => {
-        const character = characters.find(
-          (char) => char?.id === Number.parseInt(row.groupValue),
-        );
-        return (
-          <Stack key={row.groupValue} align="center" gap="component" className="flex-1">
-            <CharacterIconDisplay
-              url={character?.iconUrl}
-              className="size-28 shrink-0"
-            />
-            <Stack align="center" gap="trim">
-              <Text variant="label" className="max-w-full truncate">
-                {character?.name ?? 'Unknown Character'}
-              </Text>
-              <Text
-                as="p"
-                variant="body"
-                tabular={true}
-                className="text-primary font-mono"
-              >
-                {Math.round(row.damage).toLocaleString()}
-              </Text>
-              <Text
-                as="p"
-                variant="bodySm"
-                tabular={true}
-                tone="muted"
-                className="font-mono"
-              >
-                {row.percentage.toFixed(1)}% of team
-              </Text>
-            </Stack>
+      {data.map((row) => (
+        <Stack
+          key={row.characterName}
+          align="center"
+          gap="component"
+          className="flex-1"
+        >
+          <CharacterIconDisplay url={row.iconUrl} className="size-28 shrink-0" />
+          <Stack align="center" gap="trim">
+            <Text variant="label" className="max-w-full truncate">
+              {row.characterName}
+            </Text>
+            <Text
+              as="p"
+              variant="body"
+              tabular={true}
+              className="text-primary font-mono"
+            >
+              {Math.round(row.totalDamage).toLocaleString()}
+            </Text>
+            <Text
+              as="p"
+              variant="bodySm"
+              tabular={true}
+              tone="muted"
+              className="font-mono"
+            >
+              {row.pctOfTotal.toFixed(1)}% of team
+            </Text>
           </Stack>
-        );
-      })}
+        </Stack>
+      ))}
     </Row>
   );
 };

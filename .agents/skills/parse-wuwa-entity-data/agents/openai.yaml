@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Parse Wuwa Entity Data'
+  short_description: 'Parse raw WuWa entity data'
+  default_prompt: "Use $parse-wuwa-entity-data to convert raw Wuthering Waves entity JSON into this repo's parsed capability format."

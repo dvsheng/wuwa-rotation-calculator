@@ -190,6 +190,7 @@ describe('SavedRotationCard', () => {
       },
     } as any);
     vi.mocked(mockCalculateRotation).mockRejectedValue(new Error('Calculation failed'));
+    const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const { SavedRotationCard } = await import('./SavedRotationCard');
     render(<SavedRotationCard rotation={mockRotation} />, { wrapper });
@@ -206,5 +207,9 @@ describe('SavedRotationCard', () => {
         search: { tab: 'rotation' },
       });
     });
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      'Failed to fetch rotation results while loading build:',
+      expect.any(Error),
+    );
   });
 });

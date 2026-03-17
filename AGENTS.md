@@ -22,24 +22,6 @@ This project also uses React Compiler, so avoid useMemo and useCallback in hooks
 
 This project uses Tanstack form for forms, and zustand for frontend state management.
 
-## Data Storage
-
-### Local Data Directory
-
-All game data is stored locally in `.local/data/` with the following structure:
-
-```
-.local/data/
-├── character/parsed/     # Character detail JSON files
-├── echo/parsed/          # Echo detail JSON files
-├── echo-set/parsed/      # Echo set detail JSON files
-├── weapon/parsed/        # Weapon detail JSON files
-└── echo-set.json         # Echo set reference data
-```
-
-There is a script /Users/david/Code/wuwa-rotation-builder/scripts/validate-game-data.test.ts to validate the game-data served by the game-data service,
-and a script in package.json to run the validation.
-
 ## General Instructions
 
 - Run `npm run check` after any code changes to lint, format, and test your code

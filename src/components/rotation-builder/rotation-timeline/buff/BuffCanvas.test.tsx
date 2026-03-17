@@ -3,6 +3,8 @@ import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  BUFF_LENGTH_ON_ADD,
+  COLUMN_STEP,
   SIDEBAR_ATTACK_DRAG_TYPE,
   SIDEBAR_BUFF_DRAG_TYPE,
 } from '@/components/rotation-builder/rotation-timeline/constants';
@@ -58,10 +60,36 @@ vi.mock('@/hooks/useTeamModifierInstances', () => ({
 }));
 
 vi.mock('./BuffCanvasItem', () => ({
-  BaseBuffCanvasItem: ({ name }: { name?: string }) => (
-    <div data-testid="buff-drop-preview">{name ?? 'Drop Buff'}</div>
+  BaseBuffCanvasItem: ({
+    name,
+    stickyLeftOffset,
+    stickyRightOffset,
+  }: {
+    name?: string;
+    stickyLeftOffset?: number;
+    stickyRightOffset?: number;
+  }) => (
+    <div
+      data-testid="buff-drop-preview"
+      data-sticky-left={stickyLeftOffset}
+      data-sticky-right={stickyRightOffset}
+    >
+      {name ?? 'Drop Buff'}
+    </div>
   ),
-  BuffCanvasItem: () => <div data-testid="buff-canvas-item" />,
+  BuffCanvasItem: ({
+    stickyLeftOffset,
+    stickyRightOffset,
+  }: {
+    stickyLeftOffset?: number;
+    stickyRightOffset?: number;
+  }) => (
+    <div
+      data-testid="buff-canvas-item"
+      data-sticky-left={stickyLeftOffset}
+      data-sticky-right={stickyRightOffset}
+    />
+  ),
 }));
 
 describe('BuffCanvas', () => {
@@ -70,6 +98,10 @@ describe('BuffCanvas', () => {
       buffs: [
         {
           instanceId: 'buff-1',
+          x: 2,
+          y: 0,
+          w: 3,
+          h: 1,
         },
       ],
     });
@@ -144,5 +176,37 @@ describe('BuffCanvas', () => {
 
     expect(scrollLane).toHaveClass('overflow-x-clip');
     expect(scrollLane).not.toHaveClass('overflow-x-hidden');
+  });
+
+  it('passes per-item sticky offsets to rendered buffs and previews', () => {
+    render(
+      <BuffCanvas
+        width={640}
+        previewLayout={{
+          x: 1,
+          y: 1,
+          w: 2,
+          h: 1,
+          name: 'Preview Buff',
+        }}
+      />,
+    );
+
+    expect(screen.getByTestId('buff-canvas-item')).toHaveAttribute(
+      'data-sticky-left',
+      String(2 * COLUMN_STEP),
+    );
+    expect(screen.getByTestId('buff-canvas-item')).toHaveAttribute(
+      'data-sticky-right',
+      String((BUFF_LENGTH_ON_ADD - 5) * COLUMN_STEP),
+    );
+    expect(screen.getByTestId('buff-drop-preview')).toHaveAttribute(
+      'data-sticky-left',
+      String(COLUMN_STEP),
+    );
+    expect(screen.getByTestId('buff-drop-preview')).toHaveAttribute(
+      'data-sticky-right',
+      String((BUFF_LENGTH_ON_ADD - 3) * COLUMN_STEP),
+    );
   });
 });

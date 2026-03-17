@@ -2,6 +2,10 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import {
+  BUFF_LENGTH_ON_ADD,
+  COLUMN_STEP,
+} from '@/components/rotation-builder/rotation-timeline/constants';
 import { CapabilityType, OriginType, Target } from '@/services/game-data';
 import { useStore } from '@/store';
 import { Attribute } from '@/types';
@@ -242,6 +246,30 @@ describe('BuffCanvasItem', () => {
         '[data-slot="item-actions"]',
       ) as HTMLElement;
       expect(actionsElement.querySelectorAll('button').length).toBeGreaterThan(0);
+    });
+
+    it('applies per-item sticky offsets when a buff does not start in the first column', () => {
+      const buff = makeBuff(2, 2);
+      useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
+
+      render(
+        <BuffCanvasItem
+          buff={buff}
+          onRemove={() => {}}
+          isDialogClickable={true}
+          stickyLeftOffset={buff.x * COLUMN_STEP}
+          stickyRightOffset={
+            Math.max(0, BUFF_LENGTH_ON_ADD - (buff.x + buff.w)) * COLUMN_STEP
+          }
+        />,
+      );
+
+      expect(screen.getByTestId('buff-canvas-item-sticky-left')).toHaveStyle({
+        left: `-${buff.x * COLUMN_STEP}px`,
+      });
+      expect(screen.getByTestId('buff-canvas-item-sticky-right')).toHaveStyle({
+        right: `-${Math.max(0, BUFF_LENGTH_ON_ADD - (buff.x + buff.w)) * COLUMN_STEP}px`,
+      });
     });
   });
 

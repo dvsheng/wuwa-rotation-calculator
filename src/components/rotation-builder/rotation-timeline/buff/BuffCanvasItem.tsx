@@ -34,6 +34,8 @@ interface BuffCanvasItemProperties {
   isDialogClickable: boolean;
   onRemove: (instanceId: string) => void;
   onOpenChange?: (isOpen: boolean) => void;
+  stickyLeftOffset?: number;
+  stickyRightOffset?: number;
 }
 
 interface BaseBuffCanvasItemProperties extends React.ComponentProps<'div'> {
@@ -41,6 +43,8 @@ interface BaseBuffCanvasItemProperties extends React.ComponentProps<'div'> {
   iconUrl?: string;
   name?: string;
   actions?: React.ReactNode;
+  stickyLeftOffset?: number;
+  stickyRightOffset?: number;
 }
 
 export const BaseBuffCanvasItem = ({
@@ -50,50 +54,70 @@ export const BaseBuffCanvasItem = ({
   children,
   actions,
   className,
+  stickyLeftOffset = 0,
+  stickyRightOffset = 0,
+  style,
   ...rest
-}: BaseBuffCanvasItemProperties) => (
-  <Item
-    {...rest}
-    data-testid="buff-canvas-item"
-    className={cn(
-      'border-border relative flex h-12 items-center gap-0 border px-0 py-0 select-none',
-      className,
-    )}
-  >
-    {children}
-    {/* Left sticky: icons + name */}
-    <Row
-      align="center"
-      className="sticky left-0 z-10 h-full min-w-0 gap-4 overflow-hidden px-4"
+}: BaseBuffCanvasItemProperties) => {
+  const stickyLeftStyle =
+    stickyLeftOffset > 0 ? { left: `${-stickyLeftOffset}px` } : undefined;
+  const stickyRightStyle =
+    stickyRightOffset > 0 ? { right: `${-stickyRightOffset}px` } : undefined;
+
+  return (
+    <Item
+      {...rest}
+      data-testid="buff-canvas-item"
+      style={style}
+      className={cn(
+        'border-border relative flex h-12 items-center gap-0 border px-0 py-0 select-none',
+        className,
+      )}
     >
-      <ItemMedia>
-        <EntityIconDisplay url={characterIconUrl} size="medium" />
-      </ItemMedia>
-      <ItemMedia>
-        <CapabilityIconDisplay url={iconUrl} />
-      </ItemMedia>
-      <Text
-        variant="caption"
-        className="min-w-0 truncate"
-        data-testid="buff-canvas-item-name"
+      {children}
+      {/* Counteract the grid item's translated X position so sticky chrome hugs the visible item edge. */}
+      <Row
+        align="center"
+        data-testid="buff-canvas-item-sticky-left"
+        style={stickyLeftStyle}
+        className="sticky left-0 z-10 h-full min-w-0 gap-4 overflow-hidden px-4"
       >
-        {name}
-      </Text>
-    </Row>
-    {/* Spacer */}
-    <div className="relative z-10 flex-1" />
-    {/* Right sticky: warning + actions */}
-    <Row align="center" className="gap-inset sticky right-0 z-10 h-full shrink-0 px-4">
-      <ItemActions>{actions}</ItemActions>
-    </Row>
-  </Item>
-);
+        <ItemMedia>
+          <EntityIconDisplay url={characterIconUrl} size="medium" />
+        </ItemMedia>
+        <ItemMedia>
+          <CapabilityIconDisplay url={iconUrl} />
+        </ItemMedia>
+        <Text
+          variant="caption"
+          className="min-w-0 truncate"
+          data-testid="buff-canvas-item-name"
+        >
+          {name}
+        </Text>
+      </Row>
+      {/* Spacer */}
+      <div className="relative z-10 flex-1" />
+      {/* Right sticky: warning + actions */}
+      <Row
+        align="center"
+        data-testid="buff-canvas-item-sticky-right"
+        style={stickyRightStyle}
+        className="gap-inset sticky right-0 z-10 h-full shrink-0 px-4"
+      >
+        <ItemActions>{actions}</ItemActions>
+      </Row>
+    </Item>
+  );
+};
 
 export const BuffCanvasItem = ({
   buff,
   isDialogClickable,
   onRemove,
   onOpenChange,
+  stickyLeftOffset,
+  stickyRightOffset,
 }: BuffCanvasItemProperties) => {
   const updateBuffLayout = useStore((state) => state.updateBuffLayout);
   const { attacks } = useTeamAttackInstances();
@@ -174,6 +198,8 @@ export const BuffCanvasItem = ({
           iconUrl={buff.iconUrl}
           name={buff.name}
           className={itemClassName}
+          stickyLeftOffset={stickyLeftOffset}
+          stickyRightOffset={stickyRightOffset}
           actions={
             <>
               {shouldShowWarning && (

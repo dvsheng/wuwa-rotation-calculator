@@ -1,3 +1,5 @@
+import { compact } from 'es-toolkit/array';
+
 import { EntityType } from '@/services/game-data';
 import { useStore } from '@/store';
 
@@ -17,9 +19,9 @@ export const useTeamCharacters = () => {
   const firstCharacter = useCharacterByTeamSlotNumber(0);
   const secondCharacter = useCharacterByTeamSlotNumber(1);
   const thirdCharacter = useCharacterByTeamSlotNumber(2);
-  return [
-    { ...firstCharacter, index: 0 },
-    { ...secondCharacter, index: 1 },
-    { ...thirdCharacter, index: 2 },
-  ];
+  return compact([
+    firstCharacter && { ...firstCharacter, index: 0 },
+    secondCharacter && { ...secondCharacter, index: 1 },
+    thirdCharacter && { ...thirdCharacter, index: 2 },
+  ]);
 };

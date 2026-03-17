@@ -18,6 +18,12 @@ lazy load tabs in rotation builder (3 points)
 
 look into view transitions (3 points)
 
-reimplement scroll arrow in a headless way
+show entity tooltips on hover in builders
 
-clean up the empty states for these, maybe need to change props around
+fix buff floating when dragging to end
+
+inferno rider data is wrong
+
+tidebreaking courage 5 should be passive
+
+brant trial shoudl be passive

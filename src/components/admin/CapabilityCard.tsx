@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 
@@ -17,7 +18,10 @@ import { Text } from '../ui/typography';
 
 import type { Capability } from './CapabilityItem';
 
-type CardCapability = Pick<Capability, 'name' | 'description' | 'capabilityJson'>;
+type CardCapability = Pick<
+  Capability,
+  'id' | 'name' | 'description' | 'capabilityJson'
+>;
 
 type AlternativeDefinitionValue = 'base' | Sequence;
 
@@ -56,12 +60,14 @@ const normalizeAlternativeDefinitionValue = (
 export const CapabilityCard = ({
   capability,
   defaultAlternativeDefinition = 'base',
+  entityId,
   titlePrefix,
   titleSuffix,
   children,
 }: {
   capability: CardCapability;
   defaultAlternativeDefinition?: AlternativeDefinitionValue;
+  entityId?: number;
   titlePrefix?: ReactNode;
   titleSuffix?: ReactNode;
   children: (capability: CardCapability) => ReactNode;
@@ -90,7 +96,20 @@ export const CapabilityCard = ({
           <Row gap="inset" align="center">
             {titlePrefix}
             <Row gap="trim" align="center">
-              <CardTitle>{capability.name}</CardTitle>
+              <CardTitle>
+                {entityId ? (
+                  <Link
+                    to="/admin/entities/$id"
+                    params={{ id: String(entityId) }}
+                    search={{ capabilityId: capability.id }}
+                    className="hover:text-foreground text-foreground transition-colors hover:underline"
+                  >
+                    {capability.name}
+                  </Link>
+                ) : (
+                  capability.name
+                )}
+              </CardTitle>
               {titleSuffix}
             </Row>
           </Row>

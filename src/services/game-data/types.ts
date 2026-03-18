@@ -133,6 +133,7 @@ export interface BaseCapability {
 export interface GameDataUserParameterizedNumberNode {
   type: 'userParameterizedNumber';
   parameterId: '0' | '1' | '2';
+  scale?: number;
   minimum?: number;
   maximum?: number;
 }

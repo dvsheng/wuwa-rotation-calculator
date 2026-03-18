@@ -9,6 +9,7 @@ import {
   ItemMedia,
   ItemTitle,
 } from '@/components/ui/item';
+import { Row } from '@/components/ui/layout';
 import { Text } from '@/components/ui/typography';
 import { cn } from '@/lib/utils';
 import type { ListEntityResponseItem } from '@/services/game-data';
@@ -38,23 +39,27 @@ export const EntitySelectorTile = ({
       variant="outline"
       onClick={onClick}
     >
-      <ItemMedia>
-        <EntityIconDisplay url={entity.iconUrl} size="xlarge" />
-      </ItemMedia>
-      <ItemContent>
-        <ItemTitle>{entity.name}</ItemTitle>
-        <ItemDescription className="flex">
-          {'cost' in entity && (
-            <Text as="span" variant="caption">
-              Cost {entity.cost}
-            </Text>
-          )}
-          {'weaponType' in entity && <WeaponTypeIcon weaponType={entity.weaponType} />}
-          {'attribute' in entity && entity.attribute !== 'physical' && (
-            <AttributeIcon attribute={entity.attribute} />
-          )}
-        </ItemDescription>
-      </ItemContent>
+      <Row gap="inset">
+        <ItemMedia>
+          <EntityIconDisplay url={entity.iconUrl} size="xlarge" />
+        </ItemMedia>
+        <ItemContent>
+          <ItemTitle>{entity.name}</ItemTitle>
+          <ItemDescription className="flex">
+            {'cost' in entity && (
+              <Text as="span" variant="caption">
+                Cost {entity.cost}
+              </Text>
+            )}
+            {'weaponType' in entity && (
+              <WeaponTypeIcon weaponType={entity.weaponType} />
+            )}
+            {'attribute' in entity && entity.attribute !== 'physical' && (
+              <AttributeIcon attribute={entity.attribute} />
+            )}
+          </ItemDescription>
+        </ItemContent>
+      </Row>
     </Item>
   );
 };

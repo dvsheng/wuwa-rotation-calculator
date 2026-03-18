@@ -11,13 +11,22 @@ import {
 import type { Skill } from './CapabilityItem';
 import { TableOfContentsSidebar } from './TableOfContentsSidebar';
 
-export const ByTypeView = ({ skills }: { skills: Array<Skill> }) => {
+export const ByTypeView = ({
+  skills,
+  entityId,
+  selectedCapabilityId,
+}: {
+  skills: Array<Skill>;
+  entityId: number;
+  selectedCapabilityId?: number;
+}) => {
   const sortedSkills = sortSkills(skills);
   const allCapabilities = sortedSkills.flatMap((skill) =>
     skill.capabilities.map((capability) => ({
       capability,
       skill,
       defaultAlternativeDefinition: 'base' as const,
+      isAlternativePlacement: false,
     })),
   );
   const groups = groupCapabilitiesByType(allCapabilities);
@@ -26,6 +35,13 @@ export const ByTypeView = ({ skills }: { skills: Array<Skill> }) => {
   );
   const [openTypeValues, setOpenTypeValues] =
     useState<Array<string>>(defaultOpenValues);
+  const selectedTypeValue = selectedCapabilityId
+    ? allCapabilities.find(({ capability }) => capability.id === selectedCapabilityId)
+        ?.capability.capabilityJson.type
+    : undefined;
+  const effectiveOpenTypeValues = selectedTypeValue
+    ? [...new Set([...openTypeValues, selectedTypeValue])]
+    : openTypeValues;
   const tocItems = compact(
     typeOrder.map((type) => {
       const entries = groups.get(type) ?? [];
@@ -35,7 +51,6 @@ export const ByTypeView = ({ skills }: { skills: Array<Skill> }) => {
       return {
         id: `type-${type}`,
         label: capabilityTypeLabel[type],
-        badges: [`${entries.length} total`],
         accordionValue: type,
       };
     }),
@@ -58,9 +73,11 @@ export const ByTypeView = ({ skills }: { skills: Array<Skill> }) => {
       <div className="min-w-0 flex-1">
         <CapabilityTypeAccordion
           groups={groups}
+          entityId={entityId}
           idPrefix="type"
+          selectedCapabilityId={selectedCapabilityId}
           showSkillIcon
-          value={openTypeValues}
+          value={effectiveOpenTypeValues}
           onValueChange={setOpenTypeValues}
         />
       </div>

@@ -6,6 +6,7 @@ import {
   shift,
   useFloating,
 } from '@floating-ui/react';
+import { ArrowUpRight } from 'lucide-react';
 import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -161,6 +162,7 @@ const CapabilityCardContent = ({
   const hasDetails = isDetailedAttack(capability)
     ? capability.damageInstances.length > 0
     : capability.modifiedStats.length > 0;
+  const adminCapabilityHref = `/admin/entities/${capability.entityId}?capabilityId=${capability.id}`;
 
   return (
     <Stack gap="inset">
@@ -186,6 +188,13 @@ const CapabilityCardContent = ({
       ) : (
         <ModifierCapabilityContent capability={capability} />
       )}
+      <a
+        href={adminCapabilityHref}
+        className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-xs font-medium underline-offset-4 transition-colors hover:underline"
+      >
+        Open in admin
+        <ArrowUpRight className="size-3.5 shrink-0" />
+      </a>
     </Stack>
   );
 };

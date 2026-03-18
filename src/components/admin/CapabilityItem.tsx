@@ -15,7 +15,6 @@ import { EntityIcon } from '../common/EntityIcon';
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '../ui/hover-card';
-import { ScrollArea } from '../ui/scroll-area';
 
 import { CapabilityCard } from './CapabilityCard';
 
@@ -33,19 +32,25 @@ type Modifier = Extract<CapabilityJson, { type: 'modifier' }>;
 
 export type PermanentStatArray = Array<
   Extract<CapabilityJson, { type: 'permanent_stat' }> & {
+    id: number;
     name: string;
     description?: string;
+    isAlternativePlacement?: boolean;
   }
 >;
 
 export const CapabilityItem = ({
   capability,
+  entityId,
+  isAlternativePlacement = false,
   skill,
   defaultAlternativeDefinition = 'base',
   showCapabilityTypeBadge = false,
   showSkillIcon = false,
 }: {
   capability: Capability;
+  entityId: number;
+  isAlternativePlacement?: boolean;
   skill: Skill;
   defaultAlternativeDefinition?: 'base' | Sequence;
   showCapabilityTypeBadge?: boolean;
@@ -56,34 +61,44 @@ export const CapabilityItem = ({
   }
 
   return (
-    <CapabilityCard
-      key={`${capability.id}-${defaultAlternativeDefinition}`}
-      capability={capability}
-      defaultAlternativeDefinition={defaultAlternativeDefinition}
-      titlePrefix={
-        showSkillIcon && skill.iconUrl ? (
-          <EntityIcon iconUrl={skill.iconUrl} size="small" />
-        ) : undefined
-      }
-      titleSuffix={
-        showCapabilityTypeBadge ? (
-          <Badge variant="outline">
-            {startCase(capability.capabilityJson.type.replaceAll('_', ' '))}
-          </Badge>
-        ) : undefined
-      }
+    <div
+      data-capability-id={capability.id}
+      data-capability-placement={isAlternativePlacement ? 'alternative' : 'direct'}
     >
-      {(resolvedCapability) => (
-        <>
-          {resolvedCapability.capabilityJson.type === 'attack' && (
-            <AttackContent content={resolvedCapability.capabilityJson} />
-          )}
-          {resolvedCapability.capabilityJson.type === 'modifier' && (
-            <ModifierContent content={resolvedCapability.capabilityJson} />
-          )}
-        </>
-      )}
-    </CapabilityCard>
+      <CapabilityCard
+        key={`${capability.id}-${defaultAlternativeDefinition}`}
+        capability={capability}
+        defaultAlternativeDefinition={defaultAlternativeDefinition}
+        entityId={entityId}
+        titlePrefix={
+          showSkillIcon && skill.iconUrl ? (
+            <EntityIcon
+              iconUrl={skill.iconUrl}
+              size="small"
+              className="bg-secondary/60 ring-border/60 ring-1"
+            />
+          ) : undefined
+        }
+        titleSuffix={
+          showCapabilityTypeBadge ? (
+            <Badge variant="outline">
+              {startCase(capability.capabilityJson.type.replaceAll('_', ' '))}
+            </Badge>
+          ) : undefined
+        }
+      >
+        {(resolvedCapability) => (
+          <>
+            {resolvedCapability.capabilityJson.type === 'attack' && (
+              <AttackContent content={resolvedCapability.capabilityJson} />
+            )}
+            {resolvedCapability.capabilityJson.type === 'modifier' && (
+              <ModifierContent content={resolvedCapability.capabilityJson} />
+            )}
+          </>
+        )}
+      </CapabilityCard>
+    </div>
   );
 };
 
@@ -104,7 +119,7 @@ const AttackContent = ({ content }: { content: Attack }) => {
                 {typeof instance.motionValue === 'number' ? (
                   toPercent(instance.motionValue)
                 ) : (
-                  <FormulaTooltip label="Complex" formula={instance.motionValue} />
+                  <FormulaTooltip label="Dynamic" formula={instance.motionValue} />
                 )}
               </span>
             </TableCell>
@@ -135,7 +150,7 @@ const ModifierContent = ({ content }: { content: Modifier }) => {
                 {typeof stat.value === 'number' ? (
                   String(stat.value)
                 ) : (
-                  <FormulaTooltip label="Complex" formula={stat.value} />
+                  <FormulaTooltip label="Dynamic" formula={stat.value} />
                 )}
               </span>
             </TableCell>
@@ -173,7 +188,13 @@ export const PermanentStatContent = ({ content }: { content: PermanentStatArray 
           </TableHeader>
           <TableBody>
             {content.map((stat, index) => (
-              <TableRow key={index}>
+              <TableRow
+                key={index}
+                data-capability-id={stat.id}
+                data-capability-placement={
+                  stat.isAlternativePlacement ? 'alternative' : 'direct'
+                }
+              >
                 <TableCell>{stat.name}</TableCell>
                 <TableCell>{stat.description}</TableCell>
                 <TableCell>
@@ -181,7 +202,7 @@ export const PermanentStatContent = ({ content }: { content: PermanentStatArray 
                     {typeof stat.value === 'number' ? (
                       String(stat.value)
                     ) : (
-                      <FormulaTooltip label="Complex" formula={stat.value} />
+                      <FormulaTooltip label="Dynamic" formula={stat.value} />
                     )}
                   </span>
                 </TableCell>
@@ -204,12 +225,12 @@ const FormulaTooltip = ({ label, formula }: { label: string; formula: object }) 
   return (
     <HoverCard openDelay={150} closeDelay={100}>
       <HoverCardTrigger>{label}</HoverCardTrigger>
-      <HoverCardContent className="w-xl p-0">
-        <ScrollArea style={{ height: '24rem' }} className="w-full">
-          <pre className="p-4 text-xs whitespace-pre">
+      <HoverCardContent className="w-fit max-w-3xl overflow-hidden p-0">
+        <div className="max-h-96 max-w-3xl overflow-auto">
+          <pre className="w-fit min-w-full p-4 text-xs whitespace-pre">
             {JSON.stringify(formula, undefined, 4)}
           </pre>
-        </ScrollArea>
+        </div>
       </HoverCardContent>
     </HoverCard>
   );

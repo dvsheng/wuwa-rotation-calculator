@@ -70,6 +70,10 @@ describe('CapabilityHoverCard', () => {
       expect(await screen.findByText('Test Buff')).toBeInTheDocument();
       expect(await screen.findByText('Increases ATK by 10%')).toBeInTheDocument();
       expect(await screen.findByText('Weapon')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Open in admin' })).toHaveAttribute(
+        'href',
+        '/admin/entities/1?capabilityId=1',
+      );
     });
 
     it('shows Parameterized badge when capability has parameters', async () => {

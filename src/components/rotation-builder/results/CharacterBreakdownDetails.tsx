@@ -25,7 +25,7 @@ export const CharacterBreakdownDetails = ({
   return (
     <Stack className="h-full min-h-0" gap="component">
       <Row align="center" gap="trim">
-        <CharacterIconDisplay url={selectedCharacter.iconUrl} size="small" />
+        <CharacterIconDisplay url={selectedCharacter.iconUrl} size="xxlarge" />
         <Text variant="heading">{selectedCharacter.characterName}</Text>
       </Row>
 

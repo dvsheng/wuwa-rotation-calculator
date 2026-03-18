@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 
 import { Box } from '../ui/layout';
 
-export type IconSize = 'small' | 'medium' | 'large' | 'xlarge';
+export type IconSize = 'small' | 'medium' | 'large' | 'xlarge' | 'xxlarge';
 
 // TODO: Move this to a constants file instead
 export const SIZE_CLASSES = {
@@ -12,6 +12,7 @@ export const SIZE_CLASSES = {
   medium: 'size-icon-md',
   large: 'size-icon-lg',
   xlarge: 'size-icon-xl',
+  xxlarge: 'size-icon-2xl',
 } as const;
 
 interface CapabilityIconDisplayProperties {

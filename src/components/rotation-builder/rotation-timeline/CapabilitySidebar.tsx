@@ -78,7 +78,6 @@ const BUFF_COLOR_LEGEND: Array<LegendItem> = [
   { label: 'Enemy Target', colorClassName: 'bg-chart-4' },
 ];
 
-
 const TARGET_ORDER: Array<Target> = [
   Target.SELF,
   Target.TEAM,

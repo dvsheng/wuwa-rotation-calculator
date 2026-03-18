@@ -21,7 +21,13 @@ export type AdminEntityProperties = DetailedAdminEntity;
 
 type Entity = DetailedAdminEntity['entity'];
 
-export const AdminEntity = ({ id }: { id: number }) => {
+export const AdminEntity = ({
+  id,
+  capabilityId,
+}: {
+  id: number;
+  capabilityId?: number;
+}) => {
   const { data } = useAdminEntity(id);
   const supportsBySkill = data.entity.type === EntityType.CHARACTER;
   const [groupMode, setGroupMode] = useState<GroupMode>(
@@ -63,9 +69,17 @@ export const AdminEntity = ({ id }: { id: number }) => {
           )}
         </Row>
         {activeGroupMode === 'skill' ? (
-          <BySkillView skills={skills} />
+          <BySkillView
+            skills={skills}
+            entityId={id}
+            selectedCapabilityId={capabilityId}
+          />
         ) : (
-          <ByTypeView skills={skills} />
+          <ByTypeView
+            skills={skills}
+            entityId={id}
+            selectedCapabilityId={capabilityId}
+          />
         )}
       </Stack>
     </ScrollArea>
@@ -78,7 +92,7 @@ const AdminEntityHeader = (properties: {
   const { entity } = properties;
   return (
     <Row gap="component" align="center">
-      <EntityIcon iconUrl={entity.iconUrl} size="large" />
+      <EntityIcon iconUrl={entity.iconUrl} size="xxlarge" />
       <Stack gap="none">
         <Text variant="heading">{entity.name}</Text>
         {entity.description && (

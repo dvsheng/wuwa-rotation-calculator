@@ -46,7 +46,7 @@ export type DatabaseStaticNumber = DatabaseLeafNumber;
 // Tier 2 — User-parameterized numbers (DatabaseUserNumber)
 // Wraps Tier 1. Resolved after the user provides parameter values via the UI.
 // The minimum/maximum bounds are Tier 1 numbers (refine-scalable supported)
-// and are used only for UI form-validation — not clamped at resolution time.
+// and are enforced when user parameter values are resolved.
 // ============================================================================
 
 const USER_PARAMETER_KEYS = ['0', '1', '2'] as const;

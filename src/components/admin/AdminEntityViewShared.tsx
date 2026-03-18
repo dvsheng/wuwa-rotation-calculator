@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+
 import { SKILL_ORIGIN_ORDER } from '@/components/constants';
 import { Sequence } from '@/services/game-data';
 import type { Sequence as SequenceType } from '@/services/game-data';
@@ -32,6 +34,7 @@ export type SkillCapability = {
   capability: Capability;
   skill: Skill;
   defaultAlternativeDefinition: 'base' | SequenceType;
+  isAlternativePlacement: boolean;
 };
 
 const sequenceOrigins = new Set<SequenceType>(Object.values(Sequence));
@@ -55,6 +58,7 @@ export const buildEntriesForSkill = (
     capability,
     skill,
     defaultAlternativeDefinition: 'base' as const,
+    isAlternativePlacement: false,
   }));
 
   if (!sequenceOrigins.has(skill.originType as SequenceType)) {
@@ -80,12 +84,13 @@ export const buildEntriesForSkill = (
           capability,
           skill,
           defaultAlternativeDefinition: sequence,
+          isAlternativePlacement: true,
         },
       ];
     }),
   );
 
-  return [...directEntries, ...sequenceEntries];
+  return sortEntriesByName([...directEntries, ...sequenceEntries]);
 };
 
 export const groupCapabilitiesByType = (entries: Array<SkillCapability>) => {
@@ -95,6 +100,9 @@ export const groupCapabilitiesByType = (entries: Array<SkillCapability>) => {
     const list = groups.get(type) ?? [];
     list.push(entry);
     groups.set(type, list);
+  }
+  for (const [type, list] of groups) {
+    groups.set(type, sortEntriesByName(list));
   }
   return groups;
 };
@@ -118,12 +126,63 @@ export const sortSkills = (skills: Array<Skill>) =>
       SKILL_ORIGIN_ORDER.indexOf(b.originType),
   );
 
+const compareNames = (
+  left: string | null | undefined,
+  right: string | null | undefined,
+) => (left ?? '').localeCompare(right ?? '', undefined, { sensitivity: 'base' });
+
+export const sortEntriesByName = (entries: Array<SkillCapability>) =>
+  entries.toSorted((left, right) => {
+    const nameComparison = compareNames(left.capability.name, right.capability.name);
+    if (nameComparison !== 0) return nameComparison;
+
+    const placementComparison =
+      Number(left.isAlternativePlacement) - Number(right.isAlternativePlacement);
+    if (placementComparison !== 0) return placementComparison;
+
+    return left.capability.id - right.capability.id;
+  });
+
+const scrollToSelectedCapability = (selectedCapabilityId: number) => {
+  const selector = `[data-capability-id="${selectedCapabilityId}"][data-capability-placement="direct"]`;
+  const target =
+    document.querySelector<HTMLElement>(selector) ??
+    document.querySelector<HTMLElement>(
+      `[data-capability-id="${selectedCapabilityId}"]`,
+    );
+
+  if (!target) {
+    return;
+  }
+
+  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+};
+
+export const useSelectedCapabilityScroll = (
+  selectedCapabilityId: number | undefined,
+  scrollKey: string,
+) => {
+  useEffect(() => {
+    if (!selectedCapabilityId) {
+      return;
+    }
+
+    const timeoutId = globalThis.setTimeout(() => {
+      scrollToSelectedCapability(selectedCapabilityId);
+    }, 150);
+
+    return () => globalThis.clearTimeout(timeoutId);
+  }, [selectedCapabilityId, scrollKey]);
+};
+
 export const CapabilityList = ({
   entries,
+  entityId,
   showCapabilityTypeBadge = false,
   showSkillIcon = false,
 }: {
   entries: Array<SkillCapability>;
+  entityId: number;
   showCapabilityTypeBadge?: boolean;
   showSkillIcon?: boolean;
 }) => {
@@ -136,23 +195,34 @@ export const CapabilityList = ({
 
   return (
     <Stack gap="inset">
-      {standardEntries.map(({ capability, skill, defaultAlternativeDefinition }) => (
-        <CapabilityItem
-          key={capability.id}
-          capability={capability}
-          skill={skill}
-          defaultAlternativeDefinition={defaultAlternativeDefinition}
-          showCapabilityTypeBadge={showCapabilityTypeBadge}
-          showSkillIcon={showSkillIcon}
-        />
-      ))}
+      {standardEntries.map(
+        ({
+          capability,
+          skill,
+          defaultAlternativeDefinition,
+          isAlternativePlacement,
+        }) => (
+          <CapabilityItem
+            key={capability.id}
+            capability={capability}
+            entityId={entityId}
+            isAlternativePlacement={isAlternativePlacement}
+            skill={skill}
+            defaultAlternativeDefinition={defaultAlternativeDefinition}
+            showCapabilityTypeBadge={showCapabilityTypeBadge}
+            showSkillIcon={showSkillIcon}
+          />
+        ),
+      )}
       {permanentEntries.length > 0 && (
         <PermanentStatContent
           content={
-            permanentEntries.map(({ capability }) => ({
+            permanentEntries.map(({ capability, isAlternativePlacement }) => ({
+              id: capability.id,
               ...capability.capabilityJson,
               name: capability.name ?? '',
               description: capability.description,
+              isAlternativePlacement,
             })) as PermanentStatArray
           }
         />
@@ -163,6 +233,8 @@ export const CapabilityList = ({
 
 export const CapabilityTypeAccordion = ({
   groups,
+  entityId,
+  selectedCapabilityId,
   showCapabilityTypeBadge = false,
   showSkillIcon = false,
   idPrefix,
@@ -170,46 +242,53 @@ export const CapabilityTypeAccordion = ({
   onValueChange,
 }: {
   groups: Map<CapabilityJson['type'], Array<SkillCapability>>;
+  entityId: number;
+  selectedCapabilityId?: number;
   showCapabilityTypeBadge?: boolean;
   showSkillIcon?: boolean;
   idPrefix?: string;
   value?: Array<string>;
   onValueChange?: (value: Array<string>) => void;
-}) => (
-  <Accordion
-    type="multiple"
-    value={value}
-    onValueChange={onValueChange}
-    defaultValue={
-      value
-        ? undefined
-        : typeOrder.filter((type) => (groups.get(type)?.length ?? 0) > 0)
-    }
-  >
-    {typeOrder.map((type) => {
-      const capabilities = groups.get(type);
-      if (!capabilities || capabilities.length === 0) return;
-      return (
-        <AccordionItem
-          key={type}
-          id={idPrefix ? `${idPrefix}-${type}` : undefined}
-          value={type}
-          disabled={capabilities.length === 0}
-        >
-          <AccordionTrigger>
-            <Text variant="title">
-              {capabilityTypeLabel[type]} ({capabilities.length})
-            </Text>
-          </AccordionTrigger>
-          <AccordionContent>
-            <CapabilityList
-              entries={capabilities}
-              showCapabilityTypeBadge={showCapabilityTypeBadge}
-              showSkillIcon={showSkillIcon}
-            />
-          </AccordionContent>
-        </AccordionItem>
-      );
-    })}
-  </Accordion>
-);
+}) => {
+  useSelectedCapabilityScroll(selectedCapabilityId, (value ?? []).join('|'));
+
+  return (
+    <Accordion
+      type="multiple"
+      value={value}
+      onValueChange={onValueChange}
+      defaultValue={
+        value
+          ? undefined
+          : typeOrder.filter((type) => (groups.get(type)?.length ?? 0) > 0)
+      }
+    >
+      {typeOrder.map((type) => {
+        const capabilities = groups.get(type);
+        if (!capabilities || capabilities.length === 0) return;
+        return (
+          <AccordionItem
+            key={type}
+            id={idPrefix ? `${idPrefix}-${type}` : undefined}
+            value={type}
+            disabled={capabilities.length === 0}
+          >
+            <AccordionTrigger>
+              <Text variant="title">
+                {capabilityTypeLabel[type]} ({capabilities.length})
+              </Text>
+            </AccordionTrigger>
+            <AccordionContent>
+              <CapabilityList
+                entries={capabilities}
+                entityId={entityId}
+                showCapabilityTypeBadge={showCapabilityTypeBadge}
+                showSkillIcon={showSkillIcon}
+              />
+            </AccordionContent>
+          </AccordionItem>
+        );
+      })}
+    </Accordion>
+  );
+};

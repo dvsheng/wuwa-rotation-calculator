@@ -201,6 +201,7 @@ code {
   --spacing-icon-md: 2.5rem;
   --spacing-icon-lg: 3rem;
   --spacing-icon-xl: 4rem;
+  --spacing-icon-2xl: 5rem;
   /* Semantic padding scale */
   --spacing-page: 1.5rem; /* 24px — page containers, full section areas */
   --spacing-panel: 1rem; /* 16px — panel headers, cards, dialog sections */

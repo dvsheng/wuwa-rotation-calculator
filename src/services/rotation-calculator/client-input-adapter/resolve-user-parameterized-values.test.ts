@@ -11,9 +11,11 @@ const parameterNode = (
   parameterId: '0' | '1' | '2',
   minimum?: number,
   maximum?: number,
+  scale?: number,
 ): GameDataUserNumber => ({
   type: 'userParameterizedNumber',
   parameterId,
+  scale,
   minimum,
   maximum,
 });
@@ -36,6 +38,45 @@ describe('resolveUserParameterizedValues', () => {
 
       expect(result).toEqual({
         value: 50,
+      });
+    });
+
+    it('clamps a user-parameterized leaf up to its minimum bound', () => {
+      const input = {
+        value: parameterNode('0', 10, 20),
+        parameterValues: parameterValues({ 0: 5 }),
+      };
+
+      const result = resolveUserParameterizedValues(input);
+
+      expect(result).toEqual({
+        value: 10,
+      });
+    });
+
+    it('clamps a user-parameterized leaf down to its maximum bound', () => {
+      const input = {
+        value: parameterNode('0', 10, 20),
+        parameterValues: parameterValues({ 0: 25 }),
+      };
+
+      const result = resolveUserParameterizedValues(input);
+
+      expect(result).toEqual({
+        value: 20,
+      });
+    });
+
+    it('clamps the raw parameter value before applying scale', () => {
+      const input = {
+        value: parameterNode('0', 0, 2, 0.06),
+        parameterValues: parameterValues({ 0: 5 }),
+      };
+
+      const result = resolveUserParameterizedValues(input);
+
+      expect(result).toEqual({
+        value: 0.12,
       });
     });
 

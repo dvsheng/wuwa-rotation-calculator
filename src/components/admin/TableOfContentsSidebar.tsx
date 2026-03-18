@@ -3,7 +3,6 @@ import { useState } from 'react';
 
 import { cn } from '@/lib/utils';
 
-import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Collapsible, CollapsibleContent } from '../ui/collapsible';
 import { Row, Stack } from '../ui/layout';
@@ -14,7 +13,6 @@ export type TableOfContentsItem = {
   id: string;
   label: string;
   caption?: string;
-  badges?: Array<string>;
   accordionValue?: string;
 };
 
@@ -109,15 +107,6 @@ export const TableOfContentsSidebar = ({
                       <Text variant="caption" tone="muted" className="truncate">
                         {item.caption}
                       </Text>
-                    )}
-                    {item.badges && item.badges.length > 0 && (
-                      <Row>
-                        {item.badges.map((badge) => (
-                          <Badge key={badge} variant="outline">
-                            <span className="truncate">{badge}</span>
-                          </Badge>
-                        ))}
-                      </Row>
                     )}
                   </Stack>
                 </Button>

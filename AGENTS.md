@@ -26,3 +26,14 @@ This project uses Tanstack form for forms, and zustand for frontend state manage
 
 - Run `npm run check` after any code changes to lint, format, and test your code
 - Prefer `src/components/ui/layout` and `src/components/ui/typography` primitives over raw HTML wrappers (`div`, `span`, etc.) when practical
+- Prefer `useSuspenseQuery` for a single suspense-backed query; use `useSuspenseQueries` only when a hook or component truly coordinates multiple queries
+- Keep admin APIs as simple CRUD/read layers whenever practical; move admin-specific shaping, grouping, and presentation read models into hook-layer code
+
+## Active Technologies
+
+- TypeScript 5.x, React 19.x + TanStack Start, TanStack Router, TanStack Query, shadcn/ui, Tailwind CSS, Drizzle ORM, Zod (001-entities-tab-overhaul)
+- PostgreSQL via Drizzle ORM and denormalized `full_capabilities` view (001-entities-tab-overhaul)
+
+## Recent Changes
+
+- 001-entities-tab-overhaul: Added TypeScript 5.x, React 19.x + TanStack Start, TanStack Router, TanStack Query, shadcn/ui, Tailwind CSS, Drizzle ORM, Zod

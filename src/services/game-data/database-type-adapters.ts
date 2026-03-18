@@ -1,4 +1,3 @@
-import type { DatabaseFullCapability } from '@/db/schema';
 import type {
   DatabaseLeafNumber,
   DatabaseRefineScalableNumber,
@@ -167,7 +166,7 @@ export type ResolveAlternativeDefinitions<T extends { capabilityJson: any }> =
  * AlternativeDefinitions are now nested in capabilityJson.
  * Returns the capability without alternativeDefinitions, with override fields merged in.
  */
-export const resolveAlternativeDefinitions = <T extends DatabaseFullCapability>(
+export const resolveAlternativeDefinitions = <T extends { capabilityJson: any }>(
   capability: T,
   sequence: number = 0,
 ): ResolveAlternativeDefinitions<T> => {
@@ -192,10 +191,20 @@ export const resolveAlternativeDefinitions = <T extends DatabaseFullCapability>(
   // Merge override into base and remove alternativeDefinitions
   const override = json.alternativeDefinitions[applicableSeq];
   const { alternativeDefinitions, ...baseJson } = json;
+  const nextDescription = override?.description;
 
   return {
     ...capability,
-    capabilityDescription: override?.description ?? capability.capabilityDescription,
+    ...('capabilityDescription' in capability
+      ? {
+          capabilityDescription: nextDescription ?? capability.capabilityDescription,
+        }
+      : {}),
+    ...('description' in capability
+      ? {
+          description: nextDescription ?? capability.description,
+        }
+      : {}),
     capabilityJson: { ...baseJson, ...override },
   } as ResolveAlternativeDefinitions<T>;
 };

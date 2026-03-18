@@ -1,33 +1,28 @@
-import { asc, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 import { database } from '@/db/client';
-import { entities, fullCapabilities, skills } from '@/db/schema';
-import type {
-  AdminEntityDetailsResponse,
-  AdminGetEntityDetailsRequest,
-} from '@/schemas/admin';
+import { entities } from '@/db/schema';
+import type { AdminGetEntityDetailsRequest } from '@/schemas/admin';
 
-export const getAdminEntityDetailsHandler = async (
-  input: AdminGetEntityDetailsRequest,
-): Promise<AdminEntityDetailsResponse> => {
-  const entity = await database.query.entities.findFirst({
-    where: eq(entities.id, input.id),
+import { replaceNullsWithUndefined } from '../game-data/database-type-adapters';
+
+export const getAdminEntityDetailsHandler = async ({
+  id,
+}: AdminGetEntityDetailsRequest) => {
+  const databaseEntity = await database.query.entities.findFirst({
+    where: eq(entities.id, id),
+    with: {
+      skills: {
+        with: {
+          capabilities: true,
+        },
+      },
+    },
   });
 
-  if (!entity) {
-    throw new Error(`Entity not found for ID ${input.id}`);
+  if (!databaseEntity) {
+    throw new Error(`Entity not found for ID ${id}`);
   }
-
-  const entitySkills = await database.query.skills.findMany({
-    where: eq(skills.entityId, input.id),
-    orderBy: (table, operators) => [operators.asc(table.id)],
-  });
-
-  const rows = await database
-    .select()
-    .from(fullCapabilities)
-    .where(eq(fullCapabilities.entityId, input.id))
-    .orderBy(asc(fullCapabilities.skillId), asc(fullCapabilities.capabilityId));
-
-  return { entity, skills: entitySkills, rows };
+  const entity = replaceNullsWithUndefined(databaseEntity);
+  return { entity: entity };
 };

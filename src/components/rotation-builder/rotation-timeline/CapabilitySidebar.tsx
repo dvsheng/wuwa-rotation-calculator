@@ -6,6 +6,7 @@ import { CapabilityHoverCard } from '@/components/common/CapabilityHoverCard';
 import { CapabilityIconDisplay } from '@/components/common/CapabilityIcon';
 import { DashboardSectionHeader } from '@/components/common/DashboardSectionHeader';
 import { InfoTooltip } from '@/components/common/InfoTooltip';
+import { SKILL_ORIGIN_ORDER } from '@/components/constants';
 import { sortAttackOrigins } from '@/components/rotation-builder/constants';
 import { Input } from '@/components/ui/input';
 import { Item } from '@/components/ui/item';
@@ -77,19 +78,6 @@ const BUFF_COLOR_LEGEND: Array<LegendItem> = [
   { label: 'Enemy Target', colorClassName: 'bg-chart-4' },
 ];
 
-const BUFF_SKILL_ORDER: Array<CapabilityOriginType> = [
-  'Normal Attack',
-  'Resonance Skill',
-  'Resonance Liberation',
-  'Forte Circuit',
-  'Intro Skill',
-  'Outro Skill',
-  'Inherent Skill',
-  'Tune Break',
-  'Echo',
-  'Weapon',
-  'Echo Set',
-];
 
 const TARGET_ORDER: Array<Target> = [
   Target.SELF,
@@ -381,12 +369,12 @@ export const CapabilitySidebar = ({
               characterBuffs,
               (buff) => buff.originType,
             );
-            const orderedBuffOrigins = BUFF_SKILL_ORDER.filter(
+            const orderedBuffOrigins = SKILL_ORIGIN_ORDER.filter(
               (origin) => buffsByOrigin[origin]?.length,
             );
             const remainingOrigins = (
               Object.keys(buffsByOrigin) as Array<CapabilityOriginType>
-            ).filter((origin) => !BUFF_SKILL_ORDER.includes(origin));
+            ).filter((origin) => !SKILL_ORIGIN_ORDER.includes(origin));
             const orderedBuffs = [...orderedBuffOrigins, ...remainingOrigins]
               .flatMap((origin) => buffsByOrigin[origin] ?? [])
               .toSorted(

@@ -59,26 +59,10 @@ describe('listAdminEntitiesHandler', () => {
       },
     ]);
 
-    const result = await listAdminEntitiesHandler({});
+    const result = await listAdminEntitiesHandler();
 
     expect(result).toHaveLength(1);
-    expect(result[0].entity.name).toBe('Aalto');
+    expect(result[0].name).toBe('Aalto');
     expect(result[0].skillCount).toBe(7);
-  });
-
-  it('applies where clause when filters are provided', async () => {
-    const { listAdminEntitiesHandler } = await import('./list-admin-entities.server');
-
-    await listAdminEntitiesHandler({ entityType: 'weapon', search: 'sword' });
-
-    expect(mocks.queryBuilder.where).toHaveBeenCalledTimes(1);
-  });
-
-  it('does not apply where clause when no filters are provided', async () => {
-    const { listAdminEntitiesHandler } = await import('./list-admin-entities.server');
-
-    await listAdminEntitiesHandler({});
-
-    expect(mocks.queryBuilder.where).not.toHaveBeenCalled();
   });
 });

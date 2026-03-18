@@ -1,74 +1,23 @@
-import { useQuery } from '@tanstack/react-query';
-import {
-  Outlet,
-  createFileRoute,
-  useNavigate,
-  useRouterState,
-} from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import type { ColumnDef } from '@tanstack/react-table';
+import { startCase } from 'es-toolkit';
 import { Database } from 'lucide-react';
-import { z } from 'zod';
+import { Suspense, useState } from 'react';
 
+import { EntityIcon } from '@/components/common/EntityIcon';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { DataTable } from '@/components/ui/data-table';
 import { Input } from '@/components/ui/input';
 import { Container, Stack } from '@/components/ui/layout';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import type { AdminListEntitiesRow } from '@/schemas/admin';
-import { listAdminEntities } from '@/services/admin';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import type { AdminEntity, UseAdminEntitiesOptions } from '@/hooks/useAdminEntities';
+import { useAdminEntities } from '@/hooks/useAdminEntities';
 import { EntityType } from '@/services/game-data';
 
-const adminEntitiesSearchSchema = z.object({
-  entityType: z.enum(EntityType).optional(),
-  search: z.string().optional(),
-});
-
-function AdminEntitiesPage() {
-  const navigate = useNavigate();
-  const searchParameters = Route.useSearch();
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const isDetailRoute = pathname.startsWith('/admin/entities/');
-  const requestData = {
-    ...(searchParameters.entityType ? { entityType: searchParameters.entityType } : {}),
-    ...(searchParameters.search ? { search: searchParameters.search } : {}),
-  };
-
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['admin-entities', searchParameters.entityType, searchParameters.search],
-    queryFn: () => listAdminEntities({ data: requestData }),
-    enabled: !isDetailRoute,
-  });
-
-  const columns: Array<ColumnDef<AdminListEntitiesRow>> = [
-    {
-      accessorKey: 'entity.name',
-      header: 'Entity Name',
-      cell: ({ row }) => row.original.entity.name,
-    },
-    {
-      accessorKey: 'entity.type',
-      header: 'Entity Type',
-      cell: ({ row }) => (
-        <span className="capitalize">{row.original.entity.type.replace('_', ' ')}</span>
-      ),
-    },
-    {
-      accessorKey: 'skillCount',
-      header: 'Skills',
-      cell: ({ row }) => row.original.skillCount,
-    },
-  ];
-
-  if (isDetailRoute) {
-    return <Outlet />;
-  }
-
+export function AdminEntitiesPage() {
+  const [searchText, setSearchText] = useState('');
+  const [entityType, setEntityType] = useState<string | undefined>();
   return (
     <Container padding="page" className="h-full min-h-0 max-w-6xl">
       <Stack gap="component" className="h-full min-h-0">
@@ -82,84 +31,104 @@ function AdminEntitiesPage() {
         </div>
 
         <div className="gap-component grid">
-          <Select
-            value={searchParameters.entityType ?? 'all'}
-            onValueChange={(value) => {
-              void navigate({
-                to: '/admin/entities',
-                replace: true,
-                search: {
-                  ...searchParameters,
-                  entityType:
-                    value === 'all' ? undefined : z.enum(EntityType).parse(value),
-                },
-              });
-            }}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="All entity types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value={EntityType.CHARACTER}>Character</SelectItem>
-              <SelectItem value={EntityType.WEAPON}>Weapon</SelectItem>
-              <SelectItem value={EntityType.ECHO}>Echo</SelectItem>
-              <SelectItem value={EntityType.ECHO_SET}>Echo Set</SelectItem>
-            </SelectContent>
-          </Select>
-
           <Input
-            value={searchParameters.search ?? ''}
+            value={searchText}
+            onChange={(event) => setSearchText(event.target.value)}
             placeholder="Search entity name..."
-            onChange={(event) => {
-              const value = event.target.value;
-              void navigate({
-                to: '/admin/entities',
-                replace: true,
-                search: {
-                  ...searchParameters,
-                  search: value.trim() ? value : undefined,
-                },
-              });
-            }}
           />
+          <ToggleGroup type="single" value={entityType} onValueChange={setEntityType}>
+            {Object.values(EntityType).map((type) => (
+              <ToggleGroupItem key={type} value={type}>
+                {startCase(type)}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
         </div>
-
-        {error instanceof Error && (
-          <div className="text-destructive p-panel rounded-md border text-sm">
-            {error.message}
-          </div>
-        )}
-
-        <DataTable
-          columns={columns}
-          data={data ?? []}
-          emptyMessage={isLoading ? 'Loading entities...' : 'No entities found.'}
-          classNames={{
-            wrapper: 'min-h-0 flex-1 overflow-hidden',
-            scrollArea: 'h-full',
-          }}
-          onRowClick={(row) => {
-            void navigate({
-              to: '/admin/entities/$id',
-              params: { id: String(row.entity.id) },
-            });
-          }}
-        />
+        <AdminEntitiesTable entityType={entityType as EntityType} search={searchText} />
       </Stack>
     </Container>
   );
 }
 
-function AdminEntitiesPageWithBoundary() {
+const AdminEntitiesTableSkeleton = () => {
   return (
+    <div className="rounded-md border p-4">
+      <Stack gap="component">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <div key={`entity-skeleton-${index}`} className="grid grid-cols-3 gap-4">
+            <Skeleton className="h-6 w-full" />
+            <Skeleton className="h-6 w-full" />
+            <Skeleton className="h-6 w-full" />
+          </div>
+        ))}
+      </Stack>
+    </div>
+  );
+};
+
+const AdminEntitiesErrorFallback = () => {
+  return (
+    <div className="text-destructive p-panel rounded-md border text-sm">
+      Data failed to load.
+    </div>
+  );
+};
+
+const AdminEntitiesTable = (options: UseAdminEntitiesOptions) => {
+  const { data } = useAdminEntities(options);
+  const navigate = useNavigate();
+
+  const columns: Array<ColumnDef<AdminEntity>> = [
+    {
+      accessorKey: 'icon',
+      header: undefined,
+      cell: ({ row }) => <EntityIcon iconUrl={row.original.iconUrl} size="large" />,
+    },
+    {
+      accessorKey: 'name',
+      header: 'Entity Name',
+      cell: ({ row }) => row.original.name,
+    },
+    {
+      accessorKey: 'type',
+      header: 'Entity Type',
+      cell: ({ row }) => (
+        <span className="capitalize">{row.original.type.replace('_', ' ')}</span>
+      ),
+    },
+    {
+      accessorKey: 'skillCount',
+      header: 'Skill Count',
+      cell: ({ row }) => row.original.skillCount,
+    },
+  ];
+  return (
+    <ErrorBoundary fallback={<AdminEntitiesErrorFallback />}>
+      <Suspense fallback={<AdminEntitiesTableSkeleton />}>
+        <DataTable
+          columns={columns}
+          data={data}
+          emptyMessage="No entities found."
+          classNames={{
+            wrapper: 'min-h-0 flex-1 overflow-hidden',
+            scrollArea: 'h-full',
+          }}
+          onRowClick={(row) =>
+            navigate({
+              to: '/admin/entities/$id',
+              params: { id: String(row.id) },
+            })
+          }
+        />
+      </Suspense>
+    </ErrorBoundary>
+  );
+};
+
+export const Route = createFileRoute('/admin/entities')({
+  component: () => (
     <ErrorBoundary>
       <AdminEntitiesPage />
     </ErrorBoundary>
-  );
-}
-
-export const Route = createFileRoute('/admin/entities')({
-  validateSearch: adminEntitiesSearchSchema,
-  component: AdminEntitiesPageWithBoundary,
+  ),
 });

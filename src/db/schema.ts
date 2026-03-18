@@ -178,6 +178,10 @@ export const rotations = pgTable('rotations', {
 // Relational Queries
 // ============================================================================
 
+export const entitiesRelations = relations(entities, ({ many }) => ({
+  skills: many(skills),
+}));
+
 export const skillsRelations = relations(skills, ({ one, many }) => ({
   entity: one(entities, {
     fields: [skills.entityId],

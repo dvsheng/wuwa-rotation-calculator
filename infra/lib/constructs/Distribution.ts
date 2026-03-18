@@ -1,4 +1,5 @@
 import type { RestApi } from 'aws-cdk-lib/aws-apigateway';
+import type { ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
 import {
   AllowedMethods,
   CachePolicy,
@@ -15,6 +16,8 @@ import { Construct } from 'constructs';
 type DistributionProperties = {
   restApi: RestApi;
   bucket: Bucket;
+  certificate: ICertificate;
+  domainNames: Array<string>;
 };
 
 export class Distribution extends Construct {
@@ -23,7 +26,7 @@ export class Distribution extends Construct {
   constructor(scope: Construct, id: string, properties: DistributionProperties) {
     super(scope, id);
 
-    const { restApi, bucket } = properties;
+    const { restApi, bucket, certificate, domainNames } = properties;
 
     const s3BucketOrigin = S3BucketOrigin.withOriginAccessControl(bucket);
 
@@ -49,7 +52,9 @@ export class Distribution extends Construct {
         '/images/*': staticAssetBehavior,
         '/site.webmanifest': staticAssetBehavior,
       },
+      certificate,
       defaultBehavior,
+      domainNames,
       priceClass: PriceClass.PRICE_CLASS_100,
     });
   }

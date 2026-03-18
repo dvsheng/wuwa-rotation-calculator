@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "build": "vite build",
-    "deploy": "VITE_APP_URL=https://d3cmchfh91t9xk.cloudfront.net/ npm run build && npm run cdk -- deploy",
+    "deploy": "VITE_APP_URL=https://iriscalcs.moe/ npm run build && npm run cdk -- deploy",
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint --fix",

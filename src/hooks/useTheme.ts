@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-const THEME_STORAGE_KEY = 'wuwa-theme';
+export const THEME_STORAGE_KEY = 'wuwa-theme';
 
 export type Theme = 'light' | 'dark';
 
-const getStoredTheme = (): Theme | undefined => {
+export const getStoredTheme = (): Theme | undefined => {
   try {
     const storedTheme = globalThis.localStorage.getItem(THEME_STORAGE_KEY);
     return storedTheme === 'dark' || storedTheme === 'light' ? storedTheme : undefined;
@@ -13,7 +13,7 @@ const getStoredTheme = (): Theme | undefined => {
   }
 };
 
-const getSystemTheme = (): Theme => {
+export const getSystemTheme = (): Theme => {
   try {
     return globalThis.matchMedia('(prefers-color-scheme: dark)').matches
       ? 'dark'
@@ -23,7 +23,7 @@ const getSystemTheme = (): Theme => {
   }
 };
 
-const applyTheme = (theme: Theme) => {
+export const applyTheme = (theme: Theme) => {
   try {
     const root = globalThis.document.documentElement;
     root.classList.toggle('dark', theme === 'dark');
@@ -31,16 +31,39 @@ const applyTheme = (theme: Theme) => {
   } catch {}
 };
 
-const getInitialTheme = (): Theme => getStoredTheme() ?? getSystemTheme();
+const getAppliedTheme = (): Theme | undefined => {
+  try {
+    return globalThis.document.documentElement.classList.contains('dark')
+      ? 'dark'
+      : 'light';
+  } catch {
+    return undefined;
+  }
+};
+
+const getInitialTheme = (): Theme =>
+  getAppliedTheme() ?? getStoredTheme() ?? getSystemTheme();
+
+export const themeInitScript = `(() => {
+  try {
+    const storageKey = '${THEME_STORAGE_KEY}';
+    const storedTheme = localStorage.getItem(storageKey);
+    const theme =
+      storedTheme === 'dark' || storedTheme === 'light'
+        ? storedTheme
+        : window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light';
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    document.documentElement.style.colorScheme = theme;
+  } catch {}
+})();`;
 
 export const useTheme = () => {
   const [theme, setThemeState] = useState<Theme>(getInitialTheme);
 
-  useEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
-
   const setTheme = (nextTheme: Theme) => {
+    applyTheme(nextTheme);
     setThemeState(nextTheme);
     try {
       globalThis.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);

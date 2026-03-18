@@ -11,6 +11,7 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 
 import { AppShell } from '@/components/AppShell';
 import { Toaster } from '@/components/ui/sonner';
+import { themeInitScript } from '@/hooks/useTheme';
 import appCss from '@/styles.css?url';
 
 export const Route = createRootRouteWithContext<{
@@ -58,6 +59,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     <html lang="en">
       <head>
         {import.meta.env.DEV && <script src="http://localhost:8097"></script>}
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <HeadContent />
       </head>
       <body>

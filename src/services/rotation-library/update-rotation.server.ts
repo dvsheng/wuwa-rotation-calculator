@@ -29,6 +29,7 @@ export const updateRotationHandler = async (
       ...(input.name !== undefined && { name: input.name }),
       ...(input.description !== undefined && { description: input.description }),
       ...(input.totalDamage !== undefined && { totalDamage: input.totalDamage }),
+      ...(input.visibility !== undefined && { visibility: input.visibility }),
       ...(input.data !== undefined && { data: input.data }),
       updatedAt: new Date(),
     })

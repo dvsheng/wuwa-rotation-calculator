@@ -1,12 +1,13 @@
-import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import type { SavedRotationData } from '@/schemas/library';
 import {
   createRotation as createRotationRequest,
   deleteRotation as deleteRotationRequest,
-  listRotations,
   updateRotation as updateRotationRequest,
 } from '@/services/rotation-library';
+
+import { rotationQueryKeys } from './useRotations';
 
 interface CreateRotationInput {
   name: string;
@@ -20,6 +21,7 @@ interface UpdateRotationInput {
   name?: string;
   description?: string;
   totalDamage?: number;
+  visibility?: 'private' | 'public';
   data?: SavedRotationData;
 }
 
@@ -27,38 +29,44 @@ interface DeleteRotationInput {
   id: number;
 }
 
-export const useRotationLibrary = () => {
+export const useRotationMutations = () => {
   const queryClient = useQueryClient();
-  const queryKey = ['rotation-library'] as const;
 
-  const rotationsQuery = useSuspenseQuery({
-    queryKey,
-    queryFn: () => listRotations(),
-  });
+  const invalidateOwned = () =>
+    queryClient.invalidateQueries({
+      queryKey: rotationQueryKeys.scope('owned'),
+    });
+  const invalidatePublic = () =>
+    queryClient.invalidateQueries({
+      queryKey: rotationQueryKeys.scope('public'),
+    });
 
   const createMutation = useMutation({
     mutationFn: (input: CreateRotationInput) => createRotationRequest({ data: input }),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey });
+      await invalidateOwned();
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: (input: UpdateRotationInput) => updateRotationRequest({ data: input }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey });
+    onSuccess: async (rotation, input) => {
+      await invalidateOwned();
+
+      if (rotation.visibility === 'public' || input.visibility !== undefined) {
+        await invalidatePublic();
+      }
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (input: DeleteRotationInput) => deleteRotationRequest({ data: input }),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey });
+      await Promise.all([invalidateOwned(), invalidatePublic()]);
     },
   });
 
   return {
-    rotations: rotationsQuery.data,
     createRotation: createMutation.mutateAsync,
     updateRotation: updateMutation.mutateAsync,
     deleteRotation: deleteMutation.mutateAsync,

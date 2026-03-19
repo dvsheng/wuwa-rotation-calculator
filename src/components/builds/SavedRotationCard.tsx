@@ -1,14 +1,11 @@
-import { useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from '@tanstack/react-router';
 import { format } from 'date-fns';
 import { isNil } from 'es-toolkit/predicate';
-import { Play } from 'lucide-react';
+import { Eye, EyeOff, Play, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { AttributeIcon } from '@/components/common/AssetIcon';
 import { EntityIcon } from '@/components/common/EntityIcon';
-import { TrashButton } from '@/components/common/TrashButton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,12 +25,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card';
+import { Row } from '@/components/ui/layout';
 import { Text } from '@/components/ui/typography';
-import { useRotationLibrary } from '@/hooks/useRotationLibrary';
+import { useLoadRotation } from '@/hooks/useLoadRotation';
+import { useRotationMutations } from '@/hooks/useRotationMutations';
 import { useSession } from '@/lib/auth-client';
 import type { SavedRotation } from '@/schemas/library';
-import { calculateRotation } from '@/services/rotation-calculator/calculate-client-rotation-damage';
-import { useStore } from '@/store';
 import { Attribute } from '@/types';
 
 interface SavedRotationCardProperties {
@@ -41,62 +43,11 @@ interface SavedRotationCardProperties {
 }
 
 export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  const { setTeam, setEnemy, setAttacks, setBuffs } = useStore();
-  const { deleteRotation, isDeleting } = useRotationLibrary();
+  const loadRotation = useLoadRotation();
+  const { deleteRotation, updateRotation, isDeleting, isUpdating } =
+    useRotationMutations();
   const { data: session } = useSession();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-
-  const handleLoad = async () => {
-    const toastId = toast.loading(`Loading rotation: ${rotation.name}`);
-
-    try {
-      setTeam(rotation.data.team);
-      setEnemy(rotation.data.enemy);
-      setAttacks(rotation.data.attacks);
-      setBuffs(rotation.data.buffs);
-
-      try {
-        await queryClient.fetchQuery({
-          queryKey: [
-            'rotation-calculation',
-            rotation.data.team,
-            rotation.data.enemy,
-            rotation.data.attacks,
-            rotation.data.buffs,
-          ],
-          queryFn: () =>
-            calculateRotation({
-              data: {
-                team: rotation.data.team,
-                enemy: rotation.data.enemy,
-                attacks: rotation.data.attacks,
-                buffs: rotation.data.buffs,
-              },
-            }),
-        });
-
-        toast.success(`Loaded rotation: ${rotation.name}`, {
-          id: toastId,
-        });
-        void navigate({ to: '/create', search: { tab: 'results' } });
-      } catch (error) {
-        console.warn('Failed to fetch rotation results while loading build:', error);
-        toast.warning(`Loaded rotation: ${rotation.name}`, {
-          id: toastId,
-          description:
-            'Rotation data loaded, but damage results could not be calculated.',
-        });
-        void navigate({ to: '/create', search: { tab: 'rotation' } });
-      }
-    } catch (error) {
-      console.error('Failed to load rotation:', error);
-      toast.error('Failed to load rotation.', {
-        id: toastId,
-      });
-    }
-  };
 
   const handleDelete = async () => {
     try {
@@ -109,6 +60,25 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
     }
   };
 
+  const handleVisibilityChange = async (
+    nextVisibility: SavedRotation['visibility'],
+  ) => {
+    try {
+      await updateRotation({
+        id: rotation.id,
+        visibility: nextVisibility,
+      });
+      toast.success(
+        nextVisibility === 'public'
+          ? 'Rotation is now public.'
+          : 'Rotation is now private.',
+      );
+    } catch (error) {
+      console.error('Failed to update rotation visibility:', error);
+      toast.error('Failed to update rotation visibility.');
+    }
+  };
+
   const userId = session?.user.id;
   const isOwner = !isNil(userId) && userId === rotation.ownerId;
   const configuredCharacters = rotation.data.team.filter(
@@ -118,100 +88,131 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
     attribute,
     value: rotation.data.enemy.resistances[attribute],
   }));
+
+  const nextVisibility = rotation.visibility === 'public' ? 'private' : 'public';
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>{rotation.name}</CardTitle>
+      <CardHeader className="relative pb-3">
+        <CardTitle className="pr-20">{rotation.name}</CardTitle>
         <CardDescription>
           Last updated: {format(new Date(rotation.updatedAt), 'PPP p')}
         </CardDescription>
         {isOwner && (
-          <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-            <DialogTrigger asChild>
-              <TrashButton
-                stopPropagation={false}
-                onRemove={() => setIsDeleteDialogOpen(true)}
-              />
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Are you sure?</DialogTitle>
-                <DialogDescription>
-                  This action cannot be undone. This will permanently delete the
-                  rotation "{rotation.name}".
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-                  Cancel
-                </Button>
+          <Row gap="trim" className="absolute top-6 right-6">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              disabled={isUpdating}
+              aria-label={
+                rotation.visibility === 'public'
+                  ? 'Make rotation private'
+                  : 'Make rotation public'
+              }
+              title={
+                rotation.visibility === 'public'
+                  ? 'Make rotation private'
+                  : 'Make rotation public'
+              }
+              onClick={() => void handleVisibilityChange(nextVisibility)}
+            >
+              {rotation.visibility === 'public' ? (
+                <Eye className="size-4" />
+              ) : (
+                <EyeOff className="size-4" />
+              )}
+            </Button>
+            <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+              <DialogTrigger asChild>
                 <Button
-                  variant="destructive"
-                  onClick={() => void handleDelete()}
+                  variant="ghost"
+                  size="icon-sm"
                   disabled={isDeleting}
+                  aria-label="Delete rotation"
+                  title="Delete rotation"
+                  onClick={() => setIsDeleteDialogOpen(true)}
                 >
-                  Delete
+                  <Trash2 className="size-4" />
                 </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Are you sure?</DialogTitle>
+                  <DialogDescription>
+                    This action cannot be undone. This will permanently delete the
+                    rotation "{rotation.name}".
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsDeleteDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => void handleDelete()}
+                    disabled={isDeleting}
+                  >
+                    Delete
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </Row>
         )}
       </CardHeader>
-      <CardContent>
-        <Text variant="bodySm" tone="muted">
-          {rotation.description || 'No description.'}
-        </Text>
-        <div className="mt-4 space-y-3">
-          <div>
-            <Text variant="overline" tone="muted" className="mb-2">
-              Team
-            </Text>
-            {configuredCharacters.length > 0 ? (
-              <div className="gap-inset flex flex-wrap items-center">
-                {configuredCharacters.map((character) => (
-                  <EntityIcon key={character.id} entityId={character.id} size="large" />
-                ))}
-              </div>
-            ) : (
-              <Text variant="bodySm" tone="muted">
-                No characters configured.
-              </Text>
-            )}
-          </div>
-
-          <div>
-            <Text variant="overline" tone="muted" className="mb-2">
-              Enemy
-            </Text>
-            <div className="gap-inset mb-2 flex flex-wrap items-center">
-              <Text as="span" variant="bodySm" tone="muted">
-                Level: {rotation.data.enemy.level}
-              </Text>
-            </div>
-            <div className="gap-inset flex flex-wrap items-center">
-              <Text as="span" variant="bodySm" tone="muted">
-                Resistances:
-              </Text>
-              {resistanceEntries.map(({ attribute, value }) => (
-                <Badge
-                  key={attribute}
-                  variant="outline"
-                  className="gap-inset px-inset py-trim"
-                >
-                  {attribute !== 'physical' && (
-                    <AttributeIcon attribute={attribute} size={14} />
-                  )}
-                  <Text as="span" variant="caption">
-                    {value}%
-                  </Text>
-                </Badge>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="gap-inset mt-4 flex flex-wrap">
+      <CardContent className="space-y-4 pt-0">
+        {rotation.description && (
+          <Text variant="bodySm" tone="muted" className="line-clamp-2">
+            {rotation.description}
+          </Text>
+        )}
+        {configuredCharacters.length > 0 ? (
+          <Row gap="inset" wrap>
+            {configuredCharacters.map((character) => (
+              <EntityIcon key={character.id} entityId={character.id} size="xlarge" />
+            ))}
+          </Row>
+        ) : (
+          <Text variant="bodySm" tone="muted">
+            No characters configured.
+          </Text>
+        )}
+        <Row gap="inset" wrap>
           <Badge variant="outline">{rotation.data.attacks.length} Attacks</Badge>
           <Badge variant="outline">{rotation.data.buffs.length} Buffs</Badge>
+          <HoverCard openDelay={150} closeDelay={100}>
+            <HoverCardTrigger asChild>
+              <Badge variant="outline" className="cursor-default">
+                Enemy
+              </Badge>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-fit max-w-sm">
+              <div className="space-y-3">
+                <Text variant="label">Enemy Configuration</Text>
+                <Text variant="bodySm" tone="muted">
+                  Level: {rotation.data.enemy.level}
+                </Text>
+                <Row gap="inset" wrap>
+                  {resistanceEntries.map(({ attribute, value }) => (
+                    <Badge
+                      key={attribute}
+                      variant="outline"
+                      className="gap-inset px-inset py-trim"
+                    >
+                      {attribute !== 'physical' && (
+                        <AttributeIcon attribute={attribute} size={14} />
+                      )}
+                      <Text as="span" variant="caption">
+                        {value}%
+                      </Text>
+                    </Badge>
+                  ))}
+                </Row>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
           {rotation.totalDamage !== undefined && (
             <Badge variant="secondary">
               {rotation.totalDamage.toLocaleString(undefined, {
@@ -220,10 +221,10 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
               dmg
             </Badge>
           )}
-        </div>
+        </Row>
       </CardContent>
-      <CardFooter className="gap-inset flex justify-end">
-        <Button onClick={() => void handleLoad()} size="sm">
+      <CardFooter className="justify-end pt-0">
+        <Button onClick={() => void loadRotation(rotation)} size="sm">
           <Play className="mr-2 h-4 w-4" />
           Load
         </Button>

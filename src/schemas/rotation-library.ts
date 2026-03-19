@@ -1,29 +1,32 @@
 import { z } from 'zod';
 
-import { SavedRotationDataSchema, SavedRotationSchema } from '@/schemas/library';
+import { ListedRotationSchema, SavedRotationSchema } from '@/schemas/library';
 
-export const CreateRotationRequestSchema = z.object({
-  name: z.string(),
-  description: z.string().optional(),
-  totalDamage: z.number().optional(),
-  data: SavedRotationDataSchema,
+const MutableRotationFieldsSchema = SavedRotationSchema.pick({
+  name: true,
+  description: true,
+  totalDamage: true,
+  visibility: true,
+  data: true,
+});
+
+export const CreateRotationRequestSchema = MutableRotationFieldsSchema.omit({
+  visibility: true,
 });
 
 export type CreateRotationRequest = z.infer<typeof CreateRotationRequestSchema>;
 
 export const UpdateRotationRequestSchema = z
   .object({
-    id: z.number(),
-    name: z.string().trim().min(1).optional(),
-    description: z.string().trim().optional(),
-    totalDamage: z.number().optional(),
-    data: SavedRotationDataSchema.optional(),
+    id: SavedRotationSchema.shape.id,
   })
+  .merge(MutableRotationFieldsSchema.partial())
   .superRefine((value, context) => {
     if (
       value.name === undefined &&
       value.description === undefined &&
       value.totalDamage === undefined &&
+      value.visibility === undefined &&
       value.data === undefined
     ) {
       context.addIssue({
@@ -42,7 +45,22 @@ export const DeleteRotationRequestSchema = z.object({
 
 export type DeleteRotationRequest = z.infer<typeof DeleteRotationRequestSchema>;
 
-export const ListRotationsResponseSchema = z.array(SavedRotationSchema);
+export const ListRotationsRequestSchema = z.object({
+  scope: z.enum(['owned', 'public']),
+  offset: z.number().int().nonnegative().default(0),
+  limit: z.number().int().positive().max(100).default(20),
+  characterIds: z.array(z.number().int().positive()).optional(),
+});
+
+export type ListRotationsRequest = z.infer<typeof ListRotationsRequestSchema>;
+
+export const ListRotationsResponseSchema = z.object({
+  items: z.array(ListedRotationSchema),
+  total: z.number().int().nonnegative(),
+  offset: z.number().int().nonnegative(),
+  limit: z.number().int().nonnegative(),
+});
+
 export type ListRotationsResponse = z.infer<typeof ListRotationsResponseSchema>;
 
 export const DeleteRotationResponseSchema = z.object({

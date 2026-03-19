@@ -23,7 +23,9 @@ import {
 import { Row } from '@/components/ui/layout';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/typography';
-import { useRotationLibrary } from '@/hooks/useRotationLibrary';
+import { useRotationMutations } from '@/hooks/useRotationMutations';
+import { useRotations } from '@/hooks/useRotations';
+import { useSession } from '@/lib/auth-client';
 import type { SavedRotation } from '@/schemas/library';
 import { calculateRotation } from '@/services/rotation-calculator/calculate-client-rotation-damage';
 import { useStore } from '@/store';
@@ -31,12 +33,21 @@ import { useStore } from '@/store';
 export function SaveRotationButton() {
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
-  const { rotations, updateRotation, isUpdating } = useRotationLibrary();
+  const { data: session } = useSession();
+  const ownedRotationsQuery = useRotations(
+    {
+      scope: 'owned',
+      offset: 0,
+      limit: 20,
+    },
+    {
+      enabled: Boolean(session?.user.id),
+    },
+  );
+  const { updateRotation, isUpdating } = useRotationMutations();
   const { team, enemy, attacks, buffs } = useStore();
 
-  const sortedRotations = rotations.toSorted(
-    (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
-  );
+  const ownedRotations = ownedRotationsQuery.data.items;
 
   const handleUpdateRotation = async (rotation: SavedRotation) => {
     // TODO: Use proper useMutation and useQuery for this
@@ -108,7 +119,7 @@ export function SaveRotationButton() {
               Select a saved rotation to overwrite with your current team and rotation.
             </DialogDescription>
           </DialogHeader>
-          {sortedRotations.map((rotation) => (
+          {ownedRotations.map((rotation) => (
             <Button
               key={rotation.id}
               variant="outline"
@@ -124,6 +135,11 @@ export function SaveRotationButton() {
               </Text>
             </Button>
           ))}
+          {ownedRotations.length === 0 && (
+            <Text variant="bodySm" tone="muted">
+              No saved rotations available to update.
+            </Text>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsUpdateDialogOpen(false)}>
               Cancel

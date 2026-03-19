@@ -15,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useRotationLibrary } from '@/hooks/useRotationLibrary';
+import { useRotationMutations } from '@/hooks/useRotationMutations';
 import { calculateRotation } from '@/services/rotation-calculator/calculate-client-rotation-damage';
 import { useStore } from '@/store';
 
@@ -40,7 +40,7 @@ export function SaveRotationDialog({
   const setOpen = onOpenChange ?? setInternalOpen;
 
   const { team, enemy, attacks, buffs } = useStore();
-  const { createRotation, isCreating } = useRotationLibrary();
+  const { createRotation, isCreating } = useRotationMutations();
 
   const handleSave = async () => {
     if (!name.trim()) {

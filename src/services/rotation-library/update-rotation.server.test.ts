@@ -50,6 +50,7 @@ describe('updateRotationHandler', () => {
       name: 'Old Name',
       description: undefined,
       totalDamage: undefined,
+      visibility: 'private',
       data: {
         team: [],
         enemy: {},
@@ -66,6 +67,7 @@ describe('updateRotationHandler', () => {
         name: 'New Name',
         description: 'Updated',
         totalDamage: 5000,
+        visibility: 'public',
         data: {
           team: [],
           enemy: {},
@@ -78,7 +80,13 @@ describe('updateRotationHandler', () => {
     ]);
 
     const result = await updateRotationHandler(
-      { id: 1, name: 'New Name', description: 'Updated', totalDamage: 5000 },
+      {
+        id: 1,
+        name: 'New Name',
+        description: 'Updated',
+        totalDamage: 5000,
+        visibility: 'public',
+      },
       'dev-local-owner',
     );
 
@@ -92,6 +100,7 @@ describe('updateRotationHandler', () => {
       name: 'New Name',
       description: 'Updated',
       totalDamage: 5000,
+      visibility: 'public',
       data: { team: [], enemy: {}, attacks: [], buffs: [] },
       createdAt: new Date(100),
       updatedAt: new Date(200),
@@ -117,6 +126,7 @@ describe('updateRotationHandler', () => {
       name: 'Existing',
       description: 'Existing description',
       totalDamage: 1234,
+      visibility: 'private',
       data: {
         team: [],
         enemy: {},
@@ -133,6 +143,7 @@ describe('updateRotationHandler', () => {
         name: 'Existing',
         description: 'Existing description',
         totalDamage: 0,
+        visibility: 'private',
         data: {
           team: [],
           enemy: {},
@@ -161,5 +172,19 @@ describe('updateRotationHandler', () => {
         description: expect.anything(),
       }),
     );
+  });
+
+  it('throws when the rotation belongs to another user', async () => {
+    const { updateRotationHandler } = await import('./update-rotation.server');
+
+    mocks.findFirst.mockResolvedValue({
+      id: 1,
+      ownerId: 'other-user',
+      visibility: 'public',
+    });
+
+    await expect(
+      updateRotationHandler({ id: 1, visibility: 'private' }, 'dev-local-owner'),
+    ).rejects.toThrow('Rotation 1 does not belong to the current user');
   });
 });

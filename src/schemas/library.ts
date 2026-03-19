@@ -13,6 +13,9 @@ export const SavedRotationDataSchema = z.object({
 
 export type SavedRotationData = z.infer<typeof SavedRotationDataSchema>;
 
+export const RotationVisibilitySchema = z.enum(['private', 'public']);
+export type RotationVisibility = z.infer<typeof RotationVisibilitySchema>;
+
 export const SavedRotationSchema = z.object({
   id: z.number(),
   ownerId: z.string(),
@@ -21,7 +24,14 @@ export const SavedRotationSchema = z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
   totalDamage: z.number().optional(),
+  visibility: RotationVisibilitySchema,
   data: SavedRotationDataSchema,
 });
 
 export type SavedRotation = z.infer<typeof SavedRotationSchema>;
+
+export const ListedRotationSchema = SavedRotationSchema.extend({
+  isOwner: z.boolean(),
+});
+
+export type ListedRotation = z.infer<typeof ListedRotationSchema>;

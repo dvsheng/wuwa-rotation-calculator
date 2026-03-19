@@ -40,6 +40,7 @@ describe('createRotationHandler', () => {
         name: 'My Rotation',
         description: 'desc',
         totalDamage: 1234,
+        visibility: 'private',
         data: {
           team: [],
           enemy: {},
@@ -69,12 +70,19 @@ describe('createRotationHandler', () => {
     expect(mocks.insert).toHaveBeenCalledTimes(1);
     expect(mocks.values).toHaveBeenCalledTimes(1);
     expect(mocks.returning).toHaveBeenCalledTimes(1);
+    expect(mocks.values).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ownerId: 'dev-local-owner',
+        visibility: 'private',
+      }),
+    );
     expect(result).toEqual({
       id: 1,
       ownerId: 'dev-local-owner',
       name: 'My Rotation',
       description: 'desc',
       totalDamage: 1234,
+      visibility: 'private',
       data: { team: [], enemy: {}, attacks: [], buffs: [] },
       createdAt: new Date(100),
       updatedAt: new Date(100),

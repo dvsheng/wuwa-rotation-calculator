@@ -17,7 +17,7 @@ import type {
   DatabaseModifierData,
   DatabasePermanentStatData,
 } from '@/schemas/database';
-import type { SavedRotationData } from '@/schemas/library';
+import type { RotationVisibility, SavedRotationData } from '@/schemas/library';
 import type {
   CapabilityType,
   EntityType,
@@ -171,6 +171,10 @@ export const rotations = pgTable('rotations', {
   name: text('name').notNull(),
   description: text('description'),
   totalDamage: real('total_damage'),
+  visibility: text('visibility')
+    .notNull()
+    .$type<RotationVisibility>()
+    .default('private'),
   data: jsonb('data').notNull().$type<SavedRotationData>(),
 });
 

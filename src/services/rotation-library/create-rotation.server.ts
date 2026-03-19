@@ -11,7 +11,7 @@ export const createRotationHandler = async (
 ): Promise<SavedRotation> => {
   const [created] = await database
     .insert(rotations)
-    .values({ ...input, ownerId })
+    .values({ ...input, ownerId, visibility: 'private' })
     .returning();
 
   return mapDatabaseRotation(created);

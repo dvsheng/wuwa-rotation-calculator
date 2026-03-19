@@ -46,13 +46,16 @@ interface AssetIconProperties {
   className?: string;
 }
 
+const MONOCHROME_ICON_CLASSNAME =
+  'shrink-0 object-contain brightness-0 dark:brightness-0 dark:invert';
+
 export const AssetIcon = ({ name, size = 24, className }: AssetIconProperties) => (
   <img
     src={ICON_MAP[name]}
     width={size}
     height={size}
     alt={name}
-    className={cn('shrink-0 object-contain brightness-0', className)}
+    className={cn(MONOCHROME_ICON_CLASSNAME, className)}
   />
 );
 
@@ -92,6 +95,6 @@ export const WeaponTypeIcon = ({
     width={size}
     height={size}
     alt={weaponType}
-    className={cn('shrink-0 object-contain brightness-0', className)}
+    className={cn(MONOCHROME_ICON_CLASSNAME, className)}
   />
 );

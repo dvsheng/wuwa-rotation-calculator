@@ -8,6 +8,8 @@ import {
   createRootRouteWithContext,
 } from '@tanstack/react-router';
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
+import { AlertTriangle } from 'lucide-react';
+import { ErrorBoundary } from 'react-error-boundary';
 
 import { AppShell } from '@/components/AppShell';
 import { Toaster } from '@/components/ui/sonner';
@@ -52,6 +54,20 @@ function NotFound() {
   return <div className="p-6 text-center">Page not found</div>;
 }
 
+function RootErrorFallback({ error }: { error: Error }) {
+  return (
+    <div className="flex h-screen items-center justify-center p-6">
+      <div className="border-destructive/20 bg-destructive/5 p-panel flex items-start gap-2 rounded-md border">
+        <AlertTriangle className="text-destructive mt-0.5 h-4 w-4 shrink-0" />
+        <div className="flex flex-col gap-1">
+          <span className="text-destructive text-sm font-medium">Something went wrong</span>
+          <span className="text-muted-foreground text-xs">{error.message}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function RootDocument({ children }: { children: React.ReactNode }) {
   const { queryClient } = Route.useRouteContext();
 
@@ -64,7 +80,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <QueryClientProvider client={queryClient}>
-          <AppShell>{children}</AppShell>
+          <ErrorBoundary FallbackComponent={RootErrorFallback}>
+            <AppShell>{children}</AppShell>
+          </ErrorBoundary>
         </QueryClientProvider>
         <Toaster position="bottom-left" />
         <TanStackDevtools

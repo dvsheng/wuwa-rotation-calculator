@@ -1,11 +1,11 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { ErrorBoundary } from 'react-error-boundary';
 import type { ColumnDef } from '@tanstack/react-table';
 import { startCase } from 'es-toolkit';
 import { Database } from 'lucide-react';
 import { Suspense, useState } from 'react';
 
 import { EntityIcon } from '@/components/common/EntityIcon';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { DataTable } from '@/components/ui/data-table';
 import { Input } from '@/components/ui/input';
 import { Container, Stack } from '@/components/ui/layout';
@@ -126,9 +126,5 @@ const AdminEntitiesTable = (options: UseAdminEntitiesOptions) => {
 };
 
 export const Route = createFileRoute('/admin/entities')({
-  component: () => (
-    <ErrorBoundary>
-      <AdminEntitiesPage />
-    </ErrorBoundary>
-  ),
+  component: AdminEntitiesPage,
 });

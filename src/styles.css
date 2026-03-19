@@ -68,6 +68,8 @@ code {
   --chart-3: oklch(0.7505 0.1466 84.4461);
   --chart-4: oklch(0.17 0.04 258);
   --chart-5: oklch(0.5856 0.0481 259.1375);
+  --chart-6: oklch(0.60 0.14 195);           /* teal — futuristic terminal */
+  --chart-7: oklch(0.58 0.18 290);           /* violet — I.R.I.S. holographic */
 
   /* Sidebar */
   --sidebar: oklch(1 0 0);
@@ -155,6 +157,8 @@ code {
   --chart-3: oklch(0.7505 0.1466 84.4461);
   --chart-4: oklch(0.236 0.032 265);
   --chart-5: oklch(0.137 0.022 262);
+  --chart-6: oklch(0.68 0.16 195);           /* teal — futuristic terminal */
+  --chart-7: oklch(0.67 0.20 290);           /* violet — I.R.I.S. holographic */
 
   /* Sidebar — deeper navy than background */
   --sidebar: oklch(0.115 0.018 258);
@@ -223,6 +227,8 @@ code {
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-chart-7: var(--chart-7);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);

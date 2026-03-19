@@ -83,22 +83,20 @@ export function LibraryContainer() {
   };
 
   return (
-    <Stack className="p-page gap-page h-full w-full">
-      <Row gap="inset">
-        <Library className="size-6" />
-        <Text as="h2" variant="heading">
-          Library
-        </Text>
-      </Row>
-      <Row justify="between" align="start" wrap className="gap-component">
-        <Stack gap="trim">
-          <Text variant="bodySm" tone="muted">
-            Filter both your saved rotations and public rotations by character.
-          </Text>
-        </Stack>
+    <Stack gap="component" className="h-full min-h-0">
+      <div className="space-y-2">
+        <h2 className="gap-inset tracking-trim flex items-center text-2xl font-bold">
+          <Library className="h-6 w-6" /> Library
+        </h2>
+        <p className="text-muted-foreground text-sm">
+          Filter both your saved rotations and public rotations by character.
+        </p>
+      </div>
+
+      <div className="gap-component grid">
         <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="min-w-64 justify-between">
+            <Button variant="outline" className="min-w-64 justify-between sm:w-fit">
               <span>
                 {formatCharacterFilterLabel(
                   selectedCharacters.map((item) => item.name),
@@ -107,7 +105,7 @@ export function LibraryContainer() {
               <ChevronsUpDown className="size-4 opacity-60" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80 p-0" align="end">
+          <PopoverContent className="w-80 p-0" align="start">
             <Command>
               <CommandInput placeholder="Search characters..." />
               <CommandList>
@@ -133,7 +131,8 @@ export function LibraryContainer() {
             </Command>
           </PopoverContent>
         </Popover>
-      </Row>
+      </div>
+
       {selectedCharacters.length > 0 && (
         <Row gap="inset" wrap>
           {selectedCharacters.map((character) => (

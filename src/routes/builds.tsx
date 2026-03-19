@@ -4,30 +4,38 @@ import { Suspense } from 'react';
 import { LibraryContainer } from '@/components/builds/LibraryContainer';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Card, CardContent } from '@/components/ui/card';
+import { Container, Stack } from '@/components/ui/layout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/typography';
 
 function LibraryLoadingFallback() {
   return (
-    <div className="container mx-auto max-w-5xl space-y-6">
-      <Skeleton className="h-7 w-32" />
-      <Card className="border-dashed">
-        <CardContent className="py-page text-center">
-          <Text variant="bodySm" tone="muted">
-            Loading saved rotations...
-          </Text>
-        </CardContent>
-      </Card>
-    </div>
+    <Container padding="page" className="h-full min-h-0 max-w-6xl">
+      <Stack gap="component" className="h-full min-h-0">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-36" />
+          <Skeleton className="h-5 w-80" />
+        </div>
+        <Card className="border-dashed">
+          <CardContent className="py-page text-center">
+            <Text variant="bodySm" tone="muted">
+              Loading saved rotations...
+            </Text>
+          </CardContent>
+        </Card>
+      </Stack>
+    </Container>
   );
 }
 
 function BuildsPage() {
   return (
     <ErrorBoundary>
-      <Suspense fallback={<LibraryLoadingFallback />}>
-        <LibraryContainer />
-      </Suspense>
+      <Container padding="page" className="h-full min-h-0 max-w-6xl">
+        <Suspense fallback={<LibraryLoadingFallback />}>
+          <LibraryContainer />
+        </Suspense>
+      </Container>
     </ErrorBoundary>
   );
 }

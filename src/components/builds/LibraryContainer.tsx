@@ -1,8 +1,10 @@
 import { Check, ChevronsUpDown, Library } from 'lucide-react';
 import { useState } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 
 import { RotationTable } from '@/components/builds/RotationTable';
 import { SaveRotationDialog } from '@/components/builds/SaveRotationDialog';
+import { DataLoadFailed } from '@/components/common/DataLoadFailed';
 import { EntityIcon } from '@/components/common/EntityIcon';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -37,6 +39,14 @@ const formatCharacterFilterLabel = (selectedNames: Array<string>) => {
 };
 
 export function LibraryContainer() {
+  return (
+    <ErrorBoundary fallback={<DataLoadFailed />}>
+      <LibraryContainerContent />
+    </ErrorBoundary>
+  );
+}
+
+function LibraryContainerContent() {
   const [selectedCharacterIds, setSelectedCharacterIds] = useState<Array<number>>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [publicOffset, setPublicOffset] = useState(0);

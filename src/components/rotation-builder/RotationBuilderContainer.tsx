@@ -1,6 +1,5 @@
 import { useState } from 'react';
 
-import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { RotationResultContainer } from '@/components/rotation-builder/results/RotationResultContainer';
 import { TeamContainer } from '@/components/rotation-builder/team/TeamContainer';
 import { useRotationCalculation } from '@/hooks/useRotationCalculation';
@@ -46,11 +45,7 @@ export const RotationBuilderContainer = ({
       >
         {effectiveTab === 'team' && <TeamContainer />}
         {effectiveTab === 'rotation' && <RotationBuilder />}
-        {effectiveTab === 'results' && result && (
-          <ErrorBoundary>
-            <RotationResultContainer />
-          </ErrorBoundary>
-        )}
+        {effectiveTab === 'results' && result && <RotationResultContainer />}
       </div>
     </Stack>
   );

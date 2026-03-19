@@ -1,11 +1,12 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { ErrorBoundary } from 'react-error-boundary';
 import type { ColumnDef } from '@tanstack/react-table';
 import { startCase } from 'es-toolkit';
 import { Database } from 'lucide-react';
 import { Suspense, useState } from 'react';
 
+import { DataLoadFailed } from '@/components/common/DataLoadFailed';
 import { EntityIcon } from '@/components/common/EntityIcon';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { DataTable } from '@/components/ui/data-table';
 import { Input } from '@/components/ui/input';
 import { Container, Stack } from '@/components/ui/layout';
@@ -66,14 +67,6 @@ const AdminEntitiesTableSkeleton = () => {
   );
 };
 
-const AdminEntitiesErrorFallback = () => {
-  return (
-    <div className="text-destructive p-panel rounded-md border text-sm">
-      Data failed to load.
-    </div>
-  );
-};
-
 const AdminEntitiesTable = (options: UseAdminEntitiesOptions) => {
   const { data } = useAdminEntities(options);
   const navigate = useNavigate();
@@ -103,7 +96,7 @@ const AdminEntitiesTable = (options: UseAdminEntitiesOptions) => {
     },
   ];
   return (
-    <ErrorBoundary fallback={<AdminEntitiesErrorFallback />}>
+    <ErrorBoundary fallback={<DataLoadFailed />}>
       <Suspense fallback={<AdminEntitiesTableSkeleton />}>
         <DataTable
           columns={columns}
@@ -126,9 +119,5 @@ const AdminEntitiesTable = (options: UseAdminEntitiesOptions) => {
 };
 
 export const Route = createFileRoute('/admin/entities')({
-  component: () => (
-    <ErrorBoundary>
-      <AdminEntitiesPage />
-    </ErrorBoundary>
-  ),
+  component: AdminEntitiesPage,
 });

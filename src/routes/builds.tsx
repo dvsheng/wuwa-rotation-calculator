@@ -1,7 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Suspense } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 
 import { LibraryContainer } from '@/components/builds/LibraryContainer';
+import { DataLoadFailed } from '@/components/common/DataLoadFailed';
 import { Card, CardContent } from '@/components/ui/card';
 import { Container, Stack } from '@/components/ui/layout';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -30,9 +32,11 @@ function LibraryLoadingFallback() {
 function BuildsPage() {
   return (
     <Container padding="page" className="h-full min-h-0 max-w-6xl">
-      <Suspense fallback={<LibraryLoadingFallback />}>
-        <LibraryContainer />
-      </Suspense>
+      <ErrorBoundary fallback={<DataLoadFailed />}>
+        <Suspense fallback={<LibraryLoadingFallback />}>
+          <LibraryContainer />
+        </Suspense>
+      </ErrorBoundary>
     </Container>
   );
 }

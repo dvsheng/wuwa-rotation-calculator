@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 
+import { DataLoadFailed } from '@/components/common/DataLoadFailed';
 import { RotationResultContainer } from '@/components/rotation-builder/results/RotationResultContainer';
 import { TeamContainer } from '@/components/rotation-builder/team/TeamContainer';
 import { useRotationCalculation } from '@/hooks/useRotationCalculation';
@@ -43,7 +45,11 @@ export const RotationBuilderContainer = ({
         key={effectiveTab}
         className={`flex min-h-0 flex-1 flex-col ${animState.enterClass}`}
       >
-        {effectiveTab === 'team' && <TeamContainer />}
+        {effectiveTab === 'team' && (
+          <ErrorBoundary fallback={<DataLoadFailed />}>
+            <TeamContainer />
+          </ErrorBoundary>
+        )}
         {effectiveTab === 'rotation' && <RotationBuilder />}
         {effectiveTab === 'results' && result && <RotationResultContainer />}
       </div>

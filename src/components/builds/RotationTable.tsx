@@ -40,8 +40,6 @@ interface RotationTableProperties {
   description: string;
   rotations: Array<SavedRotation | ListedRotation>;
   showOwnerActions: boolean;
-  isLoading?: boolean;
-  isFetching?: boolean;
   emptyMessage: string;
   totalLabel?: string;
   hasNextPage?: boolean;
@@ -117,10 +115,7 @@ export function RotationTable({
   description,
   rotations,
   showOwnerActions,
-  isLoading = false,
-  isFetching = false,
   emptyMessage,
-  totalLabel,
   hasNextPage = false,
   isPreviousData = false,
   onPreviousPage,
@@ -146,8 +141,7 @@ export function RotationTable({
           ? 'Rotation is now public.'
           : 'Rotation is now private.',
       );
-    } catch (error) {
-      console.error('Failed to update rotation visibility:', error);
+    } catch {
       toast.error('Failed to update rotation visibility.');
     }
   };
@@ -161,8 +155,7 @@ export function RotationTable({
       await deleteRotation({ id: rotationPendingDeletion.id });
       toast.success('Rotation deleted.');
       setRotationPendingDeletion(undefined);
-    } catch (error) {
-      console.error('Failed to delete rotation:', error);
+    } catch {
       toast.error('Failed to delete rotation.');
     }
   };
@@ -215,7 +208,7 @@ export function RotationTable({
     },
     {
       accessorKey: 'name',
-      header: 'Rotation',
+      header: 'Name',
       cell: ({ row }) => (
         <Text variant="bodySm" className="font-medium">
           {row.original.name}
@@ -290,40 +283,33 @@ export function RotationTable({
         <DataTable
           columns={columns}
           data={rotations}
-          emptyMessage={isLoading ? `Loading ${title.toLowerCase()}...` : emptyMessage}
+          emptyMessage={emptyMessage}
           classNames={{
-            wrapper: 'overflow-hidden',
+            wrapper: 'overflow-hidden bg-card',
             cell: 'py-3 align-middle',
           }}
         />
 
-        {(totalLabel || onPreviousPage || onNextPage) && (
-          <Row justify="between" wrap className="gap-component">
-            <Text variant="bodySm" tone="muted">
-              {isFetching && !isLoading ? 'Updating results...' : totalLabel}
-            </Text>
-            {(onPreviousPage || onNextPage) && (
-              <Row gap="inset">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={!onPreviousPage || isFetching}
-                  onClick={onPreviousPage}
-                >
-                  <ChevronLeft className="size-4" />
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={!hasNextPage || !onNextPage || isFetching || isPreviousData}
-                  onClick={onNextPage}
-                >
-                  Next
-                  <ChevronRight className="size-4" />
-                </Button>
-              </Row>
-            )}
+        {(onPreviousPage || onNextPage) && (
+          <Row justify="between" gap="component" wrap>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!onPreviousPage}
+              onClick={onPreviousPage}
+            >
+              <ChevronLeft className="size-4" />
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!hasNextPage || !onNextPage || isPreviousData}
+              onClick={onNextPage}
+            >
+              Next
+              <ChevronRight className="size-4" />
+            </Button>
           </Row>
         )}
       </Stack>

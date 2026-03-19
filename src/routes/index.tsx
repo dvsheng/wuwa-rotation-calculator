@@ -7,7 +7,7 @@ import { Text } from '@/components/ui/typography';
 
 const LandingPage = () => {
   return (
-    <div className="from-background via-background to-accent/40 flex h-full min-h-0 flex-1 overflow-auto bg-linear-to-br">
+    <div className="from-background via-primary/5 to-primary/35 flex h-full min-h-0 flex-1 overflow-auto bg-linear-to-br">
       <div className="mx-auto flex w-full max-w-3xl flex-1 items-center justify-center px-6 py-12">
         <Stack gap="panel" align="center" className="text-center">
           <Stack gap="component" align="center" className="max-w-2xl">

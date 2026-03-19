@@ -1,13 +1,11 @@
 import { Link } from '@tanstack/react-router';
 import { ChevronRight } from 'lucide-react';
 import { useState } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
 
 import { useAdminEntity } from '@/hooks/useAdminEntities';
 import type { DetailedAdminEntity } from '@/hooks/useAdminEntities';
 import { EntityType } from '@/services/game-data';
 
-import { DataLoadFailed } from '../common/DataLoadFailed';
 import { EntityIcon } from '../common/EntityIcon';
 import { Row, Stack } from '../ui/layout';
 import { ScrollArea } from '../ui/scroll-area';
@@ -24,20 +22,6 @@ export type AdminEntityProperties = DetailedAdminEntity;
 type Entity = DetailedAdminEntity['entity'];
 
 export const AdminEntity = ({
-  id,
-  capabilityId,
-}: {
-  id: number;
-  capabilityId?: number;
-}) => {
-  return (
-    <ErrorBoundary fallback={<DataLoadFailed />}>
-      <AdminEntityContent id={id} capabilityId={capabilityId} />
-    </ErrorBoundary>
-  );
-};
-
-const AdminEntityContent = ({
   id,
   capabilityId,
 }: {
@@ -74,6 +58,7 @@ const AdminEntityContent = ({
           {supportsBySkill && (
             <ToggleGroup
               type="single"
+              variant="outline"
               value={groupMode}
               onValueChange={(value) => {
                 if (value) setGroupMode(value as GroupMode);

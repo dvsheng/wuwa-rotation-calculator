@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
-import { ChevronDown, Save } from 'lucide-react';
-import { useState } from 'react';
+import { ChevronDown, Loader2, Save } from 'lucide-react';
+import { Suspense, useState } from 'react';
 import { toast } from 'sonner';
 
 import { SaveRotationDialog } from '@/components/builds/SaveRotationDialog';
@@ -30,24 +30,53 @@ import type { SavedRotation } from '@/schemas/library';
 import { calculateRotation } from '@/services/rotation-calculator/calculate-client-rotation-damage';
 import { useStore } from '@/store';
 
+function UpdateExistingRotationList({
+  onSelect,
+  isUpdating,
+}: {
+  onSelect: (rotation: SavedRotation) => void;
+  isUpdating: boolean;
+}) {
+  const ownedRotationsQuery = useRotations({
+    scope: 'owned',
+    offset: 0,
+    limit: 20,
+  });
+  const ownedRotations = ownedRotationsQuery.data.items;
+
+  return (
+    <>
+      {ownedRotations.map((rotation) => (
+        <Button
+          key={rotation.id}
+          variant="outline"
+          className="w-full justify-between"
+          disabled={isUpdating}
+          onClick={() => onSelect(rotation)}
+        >
+          <Text as="span" className="truncate">
+            {rotation.name}
+          </Text>
+          <Text className="text-muted-foreground text-xs">
+            {format(new Date(rotation.updatedAt), 'PPP p')}
+          </Text>
+        </Button>
+      ))}
+      {ownedRotations.length === 0 && (
+        <Text variant="bodySm" tone="muted">
+          No saved rotations available to update.
+        </Text>
+      )}
+    </>
+  );
+}
+
 export function SaveRotationButton() {
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const { data: session } = useSession();
-  const ownedRotationsQuery = useRotations(
-    {
-      scope: 'owned',
-      offset: 0,
-      limit: 20,
-    },
-    {
-      enabled: Boolean(session?.user.id),
-    },
-  );
   const { updateRotation, isUpdating } = useRotationMutations();
   const { team, enemy, attacks, buffs } = useStore();
-
-  const ownedRotations = ownedRotationsQuery.data.items;
 
   const handleUpdateRotation = async (rotation: SavedRotation) => {
     // TODO: Use proper useMutation and useQuery for this
@@ -119,25 +148,25 @@ export function SaveRotationButton() {
               Select a saved rotation to overwrite with your current team and rotation.
             </DialogDescription>
           </DialogHeader>
-          {ownedRotations.map((rotation) => (
-            <Button
-              key={rotation.id}
-              variant="outline"
-              className="w-full justify-between"
-              disabled={isUpdating}
-              onClick={() => void handleUpdateRotation(rotation)}
+          {session?.user.id ? (
+            <Suspense
+              fallback={
+                <Row gap="inset">
+                  <Loader2 className="text-muted-foreground size-4 animate-spin" />
+                  <Text variant="bodySm" tone="muted">
+                    Loading saved rotations...
+                  </Text>
+                </Row>
+              }
             >
-              <Text as="span" className="truncate">
-                {rotation.name}
-              </Text>
-              <Text className="text-muted-foreground text-xs">
-                {format(new Date(rotation.updatedAt), 'PPP p')}
-              </Text>
-            </Button>
-          ))}
-          {ownedRotations.length === 0 && (
+              <UpdateExistingRotationList
+                onSelect={(rotation) => void handleUpdateRotation(rotation)}
+                isUpdating={isUpdating}
+              />
+            </Suspense>
+          ) : (
             <Text variant="bodySm" tone="muted">
-              No saved rotations available to update.
+              Sign in to update a saved rotation.
             </Text>
           )}
           <DialogFooter>

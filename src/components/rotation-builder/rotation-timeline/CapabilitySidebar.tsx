@@ -29,11 +29,11 @@ const ATTACK_COLORS: Record<CapabilityOriginType, string> = {
   'Resonance Liberation': 'border-l-chart-3',
   'Forte Circuit': 'border-l-chart-4',
   'Intro Skill': 'border-l-chart-5',
-  'Outro Skill': 'border-l-chart-1/50',
-  'Tune Break': 'border-l-chart-2/50',
-  Echo: 'border-l-chart-3/50',
-  Weapon: 'border-l-chart-4/50',
-  'Echo Set': 'border-l-chart-5/50',
+  'Outro Skill': 'border-l-chart-6',
+  Echo: 'border-l-chart-7',
+  'Tune Break': 'border-l-chart-1/50',
+  Weapon: 'border-l-chart-2/50',
+  'Echo Set': 'border-l-chart-3/50',
   s1: 'border-l-chart-1/30',
   s2: 'border-l-chart-1/30',
   s3: 'border-l-chart-1/30',
@@ -46,10 +46,17 @@ const ATTACK_COLORS: Record<CapabilityOriginType, string> = {
 
 const TARGET_COLORS: Record<Target, string> = {
   [Target.SELF]: 'border-l-chart-1',
-  [Target.TEAM]: 'border-l-chart-2',
-  [Target.ACTIVE_CHARACTER]: 'border-l-chart-3',
+  [Target.TEAM]: 'border-l-chart-3',
+  [Target.ACTIVE_CHARACTER]: 'border-l-chart-2',
   [Target.ENEMY]: 'border-l-destructive',
 };
+
+const BUFF_COLOR_LEGEND: Array<LegendItem> = [
+  { label: 'Self Buff', colorClassName: 'bg-chart-1' },
+  { label: 'Active Character Buff', colorClassName: 'bg-chart-2' },
+  { label: 'Team Buff', colorClassName: 'bg-chart-3' },
+  { label: 'Enemy Debuff', colorClassName: 'bg-destructive' },
+];
 
 interface LegendItem {
   label: string;
@@ -62,20 +69,9 @@ const ATTACK_COLOR_LEGEND: Array<LegendItem> = [
   { label: 'Resonance Liberation', colorClassName: 'bg-chart-3' },
   { label: 'Forte Circuit', colorClassName: 'bg-chart-4' },
   { label: 'Intro Skill', colorClassName: 'bg-chart-5' },
-  { label: 'Outro Skill', colorClassName: 'bg-chart-1' },
-  { label: 'Tune Break', colorClassName: 'bg-chart-2' },
-  { label: 'Echo', colorClassName: 'bg-chart-3' },
-  { label: 'Weapon', colorClassName: 'bg-chart-4' },
-  { label: 'Echo Set', colorClassName: 'bg-chart-5' },
-  { label: 'Inherent Skill', colorClassName: 'bg-chart-1' },
-  { label: 'Base Stats', colorClassName: 'bg-chart-2' },
-];
-
-const BUFF_COLOR_LEGEND: Array<LegendItem> = [
-  { label: 'Self Target', colorClassName: 'bg-chart-1' },
-  { label: 'Team Target', colorClassName: 'bg-chart-2' },
-  { label: 'Active Character Target', colorClassName: 'bg-chart-3' },
-  { label: 'Enemy Target', colorClassName: 'bg-chart-4' },
+  { label: 'Outro Skill', colorClassName: 'bg-chart-6' },
+  { label: 'Echo', colorClassName: 'bg-chart-7' },
+  { label: 'Tune Break', colorClassName: 'bg-chart-1/50' },
 ];
 
 const TARGET_ORDER: Array<Target> = [

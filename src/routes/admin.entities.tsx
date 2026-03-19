@@ -1,17 +1,16 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { ErrorBoundary } from 'react-error-boundary';
 import type { ColumnDef } from '@tanstack/react-table';
 import { startCase } from 'es-toolkit';
-import { Database } from 'lucide-react';
+import { Database, Loader2 } from 'lucide-react';
 import { Suspense, useState } from 'react';
 
-import { DataLoadFailed } from '@/components/common/DataLoadFailed';
 import { EntityIcon } from '@/components/common/EntityIcon';
+import { Card } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
 import { Input } from '@/components/ui/input';
 import { Container, Stack } from '@/components/ui/layout';
-import { Skeleton } from '@/components/ui/skeleton';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Text } from '@/components/ui/typography';
 import type { AdminEntity, UseAdminEntitiesOptions } from '@/hooks/useAdminEntities';
 import { useAdminEntities } from '@/hooks/useAdminEntities';
 import { EntityType } from '@/services/game-data';
@@ -37,7 +36,12 @@ export function AdminEntitiesPage() {
             onChange={(event) => setSearchText(event.target.value)}
             placeholder="Search entity name..."
           />
-          <ToggleGroup type="single" value={entityType} onValueChange={setEntityType}>
+          <ToggleGroup
+            variant="outline"
+            type="single"
+            value={entityType}
+            onValueChange={setEntityType}
+          >
             {Object.values(EntityType).map((type) => (
               <ToggleGroupItem key={type} value={type}>
                 {startCase(type)}
@@ -51,19 +55,14 @@ export function AdminEntitiesPage() {
   );
 }
 
-const AdminEntitiesTableSkeleton = () => {
+const AdminEntitiesTableLoading = () => {
   return (
-    <div className="rounded-md border p-4">
-      <Stack gap="component">
-        {Array.from({ length: 6 }).map((_, index) => (
-          <div key={`entity-skeleton-${index}`} className="grid grid-cols-3 gap-4">
-            <Skeleton className="h-6 w-full" />
-            <Skeleton className="h-6 w-full" />
-            <Skeleton className="h-6 w-full" />
-          </div>
-        ))}
-      </Stack>
-    </div>
+    <Card className="h-full items-center justify-center">
+      <Loader2 className="text-muted-foreground size-10 animate-spin" />
+      <Text variant="body" tone="muted">
+        Loading entities...
+      </Text>
+    </Card>
   );
 };
 
@@ -96,25 +95,23 @@ const AdminEntitiesTable = (options: UseAdminEntitiesOptions) => {
     },
   ];
   return (
-    <ErrorBoundary fallback={<DataLoadFailed />}>
-      <Suspense fallback={<AdminEntitiesTableSkeleton />}>
-        <DataTable
-          columns={columns}
-          data={data}
-          emptyMessage="No entities found."
-          classNames={{
-            wrapper: 'min-h-0 flex-1 overflow-hidden',
-            scrollArea: 'h-full',
-          }}
-          onRowClick={(row) =>
-            navigate({
-              to: '/admin/entities/$id',
-              params: { id: String(row.id) },
-            })
-          }
-        />
-      </Suspense>
-    </ErrorBoundary>
+    <Suspense fallback={<AdminEntitiesTableLoading />}>
+      <DataTable
+        columns={columns}
+        data={data}
+        emptyMessage="No entities found."
+        classNames={{
+          wrapper: 'min-h-0 flex-1 overflow-hidden',
+          scrollArea: 'h-full bg-card',
+        }}
+        onRowClick={(row) =>
+          navigate({
+            to: '/admin/entities/$id',
+            params: { id: String(row.id) },
+          })
+        }
+      />
+    </Suspense>
   );
 };
 

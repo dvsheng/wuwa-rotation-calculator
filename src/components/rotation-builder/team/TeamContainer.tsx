@@ -1,8 +1,6 @@
 import { Users } from 'lucide-react';
-import { ErrorBoundary } from 'react-error-boundary';
 
 import { DashboardSectionHeader } from '@/components/common/DashboardSectionHeader';
-import { DataLoadFailed } from '@/components/common/DataLoadFailed';
 import { Row, Stack } from '@/components/ui/layout';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TEAM_SIZE } from '@/schemas/team';
@@ -13,7 +11,6 @@ import { CharacterCard } from './CharacterCard';
 
 export const TeamContainer = () => {
   return (
-    <ErrorBoundary fallback={<DataLoadFailed />}>
     <Row justify="center" align="start" fullWidth className="min-h-0 min-w-0 flex-1">
       <Stack
         data-testid="team-container"
@@ -34,6 +31,5 @@ export const TeamContainer = () => {
         </ScrollArea>
       </Stack>
     </Row>
-    </ErrorBoundary>
   );
 };

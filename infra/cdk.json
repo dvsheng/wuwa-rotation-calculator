@@ -51,7 +51,6 @@
     "googleClientId": "456233492244-2nhv7m4cme8q9s0hipl9b44ad81h2139.apps.googleusercontent.com",
     "googleClientSecretName": "oauth-client-secret",
     "betterAuthSecretName": "better-auth-secret",
-    "domainName": "iriscalcs.moe",
-    "appUrl": "https://iriscalcs.moe/"
+    "domainName": "iriscalcs.moe"
   }
 }

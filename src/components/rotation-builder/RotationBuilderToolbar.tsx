@@ -1,10 +1,8 @@
 import { BarChart2, Sword, User } from 'lucide-react';
-import { Suspense } from 'react';
 
 import { SaveRotationButton } from '@/components/builds/SaveRotationButton';
 import { CalculateRotationButton } from '@/components/rotation-builder/results/CalculateRotationButton';
 import { ButtonGroup } from '@/components/ui/button-group';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useRotationCalculation } from '@/hooks/useRotationCalculation';
 
 import { Badge } from '../ui/badge';
@@ -69,9 +67,7 @@ export function RotationBuilderToolbar({
         )}
       </Row>
       <ButtonGroup>
-        <Suspense fallback={<Skeleton className="h-8 w-36" />}>
-          <SaveRotationButton />
-        </Suspense>
+        <SaveRotationButton />
         <CalculateRotationButton onCalculated={() => setSelectedTab('results')} />
       </ButtonGroup>
     </Row>

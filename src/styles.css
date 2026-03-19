@@ -11,189 +11,232 @@
 body {
   @apply m-0;
   font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
-    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    Inter,
+    'IBM Plex Sans',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Roboto',
+    'Oxygen',
+    'Ubuntu',
+    'Cantarell',
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  font-family:
+    'IBM Plex Mono', 'Space Mono', source-code-pro, Menlo, Monaco, Consolas,
+    'Courier New', monospace;
 }
 
 /* ── I.R.I.S. Theme ────────────────────────────────────────────────────────
- * Inspired by I.R.I.S. (Intelligent Retrieval & Indexing System) from
- * Wuthering Waves. Color identity pulled from her design:
- *   • Cobalt blue  — jacket / primary action color
- *   • Golden amber — yellow bow / accent / highlight
- *   • Deep navy    — skirt / dark surfaces
- *   • White        — shirt / clean backgrounds
- * Retro-futuristic academic-tech aesthetic.
+ * Theme basis:
+ *   • Wuthering Waves wiki identifies I.R.I.S. as the "Intelligent Retrieval &
+ *     Indexing System," a personified AI affiliated with the Spacetrek Collective
+ *     at Startorch Academy in Lahai-Roi.
+ *   • Her in-game dialogue explicitly calls out a self-designed retro uniform.
+ *   • Visual references (in-game + fan art) reveal her true palette:
+ *       – Vivid electric sky-blue hair (~218° hue, very high chroma)
+ *       – Bright lime/chartreuse bow and holographic background geometry (~115°)
+ *       – Deep navy-black jacket
+ *       – Crisp white shirt and stockings
+ *
+ * Design translation:
+ *   academic-tech + retro campus + holographic search terminal
+ *   cleaner whites in light mode, deeper observatory navies in dark mode,
+ *   with the lime/sky-blue signature driving the accent system.
  * ─────────────────────────────────────────────────────────────────────── */
 :root {
-  /* Surfaces */
-  --background: oklch(0.975 0.008 252);       /* light blue-white — crisp academic white */
-  --foreground: oklch(0.17 0.04 258);         /* deep navy — dark readable text */
-  --card: oklch(1 0 0);                       /* pure white cards */
-  --card-foreground: oklch(0.17 0.04 258);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.17 0.04 258);
+  /* Core surfaces */
+  --background: oklch(0.982 0.006 248);
+  --foreground: oklch(0.208 0.032 258);
+  --card: oklch(0.995 0.004 248);
+  --card-foreground: oklch(0.208 0.032 258);
+  --popover: oklch(0.998 0.003 248);
+  --popover-foreground: oklch(0.208 0.032 258);
 
-  /* Primary — cobalt blue, I.R.I.S. jacket */
-  --primary: oklch(0.505 0.19 252);
-  --primary-foreground: oklch(1 0 0);
+  /* Brand identity */
+  --primary: oklch(0.56 0.22 212); /* hair blue, toned for light mode */
+  --primary-foreground: oklch(0.985 0.002 250);
+  --secondary: oklch(0.92 0.018 248); /* cobalt now lives here as a cool panel tone */
+  --secondary-foreground: oklch(0.28 0.06 258);
 
-  /* Secondary — deep navy, I.R.I.S. skirt */
-  --secondary: oklch(0.22 0.035 260);
-  --secondary-foreground: oklch(1 0 0);
+  /* Accent — I.R.I.S. lime bow */
+  --accent: oklch(0.84 0.24 118);
+  --accent-foreground: oklch(0.12 0.06 118);
 
-  /* Muted surfaces */
-  --muted: oklch(0.912 0.018 252);            /* light blue-gray tray */
-  --muted-foreground: oklch(0.42 0.055 256);  /* readable mid-navy */
-
-  /* Accent — golden amber, I.R.I.S. bow */
-  --accent: oklch(0.765 0.155 80);
-  --accent-foreground: oklch(0.17 0.04 82);
+  --muted: oklch(0.942 0.016 246);
+  --muted-foreground: oklch(0.46 0.045 257);
 
   /* Semantic */
-  --destructive: oklch(0.6368 0.2078 25.3313);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.852 0.022 254);
-  --input: oklch(0.852 0.022 254);
-  --ring: oklch(0.505 0.19 252);
-
-  /* Charts */
-  --chart-1: oklch(0.505 0.19 252);          /* cobalt blue */
-  --chart-2: oklch(0.765 0.155 80);          /* golden amber */
-  --chart-3: oklch(0.7505 0.1466 84.4461);
-  --chart-4: oklch(0.17 0.04 258);
-  --chart-5: oklch(0.5856 0.0481 259.1375);
-  --chart-6: oklch(0.60 0.14 195);           /* teal — futuristic terminal */
-  --chart-7: oklch(0.58 0.18 290);           /* violet — I.R.I.S. holographic */
-
-  /* Sidebar */
-  --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.17 0.04 258);
-  --sidebar-primary: oklch(0.505 0.19 252);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.955 0.012 252);
-  --sidebar-accent-foreground: oklch(0.17 0.04 258);
-  --sidebar-border: oklch(0.912 0.018 252);
-  --sidebar-ring: oklch(0.505 0.19 252);
-
-  --font-sans: DM Sans, system-ui, sans-serif;
-  --font-serif: Georgia, serif;
-  --font-mono: Space Mono, monospace;
-  --radius: 0.5rem;
-  --shadow-x: 0;
-  --shadow-y: 1px;
-  --shadow-blur: 12px;
-  --shadow-spread: 0px;
-  --shadow-opacity: 0.08;
-  --shadow-color: #1e3a6e;                   /* navy-blue tinted shadows */
-  --shadow-2xs: 0 1px 12px 0px hsl(220 55% 27% / 0.04);
-  --shadow-xs: 0 1px 12px 0px hsl(220 55% 27% / 0.04);
-  --shadow-sm:
-    0 1px 12px 0px hsl(220 55% 27% / 0.08),
-    0 1px 2px -1px hsl(220 55% 27% / 0.08);
-  --shadow:
-    0 1px 12px 0px hsl(220 55% 27% / 0.08),
-    0 1px 2px -1px hsl(220 55% 27% / 0.08);
-  --shadow-md:
-    0 1px 12px 0px hsl(220 55% 27% / 0.08),
-    0 2px 4px -1px hsl(220 55% 27% / 0.08);
-  --shadow-lg:
-    0 1px 12px 0px hsl(220 55% 27% / 0.08),
-    0 4px 6px -1px hsl(220 55% 27% / 0.08);
-  --shadow-xl:
-    0 1px 12px 0px hsl(220 55% 27% / 0.08),
-    0 8px 10px -1px hsl(220 55% 27% / 0.08);
-  --shadow-2xl: 0 1px 12px 0px hsl(220 55% 27% / 0.2);
-  --tracking-normal: 0em;
-  --spacing: 0.25rem;
-  --warning: oklch(0.75 0.15 75);
-  --warning-foreground: oklch(0.15 0.05 75);
+  --destructive: oklch(0.612 0.214 26);
+  --destructive-foreground: oklch(0.985 0.002 250);
+  --warning: oklch(0.79 0.15 83);
+  --warning-foreground: oklch(0.22 0.045 83);
+  --success: oklch(0.62 0.145 170); /* holographic mint */
+  --success-foreground: oklch(0.16 0.03 170);
   --error: var(--destructive);
   --error-foreground: var(--destructive-foreground);
-  --success: oklch(0.52 0.16 145);
-  --success-foreground: oklch(1 0 0);
+
+  /* Chrome */
+  --border: oklch(0.884 0.02 248);
+  --input: oklch(0.884 0.02 248);
+  --ring: oklch(0.56 0.22 212); /* focus rings match new primary */
+
+  /* Data viz ─ built around I.R.I.S.'s actual palette from in-game + fan art:
+   *   1. Cobalt blue    — jacket / primary UI
+   *   2. Sky-blue       — her vivid electric hair (most distinctive feature)
+   *   3. Lime           — bow + holographic background geometry
+   *   4. Violet         — projection / iridescent trim
+   *   5. Deep navy      — jacket underside / dark surfaces
+   *   6. Holographic teal — AI rim-light / terminal glow
+   *   7. Cool near-white  — white shirt & stockings in blue atmosphere
+   */
+  --chart-1: oklch(0.46 0.19 258); /* cobalt takes slot 1 — still in the viz palette */
+  --chart-2: oklch(0.56 0.22 212); /* hair blue takes slot 2 */
+  --chart-3: oklch(0.84 0.24 118); /* lime — bow & terminal geometry */
+  --chart-4: oklch(0.69 0.17 293); /* violet — holographic iridescence */
+  --chart-5: oklch(0.38 0.055 260); /* deep navy */
+  --chart-6: oklch(0.73 0.14 195); /* holographic teal — AI rim glow */
+  --chart-7: oklch(0.92 0.04 248); /* cool near-white — shirt/stockings */
+
+  /* Sidebar / shell */
+  --sidebar: oklch(0.968 0.01 247);
+  --sidebar-foreground: oklch(0.208 0.032 258);
+  --sidebar-primary: oklch(0.56 0.22 212);
+  --sidebar-primary-foreground: oklch(0.985 0.002 250);
+  --sidebar-accent: oklch(0.93 0.02 243);
+  --sidebar-accent-foreground: oklch(0.258 0.038 258);
+  --sidebar-border: oklch(0.89 0.018 247);
+  --sidebar-ring: oklch(0.56 0.22 212);
+
+  /* Typography */
+  --font-sans: Inter, 'IBM Plex Sans', system-ui, sans-serif;
+  --font-serif: 'Source Serif 4', Georgia, serif;
+  --font-mono: 'IBM Plex Mono', 'Space Mono', monospace;
+
+  /* Geometry */
+  --radius: 0.75rem;
+  --spacing: 0.25rem;
+  --tracking-normal: -0.01em;
+
+  /* Shadow system: cool blue, not generic gray */
+  --shadow-color: #22427c;
+  --shadow-2xs: 0 1px 8px 0px hsl(221 57% 31% / 0.04);
+  --shadow-xs: 0 1px 10px 0px hsl(221 57% 31% / 0.05);
+  --shadow-sm:
+    0 1px 14px 0px hsl(221 57% 31% / 0.08), 0 1px 2px -1px hsl(221 57% 31% / 0.08);
+  --shadow:
+    0 1px 16px 0px hsl(221 57% 31% / 0.09), 0 1px 2px -1px hsl(221 57% 31% / 0.08);
+  --shadow-md:
+    0 4px 20px -2px hsl(221 57% 31% / 0.12), 0 2px 4px -2px hsl(221 57% 31% / 0.08);
+  --shadow-lg:
+    0 10px 28px -6px hsl(221 57% 31% / 0.14), 0 4px 8px -4px hsl(221 57% 31% / 0.08);
+  --shadow-xl:
+    0 16px 36px -10px hsl(221 57% 31% / 0.16), 0 6px 10px -6px hsl(221 57% 31% / 0.09);
+  --shadow-2xl: 0 24px 56px -18px hsl(221 57% 31% / 0.22);
+
+  /* Semantic padding scale */
+  --spacing-icon-sm: 2rem;
+  --spacing-icon-md: 2.5rem;
+  --spacing-icon-lg: 3rem;
+  --spacing-icon-xl: 4rem;
+  --spacing-icon-2xl: 5rem;
+  --spacing-page: 1.5rem;
+  --spacing-panel: 1rem;
+  --spacing-component: 0.75rem;
+  --spacing-inset: 0.5rem;
+  --spacing-trim: 0.25rem;
 }
 
 .dark {
-  /* Surfaces — deep navy, I.R.I.S. terminal aesthetic */
-  --background: oklch(0.137 0.022 262);       /* very dark navy */
-  --foreground: oklch(0.922 0.01 255);        /* soft off-white */
-  --card: oklch(0.186 0.028 262);             /* dark navy card surface */
-  --card-foreground: oklch(0.922 0.01 255);
-  --popover: oklch(0.186 0.028 262);
-  --popover-foreground: oklch(0.922 0.01 255);
+  /* Observatory / terminal surfaces */
+  --background: oklch(0.15 0.025 242);
+  --foreground: oklch(0.935 0.008 248);
+  --card: oklch(0.2 0.026 242);
+  --card-foreground: oklch(0.935 0.008 248);
+  --popover: oklch(0.19 0.024 242);
+  --popover-foreground: oklch(0.935 0.008 248);
 
-  /* Primary — bright cobalt blue, I.R.I.S. jacket (luminous on dark bg) */
-  --primary: oklch(0.635 0.195 252);
-  --primary-foreground: oklch(1 0 0);
+  /* Brand identity on dark */
+  --primary: oklch(0.72 0.3 212); /* full vivid hair blue on dark */
+  --primary-foreground: oklch(0.1 0.03 215);
+  --secondary: oklch(0.265 0.032 255); /* cobalt-tinted panel, slightly warmer */
+  --secondary-foreground: oklch(0.935 0.008 248);
 
-  /* Secondary — lighter navy layer */
-  --secondary: oklch(0.236 0.032 265);
-  --secondary-foreground: oklch(0.922 0.01 255);
-
-  /* Muted surfaces */
-  --muted: oklch(0.256 0.028 264);            /* muted navy tray */
-  --muted-foreground: oklch(0.648 0.04 258);  /* readable dimmed text */
-
-  /* Accent — golden amber, I.R.I.S. bow (pops on dark) */
-  --accent: oklch(0.765 0.155 80);
+  --accent: oklch(0.89 0.27 118);
   --accent-foreground: oklch(0 0 0);
 
+  --muted: oklch(0.245 0.022 259);
+  --muted-foreground: oklch(0.705 0.03 250);
+
   /* Semantic */
-  --destructive: oklch(0.4437 0.1613 26.8994);
-  --destructive-foreground: oklch(0.9842 0.0034 247.8575);
-  --border: oklch(0.318 0.038 263);
-  --input: oklch(0.318 0.038 263);
-  --ring: oklch(0.635 0.195 252);
-
-  /* Charts */
-  --chart-1: oklch(0.635 0.195 252);          /* cobalt blue */
-  --chart-2: oklch(0.765 0.155 80);           /* golden amber */
-  --chart-3: oklch(0.7505 0.1466 84.4461);
-  --chart-4: oklch(0.236 0.032 265);
-  --chart-5: oklch(0.137 0.022 262);
-  --chart-6: oklch(0.68 0.16 195);           /* teal — futuristic terminal */
-  --chart-7: oklch(0.67 0.20 290);           /* violet — I.R.I.S. holographic */
-
-  /* Sidebar — deeper navy than background */
-  --sidebar: oklch(0.115 0.018 258);
-  --sidebar-foreground: oklch(0.922 0.01 255);
-  --sidebar-primary: oklch(0.635 0.195 252);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.236 0.032 265);
-  --sidebar-accent-foreground: oklch(0.922 0.01 255);
-  --sidebar-border: oklch(0.256 0.028 264);
-  --sidebar-ring: oklch(0.635 0.195 252);
-
-  --font-sans: DM Sans, system-ui, sans-serif;
-  --font-serif: Georgia, serif;
-  --font-mono: Space Mono, monospace;
-  --radius: 0.5rem;
-  --shadow-x: 0;
-  --shadow-y: 1px;
-  --shadow-blur: 20px;
-  --shadow-spread: 0px;
-  --shadow-opacity: 0.4;
-  --shadow-color: #000000;
-  --shadow-2xs: 0 1px 20px 0px hsl(0 0% 0% / 0.2);
-  --shadow-xs: 0 1px 20px 0px hsl(0 0% 0% / 0.2);
-  --shadow-sm: 0 1px 20px 0px hsl(0 0% 0% / 0.4), 0 1px 2px -1px hsl(0 0% 0% / 0.4);
-  --shadow: 0 1px 20px 0px hsl(0 0% 0% / 0.4), 0 1px 2px -1px hsl(0 0% 0% / 0.4);
-  --shadow-md: 0 1px 20px 0px hsl(0 0% 0% / 0.4), 0 2px 4px -1px hsl(0 0% 0% / 0.4);
-  --shadow-lg: 0 1px 20px 0px hsl(0 0% 0% / 0.4), 0 4px 6px -1px hsl(0 0% 0% / 0.4);
-  --shadow-xl: 0 1px 20px 0px hsl(0 0% 0% / 0.4), 0 8px 10px -1px hsl(0 0% 0% / 0.4);
-  --shadow-2xl: 0 1px 20px 0px hsl(0 0% 0% / 1);
-  --warning: oklch(0.7 0.18 75);
-  --warning-foreground: oklch(0.12 0.04 75);
+  --destructive: oklch(0.56 0.195 26);
+  --destructive-foreground: oklch(0.97 0.004 250);
+  --warning: oklch(0.78 0.15 83);
+  --warning-foreground: oklch(0.14 0.03 83);
+  --success: oklch(0.72 0.14 172);
+  --success-foreground: oklch(0.14 0.03 172);
   --error: var(--destructive);
   --error-foreground: var(--destructive-foreground);
-  --success: oklch(0.65 0.18 145);
-  --success-foreground: oklch(0 0 0);
+
+  /* Chrome */
+  --border: oklch(0.31 0.03 259);
+  --input: oklch(0.31 0.03 259);
+  --ring: oklch(0.72 0.3 212);
+
+  /* Data viz */
+  --chart-1: oklch(0.6 0.22 254); /* cobalt on dark */
+  --chart-2: oklch(0.72 0.3 212); /* hair blue on dark */
+  --chart-3: oklch(0.89 0.27 118); /* lime — bow & terminal geometry */
+  --chart-4: oklch(0.76 0.17 293); /* violet — holographic iridescence */
+  --chart-5: oklch(0.53 0.06 234); /* muted navy */
+  --chart-6: oklch(0.77 0.15 195); /* holographic teal — AI rim glow */
+  --chart-7: oklch(0.88 0.05 248); /* cool near-white — shirt/stockings */
+
+  /* Sidebar */
+  --sidebar: oklch(0.125 0.022 240);
+  --sidebar-foreground: oklch(0.935 0.008 248);
+  --sidebar-primary: oklch(0.72 0.3 212);
+  --sidebar-primary-foreground: oklch(0.14 0.02 256);
+  --sidebar-accent: oklch(0.245 0.022 259);
+  --sidebar-accent-foreground: oklch(0.935 0.008 248);
+  --sidebar-border: oklch(0.27 0.032 245);
+  --sidebar-ring: oklch(0.72 0.3 212);
+
+  --font-sans: Inter, 'IBM Plex Sans', system-ui, sans-serif;
+  --font-serif: 'Source Serif 4', Georgia, serif;
+  --font-mono: 'IBM Plex Mono', 'Space Mono', monospace;
+  --radius: 0.75rem;
+  --tracking-normal: -0.01em;
+
+  /* Shadows: deeper, slightly blue-black */
+  --shadow-color: #020816;
+  --shadow-2xs: 0 1px 8px 0px hsl(222 60% 3% / 0.18);
+  --shadow-xs: 0 1px 10px 0px hsl(222 60% 3% / 0.2);
+  --shadow-sm:
+    0 1px 14px 0px hsl(222 60% 3% / 0.3), 0 1px 2px -1px hsl(222 60% 3% / 0.25);
+  --shadow:
+    0 1px 18px 0px hsl(222 60% 3% / 0.34), 0 1px 2px -1px hsl(222 60% 3% / 0.28);
+  --shadow-md:
+    0 8px 24px -4px hsl(222 60% 3% / 0.4), 0 2px 6px -2px hsl(222 60% 3% / 0.24);
+  --shadow-lg:
+    0 14px 32px -6px hsl(222 60% 3% / 0.48), 0 4px 10px -4px hsl(222 60% 3% / 0.24);
+  --shadow-xl:
+    0 20px 42px -10px hsl(222 60% 3% / 0.56), 0 6px 12px -6px hsl(222 60% 3% / 0.28);
+  --shadow-2xl: 0 30px 60px -18px hsl(222 60% 3% / 0.7);
+
+  --iris-hair-blue: oklch(0.73 0.26 218);
+  --iris-lime: oklch(0.86 0.23 115);
+  --iris-holo-teal: oklch(0.77 0.15 195);
+  --iris-holo-violet: oklch(0.76 0.17 293);
+  --iris-navy: oklch(0.19 0.026 258);
+  --iris-white: oklch(0.92 0.04 248);
 }
 
 @theme inline {
@@ -256,17 +299,16 @@ code {
   --shadow-xl: var(--shadow-xl);
   --shadow-2xl: var(--shadow-2xl);
 
-  --spacing-icon-sm: 2rem;
-  --spacing-icon-md: 2.5rem;
-  --spacing-icon-lg: 3rem;
-  --spacing-icon-xl: 4rem;
-  --spacing-icon-2xl: 5rem;
-  /* Semantic padding scale */
-  --spacing-page: 1.5rem; /* 24px — page containers, full section areas */
-  --spacing-panel: 1rem; /* 16px — panel headers, cards, dialog sections */
-  --spacing-component: 0.75rem; /* 12px — component interiors, items, tooltips */
-  --spacing-inset: 0.5rem; /* 8px  — compact chrome, canvas headers */
-  --spacing-trim: 0.25rem; /* 4px  — tight elements: table cells, icon insets */
+  --spacing-icon-sm: var(--spacing-icon-sm);
+  --spacing-icon-md: var(--spacing-icon-md);
+  --spacing-icon-lg: var(--spacing-icon-lg);
+  --spacing-icon-xl: var(--spacing-icon-xl);
+  --spacing-icon-2xl: var(--spacing-icon-2xl);
+  --spacing-page: var(--spacing-page);
+  --spacing-panel: var(--spacing-panel);
+  --spacing-component: var(--spacing-component);
+  --spacing-inset: var(--spacing-inset);
+  --spacing-trim: var(--spacing-trim);
 
   --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
   --tracking-tight: calc(var(--tracking-normal) - 0.025em);
@@ -287,10 +329,7 @@ code {
 }
 
 @utility grid-cols-auto-fit-28 {
-  grid-template-columns: repeat(
-    auto-fill,
-    minmax(min(7rem, 100%), 1fr)
-  ); /* 7rem = h-28 */
+  grid-template-columns: repeat(auto-fill, minmax(min(7rem, 100%), 1fr));
 }
 
 /* Page-level view transitions (TanStack Router) */
@@ -330,13 +369,11 @@ code {
   }
 }
 
-/* Suppress default root crossfade — only main-content should animate */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
 }
 
-/* slide-left: navigating forward */
 html:active-view-transition-type(slide-left) {
   &::view-transition-old(main-content) {
     animation: slide-out-to-left 250ms ease-in-out both;
@@ -346,7 +383,6 @@ html:active-view-transition-type(slide-left) {
   }
 }
 
-/* slide-right: navigating back */
 html:active-view-transition-type(slide-right) {
   &::view-transition-old(main-content) {
     animation: slide-out-to-right 250ms ease-in-out both;
@@ -356,7 +392,6 @@ html:active-view-transition-type(slide-right) {
   }
 }
 
-/* Tab transitions (in-page, class-based) */
 .slide-left-enter {
   animation: slide-in-from-right 200ms ease-out both;
 }

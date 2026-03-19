@@ -11,14 +11,14 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
-const SelectorRow = ({
+export const SelectorRow = ({
   className,
   ...properties
 }: ComponentPropsWithoutRef<typeof Row>) => (
-  <Row className={cn('items-center gap-3', className)} {...properties} />
+  <Row className={cn('gap-inset items-center', className)} {...properties} />
 );
 
-const SelectorIconContainer = ({
+export const SelectorIconContainer = ({
   className,
   ...properties
 }: ComponentPropsWithoutRef<'div'>) => (

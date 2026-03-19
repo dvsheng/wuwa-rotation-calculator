@@ -148,6 +148,54 @@ Note: `capability_type` column was removed. Use `capability_json->>'type'` when 
 }
 ```
 
+### stackable modifier value
+
+Use a scaled `userParameterizedNumber` for manual stack-count inputs.
+
+```json
+{
+  "type": "modifier",
+  "modifiedStats": [
+    {
+      "target": "self",
+      "stat": "damageBonus",
+      "value": {
+        "type": "userParameterizedNumber",
+        "parameterId": "0",
+        "scale": 0.1,
+        "minimum": 0,
+        "maximum": 3
+      },
+      "tags": ["spectro"]
+    }
+  ]
+}
+```
+
+### conditional permanent_stat
+
+Use this when an always-on passive or set bonus has a stat threshold gate.
+
+```json
+{
+  "type": "permanent_stat",
+  "stat": "damageBonus",
+  "value": {
+    "type": "conditional",
+    "operand": {
+      "type": "statParameterizedNumber",
+      "stat": "energyRegen",
+      "resolveWith": "self"
+    },
+    "operator": ">=",
+    "threshold": 2.5,
+    "valueIfTrue": 0.3,
+    "valueIfFalse": 0
+  },
+  "tags": ["all"]
+}
+```
+
 ---
 
 ## Write Examples (PostgreSQL)
@@ -201,6 +249,31 @@ SET capability_json = jsonb_set(
 WHERE id = 1328;
 ```
 
+## Modeling Rules
+
+- Inspect the current capability rows before editing. Match the existing entity / skill structure unless the task is specifically to restructure it.
+- Prefer updating an existing row in place when it still represents the same gameplay clause. Insert a new row only when the raw text contains an additional independent clause that deserves its own capability.
+- If a raw description contains an extra hit or damage event, model that as an `attack`, not as an oversized `damageBonus` modifier.
+- Split bundled effects into separate capabilities when they differ by trigger, duration, stack count, or condition. Examples:
+  - one clause triggers on Resonance Skill cast and another on Resonance Liberation
+  - one clause is gated by a threshold while another is unconditional
+  - two clauses stack independently
+- Only keep multiple `modifiedStats` in one modifier row when they are truly part of the same temporary effect and should always be toggled together.
+- For split echo-set modifiers, follow the existing DB convention:
+  - keep `capability.name = NULL`
+  - give each row a clause-specific `description`
+  - keep them under the same `skill_id`
+- Use `target: "self"` for buffs that belong to the source / set holder themselves.
+- Use `target: "activeCharacter"` only when the effect is meant to apply to whoever is currently on field or the incoming character at application time.
+- For all-attribute / generic damage bonuses, prefer `tags: ["all"]` instead of enumerating every elemental attribute tag when the effect is not meant to be element-specific in the model.
+- For stackable buffs, prefer a scaled `userParameterizedNumber`:
+  - `parameterId: "0"`
+  - `minimum: 0`
+  - `maximum: <max stacks>`
+  - `scale: <per-stack value>`
+- For threshold-gated passives or set bonuses that are effectively always part of the holder's statline, prefer a `permanent_stat` with a conditional `value` tree instead of a temporary `modifier`.
+- When swapping names between existing capabilities, rename the exact rows in place rather than deleting and recreating them, so capability IDs remain stable.
+
 ---
 
 ## Post-Migration Invariants (d9397bd + af4352c)
@@ -241,7 +314,7 @@ WHERE c.capability_json->>'type'='attack'
   );
 ```
 
-When a skill has multiple modifier rows triggered together, prefer a single modifier row with multiple `modifiedStats` entries (mixed targets allowed).
+When a skill has multiple effects that are truly simultaneous and inseparable, prefer a single modifier row with multiple `modifiedStats` entries (mixed targets allowed). If the effects are independently triggered, independently stacked, or have different durations / conditions, split them into separate capabilities instead.
 
 ## Post-Write Sanity Checks
 

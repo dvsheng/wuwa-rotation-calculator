@@ -3,13 +3,18 @@ import { Plus } from 'lucide-react';
 import { EntityIconDisplay } from '@/components/common/EntityIcon';
 import { TrashButton } from '@/components/common/TrashButton';
 import { Button } from '@/components/ui/button';
-import { Row, Stack } from '@/components/ui/layout';
+import { Stack } from '@/components/ui/layout';
 import { useEntityList } from '@/hooks/useEntityList';
 import { EntityType } from '@/services/game-data';
 import { useStore } from '@/store';
 
 import { EntitySelectionDialog } from './EntitySelectionDialog';
-import { SecondarySelector, SelectorLayout } from './StyledBaseSelector';
+import {
+  SecondarySelector,
+  SelectorIconContainer,
+  SelectorLayout,
+  SelectorRow,
+} from './StyledBaseSelector';
 
 interface EchoSetSelectorProperties {
   index: number;
@@ -84,8 +89,8 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
               )}
             </SelectorLayout>
             {selectedEchoSets.length < 2 && (
-              <Row>
-                <div className="flex w-20"></div>
+              <SelectorRow>
+                <SelectorIconContainer />
                 <Button
                   variant="ghost"
                   size="sm"
@@ -94,7 +99,7 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
                 >
                   <Plus className="h-3 w-3" /> Add Echo Set Bonus
                 </Button>
-              </Row>
+              </SelectorRow>
             )}
           </Stack>
         );

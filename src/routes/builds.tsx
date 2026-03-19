@@ -1,38 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { Suspense } from 'react';
 
 import { LibraryContainer } from '@/components/builds/LibraryContainer';
-import { Card, CardContent } from '@/components/ui/card';
-import { Container, Stack } from '@/components/ui/layout';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Text } from '@/components/ui/typography';
-
-function LibraryLoadingFallback() {
-  return (
-    <Container padding="page" className="h-full min-h-0 max-w-6xl">
-      <Stack gap="component" className="h-full min-h-0">
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-36" />
-          <Skeleton className="h-5 w-80" />
-        </div>
-        <Card className="border-dashed">
-          <CardContent className="py-page text-center">
-            <Text variant="bodySm" tone="muted">
-              Loading saved rotations...
-            </Text>
-          </CardContent>
-        </Card>
-      </Stack>
-    </Container>
-  );
-}
+import { Container } from '@/components/ui/layout';
 
 function BuildsPage() {
   return (
     <Container padding="page" className="h-full min-h-0 max-w-6xl">
-      <Suspense fallback={<LibraryLoadingFallback />}>
-        <LibraryContainer />
-      </Suspense>
+      <LibraryContainer />
     </Container>
   );
 }

@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "build": "vite build",
-    "deploy": "VITE_APP_URL=https://iriscalcs.moe/ npm run build && npm run cdk -- deploy",
+    "deploy": "npm run build && npm run cdk -- deploy",
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint --fix",
@@ -49,7 +49,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@react-aria/dnd": "^3.11.4",
     "@react-stately/data": "^3.15.0",
-    "@tailwindcss/vite": "^4.0.6",
+    "@tailwindcss/vite": "^4.2.2",
     "@tanstack/react-devtools": "^0.7.0",
     "@tanstack/react-form": "^1.27.7",
     "@tanstack/react-query": "^5.90.16",
@@ -88,7 +88,7 @@
   },
   "devDependencies": {
     "@rolldown/plugin-babel": "^0.2.0",
-    "@tanstack/devtools-vite": "^0.3.11",
+    "@tanstack/devtools-vite": "^0.6.0",
     "@tanstack/eslint-config": "^0.3.0",
     "@tanstack/react-query-devtools": "^5.91.2",
     "@testing-library/dom": "^10.4.0",
@@ -103,7 +103,7 @@
     "@vitejs/plugin-react": "^6.0.1",
     "babel-plugin-react-compiler": "^1.0.0",
     "concurrently": "^9.2.1",
-    "drizzle-kit": "^0.31.8",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",
@@ -119,7 +119,7 @@
     "shadcn": "^3.8.5",
     "typescript": "^5.7.2",
     "vite": "^8.0.0",
-    "vitest": "^3.0.5",
+    "vitest": "latest",
     "web-vitals": "^5.1.0"
   }
 }

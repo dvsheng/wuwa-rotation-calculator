@@ -1,11 +1,7 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useSuspenseQuery } from '@tanstack/react-query';
 
 import type { ListRotationsRequest } from '@/schemas/rotation-library';
 import { listRotations } from '@/services/rotation-library';
-
-export interface UseRotationsOptions {
-  enabled?: boolean;
-}
 
 export const normalizeRotationQuery = (
   input: ListRotationsRequest,
@@ -25,28 +21,17 @@ export const rotationQueryKeys = {
     ['rotations', input.scope, normalizeRotationQuery(input)] as const,
 };
 
-export const useRotations = (
-  input: ListRotationsRequest,
-  options: UseRotationsOptions = {},
-) => {
+export const useRotations = (input: ListRotationsRequest) => {
   const normalizedInput = normalizeRotationQuery(input);
-  const query = useQuery({
+  const query = useSuspenseQuery({
     queryKey: rotationQueryKeys.list(normalizedInput),
     queryFn: () => listRotations({ data: normalizedInput }),
-    placeholderData: normalizedInput.scope === 'public' ? keepPreviousData : undefined,
     retry: false,
-    enabled: options.enabled ?? true,
   });
 
   return {
     ...query,
-    data: query.data ?? {
-      items: [],
-      total: 0,
-      offset: normalizedInput.offset,
-      limit: normalizedInput.limit,
-    },
-    isPreviousData: query.isPlaceholderData,
+    isPreviousData: false,
     input: normalizedInput,
   };
 };

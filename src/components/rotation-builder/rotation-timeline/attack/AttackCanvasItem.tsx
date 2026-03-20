@@ -32,6 +32,7 @@ interface BaseAttackCanvasItemProperties extends Omit<
   'ref' | 'itemRef'
 > {
   cardWrapper?: (card: ReactNode) => ReactNode;
+  cardClassName?: string;
   characterIconUrl?: string;
   iconUrl?: string;
   name?: string;
@@ -41,6 +42,7 @@ interface BaseAttackCanvasItemProperties extends Omit<
 
 export const BaseAttackCanvasItem = ({
   cardWrapper,
+  cardClassName,
   characterIconUrl,
   iconUrl,
   name,
@@ -55,6 +57,7 @@ export const BaseAttackCanvasItem = ({
       size="sm"
       className={cn(
         'draggable p-trim relative flex h-56 flex-col',
+        cardClassName,
         isDragging && 'opacity-0',
       )}
       data-testid="attack-sort-card"
@@ -118,6 +121,7 @@ export const AttackCanvasItem = ({
       characterIconUrl={attack.characterIconUrl}
       iconUrl={attack.iconUrl}
       name={attack.name}
+      cardClassName={cn(shouldShowWarning && 'border-warning')}
       itemRef={ref}
       isDragging={isDragging}
     >

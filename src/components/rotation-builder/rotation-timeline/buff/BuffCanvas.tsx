@@ -49,7 +49,7 @@ export const BuffCanvas = ({ width, previewLayout }: BuffCanvasProperties) => {
       updateBuffLayout(item.i, { x: item.x, y: item.y, w: item.w, h: item.h });
     }
   };
-  const { layout: fullLayoutProperties, isInteracting } = useCanvasLayout({
+  const { layout: fullLayoutProperties } = useCanvasLayout({
     gridConfig: { rowHeight: BUFF_ROW_HEIGHT },
     resizeConfig: {
       handles: ['e', 'w'],
@@ -82,12 +82,7 @@ export const BuffCanvas = ({ width, previewLayout }: BuffCanvasProperties) => {
       >
         {buffs.map((buff) => (
           <div key={buff.instanceId}>
-            <BuffCanvasItem
-              buff={buff}
-              buffedAttackCount={buff.w}
-              onRemove={removeBuff}
-              isDialogClickable={!isInteracting}
-            />
+            <BuffCanvasItem buff={buff} onRemove={removeBuff} />
           </div>
         ))}
         {previewLayout && (

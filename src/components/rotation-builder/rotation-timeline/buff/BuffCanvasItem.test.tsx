@@ -3,12 +3,10 @@ import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CapabilityType, OriginType, Target } from '@/services/game-data';
-import { useStore } from '@/store';
 import { Attribute } from '@/types';
 
 import { BaseBuffCanvasItem, BuffCanvasItem } from './BuffCanvasItem';
 
-vi.mock('@/hooks/useSelfBuffAlignment');
 vi.mock('@/hooks/useTeamAttackInstances');
 
 const { useTeamAttackInstances } = await import('@/hooks/useTeamAttackInstances');
@@ -118,19 +116,35 @@ describe('BuffCanvasItem', () => {
     });
   });
 
-  describe('buffedAttacks passed to CanvasItem', () => {
+  describe('warning state', () => {
+    it('adds a warning border when a configurable buff is not configured', () => {
+      const buff = makeBuff(1, 2);
+      buff.parameters[0] = {
+        ...buff.parameters[0],
+        value: undefined,
+        valueConfiguration: undefined,
+      };
+
+      render(<BuffCanvasItem buff={buff} onRemove={() => {}} />);
+
+      expect(screen.getByTestId('buff-canvas-item')).toHaveClass('border-warning');
+    });
+
+    it('does not add a warning border when a configurable buff is configured', () => {
+      const buff = makeBuff(1, 2, true);
+
+      render(<BuffCanvasItem buff={buff} onRemove={() => {}} />);
+
+      expect(screen.getByTestId('buff-canvas-item')).not.toHaveClass(
+        'border-warning',
+      );
+    });
+  });
+
+  describe('parameter dialog', () => {
     it('opens the parameter dialog on the first click after hover activates', async () => {
       const buff = makeBuff(1, 2, true);
-      useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
-
-      const { container } = render(
-        <BuffCanvasItem
-          buff={buff}
-          buffedAttackCount={buff.w}
-          onRemove={() => {}}
-          isDialogClickable={true}
-        />,
-      );
+      const { container } = render(<BuffCanvasItem buff={buff} onRemove={() => {}} />);
 
       const hoverWrapper = container.firstElementChild as HTMLElement | null;
       expect(hoverWrapper).not.toBeNull();
@@ -149,126 +163,42 @@ describe('BuffCanvasItem', () => {
     });
 
     it('uses the names of attacks at buff positions as dialog labels when stack config is enabled', async () => {
-      // buff at x=1, w=2 → covers MOCK_ATTACKS[1] ("Heavy Attack") and MOCK_ATTACKS[2] ("Basic Attack")
       const buff = makeBuff(1, 2, true);
-      useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
+      const { container } = render(<BuffCanvasItem buff={buff} onRemove={() => {}} />);
 
-      render(
-        <BuffCanvasItem
-          buff={buff}
-          buffedAttackCount={buff.w}
-          onRemove={() => {}}
-          isDialogClickable={true}
-        />,
-      );
+      const trigger = container.querySelector('[data-slot="sheet-trigger"]');
+      expect(trigger).not.toBeNull();
 
-      // Click the item to open the configuration dialog
-      await userEvent.click(screen.getByText('ATK Buff'));
+      await userEvent.click(trigger as HTMLElement);
 
       expect(screen.getByText('Heavy Attack')).toBeInTheDocument();
       expect(screen.getByText('Basic Attack')).toBeInTheDocument();
     });
 
     it('uses names of attacks starting from x=0 when buff begins at the first attack', async () => {
-      // buff at x=0, w=2 → covers MOCK_ATTACKS[0] ("Resonance Liberation") and MOCK_ATTACKS[1] ("Heavy Attack")
       const buff = makeBuff(0, 2, true);
-      useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
+      const { container } = render(<BuffCanvasItem buff={buff} onRemove={() => {}} />);
 
-      render(
-        <BuffCanvasItem
-          buff={buff}
-          buffedAttackCount={buff.w}
-          onRemove={() => {}}
-          isDialogClickable={true}
-        />,
-      );
+      const trigger = container.querySelector('[data-slot="sheet-trigger"]');
+      expect(trigger).not.toBeNull();
 
-      await userEvent.click(screen.getByText('ATK Buff'));
+      await userEvent.click(trigger as HTMLElement);
 
       expect(screen.getByText('Resonance Liberation')).toBeInTheDocument();
       expect(screen.getByText('Heavy Attack')).toBeInTheDocument();
       expect(screen.queryByText('Basic Attack')).not.toBeInTheDocument();
     });
 
-    it('does not show the Stack Configuration toggle for a buff with w=1', () => {
+    it('does not show the per-attack toggle for a buff with w=1', async () => {
       const buff = makeBuff(0, 1);
-      useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
+      const { container } = render(<BuffCanvasItem buff={buff} onRemove={() => {}} />);
 
-      render(
-        <BuffCanvasItem
-          buff={buff}
-          buffedAttackCount={buff.w}
-          onRemove={() => {}}
-          isDialogClickable={true}
-        />,
-      );
+      const trigger = container.querySelector('[data-slot="sheet-trigger"]');
+      expect(trigger).not.toBeNull();
 
-      // The toggle is only shown when buffedAttacks.length > 1
-      expect(screen.queryByText('Stack Configuration')).not.toBeInTheDocument();
-    });
-  });
+      await userEvent.click(trigger as HTMLElement);
 
-  describe('onOpenChange', () => {
-    it('calls onOpenChange(true) when the dialog opens', async () => {
-      const buff = makeBuff(1, 2);
-      useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
-      const onOpenChange = vi.fn();
-
-      render(
-        <BuffCanvasItem
-          buff={buff}
-          buffedAttackCount={buff.w}
-          onRemove={() => {}}
-          isDialogClickable={true}
-          onOpenChange={onOpenChange}
-        />,
-      );
-
-      await userEvent.click(screen.getByText('ATK Buff'));
-
-      expect(onOpenChange).toHaveBeenCalledWith(true);
-    });
-
-    it('calls onOpenChange(false) when the dialog is closed via Escape', async () => {
-      const buff = makeBuff(1, 2);
-      useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
-      const onOpenChange = vi.fn();
-
-      render(
-        <BuffCanvasItem
-          buff={buff}
-          buffedAttackCount={buff.w}
-          onRemove={() => {}}
-          isDialogClickable={true}
-          onOpenChange={onOpenChange}
-        />,
-      );
-
-      await userEvent.click(screen.getByText('ATK Buff'));
-      await userEvent.keyboard('{Escape}');
-
-      expect(onOpenChange).toHaveBeenCalledWith(false);
-    });
-
-    it('calls onOpenChange(false) when parameters are saved', async () => {
-      const buff = makeBuff(1, 2);
-      useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
-      const onOpenChange = vi.fn();
-
-      render(
-        <BuffCanvasItem
-          buff={buff}
-          buffedAttackCount={buff.w}
-          onRemove={() => {}}
-          isDialogClickable={true}
-          onOpenChange={onOpenChange}
-        />,
-      );
-
-      await userEvent.click(screen.getByText('ATK Buff'));
-      await userEvent.click(screen.getByRole('button', { name: 'Save changes' }));
-
-      expect(onOpenChange).toHaveBeenCalledWith(false);
+      expect(screen.queryByText('Per-attack stacks')).not.toBeInTheDocument();
     });
   });
 });

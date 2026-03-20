@@ -1,5 +1,5 @@
 import { isNil } from 'es-toolkit/predicate';
-import { AlertTriangle, Maximize2 } from 'lucide-react';
+import { AlertTriangle, InfoIcon, Maximize2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { CapabilityHoverCard } from '@/components/common/CapabilityHoverCard';
@@ -19,8 +19,6 @@ import { useStore } from '@/store';
 
 interface BuffCanvasItemProperties {
   buff: DetailedModifierInstance;
-  buffedAttackCount: number;
-  isDialogClickable: boolean;
   onRemove: (instanceId: string) => void;
   onOpenChange?: (isOpen: boolean) => void;
 }
@@ -38,7 +36,6 @@ export const BaseBuffCanvasItem = ({
   name,
   actions,
   className,
-  style,
   ...rest
 }: BaseBuffCanvasItemProperties) => {
   return (
@@ -46,7 +43,6 @@ export const BaseBuffCanvasItem = ({
       {...rest}
       data-testid="buff-canvas-item"
       variant="outline"
-      style={style}
       className={cn(
         'draggable px-page h-12 flex-nowrap justify-between overflow-hidden',
         className,
@@ -61,30 +57,20 @@ export const BaseBuffCanvasItem = ({
           {name}
         </Text>
       </Row>
-      <ItemActions className="gap-inset min-w-0 overflow-hidden">{actions}</ItemActions>
+      <ItemActions className="gap-inset text-muted-foreground min-w-0 overflow-hidden">
+        {actions}
+      </ItemActions>
     </Item>
   );
 };
 
-export const BuffCanvasItem = ({
-  buff,
-  buffedAttackCount,
-  isDialogClickable,
-  onRemove,
-  onOpenChange,
-}: BuffCanvasItemProperties) => {
+export const BuffCanvasItem = ({ buff, onRemove }: BuffCanvasItemProperties) => {
   const updateBuffLayout = useStore((state) => state.updateBuffLayout);
   const { attacks } = useTeamAttackInstances();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleParameterConfigurationDialogOpenChange = (isOpen: boolean) => {
-    setIsDialogOpen(isOpen);
-    onOpenChange?.(isOpen);
-  };
-
   const isBuffConfigurable = buff.parameters && buff.parameters.length > 0;
-  const buffedAttacks = attacks.slice(buff.x, buff.x + buff.w);
-  const shouldShowWarning =
+  const hasIncompleteConfiguration =
     buff.parameters?.some((parameter) => {
       const valueMissing = isNil(parameter.value) || Number.isNaN(parameter.value);
       const configMissingOrIncomplete =
@@ -92,42 +78,48 @@ export const BuffCanvasItem = ({
         parameter.valueConfiguration.some(
           (v) => v === 0 || isNil(v) || Number.isNaN(v),
         ) ||
-        parameter.valueConfiguration.length !== buffedAttackCount;
+        parameter.valueConfiguration.length !== buff.w;
       return valueMissing && configMissingOrIncomplete;
     }) ?? false;
-  const isDialogDisabled = !isBuffConfigurable || !isDialogClickable;
   return (
-    <CapabilityHoverCard capability={buff} followCursor={!isDialogOpen}>
-      <ParameterConfigurationDialog
-        capability={buff}
-        disabled={isDialogDisabled}
-        buffedAttacks={buffedAttacks}
-        open={isDialogOpen}
-        onOpenChange={handleParameterConfigurationDialogOpenChange}
-      >
-        <BaseBuffCanvasItem
-          characterIconUrl={buff.characterIconUrl}
-          iconUrl={buff.iconUrl}
-          name={buff.name}
-          style={{ backgroundColor: BUFF_BACKGROUND_COLORS[buff.target] }}
-          actions={
-            <>
-              {shouldShowWarning && <AlertTriangle className="text-warning" />}
-              <Button
-                variant="ghost"
-                onPointerDown={(event) => event.stopPropagation()}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  updateBuffLayout(buff.instanceId, { x: 0, w: attacks.length });
-                }}
+    <CapabilityHoverCard capability={buff} followCursor={true}>
+      <BaseBuffCanvasItem
+        characterIconUrl={buff.characterIconUrl}
+        iconUrl={buff.iconUrl}
+        name={buff.name}
+        style={{ backgroundColor: BUFF_BACKGROUND_COLORS[buff.target] }}
+        className={cn(hasIncompleteConfiguration && 'border-warning')}
+        actions={
+          <>
+            {isBuffConfigurable && (
+              <ParameterConfigurationDialog
+                capability={buff}
+                disabled={!isBuffConfigurable}
+                buffedAttacks={attacks.slice(buff.x, buff.x + buff.w)}
+                open={isDialogOpen}
+                onOpenChange={setIsDialogOpen}
               >
-                <Maximize2 className="text-muted-foreground" />
-              </Button>
-              <TrashButton onRemove={() => onRemove(buff.instanceId)} />
-            </>
-          }
-        ></BaseBuffCanvasItem>
-      </ParameterConfigurationDialog>
+                <Button variant="ghost" onClick={() => setIsDialogOpen(true)}>
+                  {hasIncompleteConfiguration ? (
+                    <AlertTriangle className="text-warning" />
+                  ) : (
+                    <InfoIcon />
+                  )}
+                </Button>
+              </ParameterConfigurationDialog>
+            )}
+            <Button
+              variant="ghost"
+              onClick={() => {
+                updateBuffLayout(buff.instanceId, { w: attacks.length });
+              }}
+            >
+              <Maximize2 />
+            </Button>
+            <TrashButton onRemove={() => onRemove(buff.instanceId)} />
+          </>
+        }
+      ></BaseBuffCanvasItem>
     </CapabilityHoverCard>
   );
 };

@@ -140,14 +140,16 @@ export const RotationSummaryTab = ({ result }: RotationSummaryTabProperties) => 
             totalDamage={result.totalDamage}
           />
         </SummaryChartCard>
+        <SummaryChartCard
+          title="Substat Value"
+          description={`Estimated damage increase for ${character.name} by substat`}
+        >
+          <SubstatSensitivityBarChart data={substatChartData} />
+        </SummaryChartCard>
 
         <SummaryChartCard
           title="Skill Origin Distribution"
-          description={
-            character.name
-              ? `${character.name}'s damage split by skill origin type.`
-              : 'Team slot 1 damage split by skill origin type.'
-          }
+          description={`${character.name}'s damage distribution by talent nodes.`}
         >
           <DistributionPieChart
             data={skillOriginData}
@@ -158,20 +160,13 @@ export const RotationSummaryTab = ({ result }: RotationSummaryTabProperties) => 
 
         <SummaryChartCard
           title="Damage by Type"
-          description="Total rotation damage split by damage type across all characters."
+          description={`${character.name}'s damage distribution by damage type.`}
         >
           <DistributionPieChart
             data={damageTypeData}
             emptyTitle="Damage Type Breakdown"
             emptyDescription="No damage type data is available for this rotation."
           />
-        </SummaryChartCard>
-
-        <SummaryChartCard
-          title="Substat Sensitivity"
-          description="Damage delta for each +1 substat-roll scenario on the first character."
-        >
-          <SubstatSensitivityBarChart data={substatChartData} />
         </SummaryChartCard>
       </Grid>
     </Stack>

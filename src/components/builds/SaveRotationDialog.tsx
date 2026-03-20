@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useForm } from '@tanstack/react-form';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -17,43 +17,34 @@ import { useSaveRotation } from '@/hooks/useSaveRotation';
 import { Stack } from '../ui/layout';
 
 interface SaveRotationDialogProperties {
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function SaveRotationDialog({
   open,
   onOpenChange,
-}: SaveRotationDialogProperties = {}) {
-  // TODO: Refactor to use useForm
-  const [internalOpen, setInternalOpen] = useState(false);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const isOpen = open ?? internalOpen;
-  const setOpen = onOpenChange ?? setInternalOpen;
-
+}: SaveRotationDialogProperties) {
   const { saveRotation, isSaving } = useSaveRotation();
-
-  const handleSave = async () => {
-    try {
-      await saveRotation({
-        name,
-        description,
-      });
-      setOpen(false);
-      setName('');
-      setDescription('');
-    } catch {}
-  };
+  const form = useForm({
+    defaultValues: {
+      name: '',
+      description: '',
+    },
+    onSubmit: async ({ value }) => {
+      await saveRotation(value);
+      onOpenChange(false);
+      form.reset();
+    },
+  });
 
   return (
     <Dialog
-      open={isOpen}
-      onOpenChange={(nextOpen) => {
-        setOpen(nextOpen);
-        if (!nextOpen) {
-          setName('');
-          setDescription('');
+      open={open}
+      onOpenChange={(_open) => {
+        onOpenChange(_open);
+        if (!_open) {
+          form.reset();
         }
       }}
     >
@@ -64,27 +55,51 @@ export function SaveRotationDialog({
             Save your current team, enemy, and rotation configuration to the library.
           </DialogDescription>
         </DialogHeader>
-        <Stack gap="component">
-          <Label htmlFor="name">Name</Label>
-          <Input
-            id="name"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder="My Awesome Rotation"
-          />
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
-            value={description}
-            onChange={(event) => setDescription(event.target.value)}
-            placeholder="Optional notes..."
-          />
-        </Stack>
-        <DialogFooter>
-          <Button type="submit" onClick={handleSave} disabled={isSaving}>
-            {isSaving ? 'Saving...' : 'Save'}
-          </Button>
-        </DialogFooter>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            form.handleSubmit();
+          }}
+        >
+          <Stack gap="component">
+            <form.Field
+              name="name"
+              children={(field) => (
+                <Stack gap="trim">
+                  <Label htmlFor={field.name}>Name</Label>
+                  <Input
+                    id={field.name}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(event) => field.handleChange(event.target.value)}
+                    placeholder="My Awesome Rotation"
+                  />
+                </Stack>
+              )}
+            />
+            <form.Field
+              name="description"
+              children={(field) => (
+                <Stack gap="trim">
+                  <Label htmlFor={field.name}>Description</Label>
+                  <Textarea
+                    id={field.name}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(event) => field.handleChange(event.target.value)}
+                    placeholder="Optional notes..."
+                  />
+                </Stack>
+              )}
+            />
+          </Stack>
+          <DialogFooter>
+            <Button type="submit" disabled={isSaving}>
+              {isSaving ? 'Saving...' : 'Save'}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

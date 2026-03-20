@@ -109,7 +109,7 @@ describe('CapabilityHoverCard', () => {
   });
 
   describe('followCursor hover card', () => {
-    it('shows hover card content on mouseenter', async () => {
+    it('shows hover card content after the standard hover delay', async () => {
       const capability = makeAttack();
 
       render(
@@ -118,15 +118,22 @@ describe('CapabilityHoverCard', () => {
         </CapabilityHoverCard>,
       );
 
-      fireEvent.mouseEnter(getWrapper(screen.getByRole('button', { name: 'trigger' })));
-      await act(async () => {});
+      fireEvent.mouseEnter(
+        getWrapper(screen.getByRole('button', { name: 'trigger' })),
+        {
+          clientX: 120,
+          clientY: 240,
+        },
+      );
 
-      expect(screen.getByText('Test Buff')).toBeInTheDocument();
-      expect(screen.getByText('Increases ATK by 10%')).toBeInTheDocument();
-      expect(screen.getByText('Weapon')).toBeInTheDocument();
+      expect(screen.queryByText('Test Buff')).not.toBeInTheDocument();
+
+      expect(await screen.findByText('Test Buff')).toBeInTheDocument();
+      expect(await screen.findByText('Increases ATK by 10%')).toBeInTheDocument();
+      expect(await screen.findByText('Weapon')).toBeInTheDocument();
     });
 
-    it('hides hover card content on mouseleave', async () => {
+    it('does not show hover card content if hover ends before the delay', async () => {
       const capability = makeAttack();
 
       render(
@@ -137,9 +144,71 @@ describe('CapabilityHoverCard', () => {
 
       const wrapper = getWrapper(screen.getByRole('button', { name: 'trigger' }));
       fireEvent.mouseEnter(wrapper);
-      await act(async () => {});
+      fireEvent.mouseLeave(wrapper);
+
+      await act(async () => {
+        await new Promise((resolve) => globalThis.setTimeout(resolve, 250));
+      });
+
+      expect(screen.queryByText('Increases ATK by 10%')).not.toBeInTheDocument();
+    });
+
+    it('hides hover card content after the close delay on mouseleave', async () => {
+      const capability = makeAttack();
+
+      render(
+        <CapabilityHoverCard capability={capability} followCursor>
+          <button>trigger</button>
+        </CapabilityHoverCard>,
+      );
+
+      const wrapper = getWrapper(screen.getByRole('button', { name: 'trigger' }));
+      fireEvent.mouseEnter(wrapper);
+      expect(await screen.findByText('Increases ATK by 10%')).toBeInTheDocument();
 
       fireEvent.mouseLeave(wrapper);
+
+      expect(screen.getByText('Increases ATK by 10%')).toBeInTheDocument();
+      fireEvent.mouseLeave(screen.getByTestId('cursor-hover-card-content'), {
+        relatedTarget: document.body,
+      });
+
+      await act(async () => {
+        await new Promise((resolve) => globalThis.setTimeout(resolve, 120));
+      });
+
+      expect(screen.queryByText('Increases ATK by 10%')).not.toBeInTheDocument();
+    });
+
+    it('keeps hover card content visible while hovering the hover card itself', async () => {
+      const capability = makeAttack();
+
+      render(
+        <CapabilityHoverCard capability={capability} followCursor>
+          <button>trigger</button>
+        </CapabilityHoverCard>,
+      );
+
+      const wrapper = getWrapper(screen.getByRole('button', { name: 'trigger' }));
+      fireEvent.mouseEnter(wrapper);
+      expect(await screen.findByTestId('cursor-hover-card-content')).toBeInTheDocument();
+
+      fireEvent.mouseLeave(wrapper);
+      fireEvent.mouseEnter(screen.getByTestId('cursor-hover-card-content'));
+
+      await act(async () => {
+        await new Promise((resolve) => globalThis.setTimeout(resolve, 120));
+      });
+
+      expect(screen.getByText('Increases ATK by 10%')).toBeInTheDocument();
+
+      fireEvent.mouseLeave(screen.getByTestId('cursor-hover-card-content'), {
+        relatedTarget: document.body,
+      });
+
+      await act(async () => {
+        await new Promise((resolve) => globalThis.setTimeout(resolve, 120));
+      });
 
       expect(screen.queryByText('Increases ATK by 10%')).not.toBeInTheDocument();
     });
@@ -155,7 +224,7 @@ describe('CapabilityHoverCard', () => {
 
       const wrapper = getWrapper(screen.getByRole('button', { name: 'trigger' }));
       fireEvent.mouseEnter(wrapper);
-      await act(async () => {});
+      expect(await screen.findByText('Increases ATK by 10%')).toBeInTheDocument();
 
       fireEvent.mouseMove(wrapper, { clientX: 150, clientY: 300 });
       await act(async () => {});
@@ -175,9 +244,8 @@ describe('CapabilityHoverCard', () => {
       );
 
       fireEvent.mouseEnter(getWrapper(screen.getByRole('button', { name: 'trigger' })));
-      await act(async () => {});
 
-      expect(screen.getByText('Parameterized')).toBeInTheDocument();
+      expect(await screen.findByText('Parameterized')).toBeInTheDocument();
     });
 
     it('shows parentName when present', async () => {
@@ -190,9 +258,8 @@ describe('CapabilityHoverCard', () => {
       );
 
       fireEvent.mouseEnter(getWrapper(screen.getByRole('button', { name: 'trigger' })));
-      await act(async () => {});
 
-      expect(screen.getByText('Echo')).toBeInTheDocument();
+      expect(await screen.findByText('Echo')).toBeInTheDocument();
     });
 
     it('does not show Parameterized badge when capability has no parameters', async () => {
@@ -205,7 +272,7 @@ describe('CapabilityHoverCard', () => {
       );
 
       fireEvent.mouseEnter(getWrapper(screen.getByRole('button', { name: 'trigger' })));
-      await act(async () => {});
+      await screen.findByText('Test Buff');
 
       expect(screen.queryByText('Parameterized')).not.toBeInTheDocument();
     });

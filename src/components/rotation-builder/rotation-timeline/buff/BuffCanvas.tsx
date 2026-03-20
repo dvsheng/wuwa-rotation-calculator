@@ -4,9 +4,7 @@ import GridLayout from 'react-grid-layout';
 
 import {
   BUFF_CANVAS_DROP_ID,
-  BUFF_LENGTH_ON_ADD,
   BUFF_ROW_HEIGHT,
-  COLUMN_STEP,
   SIDEBAR_ATTACK_DRAG_TYPE,
   SIDEBAR_BUFF_DRAG_TYPE,
 } from '@/components/rotation-builder/rotation-timeline/constants';
@@ -37,10 +35,8 @@ const BUFF_PREVIEW_ID = '__buff-drop-preview__';
 
 export const BuffCanvas = ({ width, previewLayout }: BuffCanvasProperties) => {
   const { buffs } = useTeamModifierInstances();
-  const attackCount = useStore((state) => state.attacks.length);
   const removeBuff = useStore((state) => state.removeBuff);
   const updateBuffLayout = useStore((state) => state.updateBuffLayout);
-  const totalColumns = Math.max(attackCount, BUFF_LENGTH_ON_ADD);
   const { ref, isDropTarget } = useDroppable<SidebarCapabilityDragData>({
     id: BUFF_CANVAS_DROP_ID,
     accept: (source) =>
@@ -72,22 +68,12 @@ export const BuffCanvas = ({ width, previewLayout }: BuffCanvasProperties) => {
   });
 
   const isValidDropTarget = isDropTarget && !!previewLayout;
-  const getStickyOffsets = ({ x, w }: { x: number; w: number }) => ({
-    stickyLeftOffset: x * COLUMN_STEP,
-    stickyRightOffset: Math.max(0, totalColumns - (x + w)) * COLUMN_STEP,
-  });
 
   return (
     <div
       ref={ref}
       data-testid="buff-canvas"
-      className={cn(
-        // `overflow-x-clip` keeps wide grid content visually contained without
-        // becoming the nearest horizontal scroll container, so sticky children
-        // inside buff items still track the outer timeline scroll.
-        'flex min-h-0 flex-1 flex-col overflow-x-clip',
-        isValidDropTarget && 'bg-accent/10',
-      )}
+      className={cn('flex min-h-0 flex-1', isValidDropTarget && 'bg-accent/10')}
     >
       <GridLayout
         {...fullLayoutProperties}
@@ -98,22 +84,21 @@ export const BuffCanvas = ({ width, previewLayout }: BuffCanvasProperties) => {
           <div key={buff.instanceId}>
             <BuffCanvasItem
               buff={buff}
+              buffedAttackCount={buff.w}
               onRemove={removeBuff}
               isDialogClickable={!isInteracting}
-              {...getStickyOffsets(buff)}
             />
           </div>
         ))}
-        {previewLayout ? (
+        {previewLayout && (
           <div key={BUFF_PREVIEW_ID}>
             <BaseBuffCanvasItem
               characterIconUrl={previewLayout.characterIconUrl}
               iconUrl={previewLayout.iconUrl}
               name={previewLayout.name}
-              {...getStickyOffsets(previewLayout)}
             />
           </div>
-        ) : undefined}
+        )}
       </GridLayout>
     </div>
   );

@@ -153,9 +153,6 @@ export const LibraryContainer = () => {
       <Text as="h2" variant="heading" className="gap-inset flex items-center">
         <Library /> Library
       </Text>
-      <Text variant="body" tone="muted">
-        Filter both your saved rotations and public rotations by character.
-      </Text>
       <Combobox
         items={characters}
         multiple

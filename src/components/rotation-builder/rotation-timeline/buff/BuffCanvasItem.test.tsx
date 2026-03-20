@@ -2,10 +2,6 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  BUFF_LENGTH_ON_ADD,
-  COLUMN_STEP,
-} from '@/components/rotation-builder/rotation-timeline/constants';
 import { CapabilityType, OriginType, Target } from '@/services/game-data';
 import { useStore } from '@/store';
 import { Attribute } from '@/types';
@@ -15,10 +11,8 @@ import { BaseBuffCanvasItem, BuffCanvasItem } from './BuffCanvasItem';
 vi.mock('@/hooks/useSelfBuffAlignment');
 vi.mock('@/hooks/useTeamAttackInstances');
 
-const { useSelfBuffAlignment } = await import('@/hooks/useSelfBuffAlignment');
 const { useTeamAttackInstances } = await import('@/hooks/useTeamAttackInstances');
 
-const mockUseSelfBuffAlignment = vi.mocked(useSelfBuffAlignment);
 const mockUseTeamAttackInstances = vi.mocked(useTeamAttackInstances);
 
 beforeAll(() => {
@@ -102,11 +96,6 @@ const makeBuff = (x: number, w: number, withStackConfig = false) => ({
 });
 
 beforeEach(() => {
-  mockUseSelfBuffAlignment.mockReturnValue({
-    isSelf: false,
-    status: 'not-self',
-    columnAlignments: [],
-  });
   mockUseTeamAttackInstances.mockReturnValue({
     attacks: [...MOCK_ATTACKS],
     isLoading: false,
@@ -135,7 +124,12 @@ describe('BuffCanvasItem', () => {
       useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
 
       const { container } = render(
-        <BuffCanvasItem buff={buff} onRemove={() => {}} isDialogClickable={true} />,
+        <BuffCanvasItem
+          buff={buff}
+          buffedAttackCount={buff.w}
+          onRemove={() => {}}
+          isDialogClickable={true}
+        />,
       );
 
       const hoverWrapper = container.firstElementChild as HTMLElement | null;
@@ -160,7 +154,12 @@ describe('BuffCanvasItem', () => {
       useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
 
       render(
-        <BuffCanvasItem buff={buff} onRemove={() => {}} isDialogClickable={true} />,
+        <BuffCanvasItem
+          buff={buff}
+          buffedAttackCount={buff.w}
+          onRemove={() => {}}
+          isDialogClickable={true}
+        />,
       );
 
       // Click the item to open the configuration dialog
@@ -176,7 +175,12 @@ describe('BuffCanvasItem', () => {
       useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
 
       render(
-        <BuffCanvasItem buff={buff} onRemove={() => {}} isDialogClickable={true} />,
+        <BuffCanvasItem
+          buff={buff}
+          buffedAttackCount={buff.w}
+          onRemove={() => {}}
+          isDialogClickable={true}
+        />,
       );
 
       await userEvent.click(screen.getByText('ATK Buff'));
@@ -191,85 +195,16 @@ describe('BuffCanvasItem', () => {
       useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
 
       render(
-        <BuffCanvasItem buff={buff} onRemove={() => {}} isDialogClickable={true} />,
+        <BuffCanvasItem
+          buff={buff}
+          buffedAttackCount={buff.w}
+          onRemove={() => {}}
+          isDialogClickable={true}
+        />,
       );
 
       // The toggle is only shown when buffedAttacks.length > 1
       expect(screen.queryByText('Stack Configuration')).not.toBeInTheDocument();
-    });
-  });
-
-  describe('sticky positioning', () => {
-    it('wraps icons and name in a sticky-left group', () => {
-      const buff = makeBuff(1, 2);
-      useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
-
-      render(
-        <BuffCanvasItem buff={buff} onRemove={() => {}} isDialogClickable={true} />,
-      );
-
-      const nameElement = screen.getByText('ATK Buff');
-      const stickyGroup = nameElement.closest('div[class*="sticky"]') as HTMLElement;
-      expect(stickyGroup).not.toBeNull();
-      expect(stickyGroup).toHaveClass('left-0');
-    });
-
-    it('places icons in the sticky-left group alongside the name', () => {
-      const buff = makeBuff(1, 2);
-      useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
-
-      render(
-        <BuffCanvasItem buff={buff} onRemove={() => {}} isDialogClickable={true} />,
-      );
-
-      const nameElement = screen.getByText('ATK Buff');
-      const stickyGroup = nameElement.closest('div[class*="sticky"]') as HTMLElement;
-      // Both ItemMedia slots live inside the same sticky-left group
-      const mediaSlots = stickyGroup.querySelectorAll('[data-slot="item-media"]');
-      expect(mediaSlots).toHaveLength(2);
-    });
-
-    it('places action buttons in the sticky-right group, not the sticky-left group', () => {
-      const buff = makeBuff(1, 2);
-      useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
-
-      const { container } = render(
-        <BuffCanvasItem buff={buff} onRemove={() => {}} isDialogClickable={true} />,
-      );
-
-      const nameElement = screen.getByText('ATK Buff');
-      const stickyLeft = nameElement.closest('div[class*="sticky"]') as HTMLElement;
-      const buttons = stickyLeft.querySelectorAll('button');
-      expect(buttons).toHaveLength(0);
-
-      const actionsElement = container.querySelector(
-        '[data-slot="item-actions"]',
-      ) as HTMLElement;
-      expect(actionsElement.querySelectorAll('button').length).toBeGreaterThan(0);
-    });
-
-    it('applies per-item sticky offsets when a buff does not start in the first column', () => {
-      const buff = makeBuff(2, 2);
-      useStore.setState({ buffs: [{ ...buff, parameterValues: buff.parameters }] });
-
-      render(
-        <BuffCanvasItem
-          buff={buff}
-          onRemove={() => {}}
-          isDialogClickable={true}
-          stickyLeftOffset={buff.x * COLUMN_STEP}
-          stickyRightOffset={
-            Math.max(0, BUFF_LENGTH_ON_ADD - (buff.x + buff.w)) * COLUMN_STEP
-          }
-        />,
-      );
-
-      expect(screen.getByTestId('buff-canvas-item-sticky-left')).toHaveStyle({
-        left: `-${buff.x * COLUMN_STEP}px`,
-      });
-      expect(screen.getByTestId('buff-canvas-item-sticky-right')).toHaveStyle({
-        right: `-${Math.max(0, BUFF_LENGTH_ON_ADD - (buff.x + buff.w)) * COLUMN_STEP}px`,
-      });
     });
   });
 
@@ -282,6 +217,7 @@ describe('BuffCanvasItem', () => {
       render(
         <BuffCanvasItem
           buff={buff}
+          buffedAttackCount={buff.w}
           onRemove={() => {}}
           isDialogClickable={true}
           onOpenChange={onOpenChange}
@@ -301,6 +237,7 @@ describe('BuffCanvasItem', () => {
       render(
         <BuffCanvasItem
           buff={buff}
+          buffedAttackCount={buff.w}
           onRemove={() => {}}
           isDialogClickable={true}
           onOpenChange={onOpenChange}
@@ -321,6 +258,7 @@ describe('BuffCanvasItem', () => {
       render(
         <BuffCanvasItem
           buff={buff}
+          buffedAttackCount={buff.w}
           onRemove={() => {}}
           isDialogClickable={true}
           onOpenChange={onOpenChange}

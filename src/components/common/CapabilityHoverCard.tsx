@@ -7,7 +7,7 @@ import {
   useFloating,
 } from '@floating-ui/react';
 import { ArrowUpRight } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import {
@@ -65,6 +65,10 @@ const TARGET_LABELS: Record<Target, string> = {
   [Target.ACTIVE_CHARACTER]: 'Active',
   [Target.SELF]: 'Self',
 };
+
+const HOVER_CARD_OPEN_DELAY_MS = 200;
+const HOVER_CARD_CLOSE_DELAY_MS = 100;
+const CURSOR_HOVER_CARD_VIEWPORT_PADDING = 16;
 
 // ─── Type guard ───────────────────────────────────────────────────────────────
 
@@ -215,40 +219,106 @@ const CursorHoverCard = ({
   className?: string;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const openTimeoutReference = useRef<
+    ReturnType<typeof globalThis.setTimeout> | undefined
+  >(undefined);
+  const closeTimeoutReference = useRef<
+    ReturnType<typeof globalThis.setTimeout> | undefined
+  >(undefined);
 
   const { refs, floatingStyles } = useFloating({
     placement: 'top',
-    middleware: [offset(8), flip(), shift({ padding: 8 })],
+    middleware: [
+      offset(8),
+      flip({ padding: CURSOR_HOVER_CARD_VIEWPORT_PADDING }),
+      shift({ padding: CURSOR_HOVER_CARD_VIEWPORT_PADDING }),
+    ],
     whileElementsMounted: autoUpdate,
   });
+
+  useEffect(() => {
+    return () => {
+      if (openTimeoutReference.current !== undefined) {
+        globalThis.clearTimeout(openTimeoutReference.current);
+      }
+      if (closeTimeoutReference.current !== undefined) {
+        globalThis.clearTimeout(closeTimeoutReference.current);
+      }
+    };
+  }, []);
 
   const setFloatingReference = (node: Element | null) => {
     refs.setFloating(node as HTMLElement | null);
   };
 
-  const handleMouseMove = (event: React.MouseEvent) => {
+  const updateReferencePosition = (x: number, y: number) => {
     refs.setReference({
       getBoundingClientRect() {
         return {
           width: 0,
           height: 0,
-          x: event.clientX,
-          y: event.clientY,
-          top: event.clientY,
-          left: event.clientX,
-          right: event.clientX,
-          bottom: event.clientY,
+          x,
+          y,
+          top: y,
+          left: x,
+          right: x,
+          bottom: y,
         };
       },
     });
+  };
+
+  const handleMouseEnter = (event: React.MouseEvent) => {
+    updateReferencePosition(event.clientX, event.clientY);
+
+    if (closeTimeoutReference.current !== undefined) {
+      globalThis.clearTimeout(closeTimeoutReference.current);
+      closeTimeoutReference.current = undefined;
+    }
+    if (openTimeoutReference.current !== undefined) {
+      globalThis.clearTimeout(openTimeoutReference.current);
+    }
+
+    openTimeoutReference.current = globalThis.setTimeout(() => {
+      setIsOpen(true);
+      openTimeoutReference.current = undefined;
+    }, HOVER_CARD_OPEN_DELAY_MS);
+  };
+
+  const handleMouseLeave = () => {
+    if (openTimeoutReference.current !== undefined) {
+      globalThis.clearTimeout(openTimeoutReference.current);
+      openTimeoutReference.current = undefined;
+    }
+    if (closeTimeoutReference.current !== undefined) {
+      globalThis.clearTimeout(closeTimeoutReference.current);
+    }
+
+    closeTimeoutReference.current = globalThis.setTimeout(() => {
+      setIsOpen(false);
+      closeTimeoutReference.current = undefined;
+    }, HOVER_CARD_CLOSE_DELAY_MS);
+  };
+
+  const handleFloatingMouseEnter = () => {
+    if (closeTimeoutReference.current !== undefined) {
+      globalThis.clearTimeout(closeTimeoutReference.current);
+      closeTimeoutReference.current = undefined;
+    }
+  };
+
+  const handleMouseMove = (event: React.MouseEvent) => {
+    if (isOpen) return;
+
+    updateReferencePosition(event.clientX, event.clientY);
   };
 
   return (
     <>
       <div
         style={{ display: 'contents' }}
-        onMouseEnter={() => setIsOpen(true)}
-        onMouseLeave={() => setIsOpen(false)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         onMouseMove={handleMouseMove}
       >
         {children}
@@ -257,11 +327,14 @@ const CursorHoverCard = ({
         <FloatingPortal>
           <div
             ref={setFloatingReference}
+            data-testid="cursor-hover-card-content"
             style={floatingStyles}
             className={cn(
               'bg-popover text-popover-foreground z-50 max-w-80 rounded-md border p-4 shadow-md',
               className,
             )}
+            onMouseEnter={handleFloatingMouseEnter}
+            onMouseLeave={handleMouseLeave}
           >
             {content}
           </div>
@@ -307,7 +380,10 @@ export const CapabilityHoverCard = ({
   }
 
   return (
-    <HoverCard openDelay={200} closeDelay={100}>
+    <HoverCard
+      openDelay={HOVER_CARD_OPEN_DELAY_MS}
+      closeDelay={HOVER_CARD_CLOSE_DELAY_MS}
+    >
       <HoverCardTrigger asChild>{children}</HoverCardTrigger>
       <HoverCardContent side="top" className={cn('w-auto max-w-80', className)}>
         {content}

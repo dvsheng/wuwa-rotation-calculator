@@ -491,7 +491,7 @@ describe('RotationBuilder', () => {
     });
   });
 
-  it('keeps a newly added buff at the width of six attacks while the first six attacks are appended', async () => {
+  it('expands a newly added buff as the first six attacks are appended', async () => {
     const user = userEvent.setup();
     renderRotationBuilder();
 
@@ -516,12 +516,13 @@ describe('RotationBuilder', () => {
 
     expect(useStore.getState().attacks).toHaveLength(6);
     expect(useStore.getState().buffs[0]).toMatchObject({
-      w: INITIAL_BUFF_LAYOUT.w,
+      w: INITIAL_BUFF_LAYOUT.w + 6,
       x: INITIAL_BUFF_LAYOUT.x,
       y: INITIAL_BUFF_LAYOUT.y,
     });
     expect(Number.parseFloat(getBuffGridItem('Syntony Field').style.width)).toBe(
-      initialWidth,
+      COLUMN_WIDTH * (INITIAL_BUFF_LAYOUT.w + 6) +
+        COLUMN_MARGIN * (INITIAL_BUFF_LAYOUT.w + 6 - 1),
     );
   });
 

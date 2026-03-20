@@ -221,8 +221,8 @@ describe('useStore - rotation slice', () => {
       expect(buff.w).toBe(3);
     });
 
-    it('does not expand buff when inserting into future columns just past its occupied end', () => {
-      // attacks: [a0, a1, a2, a3], buff covers [0,1] (x=0, w=2)
+    it('expands buff when inserting after its occupied end', () => {
+      // attacks: [a0, a1, a2, a3], buff starts at 0 and grows as later attacks are inserted
       useStore.setState({
         attacks: ['a0', 'a1', 'a2', 'a3'].map((id) => makeAttack(id)),
         buffs: [makeBuff('buff-1', 0, 2)],
@@ -233,11 +233,11 @@ describe('useStore - rotation slice', () => {
 
       const buff = useStore.getState().buffs[0];
       expect(buff.x).toBe(0);
-      expect(buff.w).toBe(2);
+      expect(buff.w).toBe(3);
     });
 
-    it('does not change buff when appending to end', () => {
-      // attacks: [a0, a1, a2], buff covers [0,1] (x=0, w=2)
+    it('does not expand buff when appending beyond its covered range', () => {
+      // attacks: [a0, a1, a2], buff covers [0,1] (x=0, w=2), so append index 3 is beyond it
       useStore.setState({
         attacks: ['a0', 'a1', 'a2'].map((id) => makeAttack(id)),
         buffs: [makeBuff('buff-1', 0, 2)],
@@ -250,8 +250,21 @@ describe('useStore - rotation slice', () => {
       expect(buff.w).toBe(2);
     });
 
-    it('does not change buff when inserting after it', () => {
-      // attacks: [a0, a1, a2, a3], buff covers [0,1] (x=0, w=2)
+    it('expands a full-width buff when appending to end', () => {
+      useStore.setState({
+        attacks: ['a0', 'a1', 'a2'].map((id) => makeAttack(id)),
+        buffs: [makeBuff('buff-1', 0, 3)],
+      });
+
+      useStore.getState().addAttack({ id: 1, characterId: 1, parameterValues: [] });
+
+      const buff = useStore.getState().buffs[0];
+      expect(buff.x).toBe(0);
+      expect(buff.w).toBe(4);
+    });
+
+    it('does not expand buff when inserting after it', () => {
+      // attacks: [a0, a1, a2, a3], buff covers [0,1] (x=0, w=2), so index 3 is beyond it
       useStore.setState({
         attacks: ['a0', 'a1', 'a2', 'a3'].map((id) => makeAttack(id)),
         buffs: [makeBuff('buff-1', 0, 2)],

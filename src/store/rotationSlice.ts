@@ -80,19 +80,11 @@ export const createRotationSlice: StateCreator<
       };
       const insertIndex =
         atIndex !== undefined && atIndex !== -1 ? atIndex : state.attacks.length;
-      if (atIndex !== undefined && atIndex !== -1) {
-        state.attacks.splice(atIndex, 0, newAttack);
-      } else {
-        state.attacks.push(newAttack);
-      }
+      state.attacks.splice(insertIndex, 0, newAttack);
       for (const buff of state.buffs) {
         if (insertIndex < buff.x) {
           buff.x += 1;
-          continue;
-        }
-
-        const occupiedBuffEnd = Math.min(state.attacks.length - 1, buff.x + buff.w);
-        if (insertIndex < occupiedBuffEnd) {
+        } else if (insertIndex <= buff.x + buff.w) {
           buff.w += 1;
         }
       }
@@ -106,7 +98,7 @@ export const createRotationSlice: StateCreator<
       for (const buff of state.buffs) {
         if (removeIndex < buff.x) {
           buff.x -= 1;
-        } else if (removeIndex >= buff.x && removeIndex <= buff.x + buff.w - 1) {
+        } else if (removeIndex <= buff.x + buff.w - 1) {
           buff.w -= 1;
         }
       }

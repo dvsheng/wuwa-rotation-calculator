@@ -166,19 +166,23 @@ const CapabilityCardContent = ({
 
   return (
     <Stack gap="inset">
-      <Row justify="between" gap="inset">
-        <Text as="div" variant="bodySm" className="leading-trim font-semibold">
+      <Row justify="between" fullWidth>
+        <Text
+          as="div"
+          variant="bodySm"
+          className="min-w-0 flex-1 leading-tight font-semibold wrap-break-word"
+        >
           {capability.name}
         </Text>
-        {isParameterized && <Badge>Parameterized</Badge>}
+        {isParameterized && <Badge className="shrink-0">Parameterized</Badge>}
       </Row>
       {capability.parentName && (
-        <Text variant="caption" tone="muted">
+        <Text variant="caption" tone="muted" className="wrap-break-word">
           {capability.parentName}
         </Text>
       )}
       {capability.description && (
-        <Text as="div" variant="caption">
+        <Text as="div" variant="caption" className="wrap-break-word">
           {capability.description}
         </Text>
       )}
@@ -193,7 +197,7 @@ const CapabilityCardContent = ({
         className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-xs font-medium underline-offset-4 transition-colors hover:underline"
       >
         Open in admin
-        <ArrowUpRight className="size-3.5 shrink-0" />
+        <ArrowUpRight />
       </a>
     </Stack>
   );

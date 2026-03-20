@@ -1,8 +1,6 @@
 // @ts-check
 import { tanstackConfig } from '@tanstack/eslint-config';
 import prettier from 'eslint-config-prettier';
-import prettierPlugin from 'eslint-plugin-prettier';
-import reactCompiler from 'eslint-plugin-react-compiler';
 import reactHooks from 'eslint-plugin-react-hooks';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import tailwindcss from 'eslint-plugin-tailwindcss';
@@ -33,11 +31,9 @@ export default [
   {
     plugins: {
       import: importPlugin,
-      'react-compiler': reactCompiler,
       'react-hooks': reactHooks,
       'simple-import-sort': simpleImportSort,
       tailwindcss,
-      prettier: prettierPlugin,
     },
     settings: {
       tailwindcss: {
@@ -47,8 +43,6 @@ export default [
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      'prettier/prettier': 'error',
-      'react-compiler/react-compiler': 'error',
       'tailwindcss/no-arbitrary-value': 'error',
       'tailwindcss/no-unnecessary-arbitrary-value': 'error',
       'tailwindcss/suggest-canonical-classes': 'off',

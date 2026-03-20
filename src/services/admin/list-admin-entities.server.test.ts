@@ -1,17 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => {
-  const queryBuilder = {
-    where: vi.fn(),
-    groupBy: vi.fn(),
-    orderBy: vi.fn(),
-  };
-
-  queryBuilder.where.mockReturnValue(queryBuilder);
-  queryBuilder.groupBy.mockReturnValue(queryBuilder);
-
-  const leftJoin = vi.fn(() => queryBuilder);
-  const from = vi.fn(() => ({ leftJoin }));
+  const orderBy = vi.fn();
+  const from = vi.fn(() => ({ orderBy }));
   const select = vi.fn(() => ({ from }));
 
   const database = {
@@ -19,8 +10,7 @@ const mocks = vi.hoisted(() => {
   };
 
   return {
-    queryBuilder,
-    leftJoin,
+    orderBy,
     from,
     select,
     database,
@@ -35,17 +25,14 @@ describe('listAdminEntitiesHandler', () => {
   beforeEach(() => {
     mocks.select.mockClear();
     mocks.from.mockClear();
-    mocks.leftJoin.mockClear();
-    mocks.queryBuilder.where.mockClear();
-    mocks.queryBuilder.groupBy.mockClear();
-    mocks.queryBuilder.orderBy.mockClear();
-    mocks.queryBuilder.orderBy.mockResolvedValue([]);
+    mocks.orderBy.mockClear();
+    mocks.orderBy.mockResolvedValue([]);
   });
 
-  it('returns entities with computed skill counts', async () => {
+  it('returns ordered entities without skill counts', async () => {
     const { listAdminEntitiesHandler } = await import('./list-admin-entities.server');
 
-    mocks.queryBuilder.orderBy.mockResolvedValue([
+    mocks.orderBy.mockResolvedValue([
       {
         entity: {
           id: 101,
@@ -55,7 +42,6 @@ describe('listAdminEntitiesHandler', () => {
           name: 'Aalto',
           type: 'character',
         },
-        skillCount: 7,
       },
     ]);
 
@@ -63,6 +49,6 @@ describe('listAdminEntitiesHandler', () => {
 
     expect(result).toHaveLength(1);
     expect(result[0].name).toBe('Aalto');
-    expect(result[0].skillCount).toBe(7);
+    expect(result[0]).not.toHaveProperty('skillCount');
   });
 });

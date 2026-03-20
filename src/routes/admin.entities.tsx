@@ -85,11 +85,6 @@ const AdminEntitiesTable = (options: UseAdminEntitiesOptions) => {
         <span className="capitalize">{row.original.type.replace('_', ' ')}</span>
       ),
     },
-    {
-      accessorKey: 'skillCount',
-      header: 'Skill Count',
-      cell: ({ row }) => row.original.skillCount,
-    },
   ];
   return (
     <Suspense fallback={<AdminEntitiesTableLoading />}>

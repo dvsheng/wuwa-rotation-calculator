@@ -135,7 +135,7 @@ export const EntitySelectionDialog = ({
             wrap
             className="px-component py-inset border-b"
           >
-            <Filter className="h-4 w-4" />
+            <Filter />
             {shouldShowAttributeFilter && (
               <ToggleGroup
                 type="multiple"

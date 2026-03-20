@@ -15,6 +15,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:validate": "tsx --env-file=.env scripts/validate-database.ts",
+    "db:fix-rotations": "tsx --env-file=.env scripts/cleanup-orphaned-rotation-capabilities.ts",
     "db:seed": "tsx --env-file=.env scripts/migrate-entities-to-database.ts",
     "db:pull": "bash scripts/sync-db.sh pull",
     "db:push": "bash scripts/sync-db.sh push",

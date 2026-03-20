@@ -63,7 +63,7 @@ export const BaseBuffCanvasItem = ({
       data-testid="buff-canvas-item"
       style={style}
       className={cn(
-        'border-border relative flex h-12 flex-nowrap items-center justify-between gap-0 overflow-hidden border px-0 py-0 select-none',
+        'draggable border-border relative flex h-12 flex-nowrap items-center justify-between gap-0 overflow-hidden border px-0 py-0 select-none',
         className,
       )}
     >

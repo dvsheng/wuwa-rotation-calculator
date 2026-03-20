@@ -11,19 +11,24 @@ import {
 
 import { BuffCanvas } from './BuffCanvas';
 
-const { capturedDroppableProperties, mockUseTeamModifierInstances } = vi.hoisted(
-  () => ({
-    capturedDroppableProperties: {
-      current: undefined as
-        | {
-            accept: (source: { type: string }) => boolean;
-            id: string;
-          }
-        | undefined,
-    },
-    mockUseTeamModifierInstances: vi.fn(),
-  }),
-);
+const {
+  capturedCanvasLayoutProperties,
+  capturedDroppableProperties,
+  mockUseTeamModifierInstances,
+} = vi.hoisted(() => ({
+  capturedDroppableProperties: {
+    current: undefined as
+      | {
+          accept: (source: { type: string }) => boolean;
+          id: string;
+        }
+      | undefined,
+  },
+  capturedCanvasLayoutProperties: {
+    current: undefined as Record<string, unknown> | undefined,
+  },
+  mockUseTeamModifierInstances: vi.fn(),
+}));
 
 vi.mock('@dnd-kit/react', () => ({
   useDroppable: (properties: {
@@ -49,10 +54,13 @@ vi.mock('react-grid-layout/core', () => ({
 }));
 
 vi.mock('@/hooks/useCanvasLayout', () => ({
-  useCanvasLayout: () => ({
-    layout: { width: 640 },
-    isInteracting: false,
-  }),
+  useCanvasLayout: (properties: Record<string, unknown>) => {
+    capturedCanvasLayoutProperties.current = properties;
+    return {
+      layout: { width: 640 },
+      isInteracting: false,
+    };
+  },
 }));
 
 vi.mock('@/hooks/useTeamModifierInstances', () => ({
@@ -94,6 +102,8 @@ vi.mock('./BuffCanvasItem', () => ({
 
 describe('BuffCanvas', () => {
   beforeEach(() => {
+    capturedCanvasLayoutProperties.current = undefined;
+    capturedDroppableProperties.current = undefined;
     mockUseTeamModifierInstances.mockReturnValue({
       buffs: [
         {
@@ -120,6 +130,16 @@ describe('BuffCanvas', () => {
         type: SIDEBAR_BUFF_DRAG_TYPE,
       }),
     ).toBe(true);
+  });
+
+  it('configures east and west resize handles for buff items', () => {
+    render(<BuffCanvas width={640} />);
+
+    expect(capturedCanvasLayoutProperties.current).toMatchObject({
+      resizeConfig: {
+        handles: ['e', 'w'],
+      },
+    });
   });
 
   it('keeps rendering the grid layout even when there are no buffs or preview', () => {

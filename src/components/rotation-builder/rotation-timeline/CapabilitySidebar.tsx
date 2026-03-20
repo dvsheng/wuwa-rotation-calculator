@@ -197,7 +197,7 @@ const CapabilityCard = ({
         size="xs"
         data-testid={`sidebar-capability-card-${capability.id}`}
         data-capability-type={capability.capabilityType}
-        className={`bg-background size-28 flex-col border-l-4 transition hover:shadow-sm active:cursor-grabbing ${
+        className={`draggable bg-background size-28 flex-col border-l-4 ${
           onClick ? 'cursor-pointer' : ''
         } ${isDragging ? 'opacity-0' : ''}`}
         style={

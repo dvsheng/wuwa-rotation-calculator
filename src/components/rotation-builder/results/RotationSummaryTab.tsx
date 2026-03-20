@@ -141,14 +141,14 @@ export const RotationSummaryTab = ({ result }: RotationSummaryTabProperties) => 
           />
         </SummaryChartCard>
         <SummaryChartCard
-          title="Substat Value"
+          title={`${character.name} Damage Increase by Substat`}
           description={`Estimated damage increase for ${character.name} by substat`}
         >
           <SubstatSensitivityBarChart data={substatChartData} />
         </SummaryChartCard>
 
         <SummaryChartCard
-          title="Skill Origin Distribution"
+          title={`${character.name} Damage by Talent`}
           description={`${character.name}'s damage distribution by talent nodes.`}
         >
           <DistributionPieChart
@@ -159,7 +159,7 @@ export const RotationSummaryTab = ({ result }: RotationSummaryTabProperties) => 
         </SummaryChartCard>
 
         <SummaryChartCard
-          title="Damage by Type"
+          title={`${character.name} Damage by Damage Type`}
           description={`${character.name}'s damage distribution by damage type.`}
         >
           <DistributionPieChart

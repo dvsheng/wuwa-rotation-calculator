@@ -53,7 +53,10 @@ export const BaseAttackCanvasItem = ({
     <Item
       variant="outline"
       size="sm"
-      className={cn('p-trim relative flex h-56 flex-col', isDragging && 'opacity-0')}
+      className={cn(
+        'draggable p-trim relative flex h-56 flex-col',
+        isDragging && 'opacity-0',
+      )}
       data-testid="attack-sort-card"
       style={{ width: COLUMN_WIDTH }}
     >

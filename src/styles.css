@@ -8,6 +8,23 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@utility draggable {
+  cursor: grab;
+  transition:
+    box-shadow 120ms ease,
+    translate 120ms ease;
+
+  &:hover {
+    translate: 0 -2px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  &:active {
+    cursor: grabbing;
+    box-shadow: var(--shadow-md);
+  }
+}
+
 body {
   @apply m-0;
   font-family:
@@ -37,6 +54,40 @@ code {
 .buff-canvas-grid > .react-grid-item > .react-resizable-handle,
 .buff-canvas-grid > .react-grid-item:hover > .react-resizable-handle {
   opacity: 1;
+  background-image: none;
+}
+
+.buff-canvas-grid > .react-grid-item > .react-resizable-handle.react-resizable-handle-e,
+.buff-canvas-grid
+  > .react-grid-item
+  > .react-resizable-handle.react-resizable-handle-w {
+  width: 20px;
+}
+
+.buff-canvas-grid
+  > .react-grid-item
+  > .react-resizable-handle.react-resizable-handle-e::before,
+.buff-canvas-grid
+  > .react-grid-item
+  > .react-resizable-handle.react-resizable-handle-w::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 28px;
+  background: transparent;
+}
+
+.buff-canvas-grid
+  > .react-grid-item
+  > .react-resizable-handle.react-resizable-handle-e::before {
+  right: -8px;
+}
+
+.buff-canvas-grid
+  > .react-grid-item
+  > .react-resizable-handle.react-resizable-handle-w::before {
+  left: -8px;
 }
 
 .buff-canvas-grid > .react-grid-item > .react-resizable-handle::after {

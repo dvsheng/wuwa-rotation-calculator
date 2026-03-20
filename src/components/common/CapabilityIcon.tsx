@@ -24,7 +24,7 @@ export const CapabilityIconDisplay = ({
   url,
   className,
 }: CapabilityIconDisplayProperties) => (
-  <Box className={cn('bg-secondary/30 size-icon-md rounded-md', className)}>
+  <Box className={cn('bg-foreground/30 size-icon-md rounded-md', className)}>
     {url ? (
       <img src={url} className="p-trim" draggable={false} />
     ) : (

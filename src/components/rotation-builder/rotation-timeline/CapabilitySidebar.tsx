@@ -7,7 +7,11 @@ import { CapabilityIconDisplay } from '@/components/common/CapabilityIcon';
 import { DashboardSectionHeader } from '@/components/common/DashboardSectionHeader';
 import { InfoTooltip } from '@/components/common/InfoTooltip';
 import { SKILL_ORIGIN_ORDER } from '@/components/constants';
-import { sortAttackOrigins } from '@/components/rotation-builder/constants';
+import {
+  ATTACK_SKILL_ORDER,
+  BUFF_ACCENT_COLORS,
+  sortAttackOrigins,
+} from '@/components/rotation-builder/constants';
 import { Input } from '@/components/ui/input';
 import { Item } from '@/components/ui/item';
 import { Grid, Row, Stack } from '@/components/ui/layout';
@@ -17,62 +21,38 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Text } from '@/components/ui/typography';
 import type { DetailedAttack, DetailedModifier } from '@/hooks/useTeamDetails';
 import { useTeamDetails } from '@/hooks/useTeamDetails';
-import { cn } from '@/lib/utils';
+import { getChartColorByIndex } from '@/lib/utils';
 import type { Capability } from '@/schemas/rotation';
 import { Target } from '@/services/game-data';
 import type { OriginType as CapabilityOriginType } from '@/services/game-data';
 import type { SidebarCapabilityDragData } from '@/types/dnd';
 
-const ATTACK_COLORS: Record<CapabilityOriginType, string> = {
-  'Normal Attack': 'border-l-chart-1',
-  'Resonance Skill': 'border-l-chart-2',
-  'Resonance Liberation': 'border-l-chart-3',
-  'Forte Circuit': 'border-l-chart-4',
-  'Intro Skill': 'border-l-chart-5',
-  'Outro Skill': 'border-l-chart-6',
-  Echo: 'border-l-chart-7',
-  'Tune Break': 'border-l-chart-1/50',
-  Weapon: 'border-l-chart-2/50',
-  'Echo Set': 'border-l-chart-3/50',
-  s1: 'border-l-chart-1/30',
-  s2: 'border-l-chart-1/30',
-  s3: 'border-l-chart-1/30',
-  s4: 'border-l-chart-1/30',
-  s5: 'border-l-chart-1/30',
-  s6: 'border-l-chart-1/30',
-  'Inherent Skill': 'border-l-chart-2/30',
-  'Base Stats': 'border-l-chart-3/30',
-};
-
-const TARGET_COLORS: Record<Target, string> = {
-  [Target.SELF]: 'border-l-chart-1',
-  [Target.TEAM]: 'border-l-chart-3',
-  [Target.ACTIVE_CHARACTER]: 'border-l-chart-2',
-  [Target.ENEMY]: 'border-l-destructive',
-};
-
 const BUFF_COLOR_LEGEND: Array<LegendItem> = [
-  { label: 'Self Buff', colorClassName: 'bg-chart-1' },
-  { label: 'Active Character Buff', colorClassName: 'bg-chart-2' },
-  { label: 'Team Buff', colorClassName: 'bg-chart-3' },
-  { label: 'Enemy Debuff', colorClassName: 'bg-destructive' },
+  { label: 'Self Buff', color: BUFF_ACCENT_COLORS[Target.SELF] },
+  {
+    label: 'Active Character Buff',
+    color: BUFF_ACCENT_COLORS[Target.ACTIVE_CHARACTER],
+  },
+  { label: 'Team Buff', color: BUFF_ACCENT_COLORS[Target.TEAM] },
+  { label: 'Enemy Debuff', color: BUFF_ACCENT_COLORS[Target.ENEMY] },
 ];
 
 interface LegendItem {
   label: string;
-  colorClassName: string;
+  color: string;
 }
 
-const ATTACK_COLOR_LEGEND: Array<LegendItem> = [
-  { label: 'Normal Attack', colorClassName: 'bg-chart-1' },
-  { label: 'Resonance Skill', colorClassName: 'bg-chart-2' },
-  { label: 'Resonance Liberation', colorClassName: 'bg-chart-3' },
-  { label: 'Forte Circuit', colorClassName: 'bg-chart-4' },
-  { label: 'Intro Skill', colorClassName: 'bg-chart-5' },
-  { label: 'Outro Skill', colorClassName: 'bg-chart-6' },
-  { label: 'Echo', colorClassName: 'bg-chart-7' },
-  { label: 'Tune Break', colorClassName: 'bg-chart-1/50' },
-];
+const ATTACK_ACCENT_BY_ORIGIN = new Map<CapabilityOriginType, string>(
+  ATTACK_SKILL_ORDER.map((originType, index) => [
+    originType,
+    getChartColorByIndex(index),
+  ]),
+);
+
+const ATTACK_COLOR_LEGEND: Array<LegendItem> = ATTACK_SKILL_ORDER.map((originType) => ({
+  label: originType,
+  color: ATTACK_ACCENT_BY_ORIGIN.get(originType) ?? getChartColorByIndex(0),
+}));
 
 const TARGET_ORDER: Array<Target> = [
   Target.SELF,
@@ -103,7 +83,7 @@ interface CapabilityGroupProperties {
 
 interface CapabilityCardProperties {
   capability: DetailedAttack | DetailedModifier;
-  colorClassName?: string;
+  accentColor?: string;
   onClick?: () => void;
 }
 
@@ -145,7 +125,10 @@ const CapabilitySection = ({
               {description}
               {legend.map((entry) => (
                 <Row key={entry.label} align="center" gap="trim">
-                  <span className={cn('size-2 rounded-sm', entry.colorClassName)} />
+                  <span
+                    className="size-2 rounded-sm"
+                    style={{ backgroundColor: entry.color }}
+                  />
                   {entry.label}
                 </Row>
               ))}
@@ -195,7 +178,7 @@ const CapabilityGroup = ({ name, children }: CapabilityGroupProperties) => {
 // TODO: move this to separate file
 const CapabilityCard = ({
   capability,
-  colorClassName,
+  accentColor,
   onClick,
 }: CapabilityCardProperties) => {
   const id = useId();
@@ -217,13 +200,17 @@ const CapabilityCard = ({
         size="xs"
         data-testid={`sidebar-capability-card-${capability.id}`}
         data-capability-type={capability.capabilityType}
-        className={cn(
-          'bg-background size-28 flex-col transition hover:shadow-sm active:cursor-grabbing',
-          onClick && 'cursor-pointer',
-          isDragging && 'opacity-0',
-          colorClassName,
-          'border-l-4',
-        )}
+        className={`bg-background size-28 flex-col border-l-4 transition hover:shadow-sm active:cursor-grabbing ${
+          onClick ? 'cursor-pointer' : ''
+        } ${isDragging ? 'opacity-0' : ''}`}
+        style={
+          accentColor
+            ? ({
+                '--capability-accent': accentColor,
+                borderLeftColor: 'var(--capability-accent)',
+              } as React.CSSProperties)
+            : undefined
+        }
       >
         <CapabilityIconDisplay url={capability.iconUrl} />
         <Text as="div" variant="caption" className="line-clamp-3 text-center">
@@ -322,9 +309,8 @@ export const CapabilitySidebar = ({
           title="Attacks"
           emptyMessage="No attacks available"
           testId="sidebar-attacks-section"
-          description="Use Attacks to build the rotation order. Click a card to add it or drag it into a specific spot on the top lane, then it becomes part of the timeline and contributes damage in Results."
+          description="Use Attacks to build the rotation order. Click a card to add it or drag it into a specific spot on the top lane, then it becomes part of the timeline and contributes damage in Results. Attack accents are derived from the shared chart palette and stay consistent for each origin type."
           legend={ATTACK_COLOR_LEGEND}
-          legendAriaLabel="Attack section help and color legend"
         >
           {orderedAttackCharacterNames.map((characterName) => {
             const characterAttacks = attacksByCharacter[characterName] ?? [];
@@ -341,7 +327,7 @@ export const CapabilitySidebar = ({
                   <CapabilityCard
                     key={attack.id}
                     capability={attack}
-                    colorClassName={ATTACK_COLORS[attack.originType]}
+                    accentColor={ATTACK_ACCENT_BY_ORIGIN.get(attack.originType)}
                     onClick={onClickAttack ? () => onClickAttack(attack) : undefined}
                   />
                 ))}
@@ -386,7 +372,7 @@ export const CapabilitySidebar = ({
                   <CapabilityCard
                     key={buff.id}
                     capability={buff}
-                    colorClassName={TARGET_COLORS[buff.target]}
+                    accentColor={BUFF_ACCENT_COLORS[buff.target]}
                     onClick={onClickBuff ? () => onClickBuff(buff) : undefined}
                   />
                 ))}

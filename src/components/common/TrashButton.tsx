@@ -33,13 +33,14 @@ export const TrashButton = ({
       variant="ghost"
       size="icon"
       className={cn(
-        'text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-6 w-6',
+        'text-muted-foreground hover:bg-destructive/10 hover:text-destructive',
         className,
       )}
       onPointerDown={handlePointerDown}
       onClick={handleClick}
+      asChild
     >
-      <Trash2 className="h-3.5 w-3.5" />
+      <Trash2 />
     </Button>
   );
 };

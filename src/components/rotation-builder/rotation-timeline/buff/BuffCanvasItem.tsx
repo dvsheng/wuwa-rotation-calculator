@@ -7,6 +7,7 @@ import { CapabilityIconDisplay } from '@/components/common/CapabilityIcon';
 import { EntityIconDisplay } from '@/components/common/EntityIcon';
 import { ParameterConfigurationDialog } from '@/components/common/ParameterConfigurationDialog';
 import { TrashButton } from '@/components/common/TrashButton';
+import { BUFF_BACKGROUND_COLORS } from '@/components/rotation-builder/constants';
 import { Button } from '@/components/ui/button';
 import { Item, ItemActions, ItemMedia } from '@/components/ui/item';
 import { Row } from '@/components/ui/layout';
@@ -21,13 +22,6 @@ import type { DetailedModifierInstance } from '@/hooks/useTeamModifierInstances'
 import { cn } from '@/lib/utils';
 import { Target } from '@/services/game-data';
 import { useStore } from '@/store';
-
-const TARGET_COLORS: Record<Target, string> = {
-  [Target.SELF]: 'bg-chart-1/20',
-  [Target.TEAM]: 'bg-chart-2/20',
-  [Target.ACTIVE_CHARACTER]: 'bg-chart-3/20',
-  [Target.ENEMY]: 'bg-destructive/20',
-};
 
 interface BuffCanvasItemProperties {
   buff: DetailedModifierInstance;
@@ -130,13 +124,13 @@ export const BuffCanvasItem = ({
   };
 
   // Generate styling and segments based on target and alignment
-  const getItemClassNameAndSegments = (): {
-    itemClassName: string;
+  const getItemBackgroundColorAndSegments = (): {
+    backgroundColor?: string;
     segments: Array<AlignmentSegment>;
   } => {
     // Non-self buffs use standard colors
     if (buff.target !== Target.SELF) {
-      return { itemClassName: TARGET_COLORS[buff.target], segments: [] };
+      return { backgroundColor: BUFF_BACKGROUND_COLORS[buff.target], segments: [] };
     }
 
     // Self buff styling based on alignment status
@@ -144,32 +138,32 @@ export const BuffCanvasItem = ({
       case 'all-aligned': {
         // Fully aligned: solid fill
         return {
-          itemClassName: TARGET_COLORS[Target.SELF],
+          backgroundColor: BUFF_BACKGROUND_COLORS[Target.SELF],
           segments: [],
         };
       }
       case 'all-misaligned': {
         // Fully misaligned: outline only
-        return { itemClassName: '', segments: [] };
+        return { backgroundColor: undefined, segments: [] };
       }
       case 'mixed': {
         // Partially aligned: render individual segments with rounded corners
         const alignmentSegments = getAlignmentSegments(alignment.columnAlignments);
         return {
-          itemClassName: '',
+          backgroundColor: undefined,
           segments: alignmentSegments,
         };
       }
       default: {
         return {
-          itemClassName: TARGET_COLORS[buff.target],
+          backgroundColor: BUFF_BACKGROUND_COLORS[buff.target],
           segments: [],
         };
       }
     }
   };
 
-  const { itemClassName, segments } = getItemClassNameAndSegments();
+  const { backgroundColor, segments } = getItemBackgroundColorAndSegments();
   const isBuffConfigurable = buff.parameters && buff.parameters.length > 0;
   const buffedAttacks = attacks.slice(buff.x, buff.x + buff.w);
   const shouldShowWarning =
@@ -197,28 +191,24 @@ export const BuffCanvasItem = ({
           characterIconUrl={buff.characterIconUrl}
           iconUrl={buff.iconUrl}
           name={buff.name}
-          className={itemClassName}
           stickyLeftOffset={stickyLeftOffset}
           stickyRightOffset={stickyRightOffset}
+          style={backgroundColor ? { backgroundColor } : undefined}
           actions={
             <>
               {shouldShowWarning && (
-                <AlertTriangle
-                  data-testid="alert-triangle"
-                  className="size-5 shrink-0 text-amber-500"
-                />
+                <AlertTriangle data-testid="alert-triangle" className="text-warning" />
               )}
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-muted-foreground size-6 shrink-0"
                 onPointerDown={(event) => event.stopPropagation()}
                 onClick={(event) => {
                   event.stopPropagation();
                   updateBuffLayout(buff.instanceId, { x: 0, w: attacks.length });
                 }}
               >
-                <Maximize2 className="size-3.5" />
+                <Maximize2 className="text-muted-foreground" />
               </Button>
               <TrashButton
                 className="shrink-0"
@@ -232,8 +222,9 @@ export const BuffCanvasItem = ({
               {segments.map((segment, index) => (
                 <div
                   key={index}
-                  className={cn('absolute inset-y-0', TARGET_COLORS[Target.SELF])}
+                  className="absolute inset-y-0"
                   style={{
+                    backgroundColor: BUFF_BACKGROUND_COLORS[Target.SELF],
                     left: `${segment.start}%`,
                     width: `${segment.width}%`,
                   }}

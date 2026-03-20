@@ -20,8 +20,7 @@ export const getChartColorByIndex = (index: number) => {
   const base = index % BASE_COLORS.length;
   const cycle = Math.floor(index / BASE_COLORS.length);
 
-  if (cycle === 0) return BASE_COLORS[base];
-
-  const hueShift = cycle * 7; // rotate hue each cycle
-  return `oklch(from ${BASE_COLORS[base]} l c calc(h + ${hueShift}))`;
+  return cycle === 0
+    ? BASE_COLORS[base]
+    : `oklch(from ${BASE_COLORS[base]} l c calc(h + ${cycle * BASE_COLORS.length}))`;
 };

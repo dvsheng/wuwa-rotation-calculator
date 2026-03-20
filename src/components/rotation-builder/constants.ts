@@ -1,4 +1,5 @@
-import { OriginType, Sequence } from '@/services/game-data';
+import { getChartColorByIndex } from '@/lib/utils';
+import { OriginType, Sequence, Target } from '@/services/game-data';
 
 export const ATTACK_SKILL_ORDER: Array<OriginType> = [
   OriginType.NORMAL_ATTACK,
@@ -12,6 +13,20 @@ export const ATTACK_SKILL_ORDER: Array<OriginType> = [
   OriginType.WEAPON,
   OriginType.INHERENT_SKILL,
 ];
+
+export const BUFF_ACCENT_COLORS: Record<Target, string> = {
+  [Target.SELF]: getChartColorByIndex(0),
+  [Target.TEAM]: getChartColorByIndex(2),
+  [Target.ACTIVE_CHARACTER]: getChartColorByIndex(1),
+  [Target.ENEMY]: 'var(--destructive)',
+};
+
+export const BUFF_BACKGROUND_COLORS: Record<Target, string> = {
+  [Target.SELF]: 'color-mix(in oklab, var(--chart-1) 20%, transparent)',
+  [Target.TEAM]: 'color-mix(in oklab, var(--chart-3) 20%, transparent)',
+  [Target.ACTIVE_CHARACTER]: 'color-mix(in oklab, var(--chart-2) 20%, transparent)',
+  [Target.ENEMY]: 'color-mix(in oklab, var(--destructive) 20%, transparent)',
+};
 
 const SEQUENCE_ORDER: Array<OriginType> = [
   Sequence.S1,

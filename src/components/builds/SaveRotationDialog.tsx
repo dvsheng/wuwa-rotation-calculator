@@ -1,6 +1,4 @@
-import type { ReactNode } from 'react';
 import { useState } from 'react';
-import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -10,27 +8,22 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useRotationMutations } from '@/hooks/useRotationMutations';
-import { calculateRotation } from '@/services/rotation-calculator/calculate-client-rotation-damage';
-import { useStore } from '@/store';
+import { useSaveRotation } from '@/hooks/useSaveRotation';
 
 import { Stack } from '../ui/layout';
 
 interface SaveRotationDialogProperties {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  trigger?: ReactNode;
 }
 
 export function SaveRotationDialog({
   open,
   onOpenChange,
-  trigger,
 }: SaveRotationDialogProperties = {}) {
   // TODO: Refactor to use useForm
   const [internalOpen, setInternalOpen] = useState(false);
@@ -39,47 +32,19 @@ export function SaveRotationDialog({
   const isOpen = open ?? internalOpen;
   const setOpen = onOpenChange ?? setInternalOpen;
 
-  const { team, enemy, attacks, buffs } = useStore();
-  const { createRotation, isCreating } = useRotationMutations();
+  const { saveRotation, isSaving } = useSaveRotation();
 
   const handleSave = async () => {
-    if (!name.trim()) {
-      toast.error('Please enter a name for the rotation.');
-      return;
-    }
     try {
-      let totalDamage: number | undefined;
-      try {
-        const result = await calculateRotation({
-          data: { team, enemy, attacks, buffs },
-        });
-        totalDamage = result.totalDamage;
-      } catch {
-        // calculation is best-effort; save without it if it fails
-      }
-
-      await createRotation({
+      await saveRotation({
         name,
-        data: { team, enemy, attacks, buffs },
-        description: description || undefined,
-        totalDamage,
+        description,
       });
-      toast.success('Rotation saved successfully!');
       setOpen(false);
       setName('');
       setDescription('');
-    } catch (error) {
-      console.error('Failed to save rotation:', error);
-      toast.error('Failed to save rotation.');
-    }
+    } catch {}
   };
-
-  const resolvedTrigger =
-    trigger === undefined ? (
-      <Button variant="default">Save Current Rotation</Button>
-    ) : (
-      trigger
-    );
 
   return (
     <Dialog
@@ -92,7 +57,6 @@ export function SaveRotationDialog({
         }
       }}
     >
-      {resolvedTrigger && <DialogTrigger asChild>{resolvedTrigger}</DialogTrigger>}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Save Rotation</DialogTitle>
@@ -117,8 +81,8 @@ export function SaveRotationDialog({
           />
         </Stack>
         <DialogFooter>
-          <Button type="submit" onClick={handleSave} disabled={isCreating}>
-            {isCreating ? 'Saving...' : 'Save'}
+          <Button type="submit" onClick={handleSave} disabled={isSaving}>
+            {isSaving ? 'Saving...' : 'Save'}
           </Button>
         </DialogFooter>
       </DialogContent>

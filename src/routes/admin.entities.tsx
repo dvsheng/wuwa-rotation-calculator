@@ -1,16 +1,16 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import type { ColumnDef } from '@tanstack/react-table';
 import { startCase } from 'es-toolkit';
-import { Database, Loader2 } from 'lucide-react';
+import { Database } from 'lucide-react';
 import { Suspense, useState } from 'react';
 
 import { EntityIcon } from '@/components/common/EntityIcon';
+import { LoadingSpinnerContainer } from '@/components/common/LoadingSpinnerContainer';
 import { Card } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
 import { Input } from '@/components/ui/input';
 import { Container, Stack } from '@/components/ui/layout';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Text } from '@/components/ui/typography';
 import type { AdminEntity, UseAdminEntitiesOptions } from '@/hooks/useAdminEntities';
 import { useAdminEntities } from '@/hooks/useAdminEntities';
 import { EntityType } from '@/services/game-data';
@@ -57,11 +57,8 @@ export function AdminEntitiesPage() {
 
 const AdminEntitiesTableLoading = () => {
   return (
-    <Card className="h-full items-center justify-center">
-      <Loader2 className="text-muted-foreground size-10 animate-spin" />
-      <Text variant="body" tone="muted">
-        Loading entities...
-      </Text>
+    <Card className="h-full">
+      <LoadingSpinnerContainer message="Loading entities..." spinnerSize={40} />
     </Card>
   );
 };

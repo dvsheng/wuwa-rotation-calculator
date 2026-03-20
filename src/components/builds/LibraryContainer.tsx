@@ -1,9 +1,10 @@
 import { Link } from '@tanstack/react-router';
-import { Library, Loader2 } from 'lucide-react';
+import { Library } from 'lucide-react';
 import { Suspense, useState } from 'react';
 
 import { RotationTable } from '@/components/builds/RotationTable';
 import { EntityIcon } from '@/components/common/EntityIcon';
+import { LoadingSpinnerContainer } from '@/components/common/LoadingSpinnerContainer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -29,11 +30,8 @@ import { EntityType } from '@/services/game-data';
 const RotationTableSpinner = ({ message }: { message: string }) => {
   return (
     <Card>
-      <CardContent className="py-page flex items-center justify-center gap-3">
-        <Loader2 className="text-muted-foreground size-4 animate-spin" />
-        <Text variant="bodySm" tone="muted">
-          {message}
-        </Text>
+      <CardContent className="py-page">
+        <LoadingSpinnerContainer message={message} />
       </CardContent>
     </Card>
   );

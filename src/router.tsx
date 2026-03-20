@@ -1,6 +1,8 @@
 import { QueryClient } from '@tanstack/react-query';
 import { createRouter } from '@tanstack/react-router';
 
+import { getAppHeaderRouteOrder } from '@/components/app-header-navigation';
+
 // Import the generated route tree
 import { routeTree } from './routeTree.gen';
 
@@ -18,15 +20,8 @@ export const getRouter = () => {
     defaultViewTransition: {
       types: ({ fromLocation, toLocation }) => {
         if (!fromLocation) return [];
-        const order = ['/', '/builds', '/create', '/admin'];
-        const indexOf = (pathname: string) => {
-          const index = order.findIndex(
-            (r) => pathname === r || pathname.startsWith(r + '/'),
-          );
-          return index === -1 ? 0 : index;
-        };
-        const fromIndex = indexOf(fromLocation.pathname);
-        const toIndex = indexOf(toLocation.pathname);
+        const fromIndex = getAppHeaderRouteOrder(fromLocation.pathname);
+        const toIndex = getAppHeaderRouteOrder(toLocation.pathname);
         if (fromIndex === toIndex) return [];
         return fromIndex > toIndex ? ['slide-right'] : ['slide-left'];
       },

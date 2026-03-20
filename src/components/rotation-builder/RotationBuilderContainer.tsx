@@ -1,10 +1,10 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
 
+import { LoadingSpinnerContainer } from '@/components/common/LoadingSpinnerContainer';
 import { TeamContainer } from '@/components/rotation-builder/team/TeamContainer';
 import { useRotationCalculation } from '@/hooks/useRotationCalculation';
 
 import { Stack } from '../ui/layout';
-import { Text } from '../ui/typography';
 
 import { RotationBuilder } from './rotation-timeline/RotationTimelineBuilder';
 import { RotationBuilderToolbar } from './RotationBuilderToolbar';
@@ -64,15 +64,10 @@ export const RotationBuilderContainer = ({
         {effectiveTab === 'results' && result && (
           <Suspense
             fallback={
-              <Stack
-                align="center"
-                justify="center"
-                className="bg-background/60 h-full min-h-0 flex-1"
-              >
-                <Text variant="body" tone="muted">
-                  Loading results...
-                </Text>
-              </Stack>
+              <LoadingSpinnerContainer
+                message="Loading results..."
+                className="bg-background/60 flex-1"
+              />
             }
           >
             <LazyRotationResultContainer />

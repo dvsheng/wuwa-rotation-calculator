@@ -76,6 +76,8 @@ export const BaseBuffCanvasItem = ({
       >
         <ItemMedia>
           <EntityIconDisplay url={characterIconUrl} size="medium" />
+        </ItemMedia>
+        <ItemMedia>
           <CapabilityIconDisplay url={iconUrl} />
         </ItemMedia>
         <Text variant="caption" className="min-w-0 truncate">

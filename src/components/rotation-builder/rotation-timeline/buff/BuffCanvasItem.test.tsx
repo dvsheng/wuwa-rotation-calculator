@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CapabilityType, OriginType, Target } from '@/services/game-data';
+import { useStore } from '@/store';
 import { Attribute } from '@/types';
 
 import { BaseBuffCanvasItem, BuffCanvasItem } from './BuffCanvasItem';
@@ -12,6 +13,7 @@ vi.mock('@/hooks/useTeamAttackInstances');
 const { useTeamAttackInstances } = await import('@/hooks/useTeamAttackInstances');
 
 const mockUseTeamAttackInstances = vi.mocked(useTeamAttackInstances);
+const originalUpdateBuffLayout = useStore.getState().updateBuffLayout;
 
 beforeAll(() => {
   globalThis.ResizeObserver = class ResizeObserver {
@@ -94,6 +96,7 @@ const makeBuff = (x: number, w: number, withStackConfig = false) => ({
 });
 
 beforeEach(() => {
+  useStore.setState({ updateBuffLayout: originalUpdateBuffLayout });
   mockUseTeamAttackInstances.mockReturnValue({
     attacks: [...MOCK_ATTACKS],
     isLoading: false,
@@ -102,6 +105,41 @@ beforeEach(() => {
 });
 
 describe('BuffCanvasItem', () => {
+  describe('context menu', () => {
+    it('shows the same actions in the context menu and removes the buff', async () => {
+      const onRemove = vi.fn();
+      const buff = makeBuff(1, 2, true);
+
+      render(<BuffCanvasItem buff={buff} onRemove={onRemove} />);
+
+      fireEvent.contextMenu(screen.getByTestId('buff-canvas-item'));
+
+      expect(await screen.findByText('Configure')).toBeInTheDocument();
+      expect(screen.getByText('Expand to full rotation')).toBeInTheDocument();
+      expect(screen.getByText('Remove buff')).toBeInTheDocument();
+
+      await userEvent.click(screen.getByText('Remove buff'));
+
+      expect(onRemove).toHaveBeenCalledWith(buff.instanceId);
+    });
+
+    it('expands the buff to the full rotation from the context menu', async () => {
+      const updateBuffLayout = vi.fn();
+      const buff = makeBuff(1, 2, true);
+
+      useStore.setState({ updateBuffLayout });
+
+      render(<BuffCanvasItem buff={buff} onRemove={() => {}} />);
+
+      fireEvent.contextMenu(screen.getByTestId('buff-canvas-item'));
+      await userEvent.click(await screen.findByText('Expand to full rotation'));
+
+      expect(updateBuffLayout).toHaveBeenCalledWith(buff.instanceId, {
+        w: MOCK_ATTACKS.length,
+      });
+    });
+  });
+
   describe('base item', () => {
     it('renders the shared buff canvas item chrome', () => {
       render(

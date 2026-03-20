@@ -28,7 +28,7 @@ export const SubstatSensitivityBarChart = ({
       </Stack>
     );
   }
-
+  const trimmedData = data.slice(0, 6);
   return (
     <ChartContainer
       config={{
@@ -37,10 +37,10 @@ export const SubstatSensitivityBarChart = ({
           color: 'var(--chart-1)',
         },
       }}
-      style={{ height: Math.max(320, data.length * 34) }}
+      style={{ height: Math.max(320, trimmedData.length * 34) }}
       className="aspect-auto w-full"
     >
-      <BarChart data={data} layout="vertical" margin={{ left: 8, right: 16 }}>
+      <BarChart data={trimmedData} layout="vertical">
         <CartesianGrid horizontal={false} />
         <XAxis
           type="number"

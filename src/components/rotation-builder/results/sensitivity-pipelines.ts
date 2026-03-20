@@ -17,7 +17,6 @@ import { truncateChartLabel } from './result-chart.utilities';
 // ---------------------------------------------------------------------------
 
 const sectionDefinitions = [
-  { category: SensitivityAnalysisCategory.SUBSTAT_ROLL, title: 'Substat Rolls' },
   {
     category: SensitivityAnalysisCategory.THREE_COST_MAIN_STAT_SWAP,
     title: '3-Cost Swaps',
@@ -26,6 +25,7 @@ const sectionDefinitions = [
     category: SensitivityAnalysisCategory.FOUR_COST_MAIN_STAT_SWAP,
     title: '4-Cost Swap',
   },
+  { category: SensitivityAnalysisCategory.SUBSTAT_ROLL, title: 'Substat Rolls' },
 ] as const;
 
 const sortByDeltaDesc = (

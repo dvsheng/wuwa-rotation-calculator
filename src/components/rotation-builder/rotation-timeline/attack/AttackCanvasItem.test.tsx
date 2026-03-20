@@ -37,16 +37,16 @@ vi.mock('@/components/common/TrashButton', () => ({
 
 const { AttackCanvasItem } = await import('./AttackCanvasItem');
 
-describe('AttackCanvasItem', () => {
-  const makeAttack = (parameters: unknown[] = []) =>
-    ({
-      instanceId: 'attack-1',
-      name: 'Basic Attack',
-      characterIconUrl: '/character.png',
-      iconUrl: '/attack.png',
-      parameters,
-    }) as any;
+const makeAttack = (parameters: Array<unknown> = []) =>
+  ({
+    instanceId: 'attack-1',
+    name: 'Basic Attack',
+    characterIconUrl: '/character.png',
+    iconUrl: '/attack.png',
+    parameters,
+  }) as any;
 
+describe('AttackCanvasItem', () => {
   it('attaches sortable behavior to the outer slot while keeping the card nested', () => {
     itemReference.mockReset();
     mockUseSortable.mockReturnValue({

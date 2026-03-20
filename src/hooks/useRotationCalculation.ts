@@ -33,57 +33,45 @@ export type RotationCalculationResult = ClientRotationResult & {
 export const useRotationCalculation = () => {
   const team = useStore((state) => state.team);
   const enemy = useStore((state) => state.enemy);
-  const attacks = useStore((state) => state.attacks);
   const buffs = useStore((state) => state.buffs);
-  const { attacks: resolvedAttacks } = useTeamAttackInstances();
+  const { attacks } = useTeamAttackInstances();
   const characters = useTeamCharacters();
-
-  const calculationQuery = useQuery({
+  const { data, ...rest } = useQuery({
     queryKey: ['rotation-calculation', team, enemy, attacks, buffs],
     queryFn: async () => {
-      const result = await calculateRotation({
-        data: {
-          team: team,
-          enemy,
-          attacks,
-          buffs,
-        },
+      return await calculateRotation({
+        data: { team, enemy, attacks, buffs },
       });
-      return result;
     },
     placeholderData: keepPreviousData,
     enabled: false,
-    retry: false,
   });
 
-  const attackMap = new Map(
-    resolvedAttacks.map((attack) => [attack.instanceId, attack]),
-  );
-  const mergedDamageDetails =
-    calculationQuery.status === 'success'
-      ? compact(
-          calculationQuery.data.damageDetails.map((detail) => {
-            const attack = attackMap.get(attacks[detail.attackIndex]?.instanceId);
-            const character = characters.find((c) => c.index === detail.characterIndex);
-            if (!attack) return;
-            if (!character) return;
-            const damageInstance = attack.damageInstances[detail.damageInstanceIndex];
-            return {
-              ...attack,
-              ...damageInstance,
-              ...detail,
-              characterName: character.name,
-              characterId: character.id,
-              characterIconUrl: character.iconUrl,
-            };
-          }),
-        )
-      : [];
+  const attackMap = new Map(attacks.map((attack) => [attack.instanceId, attack]));
+  const mergedDamageDetails = data
+    ? compact(
+        data.damageDetails.map((detail) => {
+          const attack = attackMap.get(attacks[detail.attackIndex]?.instanceId);
+          const character = characters.find((c) => c.index === detail.characterIndex);
+          if (!attack) return;
+          if (!character) return;
+          const damageInstance = attack.damageInstances[detail.damageInstanceIndex];
+          return {
+            ...attack,
+            ...damageInstance,
+            ...detail,
+            characterName: character.name,
+            characterId: character.id,
+            characterIconUrl: character.iconUrl,
+          };
+        }),
+      )
+    : [];
   return {
-    ...calculationQuery,
-    data: calculationQuery.data
+    ...rest,
+    data: data
       ? ({
-          ...calculationQuery.data,
+          ...data,
           mergedDamageDetails,
           attackCount: countDistinctAttacks(mergedDamageDetails),
         } satisfies RotationCalculationResult)

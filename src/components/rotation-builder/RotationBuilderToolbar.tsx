@@ -59,9 +59,7 @@ export function RotationBuilderToolbar({
               {Math.round(result.totalDamage).toLocaleString()}
             </Text>
             {isPlaceholderData && (
-              <Badge className="bg-warning text-warning-foreground">
-                Outdated — Recalculate
-              </Badge>
+              <Badge className="bg-warning text-warning-foreground">Stale</Badge>
             )}
           </Box>
         )}

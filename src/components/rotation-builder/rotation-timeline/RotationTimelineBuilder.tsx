@@ -48,14 +48,6 @@ export const RotationBuilder = () => {
     addAttack: handleAddAttack,
     addBuff: handleAddBuff,
     attackCount,
-    onInvalidDrop: (reason) => {
-      if (reason === 'attack-to-buff') {
-        toast.error('Attacks can only be dropped on the attack timeline.');
-        return;
-      }
-
-      toast.error('Buffs can only be dropped on the buff alignment canvas.');
-    },
     reorderAttacks,
   });
 

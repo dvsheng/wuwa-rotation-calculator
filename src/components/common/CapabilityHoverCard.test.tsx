@@ -133,6 +133,26 @@ describe('CapabilityHoverCard', () => {
       expect(await screen.findByText('Weapon')).toBeInTheDocument();
     });
 
+    it('applies a small opening animation to the inner floating card', async () => {
+      const capability = makeAttack();
+
+      render(
+        <CapabilityHoverCard capability={capability} followCursor>
+          <button>trigger</button>
+        </CapabilityHoverCard>,
+      );
+
+      fireEvent.mouseEnter(getWrapper(screen.getByRole('button', { name: 'trigger' })));
+
+      const floatingContent = await screen.findByTestId('cursor-hover-card-content');
+      expect(floatingContent).toHaveClass('z-50', 'max-w-80');
+      expect(floatingContent.firstElementChild).toHaveClass(
+        'animate-in',
+        'fade-in-0',
+        'zoom-in-95',
+      );
+    });
+
     it('does not show hover card content if hover ends before the delay', async () => {
       const capability = makeAttack();
 
@@ -191,7 +211,9 @@ describe('CapabilityHoverCard', () => {
 
       const wrapper = getWrapper(screen.getByRole('button', { name: 'trigger' }));
       fireEvent.mouseEnter(wrapper);
-      expect(await screen.findByTestId('cursor-hover-card-content')).toBeInTheDocument();
+      expect(
+        await screen.findByTestId('cursor-hover-card-content'),
+      ).toBeInTheDocument();
 
       fireEvent.mouseLeave(wrapper);
       fireEvent.mouseEnter(screen.getByTestId('cursor-hover-card-content'));

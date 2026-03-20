@@ -34,7 +34,6 @@ interface UseRotationTimelineDndProperties {
     layout: { x: number; y: number; w: number; h: number },
   ) => void;
   attackCount: number;
-  onInvalidDrop?: (reason: 'attack-to-buff' | 'buff-to-attack') => void;
   reorderAttacks: (fromIndex: number, toIndex: number) => void;
 }
 
@@ -161,7 +160,6 @@ export const useRotationTimelineDnd = ({
   addAttack,
   addBuff,
   attackCount,
-  onInvalidDrop,
   reorderAttacks,
 }: UseRotationTimelineDndProperties) => {
   const attackColumnCount = getTimelineColumnCount(attackCount);
@@ -270,15 +268,6 @@ export const useRotationTimelineDnd = ({
         getBuffDropLayout(operation, attackColumnCount, nativeEvent),
       );
       return;
-    }
-
-    if (source.type === SIDEBAR_ATTACK_DRAG_TYPE && target.id === BUFF_CANVAS_DROP_ID) {
-      onInvalidDrop?.('attack-to-buff');
-      return;
-    }
-
-    if (source.type === SIDEBAR_BUFF_DRAG_TYPE && target.id === ATTACK_CANVAS_DROP_ID) {
-      onInvalidDrop?.('buff-to-attack');
     }
   };
 

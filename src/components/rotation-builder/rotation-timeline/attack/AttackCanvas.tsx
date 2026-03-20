@@ -3,7 +3,6 @@ import { useDroppable } from '@dnd-kit/react';
 import {
   ATTACK_CANVAS_DROP_ID,
   SIDEBAR_ATTACK_DRAG_TYPE,
-  SIDEBAR_BUFF_DRAG_TYPE,
 } from '@/components/rotation-builder/rotation-timeline/constants';
 import { Row } from '@/components/ui/layout';
 import { useTeamAttackInstances } from '@/hooks/useTeamAttackInstances';
@@ -22,9 +21,7 @@ export const AttackCanvas = ({ previewInsertIndex }: AttackCanvasProperties) => 
   const removeAttack = useStore((state) => state.removeAttack);
   const { ref, isDropTarget } = useDroppable<TimelineDragData>({
     id: ATTACK_CANVAS_DROP_ID,
-    accept: (source) =>
-      source.type === SIDEBAR_ATTACK_DRAG_TYPE ||
-      source.type === SIDEBAR_BUFF_DRAG_TYPE,
+    accept: (source) => source.type === SIDEBAR_ATTACK_DRAG_TYPE,
   });
 
   const hasPreview = previewInsertIndex !== undefined;

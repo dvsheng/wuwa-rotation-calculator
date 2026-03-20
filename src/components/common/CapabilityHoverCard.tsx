@@ -69,6 +69,8 @@ const TARGET_LABELS: Record<Target, string> = {
 const HOVER_CARD_OPEN_DELAY_MS = 200;
 const HOVER_CARD_CLOSE_DELAY_MS = 100;
 const CURSOR_HOVER_CARD_VIEWPORT_PADDING = 16;
+const CURSOR_HOVER_CARD_ANIMATION_CLASS_NAME =
+  'animate-in fade-in-0 zoom-in-95 duration-200';
 
 // ─── Type guard ───────────────────────────────────────────────────────────────
 
@@ -329,14 +331,18 @@ const CursorHoverCard = ({
             ref={setFloatingReference}
             data-testid="cursor-hover-card-content"
             style={floatingStyles}
-            className={cn(
-              'bg-popover text-popover-foreground z-50 max-w-80 rounded-md border p-4 shadow-md',
-              className,
-            )}
+            className={cn('z-50 max-w-80', className)}
             onMouseEnter={handleFloatingMouseEnter}
             onMouseLeave={handleMouseLeave}
           >
-            {content}
+            <div
+              className={cn(
+                'bg-popover text-popover-foreground rounded-md border p-4 shadow-md',
+                CURSOR_HOVER_CARD_ANIMATION_CLASS_NAME,
+              )}
+            >
+              {content}
+            </div>
           </div>
         </FloatingPortal>
       )}

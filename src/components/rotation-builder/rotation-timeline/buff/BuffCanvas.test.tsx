@@ -115,14 +115,14 @@ describe('BuffCanvas', () => {
     });
   });
 
-  it('registers the canvas as a droppable for both sidebar drag types', () => {
+  it('registers the canvas as a droppable for only sidebar buff types', () => {
     render(<BuffCanvas width={640} />);
     // TODO: This should be false
     expect(
       capturedDroppableProperties.current?.accept({
         type: SIDEBAR_ATTACK_DRAG_TYPE,
       }),
-    ).toBe(true);
+    ).not.toBe(true);
     expect(
       capturedDroppableProperties.current?.accept({
         type: SIDEBAR_BUFF_DRAG_TYPE,

@@ -285,7 +285,7 @@ export const CapabilitySidebar = ({
           value={selectedCharacter}
           onValueChange={setSelectedCharacter}
           size="sm"
-          className="w-fit"
+          variant="outline"
         >
           {characterNames.map((characterName) => (
             <ToggleGroupItem key={characterName} value={characterName}>

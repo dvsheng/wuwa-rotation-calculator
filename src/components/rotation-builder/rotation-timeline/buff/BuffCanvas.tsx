@@ -5,7 +5,6 @@ import GridLayout from 'react-grid-layout';
 import {
   BUFF_CANVAS_DROP_ID,
   BUFF_ROW_HEIGHT,
-  SIDEBAR_ATTACK_DRAG_TYPE,
   SIDEBAR_BUFF_DRAG_TYPE,
 } from '@/components/rotation-builder/rotation-timeline/constants';
 import { useCanvasLayout } from '@/hooks/useCanvasLayout';
@@ -39,9 +38,7 @@ export const BuffCanvas = ({ width, previewLayout }: BuffCanvasProperties) => {
   const updateBuffLayout = useStore((state) => state.updateBuffLayout);
   const { ref, isDropTarget } = useDroppable<SidebarCapabilityDragData>({
     id: BUFF_CANVAS_DROP_ID,
-    accept: (source) =>
-      source.type === SIDEBAR_ATTACK_DRAG_TYPE ||
-      source.type === SIDEBAR_BUFF_DRAG_TYPE,
+    accept: (source) => source.type === SIDEBAR_BUFF_DRAG_TYPE,
   });
   const onLayoutChange = (layout: Layout) => {
     for (const item of layout) {

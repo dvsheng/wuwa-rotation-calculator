@@ -127,7 +127,6 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
                   variant="ghost"
                   size="icon-sm"
                   disabled={isDeleting}
-                  aria-label="Delete rotation"
                   title="Delete rotation"
                   onClick={() => setIsDeleteDialogOpen(true)}
                 >

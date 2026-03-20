@@ -2,7 +2,6 @@ import { Trash2 } from 'lucide-react';
 import type { MouseEvent } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 interface TrashButtonProperties {
   onRemove: () => void;
@@ -31,16 +30,12 @@ export const TrashButton = ({
   return (
     <Button
       variant="ghost"
-      size="icon"
-      className={cn(
-        'text-muted-foreground hover:bg-destructive/10 hover:text-destructive',
-        className,
-      )}
+      size="icon-sm"
+      className={className}
       onPointerDown={handlePointerDown}
       onClick={handleClick}
-      asChild
     >
-      <Trash2 />
+      <Trash2 className="text-muted-foreground" />
     </Button>
   );
 };

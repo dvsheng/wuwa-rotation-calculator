@@ -1,5 +1,4 @@
 import { useDroppable } from '@dnd-kit/react';
-import type { Ref } from 'react';
 import type { Layout } from 'react-grid-layout';
 import GridLayout from 'react-grid-layout';
 
@@ -58,21 +57,6 @@ export const BuffCanvas = ({ width, previewLayout }: BuffCanvasProperties) => {
     gridConfig: { rowHeight: BUFF_ROW_HEIGHT },
     resizeConfig: {
       handles: ['e', 'w'],
-      // Render handles as styled React elements rather than CSS-positioned divs.
-      // react-grid-layout types this ref generically as Ref<HTMLElement>; the cast
-      // to Ref<HTMLDivElement> is safe because HTMLDivElement extends HTMLElement.
-      handleComponent: (axis, reference) => (
-        <div
-          ref={reference as Ref<HTMLDivElement>}
-          className={cn(
-            'react-resizable-handle',
-            `react-resizable-handle-${axis}`,
-            'absolute inset-y-0 z-20 w-1.5 cursor-col-resize overflow-hidden rounded-md',
-            'bg-muted-foreground/20 hover:bg-muted-foreground/40 transition-colors',
-            axis === 'e' ? 'right-0' : 'left-0',
-          )}
-        />
-      ),
     },
     layout: [
       ...buffs.map((buff) => ({
@@ -105,7 +89,11 @@ export const BuffCanvas = ({ width, previewLayout }: BuffCanvasProperties) => {
         isValidDropTarget && 'bg-accent/10',
       )}
     >
-      <GridLayout {...fullLayoutProperties} width={width} className="min-h-0 flex-1">
+      <GridLayout
+        {...fullLayoutProperties}
+        width={width}
+        className="buff-canvas-grid min-h-0 flex-1"
+      >
         {buffs.map((buff) => (
           <div key={buff.instanceId}>
             <BuffCanvasItem

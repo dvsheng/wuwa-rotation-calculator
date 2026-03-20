@@ -34,6 +34,21 @@ code {
     'Courier New', monospace;
 }
 
+.buff-canvas-grid > .react-grid-item > .react-resizable-handle,
+.buff-canvas-grid > .react-grid-item:hover > .react-resizable-handle {
+  opacity: 1;
+}
+
+.buff-canvas-grid > .react-grid-item > .react-resizable-handle::after {
+  right: 5px;
+  bottom: 5px;
+  width: 9px;
+  height: 9px;
+  border-right-color: var(--muted-foreground);
+  border-bottom-color: var(--muted-foreground);
+  opacity: 1;
+}
+
 /* ── I.R.I.S. Theme ────────────────────────────────────────────────────────
  * Theme basis:
  *   • Wuthering Waves wiki identifies I.R.I.S. as the "Intelligent Retrieval &

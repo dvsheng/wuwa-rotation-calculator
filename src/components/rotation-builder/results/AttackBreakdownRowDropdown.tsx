@@ -104,10 +104,7 @@ export const AttackBreakdownRowDropdown = ({
       },
       cell: ({ row }) => (
         <div className="flex justify-end">
-          <InfoTooltip
-            ariaLabel="Open damage details inspector"
-            onClick={() => onSelect(row.original.detail)}
-          >
+          <InfoTooltip onClick={() => onSelect(row.original.detail)}>
             Open damage details inspector
           </InfoTooltip>
         </div>

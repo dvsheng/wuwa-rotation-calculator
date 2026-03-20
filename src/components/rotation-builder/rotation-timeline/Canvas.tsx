@@ -101,7 +101,6 @@ const scrollButtonProperties = (
 ) => ({
   variant: 'ghost' as const,
   size: 'icon' as const,
-  'aria-label': `Scroll ${side}`,
   className: `bg-muted/60 hover:bg-muted/80 disabled:bg-muted/20 disabled:text-foreground/30 absolute top-1/2 ${side}-1 z-10 h-16 -translate-y-1/2 transition-colors`,
   ...controls,
 });

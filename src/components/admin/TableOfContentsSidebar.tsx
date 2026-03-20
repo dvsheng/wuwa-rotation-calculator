@@ -68,9 +68,6 @@ export const TableOfContentsSidebar = ({
           type="button"
           variant="ghost"
           size="icon-xs"
-          aria-label={
-            isOpen ? 'Collapse table of contents' : 'Expand table of contents'
-          }
           onClick={() => setIsOpen((current) => !current)}
         >
           {isOpen ? <PanelLeftCloseIcon /> : <PanelLeftOpenIcon />}

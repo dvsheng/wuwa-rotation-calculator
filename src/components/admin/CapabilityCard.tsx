@@ -131,6 +131,7 @@ export const CapabilityCard = ({
               </Text>
               <ToggleGroup
                 type="single"
+                variant="outline"
                 value={selectedAlternativeDefinition}
                 onValueChange={(value) => {
                   if (value) {

@@ -45,7 +45,6 @@ export const BaseBuffCanvasItem = ({
   characterIconUrl,
   iconUrl,
   name,
-  children,
   actions,
   className,
   stickyLeftOffset = 0,
@@ -64,42 +63,35 @@ export const BaseBuffCanvasItem = ({
       data-testid="buff-canvas-item"
       style={style}
       className={cn(
-        'border-border relative flex h-12 items-center gap-0 border px-0 py-0 select-none',
+        'border-border relative flex h-12 flex-nowrap items-center justify-between gap-0 overflow-hidden border px-0 py-0 select-none',
         className,
       )}
     >
-      {children}
       {/* Counteract the grid item's translated X position so sticky chrome hugs the visible item edge. */}
       <Row
         align="center"
         data-testid="buff-canvas-item-sticky-left"
         style={stickyLeftStyle}
-        className="sticky left-0 z-10 h-full min-w-0 gap-4 overflow-hidden px-4"
+        className="gap-inset sticky left-0 z-10 min-w-0 flex-nowrap overflow-hidden px-6"
       >
         <ItemMedia>
           <EntityIconDisplay url={characterIconUrl} size="medium" />
-        </ItemMedia>
-        <ItemMedia>
           <CapabilityIconDisplay url={iconUrl} />
         </ItemMedia>
-        <Text
-          variant="caption"
-          className="min-w-0 truncate"
-          data-testid="buff-canvas-item-name"
-        >
+        <Text variant="caption" className="min-w-0 truncate">
           {name}
         </Text>
       </Row>
-      {/* Spacer */}
-      <div className="relative z-10 flex-1" />
       {/* Right sticky: warning + actions */}
       <Row
         align="center"
         data-testid="buff-canvas-item-sticky-right"
         style={stickyRightStyle}
-        className="gap-inset sticky right-0 z-10 h-full shrink-0 px-4"
+        className="gap-trim sticky right-0 z-10 min-w-0 flex-nowrap justify-end overflow-hidden px-6"
       >
-        <ItemActions>{actions}</ItemActions>
+        <ItemActions className="min-w-0 flex-nowrap overflow-hidden">
+          {actions}
+        </ItemActions>
       </Row>
     </Item>
   );
@@ -196,12 +188,9 @@ export const BuffCanvasItem = ({
           style={backgroundColor ? { backgroundColor } : undefined}
           actions={
             <>
-              {shouldShowWarning && (
-                <AlertTriangle data-testid="alert-triangle" className="text-warning" />
-              )}
+              {shouldShowWarning && <AlertTriangle className="text-warning" />}
               <Button
                 variant="ghost"
-                size="icon"
                 onPointerDown={(event) => event.stopPropagation()}
                 onClick={(event) => {
                   event.stopPropagation();
@@ -210,10 +199,7 @@ export const BuffCanvasItem = ({
               >
                 <Maximize2 className="text-muted-foreground" />
               </Button>
-              <TrashButton
-                className="shrink-0"
-                onRemove={() => onRemove(buff.instanceId)}
-              />
+              <TrashButton onRemove={() => onRemove(buff.instanceId)} />
             </>
           }
         >

@@ -12,10 +12,7 @@ import { CharacterCard } from './CharacterCard';
 export const TeamContainer = () => {
   return (
     <Row justify="center" align="start" fullWidth className="min-h-0 min-w-0 flex-1">
-      <Stack
-        data-testid="team-container"
-        className="border-border relative h-full min-w-0 flex-1 overflow-hidden border-r"
-      >
+      <Stack className="border-border relative h-full min-w-0 flex-1 overflow-hidden border-r">
         <DashboardSectionHeader
           title="Team"
           description="Build the team here by choosing each slot's character, weapon, echoes, and substats. Those choices set the stats and passives used everywhere else in the rotation."

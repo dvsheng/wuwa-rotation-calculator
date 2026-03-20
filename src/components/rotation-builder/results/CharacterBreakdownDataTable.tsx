@@ -115,7 +115,6 @@ export const CharacterBreakdownDataTable = ({
       cell: ({ row }) => (
         <div className="flex justify-end">
           <InfoTooltip
-            ariaLabel="Open character attack breakdown"
             onClick={(event) => {
               event.stopPropagation();
               setSelectedCharacterName((previous) =>

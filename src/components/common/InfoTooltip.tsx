@@ -7,14 +7,12 @@ import { cn } from '@/lib/utils';
 interface InfoTooltipProperties {
   children: ReactNode;
   onClick?: MouseEventHandler<HTMLButtonElement>;
-  ariaLabel?: string;
   contentClassName?: string;
 }
 
 export const InfoTooltip = ({
   children,
   onClick,
-  ariaLabel = 'More information',
   contentClassName,
 }: InfoTooltipProperties) => {
   return (
@@ -23,12 +21,7 @@ export const InfoTooltip = ({
         {children}
       </TooltipContent>
       <TooltipTrigger asChild>
-        <button
-          type="button"
-          aria-label={ariaLabel}
-          onClick={onClick}
-          className="items-center justify-center"
-        >
+        <button type="button" onClick={onClick} className="items-center justify-center">
           <Info className="text-muted-foreground size-4" />
         </button>
       </TooltipTrigger>

@@ -130,7 +130,6 @@ export const AttackBreakdownDataTable = ({
         return (
           <div className="flex justify-end">
             <InfoTooltip
-              ariaLabel="Open damage details inspector"
               onClick={(event) => {
                 // Keep the table row collapsed/expanded state unchanged when opening the inspector.
                 event.stopPropagation();

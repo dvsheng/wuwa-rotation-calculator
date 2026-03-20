@@ -69,10 +69,8 @@ interface CapabilitySidebarProperties {
 interface CapabilitySectionProperties {
   title: string;
   emptyMessage: string;
-  testId?: string;
   description?: React.ReactNode;
   legend?: Array<LegendItem>;
-  legendAriaLabel?: string;
   children: React.ReactNode;
 }
 
@@ -108,13 +106,12 @@ const matchesSearchText = (
 const CapabilitySection = ({
   title,
   emptyMessage,
-  testId,
   description,
   legend,
   children,
 }: CapabilitySectionProperties) => {
   return (
-    <Stack data-testid={testId}>
+    <Stack>
       <Row align="center" className="px-panel gap-trim">
         <Text as="h3" variant="title" className="text-lg">
           {title}
@@ -135,7 +132,7 @@ const CapabilitySection = ({
             </Stack>
           </InfoTooltip>
         ) : description ? (
-          <InfoTooltip ariaLabel={`${title} section help`}>{description}</InfoTooltip>
+          <InfoTooltip>{description}</InfoTooltip>
         ) : undefined}
       </Row>
       {children ? (
@@ -268,13 +265,7 @@ export const CapabilitySidebar = ({
   }, [dragOperation]);
 
   return (
-    <Stack
-      fullHeight
-      fullWidth
-      gap="component"
-      className="bg-muted/30"
-      data-testid="capability-sidebar"
-    >
+    <Stack fullHeight fullWidth gap="component" className="bg-muted/30">
       <DashboardSectionHeader
         title="Palette"
         description="This is the action library for the current team. Search or filter the list, then click to add an item immediately or drag it into the matching canvas."
@@ -308,7 +299,6 @@ export const CapabilitySidebar = ({
         <CapabilitySection
           title="Attacks"
           emptyMessage="No attacks available"
-          testId="sidebar-attacks-section"
           description="Use Attacks to build the rotation order. Click a card to add it or drag it into a specific spot on the top lane, then it becomes part of the timeline and contributes damage in Results. Attack accents are derived from the shared chart palette and stay consistent for each origin type."
           legend={ATTACK_COLOR_LEGEND}
         >
@@ -339,10 +329,8 @@ export const CapabilitySidebar = ({
         <CapabilitySection
           title="Buffs"
           emptyMessage="No buffs available"
-          testId="sidebar-buffs-section"
           description="Use Buffs to place modifiers under the attacks they should influence. Click to add one with a default placement or drag it onto a specific span, then it will apply to the attacks covered by that layout."
           legend={BUFF_COLOR_LEGEND}
-          legendAriaLabel="Buff section help and color legend"
         >
           {orderedBuffCharacterNames.map((characterName) => {
             const characterBuffs = filteredBuffsByCharacter[characterName] ?? [];

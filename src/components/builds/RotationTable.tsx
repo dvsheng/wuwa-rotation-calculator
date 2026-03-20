@@ -246,7 +246,6 @@ export function RotationTable({
                 variant="ghost"
                 size="icon-sm"
                 disabled={isDeleting}
-                aria-label="Delete rotation"
                 onClick={() =>
                   setRotationPendingDeletion(row.original as SavedRotation)
                 }

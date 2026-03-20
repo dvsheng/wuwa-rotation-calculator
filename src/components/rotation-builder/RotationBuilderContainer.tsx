@@ -1,13 +1,22 @@
-import { useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 
-import { RotationResultContainer } from '@/components/rotation-builder/results/RotationResultContainer';
 import { TeamContainer } from '@/components/rotation-builder/team/TeamContainer';
 import { useRotationCalculation } from '@/hooks/useRotationCalculation';
 
 import { Stack } from '../ui/layout';
+import { Text } from '../ui/typography';
 
 import { RotationBuilder } from './rotation-timeline/RotationTimelineBuilder';
 import { RotationBuilderToolbar } from './RotationBuilderToolbar';
+
+const loadRotationResultContainer = () =>
+  import('@/components/rotation-builder/results/RotationResultContainer').then(
+    (module) => ({
+      default: module.RotationResultContainer,
+    }),
+  );
+
+const LazyRotationResultContainer = lazy(loadRotationResultContainer);
 
 interface RotationBuilderContainerProperties {
   initialTab?: 'team' | 'rotation' | 'results';
@@ -21,6 +30,13 @@ export const RotationBuilderContainer = ({
   const [selectedTab, setSelectedTab] = useState(initialTab);
   const { data: result } = useRotationCalculation();
   const effectiveTab = selectedTab === 'results' && !result ? 'rotation' : selectedTab;
+
+  useEffect(() => {
+    if (!result) {
+      return;
+    }
+    loadRotationResultContainer();
+  }, [result]);
 
   const [animState, setAnimState] = useState({ tab: effectiveTab, enterClass: '' });
   if (animState.tab !== effectiveTab) {
@@ -45,7 +61,23 @@ export const RotationBuilderContainer = ({
       >
         {effectiveTab === 'team' && <TeamContainer />}
         {effectiveTab === 'rotation' && <RotationBuilder />}
-        {effectiveTab === 'results' && result && <RotationResultContainer />}
+        {effectiveTab === 'results' && result && (
+          <Suspense
+            fallback={
+              <Stack
+                align="center"
+                justify="center"
+                className="bg-background/60 h-full min-h-0 flex-1"
+              >
+                <Text variant="body" tone="muted">
+                  Loading results...
+                </Text>
+              </Stack>
+            }
+          >
+            <LazyRotationResultContainer />
+          </Suspense>
+        )}
       </div>
     </Stack>
   );

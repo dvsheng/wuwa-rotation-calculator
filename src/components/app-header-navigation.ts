@@ -2,6 +2,7 @@ import { BookOpenText, Calculator, Database, Library } from 'lucide-react';
 
 export const APP_HEADER_HOME = {
   label: 'I.R.I.S. Rotation Inspector',
+  mobileLabel: 'I.R.I.S.',
   to: '/',
 } as const;
 

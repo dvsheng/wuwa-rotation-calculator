@@ -2,8 +2,13 @@ import { LogIn, LogOut } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { authClient } from '@/lib/auth-client';
+import { cn } from '@/lib/utils';
 
-export function LoginButton() {
+interface LoginButtonProperties {
+  compactOnMobile?: boolean;
+}
+
+export function LoginButton({ compactOnMobile = false }: LoginButtonProperties = {}) {
   const { data: session } = authClient.useSession();
 
   const handleClick = () => {
@@ -18,10 +23,17 @@ export function LoginButton() {
   };
 
   const Icon = session ? LogOut : LogIn;
+  const label = session ? 'Sign out' : 'Sign in with Google';
   return (
-    <Button variant="ghost" size="sm" onClick={handleClick}>
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={handleClick}
+      aria-label={compactOnMobile ? label : undefined}
+      className={cn(compactOnMobile && 'max-md:px-2.5')}
+    >
       <Icon />
-      {session ? 'Sign out' : 'Sign in with Google'}
+      <span className={cn(compactOnMobile && 'max-md:sr-only')}>{label}</span>
     </Button>
   );
 }

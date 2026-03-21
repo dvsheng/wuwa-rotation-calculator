@@ -1,4 +1,4 @@
-import { Link, useLocation } from '@tanstack/react-router';
+import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import type { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import {
@@ -34,7 +34,6 @@ import {
 import { Row, Stack } from '@/components/ui/layout';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Text } from '@/components/ui/typography';
-import { useLoadRotation } from '@/hooks/useLoadRotation';
 import { useRotationMutations } from '@/hooks/useRotationMutations';
 import { useSession } from '@/lib/auth-client';
 import type { ListedRotation, SavedRotation } from '@/schemas/library';
@@ -230,7 +229,7 @@ export function RotationTable({
   onPreviousPage,
   onNextPage,
 }: RotationTableProperties) {
-  const loadRotation = useLoadRotation();
+  const navigate = useNavigate();
   const { deleteRotation, updateRotation, isDeleting, isUpdating } =
     useRotationMutations();
   const { data: session } = useSession();
@@ -335,7 +334,15 @@ export function RotationTable({
                 />
               </>
             )}
-            <Button size="sm" onClick={() => loadRotation(row.original)}>
+            <Button
+              size="sm"
+              onClick={() => {
+                navigate({
+                  to: '/create',
+                  search: { rotationId: row.original.id, tab: 'results' },
+                });
+              }}
+            >
               <Play />
               Load
             </Button>

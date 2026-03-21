@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router';
+import { Link, useLocation } from '@tanstack/react-router';
 import { CircleUserRound, LogIn, LogOut, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 
@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { authClient, useSession } from '@/lib/auth-client';
-import { getCurrentRedirectTo } from '@/lib/auth-routing';
+import { normalizeRedirectTo } from '@/lib/auth-routing';
 import { cn } from '@/lib/utils';
 
 interface LoginButtonProperties {
@@ -21,8 +21,9 @@ interface LoginButtonProperties {
 
 export function LoginButton({ compactOnMobile = false }: LoginButtonProperties = {}) {
   const { data: session } = useSession();
+  const currentLocation = useLocation();
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const redirectTo = getCurrentRedirectTo();
+  const redirectTo = normalizeRedirectTo(currentLocation.href);
 
   const handleSignOut = async () => {
     try {
@@ -55,12 +56,10 @@ export function LoginButton({ compactOnMobile = false }: LoginButtonProperties =
   }
 
   const username =
-    session.user.username ||
     (session.user.isAnonymous ? 'Guest' : undefined) ||
-    session.user.name ||
+    session.user.username ||
     session.user.email;
   const needsUsername = !session.user.username;
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

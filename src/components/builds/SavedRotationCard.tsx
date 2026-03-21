@@ -1,3 +1,4 @@
+import { useNavigate } from '@tanstack/react-router';
 import { format } from 'date-fns';
 import { isNil } from 'es-toolkit/predicate';
 import { Eye, EyeOff, Play, Trash2 } from 'lucide-react';
@@ -32,7 +33,6 @@ import {
 } from '@/components/ui/hover-card';
 import { Row } from '@/components/ui/layout';
 import { Text } from '@/components/ui/typography';
-import { useLoadRotation } from '@/hooks/useLoadRotation';
 import { useRotationMutations } from '@/hooks/useRotationMutations';
 import { useSession } from '@/lib/auth-client';
 import type { SavedRotation } from '@/schemas/library';
@@ -43,7 +43,7 @@ interface SavedRotationCardProperties {
 }
 
 export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
-  const loadRotation = useLoadRotation();
+  const navigate = useNavigate();
   const { deleteRotation, updateRotation, isDeleting, isUpdating } =
     useRotationMutations();
   const { data: session } = useSession();
@@ -227,7 +227,15 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
         </Row>
       </CardContent>
       <CardFooter className="justify-end pt-0">
-        <Button onClick={() => void loadRotation(rotation)} size="sm">
+        <Button
+          onClick={() => {
+            void navigate({
+              to: '/create',
+              search: { rotationId: rotation.id, tab: 'results' },
+            });
+          }}
+          size="sm"
+        >
           <Play className="mr-2 h-4 w-4" />
           Load
         </Button>

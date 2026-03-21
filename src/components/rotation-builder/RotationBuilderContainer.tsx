@@ -28,7 +28,7 @@ export const RotationBuilderContainer = ({
   initialTab = 'team',
 }: RotationBuilderContainerProperties) => {
   const [selectedTab, setSelectedTab] = useState(initialTab);
-  const { data: result } = useRotationCalculation();
+  const { data: result, isPlaceholderData } = useRotationCalculation();
   const effectiveTab = selectedTab === 'results' && !result ? 'rotation' : selectedTab;
 
   useEffect(() => {
@@ -65,12 +65,15 @@ export const RotationBuilderContainer = ({
           <Suspense
             fallback={
               <LoadingSpinnerContainer
-                message="Loading results..."
-                className="bg-background/60 flex-1"
+                message="Loading rotation results..."
+                spinnerSize={40}
               />
             }
           >
-            <LazyRotationResultContainer />
+            <LazyRotationResultContainer
+              data={result}
+              isPlaceholderData={isPlaceholderData}
+            />
           </Suspense>
         )}
       </div>

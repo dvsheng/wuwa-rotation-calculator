@@ -13,6 +13,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 
 import { AppShell } from '@/components/AppShell';
 import { Toaster } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { themeInitScript } from '@/hooks/useTheme';
 import appCss from '@/styles.css?url';
 
@@ -73,7 +74,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const { queryClient } = Route.useRouteContext();
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         {import.meta.env.DEV && <script src="http://localhost:8097"></script>}
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
@@ -81,11 +82,13 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <QueryClientProvider client={queryClient}>
-          <AppShell>
-            <ErrorBoundary FallbackComponent={RootErrorFallback}>
-              {children}
-            </ErrorBoundary>
-          </AppShell>
+          <TooltipProvider>
+            <AppShell>
+              <ErrorBoundary FallbackComponent={RootErrorFallback}>
+                {children}
+              </ErrorBoundary>
+            </AppShell>
+          </TooltipProvider>
         </QueryClientProvider>
         <Toaster position="bottom-left" />
         <TanStackDevtools

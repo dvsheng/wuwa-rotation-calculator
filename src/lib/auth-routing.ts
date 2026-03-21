@@ -14,17 +14,7 @@ export function normalizeRedirectTo(redirectTo?: string) {
   return redirectTo;
 }
 
-export function getCurrentRedirectTo() {
-  if (import.meta.env.SSR) {
-    return AUTH_FALLBACK_REDIRECT;
-  }
-
-  return normalizeRedirectTo(
-    `${globalThis.location.pathname}${globalThis.location.search}${globalThis.location.hash}`,
-  );
-}
-
-export function buildAuthViewPath(view: AuthView, redirectTo?: string) {
+function buildAuthViewPath(view: AuthView, redirectTo?: string) {
   const normalizedRedirectTo = normalizeRedirectTo(redirectTo);
   const search = new URLSearchParams({ redirectTo: normalizedRedirectTo });
 

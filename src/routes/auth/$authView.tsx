@@ -24,5 +24,6 @@ function AuthRoutePage() {
 
 export const Route = createFileRoute('/auth/$authView')({
   validateSearch: authSearchSchema,
+  ssr: false,
   component: AuthRoutePage,
 });

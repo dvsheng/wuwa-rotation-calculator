@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Text } from '@/components/ui/typography';
-import { useRotationCalculation } from '@/hooks/useRotationCalculation';
+import type { useRotationCalculation } from '@/hooks/useRotationCalculation';
 
 import { AttackBreakdownDataTable } from './AttackBreakdownDataTable';
 import { CharacterBreakdownDataTable } from './CharacterBreakdownDataTable';
@@ -17,12 +17,19 @@ import { RotationResultSummary } from './RotationResultSummary';
 import { RotationSummaryTab } from './RotationSummaryTab';
 import { SensitivityAnalysisTable } from './SensitivityAnalysisTable';
 
-export const RotationResultContainer = () => {
+type RotationResultContainerProperties = Pick<
+  ReturnType<typeof useRotationCalculation>,
+  'data' | 'isPlaceholderData'
+>;
+
+export const RotationResultContainer = ({
+  data: result,
+  isPlaceholderData,
+}: RotationResultContainerProperties) => {
   const [selectedTab, setSelectedTab] = useState('summary');
   const [inspectorPortalNode, setInspectorPortalNode] = useState<
     HTMLDivElement | undefined
   >();
-  const { data: result, isStale } = useRotationCalculation();
   if (!result) {
     return;
   }
@@ -49,7 +56,7 @@ export const RotationResultContainer = () => {
             }
           />
           <Stack gap="component" className="p-page min-h-0 flex-1">
-            {isStale && (
+            {isPlaceholderData && (
               <Row className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-amber-500">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 <Stack>

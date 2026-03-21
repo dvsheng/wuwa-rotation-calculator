@@ -45,6 +45,12 @@ export const DeleteRotationRequestSchema = z.object({
 
 export type DeleteRotationRequest = z.infer<typeof DeleteRotationRequestSchema>;
 
+export const GetRotationByIdRequestSchema = z.object({
+  id: z.number().int().positive(),
+});
+
+export type GetRotationByIdRequest = z.infer<typeof GetRotationByIdRequestSchema>;
+
 export const ListRotationsRequestSchema = z.object({
   scope: z.enum(['owned', 'public']),
   offset: z.number().int().nonnegative().default(0),

@@ -6,12 +6,12 @@ import type { SavedRotation } from '@/schemas/library';
 
 import { SavedRotationCard } from './SavedRotationCard';
 
-vi.mock('@/lib/auth-client', () => ({
-  useSession: vi.fn(),
+vi.mock('@tanstack/react-router', () => ({
+  useNavigate: vi.fn(),
 }));
 
-vi.mock('@/hooks/useLoadRotation', () => ({
-  useLoadRotation: vi.fn(),
+vi.mock('@/lib/auth-client', () => ({
+  useSession: vi.fn(),
 }));
 
 vi.mock('@/hooks/useRotationMutations', () => ({
@@ -26,13 +26,12 @@ vi.mock('@/components/common/AssetIcon', () => ({
   AttributeIcon: () => <div data-testid="attribute-icon" />,
 }));
 
+const { useNavigate: mockUseNavigate } = await import('@tanstack/react-router');
 const { useSession: mockUseSession } = await import('@/lib/auth-client');
-const { useLoadRotation: mockUseLoadRotation } =
-  await import('@/hooks/useLoadRotation');
 const { useRotationMutations: mockUseRotationMutations } =
   await import('@/hooks/useRotationMutations');
 
-const mockLoadRotation = vi.fn();
+const mockNavigate = vi.fn();
 const mockDeleteRotation = vi.fn();
 const mockUpdateRotation = vi.fn();
 
@@ -67,7 +66,7 @@ const mockRotation = {
 describe('SavedRotationCard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(mockUseLoadRotation).mockReturnValue(mockLoadRotation);
+    vi.mocked(mockUseNavigate).mockReturnValue(mockNavigate);
     vi.mocked(mockUseRotationMutations).mockReturnValue({
       deleteRotation: mockDeleteRotation,
       updateRotation: mockUpdateRotation,
@@ -100,7 +99,7 @@ describe('SavedRotationCard', () => {
     expect(screen.queryByRole('button', { name: /delete/i })).not.toBeInTheDocument();
   });
 
-  it('loads the saved rotation through the shared loader', async () => {
+  it('navigates to the create route with the saved rotation id', async () => {
     vi.mocked(mockUseSession).mockReturnValue({
       data: {
         user: {
@@ -113,7 +112,10 @@ describe('SavedRotationCard', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /load/i }));
 
-    expect(mockLoadRotation).toHaveBeenCalledWith(mockRotation);
+    expect(mockNavigate).toHaveBeenCalledWith({
+      to: '/create',
+      search: { rotationId: mockRotation.id, tab: 'results' },
+    });
   });
 
   it('hides the public toggle for anonymous owners', () => {

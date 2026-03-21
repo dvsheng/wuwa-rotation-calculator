@@ -35,6 +35,104 @@ function formatFormErrors(errors: Array<{ message?: string } | string | undefine
     .join(', ');
 }
 
+function extractVisibleFormErrorMessage(error: unknown): string | undefined {
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  if (!isObject(error)) {
+    return undefined;
+  }
+
+  if (typeof error.message === 'string') {
+    return error.message;
+  }
+
+  return extractVisibleFormErrorMessage(error.form);
+}
+
+function getVisibleSubmitError(
+  errorMapOnSubmit: unknown,
+  formErrors: Array<unknown>,
+): string | undefined {
+  const submitError = extractVisibleFormErrorMessage(errorMapOnSubmit);
+  if (submitError) {
+    return submitError;
+  }
+
+  for (const error of formErrors) {
+    const formError = extractVisibleFormErrorMessage(error);
+    if (formError) {
+      return formError;
+    }
+  }
+
+  return undefined;
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function extractAuthErrorDetails(
+  error: unknown,
+): { code?: string; message?: string } | undefined {
+  if (!isObject(error)) {
+    return undefined;
+  }
+
+  const code = typeof error.code === 'string' ? error.code : undefined;
+  const message = typeof error.message === 'string' ? error.message : undefined;
+
+  if (code || message) {
+    return { code, message };
+  }
+
+  for (const nestedKey of ['error', 'body', 'data', 'cause']) {
+    const nestedValue = error[nestedKey];
+    if (!nestedValue) {
+      continue;
+    }
+
+    const nestedDetails = extractAuthErrorDetails(nestedValue);
+    if (nestedDetails) {
+      return nestedDetails;
+    }
+  }
+
+  return undefined;
+}
+
+function getSignInErrorMessage(error: unknown) {
+  const errorDetails = extractAuthErrorDetails(error);
+
+  switch (errorDetails?.code) {
+    case 'CREDENTIAL_ACCOUNT_NOT_FOUND':
+    case 'INVALID_EMAIL_OR_PASSWORD':
+    case 'INVALID_PASSWORD':
+    case 'USER_NOT_FOUND': {
+      return 'Invalid username or password.';
+    }
+    default: {
+      return errorDetails?.message ?? 'Sign in failed.';
+    }
+  }
+}
+
+function getUsernameTakenErrorMessage(error: unknown, fallbackMessage: string) {
+  const errorDetails = extractAuthErrorDetails(error);
+
+  switch (errorDetails?.code) {
+    case 'USER_ALREADY_EXISTS':
+    case 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL': {
+      return 'That username is already taken.';
+    }
+    default: {
+      return errorDetails?.message ?? fallbackMessage;
+    }
+  }
+}
+
 function AuthPageShell({
   title,
   description,
@@ -163,7 +261,7 @@ function SignInView({ redirectTo }: { redirectTo: string }) {
         if (result.error) {
           formApi.setErrorMap({
             onSubmit: {
-              form: result.error.message ?? 'Sign in failed.',
+              form: getSignInErrorMessage(result.error),
               fields: {},
             },
           });
@@ -171,16 +269,21 @@ function SignInView({ redirectTo }: { redirectTo: string }) {
         }
         await router.invalidate();
         router.navigate({ to: redirectTo });
-      } catch {
+      } catch (error) {
         formApi.setErrorMap({
           onSubmit: {
-            form: 'Sign in failed.',
+            form: getSignInErrorMessage(error),
             fields: {},
           },
         });
       }
     },
   });
+
+  const submitError = getVisibleSubmitError(
+    form.state.errorMap.onSubmit,
+    form.state.errors,
+  );
 
   const handleAnonymousSignIn = async () => {
     await authClient.signIn.anonymous();
@@ -252,6 +355,11 @@ function SignInView({ redirectTo }: { redirectTo: string }) {
               </Stack>
             )}
           />
+          {submitError ? (
+            <Text as="p" variant="bodySm" tone="destructive" role="alert">
+              {submitError}
+            </Text>
+          ) : undefined}
           <Button type="submit" disabled={form.state.isSubmitting}>
             {form.state.isSubmitting ? <Loader2 className="animate-spin" /> : undefined}
             Sign in with username
@@ -274,6 +382,7 @@ function SignUpView({ redirectTo }: { redirectTo: string }) {
       onSubmit: PasswordSignUpSchema,
     },
     onSubmit: async ({ value, formApi }) => {
+      formApi.setErrorMap({ onSubmit: undefined });
       try {
         const parsedValue = PasswordSignUpSchema.parse(value);
         const result = await authClient.signUp.email({
@@ -287,7 +396,7 @@ function SignUpView({ redirectTo }: { redirectTo: string }) {
         if (result.error) {
           formApi.setErrorMap({
             onSubmit: {
-              form: 'Sign up failed.',
+              form: getUsernameTakenErrorMessage(result.error, 'Sign up failed.'),
               fields: {},
             },
           });
@@ -295,16 +404,21 @@ function SignUpView({ redirectTo }: { redirectTo: string }) {
         }
         await router.invalidate();
         router.navigate({ to: redirectTo });
-      } catch {
+      } catch (error) {
         formApi.setErrorMap({
           onSubmit: {
-            form: 'Sign up failed.',
+            form: getUsernameTakenErrorMessage(error, 'Sign up failed.'),
             fields: {},
           },
         });
       }
     },
   });
+
+  const submitError = getVisibleSubmitError(
+    form.state.errorMap.onSubmit,
+    form.state.errors,
+  );
 
   return (
     <AuthPageShell
@@ -393,9 +507,9 @@ function SignUpView({ redirectTo }: { redirectTo: string }) {
             </Stack>
           )}
         />
-        {form.state.errorMap.onSubmit ? (
-          <Text variant="bodySm" tone="destructive">
-            {formatFormErrors([form.state.errorMap.onSubmit])}
+        {submitError ? (
+          <Text as="p" variant="bodySm" tone="destructive" role="alert">
+            {submitError}
           </Text>
         ) : undefined}
         <Button type="submit" disabled={form.state.isSubmitting}>

@@ -59,16 +59,11 @@ function RotationDetailsHoverCard({
   return (
     <HoverCard openDelay={150} closeDelay={100}>
       <HoverCardTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={`View details for ${rotation.name}`}
-          title={`View details for ${rotation.name}`}
-        >
-          <Info className="size-4" />
+        <Button variant="ghost" size="icon-sm">
+          <Info />
         </Button>
       </HoverCardTrigger>
-      <HoverCardContent align="start" className="w-80">
+      <HoverCardContent align="start">
         <Stack gap="component">
           <Stack gap="trim">
             <Text variant="title">{rotation.name}</Text>
@@ -83,7 +78,7 @@ function RotationDetailsHoverCard({
               </Text>
             </Stack>
             <Text variant="bodySm" tone="muted">
-              {rotation.description || 'No description.'}
+              {rotation.description ?? 'No description.'}
             </Text>
           </Stack>
           <Row gap="inset" wrap>

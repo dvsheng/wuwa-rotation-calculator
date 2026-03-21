@@ -1,4 +1,4 @@
-import { Calculator, Database, Library } from 'lucide-react';
+import { BookOpenText, Calculator, Database, Library } from 'lucide-react';
 
 export const APP_HEADER_HOME = {
   label: 'I.R.I.S. Rotation Inspector',
@@ -6,6 +6,12 @@ export const APP_HEADER_HOME = {
 } as const;
 
 export const APP_HEADER_NAV_ITEMS = [
+  {
+    label: 'About',
+    to: '/about',
+    matchPath: '/about',
+    icon: BookOpenText,
+  },
   {
     label: 'Entities',
     to: '/entities',

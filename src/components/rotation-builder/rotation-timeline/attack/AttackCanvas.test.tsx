@@ -55,7 +55,7 @@ vi.mock('./AttackCanvasItem', () => ({
 const { AttackCanvas } = await import('./AttackCanvas');
 
 describe('AttackCanvas', () => {
-  it('registers the canvas as a droppable for both sidebar drag types', () => {
+  it('registers the canvas as a droppable for sidebar attack drags only', () => {
     mockUseDroppable.mockImplementation((properties) => {
       capturedDroppableProperties.current = properties;
       return {
@@ -82,7 +82,7 @@ describe('AttackCanvas', () => {
       capturedDroppableProperties.current?.accept({
         type: SIDEBAR_BUFF_DRAG_TYPE,
       }),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it('keeps rendering the attack row even when there are no attacks or preview', () => {

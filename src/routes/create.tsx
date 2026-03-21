@@ -22,5 +22,6 @@ const RotationBuilderRoute = () => {
 
 export const Route = createFileRoute('/create')({
   validateSearch: createSearchSchema,
+  ssr: false,
   component: RotationBuilderRoute,
 });

@@ -114,7 +114,7 @@ describe('BuffCanvasItem', () => {
 
       fireEvent.contextMenu(screen.getByTestId('buff-canvas-item'));
 
-      expect(await screen.findByText('Configure')).toBeInTheDocument();
+      expect(await screen.findByText('Configure Parameters')).toBeInTheDocument();
       expect(screen.getByText('Expand to full rotation')).toBeInTheDocument();
       expect(screen.getByText('Remove buff')).toBeInTheDocument();
 

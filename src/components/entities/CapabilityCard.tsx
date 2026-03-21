@@ -17,6 +17,7 @@ import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group';
 import { Text } from '../ui/typography';
 
 import type { Capability } from './CapabilityItem';
+import { ReportCapabilityIssueDialog } from './ReportCapabilityIssueDialog';
 
 type CardCapability = Pick<
   Capability,
@@ -92,7 +93,7 @@ export const CapabilityCard = ({
   return (
     <Card>
       <CardHeader>
-        <Row justify="between">
+        <Row justify="between" align="start" wrap={true} gap="inset">
           <Row gap="inset" align="center">
             {titlePrefix}
             <Row gap="trim" align="center">
@@ -113,9 +114,16 @@ export const CapabilityCard = ({
               {titleSuffix}
             </Row>
           </Row>
-          <Row gap="inset">
-            <Switch checked={isJsonView} onCheckedChange={setIsJsonView} />
-            <Label>JSON View</Label>
+          <Row gap="component" align="center" wrap={true}>
+            <ReportCapabilityIssueDialog
+              capability={capability}
+              entityId={entityId}
+              alternativeDefinition={selectedAlternativeDefinition}
+            />
+            <Row gap="inset" align="center">
+              <Switch checked={isJsonView} onCheckedChange={setIsJsonView} />
+              <Label>JSON View</Label>
+            </Row>
           </Row>
         </Row>
         {resolvedCapability.description && (

@@ -95,6 +95,9 @@ export class WuwaRotationBuilderStack extends cdk.Stack {
     const betterAuthSecretName = this.node.tryGetContext(
       'betterAuthSecretName',
     ) as string;
+    const discordCapabilityIssueWebhookSecretName = this.node.tryGetContext(
+      'discordCapabilityIssueWebhookSecretName',
+    ) as string;
 
     server.function.addEnvironment('BETTER_AUTH_URL', appUrl);
     server.function.addEnvironment(
@@ -108,6 +111,12 @@ export class WuwaRotationBuilderStack extends cdk.Stack {
     server.function.addEnvironment(
       'BETTER_AUTH_SECRET',
       cdk.SecretValue.secretsManager(betterAuthSecretName).unsafeUnwrap(),
+    );
+    server.function.addEnvironment(
+      'DISCORD_CAPABILITY_ISSUE_WEBHOOK_URL',
+      cdk.SecretValue.secretsManager(
+        discordCapabilityIssueWebhookSecretName,
+      ).unsafeUnwrap(),
     );
     new AssetDeployment(this, 'Deployment', {
       bucket: bucket.assetsBucket,

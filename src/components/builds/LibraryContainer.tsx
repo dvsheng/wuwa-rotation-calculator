@@ -76,7 +76,7 @@ const OwnedRotationsSection = ({
       ) : (
         <RotationTable
           title="Your Rotations"
-          description="Manage your saved rotations and choose which ones are public."
+          description="Manage your saved rotations."
           rotations={data.items}
           showOwnerActions
           emptyMessage="No saved rotations found."
@@ -95,14 +95,14 @@ const PublicRotationsSection = ({
   publicOffset: number;
   setPublicOffset: (value: number | ((currentOffset: number) => number)) => void;
 }) => {
-  const { data, isPreviousData } = useRotations({
+  const { data } = useRotations({
     scope: 'public',
     offset: publicOffset,
     limit: 20,
     characterIds: selectedCharacterIds,
   });
   const publicRotations = data.items.filter((rotation) => !rotation.isOwner);
-  const hasNextPublicPage = data.offset + data.limit < data.total;
+  const hasNextPage = data.offset + data.limit < data.total;
   return (
     <Suspense fallback={<RotationTableSpinner message="Loading public rotations..." />}>
       <RotationTable
@@ -112,17 +112,14 @@ const PublicRotationsSection = ({
         rotations={publicRotations}
         showOwnerActions={false}
         emptyMessage="No public rotations found."
-        hasNextPage={hasNextPublicPage}
-        isPreviousData={isPreviousData}
+        hasNextPage={hasNextPage}
         onPreviousPage={
           publicOffset > 0
             ? () => setPublicOffset((currentOffset) => Math.max(currentOffset - 20, 0))
             : undefined
         }
         onNextPage={
-          hasNextPublicPage
-            ? () => setPublicOffset(data.offset + data.limit)
-            : undefined
+          hasNextPage ? () => setPublicOffset(data.offset + data.limit) : undefined
         }
       />
     </Suspense>
@@ -135,9 +132,11 @@ export const LibraryContainer = () => {
   const { data: session } = useSession();
   const { data: characters } = useEntityList({ entityType: EntityType.CHARACTER });
 
-  const setCharacterFilter = (nextCharacters: Array<(typeof characters)[number]>) => {
+  const handleSetCharactersFilter = (
+    _characters: Array<(typeof characters)[number]>,
+  ) => {
     setSelectedCharacterIds(
-      nextCharacters
+      _characters
         .map((character) => character.id)
         .toSorted((left, right) => left - right),
     );
@@ -157,7 +156,7 @@ export const LibraryContainer = () => {
         items={characters}
         multiple
         value={selectedCharacters}
-        onValueChange={setCharacterFilter}
+        onValueChange={handleSetCharactersFilter}
         itemToStringValue={(character) => character.name}
       >
         <ComboboxChips>
@@ -182,7 +181,7 @@ export const LibraryContainer = () => {
           </ComboboxList>
         </ComboboxContent>
       </Combobox>
-      <ScrollArea className="min-h-0 flex-1">
+      <ScrollArea className="min-h-0 flex-1" orientation="both">
         <Stack gap="page">
           {isAuthenticated && (
             <OwnedRotationsSection selectedCharacterIds={selectedCharacterIds} />

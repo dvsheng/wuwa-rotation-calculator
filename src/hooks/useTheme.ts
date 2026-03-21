@@ -1,10 +1,10 @@
 import { useState } from 'react';
 
-export const THEME_STORAGE_KEY = 'wuwa-theme';
+const THEME_STORAGE_KEY = 'wuwa-theme';
 
 export type Theme = 'light' | 'dark';
 
-export const getStoredTheme = (): Theme | undefined => {
+const getStoredTheme = (): Theme | undefined => {
   try {
     const storedTheme = globalThis.localStorage.getItem(THEME_STORAGE_KEY);
     return storedTheme === 'dark' || storedTheme === 'light' ? storedTheme : undefined;
@@ -13,7 +13,7 @@ export const getStoredTheme = (): Theme | undefined => {
   }
 };
 
-export const getSystemTheme = (): Theme => {
+const getSystemTheme = (): Theme => {
   try {
     return globalThis.matchMedia('(prefers-color-scheme: dark)').matches
       ? 'dark'
@@ -23,7 +23,7 @@ export const getSystemTheme = (): Theme => {
   }
 };
 
-export const applyTheme = (theme: Theme) => {
+const applyTheme = (theme: Theme) => {
   try {
     const root = globalThis.document.documentElement;
     root.classList.toggle('dark', theme === 'dark');

@@ -30,8 +30,11 @@ export const SavedRotationSchema = z.object({
 
 export type SavedRotation = z.infer<typeof SavedRotationSchema>;
 
-export const ListedRotationSchema = SavedRotationSchema.extend({
+export const ListedRotationSchema = SavedRotationSchema.omit({
+  ownerId: true,
+}).extend({
   isOwner: z.boolean(),
+  ownerName: z.string(),
 });
 
 export type ListedRotation = z.infer<typeof ListedRotationSchema>;

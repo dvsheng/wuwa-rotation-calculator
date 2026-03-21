@@ -87,7 +87,11 @@ describe('updateRotationHandler', () => {
         totalDamage: 5000,
         visibility: 'public',
       },
-      'dev-local-owner',
+      {
+        id: 'dev-local-owner',
+        isAnonymous: false,
+        username: 'dev-local-owner',
+      },
     );
 
     expect(mocks.findFirst).toHaveBeenCalledTimes(1);
@@ -113,7 +117,14 @@ describe('updateRotationHandler', () => {
     mocks.findFirst.mockResolvedValue(undefined as any);
 
     await expect(
-      updateRotationHandler({ id: 999, name: 'New Name' }, 'dev-local-owner'),
+      updateRotationHandler(
+        { id: 999, name: 'New Name' },
+        {
+          id: 'dev-local-owner',
+          isAnonymous: false,
+          username: 'dev-local-owner',
+        },
+      ),
     ).rejects.toThrow('Rotation not found for ID 999');
   });
 
@@ -155,7 +166,14 @@ describe('updateRotationHandler', () => {
       },
     ]);
 
-    await updateRotationHandler({ id: 1, totalDamage: 0 }, 'dev-local-owner');
+    await updateRotationHandler(
+      { id: 1, totalDamage: 0 },
+      {
+        id: 'dev-local-owner',
+        isAnonymous: false,
+        username: undefined,
+      },
+    );
 
     expect(mocks.set).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -184,7 +202,60 @@ describe('updateRotationHandler', () => {
     });
 
     await expect(
-      updateRotationHandler({ id: 1, visibility: 'private' }, 'dev-local-owner'),
+      updateRotationHandler(
+        { id: 1, visibility: 'private' },
+        {
+          id: 'dev-local-owner',
+          isAnonymous: false,
+          username: 'dev-local-owner',
+        },
+      ),
     ).rejects.toThrow('Rotation 1 does not belong to the current user');
+  });
+
+  it('blocks anonymous users from making rotations public', async () => {
+    const { updateRotationHandler } = await import('./update-rotation.server');
+
+    mocks.findFirst.mockResolvedValue({
+      id: 1,
+      ownerId: 'dev-local-owner',
+      visibility: 'private',
+    });
+
+    await expect(
+      updateRotationHandler(
+        { id: 1, visibility: 'public' },
+        {
+          id: 'dev-local-owner',
+          isAnonymous: true,
+          username: undefined,
+        },
+      ),
+    ).rejects.toThrow('Anonymous users cannot make rotations public');
+
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
+
+  it('blocks users without usernames from making rotations public', async () => {
+    const { updateRotationHandler } = await import('./update-rotation.server');
+
+    mocks.findFirst.mockResolvedValue({
+      id: 1,
+      ownerId: 'dev-local-owner',
+      visibility: 'private',
+    });
+
+    await expect(
+      updateRotationHandler(
+        { id: 1, visibility: 'public' },
+        {
+          id: 'dev-local-owner',
+          isAnonymous: false,
+          username: undefined,
+        },
+      ),
+    ).rejects.toThrow('Users must choose a username before making rotations public');
+
+    expect(mocks.update).not.toHaveBeenCalled();
   });
 });

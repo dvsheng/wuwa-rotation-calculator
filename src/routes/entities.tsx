@@ -81,9 +81,7 @@ const EntitiesTable = (options: UseEntitiesOptions) => {
     {
       accessorKey: 'type',
       header: 'Entity Type',
-      cell: ({ row }) => (
-        <span className="capitalize">{row.original.type.replace('_', ' ')}</span>
-      ),
+      cell: ({ row }) => <span>{startCase(row.original.type)}</span>,
     },
   ];
   return (
@@ -93,8 +91,8 @@ const EntitiesTable = (options: UseEntitiesOptions) => {
         data={data}
         emptyMessage="No entities found."
         classNames={{
-          wrapper: 'min-h-0 flex-1 overflow-hidden',
-          scrollArea: 'h-full bg-card',
+          wrapper: 'min-h-0 flex-1 overflow-hidden flex flex-col',
+          scrollArea: 'h-full overflow-auto bg-card',
         }}
         onRowClick={(row) =>
           navigate({

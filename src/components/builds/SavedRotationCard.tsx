@@ -81,6 +81,8 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
 
   const userId = session?.user.id;
   const isOwner = !isNil(userId) && userId === rotation.ownerId;
+  const canChangeVisibility =
+    isOwner && (!session?.user.isAnonymous || rotation.visibility === 'public');
   const configuredCharacters = rotation.data.team.filter(
     (character) => character.id > 0,
   );
@@ -99,28 +101,30 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
         </CardDescription>
         {isOwner && (
           <Row gap="trim" className="absolute top-6 right-6">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              disabled={isUpdating}
-              aria-label={
-                rotation.visibility === 'public'
-                  ? 'Make rotation private'
-                  : 'Make rotation public'
-              }
-              title={
-                rotation.visibility === 'public'
-                  ? 'Make rotation private'
-                  : 'Make rotation public'
-              }
-              onClick={() => void handleVisibilityChange(nextVisibility)}
-            >
-              {rotation.visibility === 'public' ? (
-                <Eye className="size-4" />
-              ) : (
-                <EyeOff className="size-4" />
-              )}
-            </Button>
+            {canChangeVisibility && (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                disabled={isUpdating}
+                aria-label={
+                  rotation.visibility === 'public'
+                    ? 'Make rotation private'
+                    : 'Make rotation public'
+                }
+                title={
+                  rotation.visibility === 'public'
+                    ? 'Make rotation private'
+                    : 'Make rotation public'
+                }
+                onClick={() => void handleVisibilityChange(nextVisibility)}
+              >
+                {rotation.visibility === 'public' ? (
+                  <Eye className="size-4" />
+                ) : (
+                  <EyeOff className="size-4" />
+                )}
+              </Button>
+            )}
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
               <DialogTrigger asChild>
                 <Button

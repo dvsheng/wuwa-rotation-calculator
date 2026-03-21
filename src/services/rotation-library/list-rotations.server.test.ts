@@ -3,25 +3,32 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SavedRotationData } from '@/schemas/library';
 
 const mocks = vi.hoisted(() => {
-  const findMany = vi.fn();
-  const selectWhere = vi.fn();
-  const selectFrom = vi.fn(() => ({ where: selectWhere }));
-  const select = vi.fn(() => ({ from: selectFrom }));
+  const countWhere = vi.fn();
+  const countFrom = vi.fn(() => ({ where: countWhere }));
+  const rowsLimit = vi.fn();
+  const rowsOffset = vi.fn(() => ({ limit: rowsLimit }));
+  const rowsOrderBy = vi.fn();
+  const rowsWhere = vi.fn(() => ({ orderBy: rowsOrderBy }));
+  const rowsLeftJoin = vi.fn(() => ({ where: rowsWhere }));
+  const rowsFrom = vi.fn(() => ({ leftJoin: rowsLeftJoin }));
+  const select = vi.fn((selection?: Record<string, unknown>) =>
+    selection && 'count' in selection ? { from: countFrom } : { from: rowsFrom },
+  );
 
   const database = {
-    query: {
-      rotations: {
-        findMany,
-      },
-    },
     select,
   };
 
   return {
-    findMany,
     select,
-    selectFrom,
-    selectWhere,
+    countFrom,
+    countWhere,
+    rowsFrom,
+    rowsLeftJoin,
+    rowsWhere,
+    rowsOrderBy,
+    rowsOffset,
+    rowsLimit,
     database,
   };
 });
@@ -32,19 +39,25 @@ vi.mock('@/db/client', () => ({
 
 describe('listRotationsHandler', () => {
   beforeEach(() => {
-    mocks.findMany.mockClear();
     mocks.select.mockClear();
-    mocks.selectFrom.mockClear();
-    mocks.selectWhere.mockClear();
+    mocks.countFrom.mockClear();
+    mocks.countWhere.mockReset();
+    mocks.rowsFrom.mockClear();
+    mocks.rowsLeftJoin.mockClear();
+    mocks.rowsWhere.mockClear();
+    mocks.rowsOrderBy.mockReset();
+    mocks.rowsOffset.mockReset();
+    mocks.rowsLimit.mockReset();
   });
 
   it('returns owned rotations for the current user', async () => {
     const { listRotationsHandler } = await import('./list-rotations.server');
 
-    mocks.findMany.mockResolvedValue([
+    mocks.rowsOrderBy.mockResolvedValue([
       {
         id: 1,
         ownerId: 'dev-local-owner',
+        ownerName: 'dev-local-owner',
         name: 'Rotation 1',
         description: undefined,
         totalDamage: undefined,
@@ -65,12 +78,12 @@ describe('listRotationsHandler', () => {
       'dev-local-owner',
     );
 
-    expect(mocks.findMany).toHaveBeenCalledTimes(1);
+    expect(mocks.select).toHaveBeenCalledTimes(1);
     expect(result).toEqual({
       items: [
         {
           id: 1,
-          ownerId: 'dev-local-owner',
+          ownerName: 'dev-local-owner',
           name: 'Rotation 1',
           description: undefined,
           totalDamage: undefined,
@@ -90,10 +103,11 @@ describe('listRotationsHandler', () => {
   it('applies character filters to owned rotations too', async () => {
     const { listRotationsHandler } = await import('./list-rotations.server');
 
-    mocks.findMany.mockResolvedValue([
+    mocks.rowsOrderBy.mockResolvedValue([
       {
         id: 3,
         ownerId: 'dev-local-owner',
+        ownerName: 'dev-local-owner',
         name: 'Filtered Rotation',
         description: undefined,
         totalDamage: 999,
@@ -114,7 +128,7 @@ describe('listRotationsHandler', () => {
       'dev-local-owner',
     );
 
-    expect(mocks.findMany).toHaveBeenCalledTimes(1);
+    expect(mocks.select).toHaveBeenCalledTimes(1);
     expect(result.items).toHaveLength(1);
     expect(result.items[0]?.name).toBe('Filtered Rotation');
   });
@@ -122,11 +136,13 @@ describe('listRotationsHandler', () => {
   it('returns public rotations with ownership metadata', async () => {
     const { listRotationsHandler } = await import('./list-rotations.server');
 
-    mocks.selectWhere.mockResolvedValue([{ count: 2 }]);
-    mocks.findMany.mockResolvedValue([
+    mocks.countWhere.mockResolvedValue([{ count: 2 }]);
+    mocks.rowsOrderBy.mockReturnValue({ offset: mocks.rowsOffset });
+    mocks.rowsLimit.mockResolvedValue([
       {
         id: 1,
         ownerId: 'dev-local-owner',
+        ownerName: 'dev-local-owner',
         name: 'My Public Rotation',
         description: undefined,
         totalDamage: 1111,
@@ -143,6 +159,7 @@ describe('listRotationsHandler', () => {
       {
         id: 2,
         ownerId: 'other-user',
+        ownerName: 'other-user',
         name: 'Community Rotation',
         description: 'Shared',
         totalDamage: 2222,
@@ -163,13 +180,12 @@ describe('listRotationsHandler', () => {
       'dev-local-owner',
     );
 
-    expect(mocks.select).toHaveBeenCalledTimes(1);
-    expect(mocks.findMany).toHaveBeenCalledTimes(1);
+    expect(mocks.select).toHaveBeenCalledTimes(2);
     expect(result).toEqual({
       items: [
         {
           id: 1,
-          ownerId: 'dev-local-owner',
+          ownerName: 'dev-local-owner',
           name: 'My Public Rotation',
           description: undefined,
           totalDamage: 1111,
@@ -181,7 +197,7 @@ describe('listRotationsHandler', () => {
         },
         {
           id: 2,
-          ownerId: 'other-user',
+          ownerName: 'other-user',
           name: 'Community Rotation',
           description: 'Shared',
           totalDamage: 2222,
@@ -201,11 +217,13 @@ describe('listRotationsHandler', () => {
   it('marks guest callers as non-owners for public rows', async () => {
     const { listRotationsHandler } = await import('./list-rotations.server');
 
-    mocks.selectWhere.mockResolvedValue([{ count: 1 }]);
-    mocks.findMany.mockResolvedValue([
+    mocks.countWhere.mockResolvedValue([{ count: 1 }]);
+    mocks.rowsOrderBy.mockReturnValue({ offset: mocks.rowsOffset });
+    mocks.rowsLimit.mockResolvedValue([
       {
         id: 2,
         ownerId: 'other-user',
+        ownerName: 'other-user',
         name: 'Community Rotation',
         description: undefined,
         totalDamage: undefined,

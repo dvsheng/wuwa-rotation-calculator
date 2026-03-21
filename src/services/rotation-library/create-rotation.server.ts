@@ -3,7 +3,7 @@ import { rotations } from '@/db/schema';
 import type { SavedRotation } from '@/schemas/library';
 import type { CreateRotationRequest } from '@/schemas/rotation-library';
 
-import { mapDatabaseRotation } from './map-database-rotation';
+import { mapSavedRotationRow } from './database-rotation-adapter';
 
 export const createRotationHandler = async (
   input: CreateRotationRequest,
@@ -14,5 +14,5 @@ export const createRotationHandler = async (
     .values({ ...input, ownerId, visibility: 'private' })
     .returning();
 
-  return mapDatabaseRotation(created);
+  return mapSavedRotationRow(created);
 };

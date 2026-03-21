@@ -7,8 +7,6 @@ import {
   updateRotation as updateRotationRequest,
 } from '@/services/rotation-library';
 
-import { rotationQueryKeys } from './useRotations';
-
 interface CreateRotationInput {
   name: string;
   description?: string;
@@ -34,11 +32,11 @@ export const useRotationMutations = () => {
 
   const invalidateOwned = () =>
     queryClient.invalidateQueries({
-      queryKey: rotationQueryKeys.scope('owned'),
+      queryKey: ['rotations', 'owned'],
     });
   const invalidatePublic = () =>
     queryClient.invalidateQueries({
-      queryKey: rotationQueryKeys.scope('public'),
+      queryKey: ['rotations', 'public'],
     });
 
   const createMutation = useMutation({

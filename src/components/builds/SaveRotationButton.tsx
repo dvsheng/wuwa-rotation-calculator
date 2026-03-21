@@ -24,7 +24,7 @@ import { Text } from '@/components/ui/typography';
 import { useRotations } from '@/hooks/useRotations';
 import { useSaveRotation } from '@/hooks/useSaveRotation';
 import { useSession } from '@/lib/auth-client';
-import type { SavedRotation } from '@/schemas/library';
+import type { ListedRotation } from '@/schemas/library';
 
 import {
   Item,
@@ -44,7 +44,7 @@ function UpdateExistingRotationList({ onUpdated }: { onUpdated: () => void }) {
     limit: 20,
   });
 
-  const handleUpdateRotation = async (rotation: SavedRotation) => {
+  const handleUpdateRotation = async (rotation: ListedRotation) => {
     if (isPending) {
       return;
     }

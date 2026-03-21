@@ -1,7 +1,18 @@
-import { LogIn, LogOut } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
+import { CircleUserRound, LogIn, LogOut, Sparkles } from 'lucide-react';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { authClient } from '@/lib/auth-client';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { authClient, useSession } from '@/lib/auth-client';
+import { getCurrentRedirectTo } from '@/lib/auth-routing';
 import { cn } from '@/lib/utils';
 
 interface LoginButtonProperties {
@@ -9,31 +20,85 @@ interface LoginButtonProperties {
 }
 
 export function LoginButton({ compactOnMobile = false }: LoginButtonProperties = {}) {
-  const { data: session } = authClient.useSession();
+  const { data: session } = useSession();
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const redirectTo = getCurrentRedirectTo();
 
-  const handleClick = () => {
-    if (session) {
-      authClient.signOut();
-    } else {
-      authClient.signIn.social({
-        provider: 'google',
-        callbackURL: globalThis.location.href,
-      });
+  const handleSignOut = async () => {
+    try {
+      setIsSigningOut(true);
+      await authClient.signOut();
+    } finally {
+      setIsSigningOut(false);
     }
   };
 
-  const Icon = session ? LogOut : LogIn;
-  const label = session ? 'Sign out' : 'Sign in with Google';
+  if (!session) {
+    return (
+      <Button
+        asChild
+        variant="ghost"
+        size="sm"
+        aria-label={compactOnMobile ? 'Sign in' : undefined}
+        className={cn(compactOnMobile && 'max-md:px-2.5')}
+      >
+        <Link
+          to="/auth/$authView"
+          params={{ authView: 'sign-in' }}
+          search={{ redirectTo }}
+        >
+          <LogIn />
+          <span className={cn(compactOnMobile && 'max-md:sr-only')}>Sign in</span>
+        </Link>
+      </Button>
+    );
+  }
+
+  const username =
+    session.user.username ||
+    (session.user.isAnonymous ? 'Guest' : undefined) ||
+    session.user.name ||
+    session.user.email;
+  const needsUsername = !session.user.username;
+
   return (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={handleClick}
-      aria-label={compactOnMobile ? label : undefined}
-      className={cn(compactOnMobile && 'max-md:px-2.5')}
-    >
-      <Icon />
-      <span className={cn(compactOnMobile && 'max-md:sr-only')}>{label}</span>
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={compactOnMobile ? 'Account menu' : undefined}
+          className={cn(compactOnMobile && 'max-md:px-2.5')}
+        >
+          <CircleUserRound />
+          <span className={cn(compactOnMobile && 'max-md:sr-only')}>{username}</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel className="max-w-64 truncate">
+          {session.user.isAnonymous ? 'Guest account' : session.user.email}
+        </DropdownMenuLabel>
+        {needsUsername && !session.user.isAnonymous && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link
+                to="/auth/$authView"
+                params={{ authView: 'complete-profile' }}
+                search={{ redirectTo }}
+              >
+                <Sparkles />
+                Configure Username
+              </Link>
+            </DropdownMenuItem>
+          </>
+        )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem disabled={isSigningOut} onSelect={() => void handleSignOut()}>
+          <LogOut />
+          {isSigningOut ? 'Signing out...' : 'Sign out'}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

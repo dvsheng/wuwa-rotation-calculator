@@ -1,8 +1,10 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { SavedRotation } from '@/schemas/library';
+
+import { SavedRotationCard } from './SavedRotationCard';
 
 vi.mock('@/lib/auth-client', () => ({
   useSession: vi.fn(),
@@ -76,7 +78,11 @@ describe('SavedRotationCard', () => {
     } as any);
   });
 
-  it('hides owner controls for other users', async () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('hides owner controls for other users', () => {
     vi.mocked(mockUseSession).mockReturnValue({
       data: {
         user: {
@@ -85,7 +91,6 @@ describe('SavedRotationCard', () => {
       },
     } as any);
 
-    const { SavedRotationCard } = await import('./SavedRotationCard');
     render(<SavedRotationCard rotation={mockRotation} />);
 
     expect(screen.getByRole('button', { name: /load/i })).toBeInTheDocument();
@@ -104,7 +109,6 @@ describe('SavedRotationCard', () => {
       },
     } as any);
 
-    const { SavedRotationCard } = await import('./SavedRotationCard');
     render(<SavedRotationCard rotation={mockRotation} />);
 
     await userEvent.click(screen.getByRole('button', { name: /load/i }));
@@ -112,11 +116,32 @@ describe('SavedRotationCard', () => {
     expect(mockLoadRotation).toHaveBeenCalledWith(mockRotation);
   });
 
+  it('hides the public toggle for anonymous owners', () => {
+    vi.mocked(mockUseSession).mockReturnValue({
+      data: {
+        user: {
+          id: 'owner-123',
+          isAnonymous: true,
+        },
+      },
+    } as any);
+
+    render(<SavedRotationCard rotation={mockRotation} />);
+
+    expect(
+      screen.queryByRole('button', { name: /make rotation public/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /delete rotation/i }),
+    ).toBeInTheDocument();
+  });
+
   it('updates visibility when the owner toggles the public switch', async () => {
     vi.mocked(mockUseSession).mockReturnValue({
       data: {
         user: {
           id: 'owner-123',
+          isAnonymous: false,
         },
       },
     } as any);
@@ -125,7 +150,6 @@ describe('SavedRotationCard', () => {
       visibility: 'public',
     });
 
-    const { SavedRotationCard } = await import('./SavedRotationCard');
     render(<SavedRotationCard rotation={mockRotation} />);
 
     await userEvent.click(

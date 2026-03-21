@@ -35,6 +35,9 @@ export const authUser = pgTable('user', {
   email: text('email').notNull().unique(),
   emailVerified: boolean('email_verified').notNull(),
   image: text('image'),
+  isAnonymous: boolean('is_anonymous').default(false).notNull(),
+  username: text('username').unique(),
+  displayUsername: text('display_username'),
   createdAt: timestamp('created_at').notNull(),
   updatedAt: timestamp('updated_at').notNull(),
 });
@@ -167,7 +170,9 @@ export const capabilities = pgTable('capabilities', {
  */
 export const rotations = pgTable('rotations', {
   ...baseTableFields,
-  ownerId: text('owner_id').notNull(),
+  ownerId: text('owner_id')
+    .notNull()
+    .references(() => authUser.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   description: text('description'),
   totalDamage: real('total_damage'),

@@ -4,7 +4,12 @@ import { getRequest } from '@tanstack/react-start/server';
 import { auth } from '@/lib/auth';
 
 export interface AuthContext {
-  user: { sub: string; username: string };
+  user: {
+    email: string;
+    id: string;
+    isAnonymous: boolean;
+    username?: string;
+  };
 }
 
 export const authMiddleware = createMiddleware({ type: 'function' })
@@ -22,6 +27,8 @@ export const authMiddleware = createMiddleware({ type: 'function' })
         user: {
           id: session.user.id,
           email: session.user.email,
+          isAnonymous: session.user.isAnonymous ?? false,
+          username: session.user.username ?? undefined,
         },
       },
     });

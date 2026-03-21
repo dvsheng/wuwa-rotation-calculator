@@ -1,3 +1,4 @@
+import { Link, useLocation } from '@tanstack/react-router';
 import type { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import {
@@ -9,7 +10,6 @@ import {
   Play,
   Trash2,
 } from 'lucide-react';
-import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { EntityIcon } from '@/components/common/EntityIcon';
@@ -18,11 +18,13 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   HoverCard,
@@ -30,15 +32,17 @@ import {
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
 import { Row, Stack } from '@/components/ui/layout';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Text } from '@/components/ui/typography';
 import { useLoadRotation } from '@/hooks/useLoadRotation';
 import { useRotationMutations } from '@/hooks/useRotationMutations';
+import { useSession } from '@/lib/auth-client';
 import type { ListedRotation, SavedRotation } from '@/schemas/library';
 
 interface RotationTableProperties {
   title: string;
   description: string;
-  rotations: Array<SavedRotation | ListedRotation>;
+  rotations: Array<ListedRotation>;
   showOwnerActions: boolean;
   emptyMessage: string;
   totalLabel?: string;
@@ -110,6 +114,111 @@ function RotationDetailsHoverCard({
   );
 }
 
+function RotationVisibilityButton({
+  isDisabled,
+  onClick,
+  visibility,
+}: {
+  isDisabled: boolean;
+  onClick: () => void;
+  visibility: ListedRotation['visibility'];
+}) {
+  const currentLocation = useLocation();
+  const buttonLabel =
+    visibility === 'public' ? 'Make rotation private' : 'Make rotation public';
+  const button = (
+    <Button
+      variant="ghost"
+      size="icon-sm"
+      disabled={isDisabled}
+      aria-label={buttonLabel}
+      title={buttonLabel}
+      onClick={onClick}
+    >
+      {visibility === 'public' ? <Eye /> : <EyeOff />}
+    </Button>
+  );
+
+  if (!isDisabled) {
+    return button;
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex" tabIndex={0}>
+          {button}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-64">
+        <Stack gap="trim">
+          <Text variant="caption">
+            Choose a username before making rotations public.
+          </Text>
+          <Link
+            to="/auth/$authView"
+            params={{ authView: 'complete-profile' }}
+            search={{ redirectTo: currentLocation.href }}
+            className="text-xs underline underline-offset-2"
+          >
+            Finish configuring your account
+          </Link>
+        </Stack>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+const DeleteRotationButton = ({
+  deleteRotation,
+  isDeleting,
+  rotation,
+}: {
+  deleteRotation: (input: { id: number }) => Promise<unknown>;
+  isDeleting: boolean;
+  rotation: ListedRotation;
+}) => {
+  const handleDelete = async () => {
+    try {
+      await deleteRotation({ id: rotation.id });
+      toast.success('Rotation deleted.');
+    } catch {
+      toast.error('Failed to delete rotation.');
+    }
+  };
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon-sm" disabled={isDeleting}>
+          <Trash2 className="size-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Are you sure?</DialogTitle>
+          <DialogDescription>
+            This action cannot be undone. This will permanently delete the rotation "
+            {rotation.name}".
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DialogClose>
+          <Button
+            variant="destructive"
+            onClick={() => void handleDelete()}
+            disabled={isDeleting}
+          >
+            Delete
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 export function RotationTable({
   title,
   description,
@@ -124,228 +233,164 @@ export function RotationTable({
   const loadRotation = useLoadRotation();
   const { deleteRotation, updateRotation, isDeleting, isUpdating } =
     useRotationMutations();
-  const [rotationPendingDeletion, setRotationPendingDeletion] = useState<
-    SavedRotation | undefined
-  >();
+  const { data: session } = useSession();
 
   const handleVisibilityChange = async (rotation: SavedRotation | ListedRotation) => {
     const nextVisibility = rotation.visibility === 'public' ? 'private' : 'public';
-
     try {
       await updateRotation({
         id: rotation.id,
         visibility: nextVisibility,
       });
-      toast.success(
-        nextVisibility === 'public'
-          ? 'Rotation is now public.'
-          : 'Rotation is now private.',
-      );
+      toast.success(`Rotation is now ${nextVisibility}.`);
     } catch {
       toast.error('Failed to update rotation visibility.');
     }
   };
 
-  const handleDelete = async () => {
-    if (!rotationPendingDeletion) {
-      return;
-    }
-
-    try {
-      await deleteRotation({ id: rotationPendingDeletion.id });
-      toast.success('Rotation deleted.');
-      setRotationPendingDeletion(undefined);
-    } catch {
-      toast.error('Failed to delete rotation.');
-    }
-  };
-
-  const columns: Array<ColumnDef<SavedRotation | ListedRotation>> = [
+  const columns: Array<ColumnDef<ListedRotation>> = [
     {
       id: 'team',
       header: 'Team',
       cell: ({ row }) => {
-        const configuredCharacters = row.original.data.team
-          .filter((character) => character.id > 0)
-          .slice(0, 3);
-
+        const configuredCharacters = row.original.data.team;
         return (
-          <Row gap="inset" className="min-w-0">
+          <Row>
             <RotationDetailsHoverCard rotation={row.original} />
-            {configuredCharacters.length > 0 ? (
-              <Row gap="inset">
-                {configuredCharacters.map((character) => (
-                  <EntityIcon key={character.id} entityId={character.id} size="large" />
-                ))}
-              </Row>
-            ) : (
-              <Text variant="caption" tone="muted">
-                No team
-              </Text>
-            )}
+            <Row>
+              {configuredCharacters.map((character) => (
+                <EntityIcon
+                  key={character.id}
+                  entityId={character.id}
+                  size="medium"
+                  className="shrink-0"
+                />
+              ))}
+            </Row>
           </Row>
         );
       },
-      meta: {
-        headerClassName: 'w-52',
-        cellClassName: 'w-52',
-      },
+      meta: { headerClassName: 'w-[30%]', cellClassName: 'w-[30%]' },
     },
     {
       accessorKey: 'totalDamage',
       header: 'Damage',
       cell: ({ row }) => (
-        <Text variant="bodySm" tabular>
+        <Text variant="bodySm" tabular className="font-mono whitespace-nowrap">
           {row.original.totalDamage?.toLocaleString(undefined, {
             maximumFractionDigits: 0,
           }) ?? 'Not calculated'}
         </Text>
       ),
-      meta: {
-        headerClassName: 'w-40',
-        cellClassName: 'w-40',
-      },
+      meta: { headerClassName: 'w-[15%]', cellClassName: 'w-[15%]' },
     },
     {
       accessorKey: 'name',
       header: 'Name',
       cell: ({ row }) => (
-        <Text variant="bodySm" className="font-medium">
+        <Text variant="bodySm" className="block truncate">
           {row.original.name}
         </Text>
       ),
-      meta: {
-        cellClassName: 'min-w-56',
+      meta: { headerClassName: 'w-[25%]', cellClassName: 'w-[25%]' },
+    },
+    {
+      id: 'context',
+      header: showOwnerActions ? 'Status' : 'Owner',
+      cell: ({ row }) => {
+        if (showOwnerActions) {
+          return (
+            <Text className="block truncate">
+              {row.original.visibility === 'public' ? 'Public' : 'Private'}
+            </Text>
+          );
+        }
+        return (
+          <Text variant="bodySm" className="block truncate">
+            {row.original.ownerName}
+          </Text>
+        );
       },
+      meta: { headerClassName: 'w-[10%]', cellClassName: 'w-[10%]' },
     },
     {
       id: 'actions',
-      header: '',
-      cell: ({ row }) => (
-        <Row gap="trim" className="justify-end">
-          {showOwnerActions && (
-            <>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                disabled={isUpdating}
-                aria-label={
-                  row.original.visibility === 'public'
-                    ? 'Make rotation private'
-                    : 'Make rotation public'
-                }
-                onClick={() => void handleVisibilityChange(row.original)}
-              >
-                {row.original.visibility === 'public' ? (
-                  <Eye className="size-4" />
-                ) : (
-                  <EyeOff className="size-4" />
+      header: 'Actions',
+      cell: ({ row }) => {
+        return (
+          <Row justify="end" gap="inset">
+            {showOwnerActions && (
+              <>
+                {!session?.user.isAnonymous && (
+                  <RotationVisibilityButton
+                    visibility={row.original.visibility}
+                    isDisabled={!session?.user.username || isUpdating}
+                    onClick={() => handleVisibilityChange(row.original)}
+                  />
                 )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                disabled={isDeleting}
-                onClick={() =>
-                  setRotationPendingDeletion(row.original as SavedRotation)
-                }
-              >
-                <Trash2 className="size-4" />
-              </Button>
-            </>
-          )}
-          <Button size="sm" onClick={() => void loadRotation(row.original)}>
-            <Play className="size-4" />
-            Load
-          </Button>
-        </Row>
-      ),
+                <DeleteRotationButton
+                  rotation={row.original}
+                  deleteRotation={deleteRotation}
+                  isDeleting={isDeleting}
+                />
+              </>
+            )}
+            <Button size="sm" onClick={() => loadRotation(row.original)}>
+              <Play />
+              Load
+            </Button>
+          </Row>
+        );
+      },
       meta: {
-        headerClassName: showOwnerActions ? 'w-56' : 'w-24',
-        cellClassName: showOwnerActions ? 'w-56' : 'w-24',
+        headerClassName: 'w-[20%] text-right',
+        cellClassName: 'w-[20%] text-right',
       },
     },
   ];
 
   return (
-    <>
-      <Stack gap="component">
-        <Stack gap="trim">
-          <Text as="h3" variant="heading">
-            {title}
-          </Text>
-          <Text variant="bodySm" tone="muted">
-            {description}
-          </Text>
-        </Stack>
-
-        <DataTable
-          columns={columns}
-          data={rotations}
-          emptyMessage={emptyMessage}
-          classNames={{
-            wrapper: 'overflow-hidden bg-card',
-            cell: 'py-3 align-middle',
-          }}
-        />
-
-        {(onPreviousPage || onNextPage) && (
-          <Row justify="between" gap="component" wrap>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!onPreviousPage}
-              onClick={onPreviousPage}
-            >
-              <ChevronLeft className="size-4" />
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!hasNextPage || !onNextPage || isPreviousData}
-              onClick={onNextPage}
-            >
-              Next
-              <ChevronRight className="size-4" />
-            </Button>
-          </Row>
-        )}
+    <Stack gap="component">
+      <Stack gap="trim">
+        <Text as="h3" variant="heading">
+          {title}
+        </Text>
+        <Text variant="bodySm" tone="muted">
+          {description}
+        </Text>
       </Stack>
 
-      <Dialog
-        open={rotationPendingDeletion !== undefined}
-        onOpenChange={(open) => {
-          if (!open) {
-            setRotationPendingDeletion(undefined);
-          }
+      <DataTable
+        columns={columns}
+        data={rotations}
+        emptyMessage={emptyMessage}
+        classNames={{
+          wrapper: 'bg-card',
         }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Are you sure?</DialogTitle>
-            <DialogDescription>
-              This action cannot be undone. This will permanently delete the rotation "
-              {rotationPendingDeletion?.name}".
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setRotationPendingDeletion(undefined)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => void handleDelete()}
-              disabled={isDeleting}
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+      />
+
+      {(onPreviousPage || onNextPage) && (
+        <Row justify="between" gap="component" wrap>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!onPreviousPage}
+            onClick={onPreviousPage}
+          >
+            <ChevronLeft className="size-4" />
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!hasNextPage || !onNextPage || isPreviousData}
+            onClick={onNextPage}
+          >
+            Next
+            <ChevronRight className="size-4" />
+          </Button>
+        </Row>
+      )}
+    </Stack>
   );
 }

@@ -6,9 +6,7 @@ import type { AdminGetEntityDetailsRequest } from '@/schemas/admin';
 
 import { replaceNullsWithUndefined } from '../game-data/database-type-adapters';
 
-export const getAdminEntityDetailsHandler = async ({
-  id,
-}: AdminGetEntityDetailsRequest) => {
+export const getEntityDetailsHandler = async ({ id }: AdminGetEntityDetailsRequest) => {
   const databaseEntity = await database.query.entities.findFirst({
     where: eq(entities.id, id),
     with: {
@@ -24,5 +22,5 @@ export const getAdminEntityDetailsHandler = async ({
     throw new Error(`Entity not found for ID ${id}`);
   }
   const entity = replaceNullsWithUndefined(databaseEntity);
-  return { entity: entity };
+  return { entity };
 };

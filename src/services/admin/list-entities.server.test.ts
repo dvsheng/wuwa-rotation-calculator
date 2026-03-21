@@ -21,7 +21,7 @@ vi.mock('@/db/client', () => ({
   database: mocks.database,
 }));
 
-describe('listAdminEntitiesHandler', () => {
+describe('listEntitiesHandler', () => {
   beforeEach(() => {
     mocks.select.mockClear();
     mocks.from.mockClear();
@@ -30,7 +30,7 @@ describe('listAdminEntitiesHandler', () => {
   });
 
   it('returns ordered entities without skill counts', async () => {
-    const { listAdminEntitiesHandler } = await import('./list-admin-entities.server');
+    const { listEntitiesHandler } = await import('./list-entities.server');
 
     mocks.orderBy.mockResolvedValue([
       {
@@ -45,7 +45,7 @@ describe('listAdminEntitiesHandler', () => {
       },
     ]);
 
-    const result = await listAdminEntitiesHandler();
+    const result = await listEntitiesHandler();
 
     expect(result).toHaveLength(1);
     expect(result[0].name).toBe('Aalto');

@@ -9,13 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as EntitiesRouteImport } from './routes/entities'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as BuildsRouteImport } from './routes/builds'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AdminEntitiesRouteImport } from './routes/admin.entities'
+import { Route as EntitiesIdRouteImport } from './routes/entities_.$id'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
-import { Route as AdminEntitiesIdRouteImport } from './routes/admin.entities_.$id'
 
+const EntitiesRoute = EntitiesRouteImport.update({
+  id: '/entities',
+  path: '/entities',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CreateRoute = CreateRouteImport.update({
   id: '/create',
   path: '/create',
@@ -31,9 +36,9 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminEntitiesRoute = AdminEntitiesRouteImport.update({
-  id: '/admin/entities',
-  path: '/admin/entities',
+const EntitiesIdRoute = EntitiesIdRouteImport.update({
+  id: '/entities_/$id',
+  path: '/entities/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
@@ -41,26 +46,21 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminEntitiesIdRoute = AdminEntitiesIdRouteImport.update({
-  id: '/admin/entities_/$id',
-  path: '/admin/entities/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/builds': typeof BuildsRoute
   '/create': typeof CreateRoute
-  '/admin/entities': typeof AdminEntitiesRoute
-  '/admin/entities/$id': typeof AdminEntitiesIdRoute
+  '/entities': typeof EntitiesRoute
+  '/entities/$id': typeof EntitiesIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/builds': typeof BuildsRoute
   '/create': typeof CreateRoute
-  '/admin/entities': typeof AdminEntitiesRoute
-  '/admin/entities/$id': typeof AdminEntitiesIdRoute
+  '/entities': typeof EntitiesRoute
+  '/entities/$id': typeof EntitiesIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
@@ -68,8 +68,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/builds': typeof BuildsRoute
   '/create': typeof CreateRoute
-  '/admin/entities': typeof AdminEntitiesRoute
-  '/admin/entities_/$id': typeof AdminEntitiesIdRoute
+  '/entities': typeof EntitiesRoute
+  '/entities_/$id': typeof EntitiesIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
@@ -78,24 +78,24 @@ export interface FileRouteTypes {
     | '/'
     | '/builds'
     | '/create'
-    | '/admin/entities'
-    | '/admin/entities/$id'
+    | '/entities'
+    | '/entities/$id'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/builds'
     | '/create'
-    | '/admin/entities'
-    | '/admin/entities/$id'
+    | '/entities'
+    | '/entities/$id'
     | '/api/auth/$'
   id:
     | '__root__'
     | '/'
     | '/builds'
     | '/create'
-    | '/admin/entities'
-    | '/admin/entities_/$id'
+    | '/entities'
+    | '/entities_/$id'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
@@ -103,13 +103,20 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BuildsRoute: typeof BuildsRoute
   CreateRoute: typeof CreateRoute
-  AdminEntitiesRoute: typeof AdminEntitiesRoute
-  AdminEntitiesIdRoute: typeof AdminEntitiesIdRoute
+  EntitiesRoute: typeof EntitiesRoute
+  EntitiesIdRoute: typeof EntitiesIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/entities': {
+      id: '/entities'
+      path: '/entities'
+      fullPath: '/entities'
+      preLoaderRoute: typeof EntitiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/create': {
       id: '/create'
       path: '/create'
@@ -131,11 +138,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/entities': {
-      id: '/admin/entities'
-      path: '/admin/entities'
-      fullPath: '/admin/entities'
-      preLoaderRoute: typeof AdminEntitiesRouteImport
+    '/entities_/$id': {
+      id: '/entities_/$id'
+      path: '/entities/$id'
+      fullPath: '/entities/$id'
+      preLoaderRoute: typeof EntitiesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/$': {
@@ -145,13 +152,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/entities_/$id': {
-      id: '/admin/entities_/$id'
-      path: '/admin/entities/$id'
-      fullPath: '/admin/entities/$id'
-      preLoaderRoute: typeof AdminEntitiesIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -159,8 +159,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BuildsRoute: BuildsRoute,
   CreateRoute: CreateRoute,
-  AdminEntitiesRoute: AdminEntitiesRoute,
-  AdminEntitiesIdRoute: AdminEntitiesIdRoute,
+  EntitiesRoute: EntitiesRoute,
+  EntitiesIdRoute: EntitiesIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

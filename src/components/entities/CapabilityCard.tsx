@@ -99,7 +99,7 @@ export const CapabilityCard = ({
               <CardTitle>
                 {entityId ? (
                   <Link
-                    to="/admin/entities/$id"
+                    to="/entities/$id"
                     params={{ id: String(entityId) }}
                     search={{ capabilityId: capability.id }}
                     className="hover:text-foreground text-foreground transition-colors hover:underline"

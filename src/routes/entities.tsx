@@ -11,11 +11,11 @@ import { DataTable } from '@/components/ui/data-table';
 import { Input } from '@/components/ui/input';
 import { Container, Stack } from '@/components/ui/layout';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import type { AdminEntity, UseAdminEntitiesOptions } from '@/hooks/useAdminEntities';
-import { useAdminEntities } from '@/hooks/useAdminEntities';
+import type { EntityListItem, UseEntitiesOptions } from '@/hooks/useEntities';
+import { useEntities } from '@/hooks/useEntities';
 import { EntityType } from '@/services/game-data';
 
-export function AdminEntitiesPage() {
+export function EntitiesPage() {
   const [searchText, setSearchText] = useState('');
   const [entityType, setEntityType] = useState<string | undefined>();
   return (
@@ -49,13 +49,13 @@ export function AdminEntitiesPage() {
             ))}
           </ToggleGroup>
         </div>
-        <AdminEntitiesTable entityType={entityType as EntityType} search={searchText} />
+        <EntitiesTable entityType={entityType as EntityType} search={searchText} />
       </Stack>
     </Container>
   );
 }
 
-const AdminEntitiesTableLoading = () => {
+const EntitiesTableLoading = () => {
   return (
     <Card className="h-full">
       <LoadingSpinnerContainer message="Loading entities..." spinnerSize={40} />
@@ -63,11 +63,11 @@ const AdminEntitiesTableLoading = () => {
   );
 };
 
-const AdminEntitiesTable = (options: UseAdminEntitiesOptions) => {
-  const { data } = useAdminEntities(options);
+const EntitiesTable = (options: UseEntitiesOptions) => {
+  const { data } = useEntities(options);
   const navigate = useNavigate();
 
-  const columns: Array<ColumnDef<AdminEntity>> = [
+  const columns: Array<ColumnDef<EntityListItem>> = [
     {
       accessorKey: 'icon',
       header: undefined,
@@ -87,7 +87,7 @@ const AdminEntitiesTable = (options: UseAdminEntitiesOptions) => {
     },
   ];
   return (
-    <Suspense fallback={<AdminEntitiesTableLoading />}>
+    <Suspense fallback={<EntitiesTableLoading />}>
       <DataTable
         columns={columns}
         data={data}
@@ -98,7 +98,7 @@ const AdminEntitiesTable = (options: UseAdminEntitiesOptions) => {
         }}
         onRowClick={(row) =>
           navigate({
-            to: '/admin/entities/$id',
+            to: '/entities/$id',
             params: { id: String(row.id) },
           })
         }
@@ -107,6 +107,6 @@ const AdminEntitiesTable = (options: UseAdminEntitiesOptions) => {
   );
 };
 
-export const Route = createFileRoute('/admin/entities')({
-  component: AdminEntitiesPage,
+export const Route = createFileRoute('/entities')({
+  component: EntitiesPage,
 });

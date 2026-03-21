@@ -168,7 +168,7 @@ const CapabilityCardContent = ({
   const hasDetails = isDetailedAttack(capability)
     ? capability.damageInstances.length > 0
     : capability.modifiedStats.length > 0;
-  const adminCapabilityHref = `/admin/entities/${capability.entityId}?capabilityId=${capability.id}`;
+  const entityCapabilityHref = `/entities/${capability.entityId}?capabilityId=${capability.id}`;
 
   return (
     <Stack gap="inset">
@@ -199,7 +199,7 @@ const CapabilityCardContent = ({
         <ModifierCapabilityContent capability={capability} />
       )}
       <a
-        href={adminCapabilityHref}
+        href={entityCapabilityHref}
         className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-xs font-medium underline-offset-4 transition-colors hover:underline"
       >
         Open in admin

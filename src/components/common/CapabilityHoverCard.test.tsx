@@ -72,7 +72,7 @@ describe('CapabilityHoverCard', () => {
       expect(await screen.findByText('Weapon')).toBeInTheDocument();
       expect(screen.getByRole('link', { name: 'Open in admin' })).toHaveAttribute(
         'href',
-        '/admin/entities/1?capabilityId=1',
+        '/entities/1?capabilityId=1',
       );
     });
 

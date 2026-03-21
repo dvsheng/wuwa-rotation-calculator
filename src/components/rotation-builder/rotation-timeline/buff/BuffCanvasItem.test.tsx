@@ -173,9 +173,7 @@ describe('BuffCanvasItem', () => {
 
       render(<BuffCanvasItem buff={buff} onRemove={() => {}} />);
 
-      expect(screen.getByTestId('buff-canvas-item')).not.toHaveClass(
-        'border-warning',
-      );
+      expect(screen.getByTestId('buff-canvas-item')).not.toHaveClass('border-warning');
     });
   });
 

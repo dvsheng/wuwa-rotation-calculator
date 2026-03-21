@@ -2,8 +2,8 @@ import { Link } from '@tanstack/react-router';
 import { ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 
-import { useAdminEntity } from '@/hooks/useAdminEntities';
-import type { DetailedAdminEntity } from '@/hooks/useAdminEntities';
+import { useEntity } from '@/hooks/useEntities';
+import type { DetailedEntity } from '@/hooks/useEntities';
 import { EntityType } from '@/services/game-data';
 
 import { EntityIcon } from '../common/EntityIcon';
@@ -17,9 +17,7 @@ import { ByTypeView } from './ByTypeView';
 
 type GroupMode = 'skill' | 'type';
 
-export type AdminEntityProperties = DetailedAdminEntity;
-
-type Entity = DetailedAdminEntity['entity'];
+type Entity = DetailedEntity['entity'];
 
 export const AdminEntity = ({
   id,
@@ -28,7 +26,7 @@ export const AdminEntity = ({
   id: number;
   capabilityId?: number;
 }) => {
-  const { data } = useAdminEntity(id);
+  const { data } = useEntity(id);
   const supportsBySkill = data.entity.type === EntityType.CHARACTER;
   const [groupMode, setGroupMode] = useState<GroupMode>(
     supportsBySkill ? 'skill' : 'type',
@@ -45,7 +43,7 @@ export const AdminEntity = ({
           className="bg-background/95 sticky top-0 z-10 py-2 backdrop-blur"
         >
           <Link
-            to="/admin/entities"
+            to="/entities"
             className="text-muted-foreground hover:text-foreground text-sm transition-colors"
           >
             Entities

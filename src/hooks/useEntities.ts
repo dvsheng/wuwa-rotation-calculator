@@ -1,21 +1,21 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 
-import { getAdminEntityDetails, listAdminEntities } from '@/services/admin';
+import { getEntityDetails, listEntities } from '@/services/admin';
 import type { EntityType } from '@/services/game-data';
 
-export interface UseAdminEntitiesOptions {
+export interface UseEntitiesOptions {
   entityType?: EntityType;
   search?: string;
 }
 
-export type AdminEntity = Awaited<ReturnType<typeof useAdminEntities>>['data'][number];
+export type EntityListItem = Awaited<ReturnType<typeof useEntities>>['data'][number];
 
-export type DetailedAdminEntity = ReturnType<typeof useAdminEntity>['data'];
+export type DetailedEntity = ReturnType<typeof useEntity>['data'];
 
-export const useAdminEntities = ({ entityType, search }: UseAdminEntitiesOptions) => {
+export const useEntities = ({ entityType, search }: UseEntitiesOptions) => {
   const query = useSuspenseQuery({
-    queryKey: ['admin-entities'],
-    queryFn: () => listAdminEntities(),
+    queryKey: ['entities'],
+    queryFn: () => listEntities(),
     staleTime: Infinity,
     retry: false,
   });
@@ -34,10 +34,10 @@ export const useAdminEntities = ({ entityType, search }: UseAdminEntitiesOptions
   return { ...query, data: filteredData };
 };
 
-export const useAdminEntity = (entityId: number) => {
+export const useEntity = (entityId: number) => {
   return useSuspenseQuery({
-    queryKey: ['admin-entity-details', entityId],
-    queryFn: () => getAdminEntityDetails({ data: { id: entityId } }),
+    queryKey: ['entity-details', entityId],
+    queryFn: () => getEntityDetails({ data: { id: entityId } }),
     staleTime: Infinity,
     retry: false,
   });

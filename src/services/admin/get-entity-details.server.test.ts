@@ -21,14 +21,13 @@ vi.mock('@/db/client', () => ({
   database: mocks.database,
 }));
 
-describe('getAdminEntityDetailsHandler', () => {
+describe('getEntityDetailsHandler', () => {
   beforeEach(() => {
     mocks.findFirst.mockClear();
   });
 
   it('returns the entity with nested skills and capabilities', async () => {
-    const { getAdminEntityDetailsHandler } =
-      await import('./get-admin-entity-details.server');
+    const { getEntityDetailsHandler } = await import('./get-entity-details.server');
 
     mocks.findFirst.mockResolvedValue({
       id: 100,
@@ -82,7 +81,7 @@ describe('getAdminEntityDetailsHandler', () => {
       ],
     });
 
-    const result = await getAdminEntityDetailsHandler({ id: 100 });
+    const result = await getEntityDetailsHandler({ id: 100 });
 
     expect(result.entity.id).toBe(100);
     expect(result.entity.skills).toHaveLength(1);
@@ -92,8 +91,7 @@ describe('getAdminEntityDetailsHandler', () => {
   });
 
   it('returns the entity when it has skills without capabilities', async () => {
-    const { getAdminEntityDetailsHandler } =
-      await import('./get-admin-entity-details.server');
+    const { getEntityDetailsHandler } = await import('./get-entity-details.server');
 
     mocks.findFirst.mockResolvedValue({
       id: 100,
@@ -126,7 +124,7 @@ describe('getAdminEntityDetailsHandler', () => {
       ],
     });
 
-    const result = await getAdminEntityDetailsHandler({ id: 100 });
+    const result = await getEntityDetailsHandler({ id: 100 });
 
     expect(result.entity.skills).toHaveLength(1);
     expect(result.entity.skills[0]?.name).toBe('Skill With No Caps');
@@ -136,12 +134,11 @@ describe('getAdminEntityDetailsHandler', () => {
   });
 
   it('throws when the entity does not exist', async () => {
-    const { getAdminEntityDetailsHandler } =
-      await import('./get-admin-entity-details.server');
+    const { getEntityDetailsHandler } = await import('./get-entity-details.server');
 
     mocks.findFirst.mockImplementation(() => {});
 
-    await expect(getAdminEntityDetailsHandler({ id: 999_999 })).rejects.toThrow(
+    await expect(getEntityDetailsHandler({ id: 999_999 })).rejects.toThrow(
       'Entity not found for ID 999999',
     );
   });

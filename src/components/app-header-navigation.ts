@@ -8,8 +8,8 @@ export const APP_HEADER_HOME = {
 export const APP_HEADER_NAV_ITEMS = [
   {
     label: 'Entities',
-    to: '/admin/entities',
-    matchPath: '/admin',
+    to: '/entities',
+    matchPath: '/entities',
     icon: Database,
   },
   {

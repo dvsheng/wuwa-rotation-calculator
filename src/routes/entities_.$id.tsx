@@ -1,20 +1,20 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 
-import { AdminEntity } from '@/components/admin/AdminEntity';
+import { AdminEntity } from '@/components/entities/AdminEntity';
 
-const adminEntitySearchSchema = z.object({
+const entitySearchSchema = z.object({
   capabilityId: z.coerce.number().int().positive().optional(),
 });
 
-function AdminEntityDetailsPage() {
+function EntityDetailsPage() {
   const { id } = Route.useParams();
   const { capabilityId } = Route.useSearch();
 
   return <AdminEntity id={Number.parseInt(id)} capabilityId={capabilityId} />;
 }
 
-export const Route = createFileRoute('/admin/entities_/$id')({
-  validateSearch: adminEntitySearchSchema,
-  component: AdminEntityDetailsPage,
+export const Route = createFileRoute('/entities_/$id')({
+  validateSearch: entitySearchSchema,
+  component: EntityDetailsPage,
 });

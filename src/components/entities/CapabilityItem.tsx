@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type { DetailedAdminEntity } from '@/hooks/useAdminEntities';
+import type { DetailedEntity } from '@/hooks/useEntities';
 import type { Sequence } from '@/services/game-data';
 
 import { EntityIcon } from '../common/EntityIcon';
@@ -18,7 +18,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from '../ui/hover-card'
 
 import { CapabilityCard } from './CapabilityCard';
 
-type Entity = DetailedAdminEntity['entity'];
+type Entity = DetailedEntity['entity'];
 
 export type Skill = Entity['skills'][number];
 

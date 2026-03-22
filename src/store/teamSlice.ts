@@ -12,6 +12,7 @@ import type { Enemy } from '@/schemas/enemy';
 import type { Team } from '@/schemas/team';
 import type { RefineLevel } from '@/services/game-data';
 
+import type { RotationBuilderUiSlice } from './rotationBuilderUiSlice';
 import type { RotationSlice } from './rotationSlice';
 
 export interface TeamSlice {
@@ -130,7 +131,7 @@ const initialTeam: Team = [
 const initialEnemy: Enemy = initialEnemyData;
 
 export const createTeamSlice: StateCreator<
-  TeamSlice & RotationSlice,
+  TeamSlice & RotationBuilderUiSlice & RotationSlice,
   [['zustand/immer', never], ['zustand/persist', unknown]],
   [],
   TeamSlice

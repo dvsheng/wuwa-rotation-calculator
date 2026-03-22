@@ -3,16 +3,19 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
+import { createRotationBuilderUiSlice } from './rotationBuilderUiSlice';
+import type { RotationBuilderUiSlice } from './rotationBuilderUiSlice';
 import { createRotationSlice } from './rotationSlice';
 import type { RotationSlice } from './rotationSlice';
 import { createTeamSlice } from './teamSlice';
 import type { TeamSlice } from './teamSlice';
 
-export type AppStore = RotationSlice & TeamSlice;
+export type AppStore = RotationBuilderUiSlice & RotationSlice & TeamSlice;
 
 export const useStore = create<AppStore>()(
   persist(
     immer((...arguments_) => ({
+      ...createRotationBuilderUiSlice(...arguments_),
       ...createRotationSlice(...arguments_),
       ...createTeamSlice(...arguments_),
     })),

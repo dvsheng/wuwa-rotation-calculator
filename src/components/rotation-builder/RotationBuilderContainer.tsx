@@ -3,6 +3,8 @@ import { Suspense, lazy, useEffect, useState } from 'react';
 import { LoadingSpinnerContainer } from '@/components/common/LoadingSpinnerContainer';
 import { TeamContainer } from '@/components/rotation-builder/team/TeamContainer';
 import { useRotationCalculation } from '@/hooks/useRotationCalculation';
+import { useStore, useStoreHydrated } from '@/store';
+import { rotationBuilderTabs } from '@/store/rotationBuilderUiSlice';
 
 import { Stack } from '../ui/layout';
 
@@ -18,19 +20,15 @@ const loadRotationResultContainer = () =>
 
 const LazyRotationResultContainer = lazy(loadRotationResultContainer);
 
-interface RotationBuilderContainerProperties {
-  initialTab?: 'team' | 'rotation' | 'results';
-}
-
-const TAB_ORDER = ['team', 'rotation', 'results'] as const;
-
-export const RotationBuilderContainer = ({
-  initialTab = 'team',
-}: RotationBuilderContainerProperties) => {
-  const [selectedTab, setSelectedTab] = useState(initialTab);
+export const RotationBuilderContainer = () => {
+  const hydrated = useStoreHydrated();
+  const selectedTab = useStore((state) => state.activeTab);
+  const setSelectedTab = useStore((state) => state.setActiveTab);
   const { data: result, isPlaceholderData } = useRotationCalculation();
   const effectiveTab = selectedTab === 'results' && !result ? 'rotation' : selectedTab;
+  const [animState, setAnimState] = useState({ tab: effectiveTab, enterClass: '' });
 
+  // Lazy load the RotationResultContainer if results are present
   useEffect(() => {
     if (!result) {
       return;
@@ -38,10 +36,9 @@ export const RotationBuilderContainer = ({
     loadRotationResultContainer();
   }, [result]);
 
-  const [animState, setAnimState] = useState({ tab: effectiveTab, enterClass: '' });
   if (animState.tab !== effectiveTab) {
-    const previousIndex = TAB_ORDER.indexOf(animState.tab);
-    const currentIndex = TAB_ORDER.indexOf(effectiveTab);
+    const previousIndex = rotationBuilderTabs.indexOf(animState.tab);
+    const currentIndex = rotationBuilderTabs.indexOf(effectiveTab);
     setAnimState({
       tab: effectiveTab,
       enterClass:
@@ -49,6 +46,11 @@ export const RotationBuilderContainer = ({
     });
   }
 
+  if (!hydrated) {
+    return (
+      <LoadingSpinnerContainer message="Loading Rotation Builder" spinnerSize={40} />
+    );
+  }
   return (
     <Stack className="h-full min-h-0">
       <RotationBuilderToolbar

@@ -1,216 +1,91 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { LoadingSpinnerContainer } from '@/components/common/LoadingSpinnerContainer';
 import { RotationBuilderContainer } from '@/components/rotation-builder/RotationBuilderContainer';
-import { useRotationCalculation } from '@/hooks/useRotationCalculation';
-import { useTeamAttackInstances } from '@/hooks/useTeamAttackInstances';
+import { getRotationCalculationQueryOptions } from '@/hooks/useRotationCalculation';
 import { getRotationById } from '@/services/rotation-library';
-import { useStore, useStoreHydrated } from '@/store';
+import { useStore } from '@/store';
+import { rotationBuilderTabs } from '@/store/rotationBuilderUiSlice';
 
 const createSearchSchema = z.object({
-  tab: z.enum(['team', 'rotation', 'results']).optional(),
+  tab: z.enum(rotationBuilderTabs).optional(),
   rotationId: z.coerce.number().int().positive().optional(),
 });
 
-interface RotationRouteLoaderProperties {
-  initialTab: 'team' | 'rotation' | 'results';
-  rotationId?: number;
-}
-
-const RotationRouteLoader = ({
-  initialTab,
-  rotationId,
-}: RotationRouteLoaderProperties) => {
+/**
+ * Pre-populates the Zustand store for the Rotation Builder before load
+ * @returns the Rotation Builder with it's store populated
+ */
+const RotationRouteComponent = () => {
+  const { rotation } = Route.useLoaderData();
+  const { tab } = Route.useSearch();
   const navigate = useNavigate({ from: '/create' });
-  const setTeam = useStore((state) => state.setTeam);
-  const setEnemy = useStore((state) => state.setEnemy);
-  const setAttacks = useStore((state) => state.setAttacks);
-  const setBuffs = useStore((state) => state.setBuffs);
-  const queryClient = useQueryClient();
-  const { isLoading: isLoadingTeamAttacks } = useTeamAttackInstances();
-  const { refetch } = useRotationCalculation();
-  const [isBootstrapping, setIsBootstrapping] = useState(rotationId !== undefined);
-  const [syncedRotationId, setSyncedRotationId] = useState<number | undefined>();
-  const [calculatedRotationId, setCalculatedRotationId] = useState<
-    number | undefined
-  >();
-  const syncedRotationIdReference = useRef<number | undefined>(undefined);
-  const notifiedErrorKeyReference = useRef<string | undefined>(undefined);
-  const {
-    data: rotation,
-    error,
-    isFetching,
-  } = useQuery({
-    queryKey: ['rotation', rotationId],
-    queryFn: () => getRotationById({ data: { id: rotationId! } }),
-    enabled: rotationId !== undefined,
-    retry: false,
+  const setActiveTab = useStore((store) => store.setActiveTab);
+  const setTeam = useStore((store) => store.setTeam);
+  const setEnemy = useStore((store) => store.setEnemy);
+  const setAttacks = useStore((store) => store.setAttacks);
+  const setBuffs = useStore((store) => store.setBuffs);
+
+  useEffect(() => {
+    if (tab) setActiveTab(tab);
+    if (rotation) {
+      setTeam(rotation.data.team);
+      setEnemy(rotation.data.enemy);
+      setAttacks(rotation.data.attacks);
+      setBuffs(rotation.data.buffs);
+    }
+    // Remove query parameters from path to prevent reloading the rotation data,
+    // which may potentially overwrite user changes, on page refresh
+    navigate({
+      replace: true,
+      search: (previous) => ({ ...previous, rotationId: undefined, tab: undefined }),
+    });
   });
 
-  useEffect(() => {
-    if (rotationId === undefined) {
-      syncedRotationIdReference.current = undefined;
-      setSyncedRotationId(undefined);
-      setCalculatedRotationId(undefined);
-      setIsBootstrapping(false);
-      return;
-    }
-
-    queryClient.removeQueries({
-      queryKey: ['rotation-calculation'],
-    });
-    syncedRotationIdReference.current = undefined;
-    setSyncedRotationId(undefined);
-    setCalculatedRotationId(undefined);
-    setIsBootstrapping(true);
-  }, [queryClient, rotationId]);
-
-  useEffect(() => {
-    if (!rotation || syncedRotationIdReference.current === rotation.id) {
-      return;
-    }
-
-    queryClient.removeQueries({
-      queryKey: ['rotation-calculation'],
-    });
-    setTeam(rotation.data.team);
-    setEnemy(rotation.data.enemy);
-    setAttacks(rotation.data.attacks);
-    setBuffs(rotation.data.buffs);
-    syncedRotationIdReference.current = rotation.id;
-    setSyncedRotationId(rotation.id);
-    setCalculatedRotationId(undefined);
-    setIsBootstrapping(true);
-  }, [queryClient, rotation, setAttacks, setBuffs, setEnemy, setTeam]);
-
-  useEffect(() => {
-    if (rotationId === undefined || !rotation) {
-      return;
-    }
-
-    if (syncedRotationId !== rotation.id || isLoadingTeamAttacks) {
-      return;
-    }
-
-    if (calculatedRotationId === rotation.id) {
-      setIsBootstrapping(false);
-      return;
-    }
-
-    let isCancelled = false;
-
-    const calculateLoadedRotation = async () => {
-      try {
-        const result = await refetch();
-        if (isCancelled) {
-          return;
-        }
-
-        if (result.isError) {
-          toast.warning(`Loaded rotation: ${rotation.name}`, {
-            description:
-              'Rotation data loaded, but damage results could not be calculated.',
-          });
-        } else {
-          toast.success(`Loaded rotation: ${rotation.name}`);
-        }
-      } catch {
-        if (!isCancelled) {
-          toast.warning(`Loaded rotation: ${rotation.name}`, {
-            description:
-              'Rotation data loaded, but damage results could not be calculated.',
-          });
-        }
-      } finally {
-        if (!isCancelled) {
-          setCalculatedRotationId(rotation.id);
-          setIsBootstrapping(false);
-        }
-      }
-    };
-
-    void calculateLoadedRotation();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [
-    calculatedRotationId,
-    isLoadingTeamAttacks,
-    refetch,
-    rotation,
-    rotationId,
-    syncedRotationId,
-  ]);
-
-  useEffect(() => {
-    if (!error) {
-      return;
-    }
-
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    const errorKey = `${rotationId}:${errorMessage}`;
-    if (notifiedErrorKeyReference.current === errorKey) {
-      setIsBootstrapping(false);
-      return;
-    }
-
-    toast.error('Failed to load rotation.', {
-      description: errorMessage,
-    });
-    notifiedErrorKeyReference.current = errorKey;
-    setIsBootstrapping(false);
-  }, [error, rotationId]);
-
-  useEffect(() => {
-    if (
-      rotationId === undefined ||
-      syncedRotationId === undefined ||
-      calculatedRotationId !== syncedRotationId
-    ) {
-      return;
-    }
-
-    void navigate({
-      replace: true,
-      search: (previous) => ({
-        ...previous,
-        rotationId: undefined,
-      }),
-    });
-  }, [calculatedRotationId, navigate, rotationId, syncedRotationId]);
-
-  if (rotationId !== undefined && (isFetching || isBootstrapping)) {
-    return (
-      <LoadingSpinnerContainer message="Loading Rotation Builder" spinnerSize={40} />
-    );
-  }
-
-  return <RotationBuilderContainer initialTab={initialTab} />;
-};
-
-const RotationBuilderRoute = () => {
-  const hydrated = useStoreHydrated();
-  const searchParameters = Route.useSearch();
-  if (!hydrated) {
-    return (
-      <LoadingSpinnerContainer message="Loading Rotation Builder" spinnerSize={40} />
-    );
-  }
-  return (
-    <RotationRouteLoader
-      initialTab={searchParameters.tab ?? 'team'}
-      rotationId={searchParameters.rotationId}
-    />
-  );
+  return <RotationBuilderContainer />;
 };
 
 export const Route = createFileRoute('/create')({
   validateSearch: createSearchSchema,
   ssr: false,
-  component: RotationBuilderRoute,
+  /**
+   * Populate the query client with rotation results when navigating to the page with
+   * a rotationId
+   */
+  loaderDeps: ({ search: { rotationId } }) => ({ rotationId }),
+  loader: async ({ context: { queryClient }, deps: { rotationId } }) => {
+    if (rotationId === undefined) return { rotation: undefined };
+
+    let rotation;
+    try {
+      rotation = await queryClient.fetchQuery({
+        queryKey: ['rotation', rotationId],
+        queryFn: () => getRotationById({ data: { id: rotationId } }),
+      });
+    } catch (error) {
+      toast.error('Failed to load rotation.', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
+      return { rotation: undefined };
+    }
+
+    try {
+      await queryClient.fetchQuery(getRotationCalculationQueryOptions(rotation.data));
+    } catch {
+      toast.warning(`Loaded rotation: ${rotation.name}`, {
+        description:
+          'Rotation data loaded, but damage results could not be calculated.',
+      });
+    }
+    toast.success(`Loaded rotation: ${rotation.name}`);
+
+    return { rotation };
+  },
+  pendingComponent: () => (
+    <LoadingSpinnerContainer message="Loading Rotation Builder" spinnerSize={40} />
+  ),
+  component: RotationRouteComponent,
 });

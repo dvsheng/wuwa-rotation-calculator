@@ -4,13 +4,12 @@ import { SaveRotationButton } from '@/components/builds/SaveRotationButton';
 import { CalculateRotationButton } from '@/components/rotation-builder/results/CalculateRotationButton';
 import { ButtonGroup } from '@/components/ui/button-group';
 import { useRotationCalculation } from '@/hooks/useRotationCalculation';
+import type { RotationBuilderTab } from '@/store/rotationBuilderUiSlice';
 
 import { Badge } from '../ui/badge';
 import { Box, Row } from '../ui/layout';
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
 import { Text } from '../ui/typography';
-
-type RotationBuilderTab = 'team' | 'rotation' | 'results';
 
 export function RotationBuilderToolbar({
   selectedTab,

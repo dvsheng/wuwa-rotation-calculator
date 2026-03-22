@@ -6,6 +6,7 @@ import type {
   ParameterInstance,
 } from '@/schemas/rotation';
 
+import type { RotationBuilderUiSlice } from './rotationBuilderUiSlice';
 import type { TeamSlice } from './teamSlice';
 
 export interface RotationSlice {
@@ -64,7 +65,7 @@ const findAvailableBuffLayout = (
 };
 
 export const createRotationSlice: StateCreator<
-  RotationSlice & TeamSlice,
+  RotationSlice & RotationBuilderUiSlice & TeamSlice,
   [['zustand/immer', never], ['zustand/persist', unknown]],
   [],
   RotationSlice

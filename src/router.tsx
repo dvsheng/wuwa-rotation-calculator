@@ -16,7 +16,6 @@ export const getRouter = () => {
       queryClient,
     },
     scrollRestoration: true,
-    defaultPreloadStaleTime: 0,
     defaultViewTransition: {
       types: ({ fromLocation, toLocation }) => {
         if (!fromLocation) return [];

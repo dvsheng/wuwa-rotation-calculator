@@ -89,23 +89,23 @@ function RootDocument({ children }: { children: React.ReactNode }) {
               </ErrorBoundary>
             </AppShell>
           </TooltipProvider>
+          <TanStackDevtools
+            config={{
+              position: 'bottom-right',
+            }}
+            plugins={[
+              {
+                name: 'Tanstack Router',
+                render: <TanStackRouterDevtoolsPanel />,
+              },
+              {
+                name: 'React Query',
+                render: <ReactQueryDevtoolsPanel />,
+              },
+            ]}
+          />
         </QueryClientProvider>
         <Toaster position="bottom-left" />
-        <TanStackDevtools
-          config={{
-            position: 'bottom-right',
-          }}
-          plugins={[
-            {
-              name: 'Tanstack Router',
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-            {
-              name: 'React Query',
-              render: <ReactQueryDevtoolsPanel />,
-            },
-          ]}
-        />
         <Scripts />
       </body>
     </html>

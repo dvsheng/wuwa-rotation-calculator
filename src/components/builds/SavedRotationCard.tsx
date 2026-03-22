@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/hover-card';
 import { Row } from '@/components/ui/layout';
 import { Text } from '@/components/ui/typography';
-import { useRotationMutations } from '@/hooks/useRotationMutations';
+import { useRotationMutations } from '@/hooks/useRotations';
 import { useSession } from '@/lib/auth-client';
 import type { SavedRotation } from '@/schemas/library';
 import { Attribute } from '@/types';

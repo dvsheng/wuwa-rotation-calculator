@@ -11,7 +11,7 @@ export const updateRotationHandler = async (
   input: UpdateRotationRequest,
   owner: {
     id: string;
-    username?: string;
+    username?: string | null;
   },
 ): Promise<SavedRotation> => {
   const existing = await database.query.rotations.findFirst({

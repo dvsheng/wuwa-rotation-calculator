@@ -15,7 +15,7 @@ vi.mock('@/lib/auth-client', () => ({
   useSession: vi.fn(),
 }));
 
-vi.mock('@/hooks/useRotationMutations', () => ({
+vi.mock('@/hooks/useRotations', () => ({
   useRotationMutations: vi.fn(),
 }));
 
@@ -31,7 +31,7 @@ const { useNavigate: mockUseNavigate, useRouter: mockUseRouter } =
   await import('@tanstack/react-router');
 const { useSession: mockUseSession } = await import('@/lib/auth-client');
 const { useRotationMutations: mockUseRotationMutations } =
-  await import('@/hooks/useRotationMutations');
+  await import('@/hooks/useRotations');
 
 const mockNavigate = vi.fn();
 const mockDeleteRotation = vi.fn();

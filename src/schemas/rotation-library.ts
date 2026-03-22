@@ -16,26 +16,11 @@ export const CreateRotationRequestSchema = MutableRotationFieldsSchema.omit({
 
 export type CreateRotationRequest = z.infer<typeof CreateRotationRequestSchema>;
 
-export const UpdateRotationRequestSchema = z
-  .object({
-    id: SavedRotationSchema.shape.id,
-  })
-  .merge(MutableRotationFieldsSchema.partial())
-  .superRefine((value, context) => {
-    if (
-      value.name === undefined &&
-      value.description === undefined &&
-      value.totalDamage === undefined &&
-      value.visibility === undefined &&
-      value.data === undefined
-    ) {
-      context.addIssue({
-        code: 'custom',
-        message: 'At least one updatable field must be provided',
-        path: ['id'],
-      });
-    }
-  });
+export const UpdateRotationRequestSchema = MutableRotationFieldsSchema.partial().extend(
+  {
+    id: z.number(),
+  },
+);
 
 export type UpdateRotationRequest = z.infer<typeof UpdateRotationRequestSchema>;
 

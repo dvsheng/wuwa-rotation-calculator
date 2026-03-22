@@ -43,7 +43,8 @@ const RotationRouteComponent = () => {
       replace: true,
       search: (previous) => ({ ...previous, rotationId: undefined, tab: undefined }),
     });
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return <RotationBuilderContainer />;
 };

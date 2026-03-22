@@ -15,7 +15,7 @@ import type { EntityListItem, UseEntitiesOptions } from '@/hooks/useEntities';
 import { useEntities } from '@/hooks/useEntities';
 import { EntityType } from '@/services/game-data';
 
-export function EntitiesPage() {
+function EntitiesPage() {
   const [searchText, setSearchText] = useState('');
   const [entityType, setEntityType] = useState<string | undefined>();
   return (

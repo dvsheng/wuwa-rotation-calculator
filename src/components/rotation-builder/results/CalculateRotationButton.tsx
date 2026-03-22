@@ -33,14 +33,11 @@ export function CalculateRotationButton({
   };
 
   return (
-    <Button
-      data-role="calculate"
-      size="sm"
-      onClick={() => void handleCalculateClick()}
-      disabled={isFetching}
-    >
-      <Play className="size-4 fill-current" />
-      {isFetching ? 'Calculating...' : 'Calculate Rotation Damage'}
+    <Button size="sm" onClick={() => void handleCalculateClick()} disabled={isFetching}>
+      <Play className="fill-current" />
+      <span className="hidden md:inline">
+        {isFetching ? 'Calculating...' : 'Calculate Damage'}
+      </span>
     </Button>
   );
 }

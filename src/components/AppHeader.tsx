@@ -18,7 +18,6 @@ import {
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -66,7 +65,7 @@ export const AppHeader = () => {
         <Toggle onClick={toggleTheme} aria-label="Toggle dark mode">
           <SunMoon className="size-4" />
         </Toggle>
-        <UserButton variant="ghost" />
+        <UserButton variant="ghost" size="sm" />
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetTrigger asChild>
             <Button
@@ -80,8 +79,7 @@ export const AppHeader = () => {
           </SheetTrigger>
           <SheetContent side="right" className="w-72 p-0">
             <SheetHeader className="border-b px-4 py-4">
-              <SheetTitle>{APP_HEADER_HOME.mobileLabel}</SheetTitle>
-              <SheetDescription>Navigate the app.</SheetDescription>
+              <SheetTitle>Navigate</SheetTitle>
             </SheetHeader>
             <nav className="flex flex-col p-2">
               {APP_HEADER_NAV_ITEMS.map((item) => {

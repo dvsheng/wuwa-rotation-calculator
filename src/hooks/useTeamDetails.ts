@@ -68,7 +68,6 @@ export const useTeamDetails = () => {
               activatedSequence: character.sequence,
             },
           }),
-        enabled: !!character.id,
         staleTime: Infinity,
       },
       {
@@ -81,7 +80,6 @@ export const useTeamDetails = () => {
               refineLevel: character.weapon.refine,
             },
           }),
-        enabled: !!character.weapon.id,
         staleTime: Infinity,
       },
       {
@@ -93,7 +91,6 @@ export const useTeamDetails = () => {
               entityType: EntityType.ECHO,
             },
           }),
-        enabled: !!character.primarySlotEcho.id,
         staleTime: Infinity,
       },
       ...character.echoSets.map((set) => ({
@@ -106,7 +103,6 @@ export const useTeamDetails = () => {
               activatedSetBonus: Number.parseInt(set.requirement),
             },
           }),
-        enabled: !!set.id,
         staleTime: Infinity,
       })),
     ]),

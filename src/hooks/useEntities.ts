@@ -17,7 +17,6 @@ export const useEntities = ({ entityType, search }: UseEntitiesOptions) => {
     queryKey: ['entities'],
     queryFn: () => listEntities(),
     staleTime: Infinity,
-    retry: false,
   });
 
   const normalizedSearch = search?.trim().toLowerCase();
@@ -39,6 +38,5 @@ export const useEntity = (entityId: number) => {
     queryKey: ['entity-details', entityId],
     queryFn: () => getEntityDetails({ data: { id: entityId } }),
     staleTime: Infinity,
-    retry: false,
   });
 };

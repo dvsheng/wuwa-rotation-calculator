@@ -34,7 +34,7 @@ import {
 import { Row, Stack } from '@/components/ui/layout';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Text } from '@/components/ui/typography';
-import { useRotationMutations } from '@/hooks/useRotationMutations';
+import { useRotationMutations } from '@/hooks/useRotations';
 import { useSession } from '@/lib/auth-client';
 import type { ListedRotation, SavedRotation } from '@/schemas/library';
 

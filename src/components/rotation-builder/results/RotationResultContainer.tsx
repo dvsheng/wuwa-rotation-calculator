@@ -27,16 +27,14 @@ export const RotationResultContainer = ({
   isPlaceholderData,
 }: RotationResultContainerProperties) => {
   const [selectedTab, setSelectedTab] = useState('summary');
-  const [inspectorPortalNode, setInspectorPortalNode] = useState<
-    HTMLDivElement | undefined
-  >();
+  const [inspectorPortalNode, setInspectorPortalNode] = useState<HTMLDivElement>();
   if (!result) {
     return;
   }
 
   return (
-    <Container className="flex h-full min-h-0 w-full flex-col-reverse overflow-y-auto md:flex-row md:overflow-hidden">
-      <Stack className="min-h-0 flex-2 md:overflow-hidden">
+    <Container className="flex h-full min-h-0 w-full flex-col overflow-y-auto md:flex-row md:overflow-hidden">
+      <Stack className="min-h-0 max-w-7xl flex-2 md:overflow-hidden">
         <DashboardSectionHeader
           title="Results"
           subtitle={`${result.attackCount} ${result.attackCount === 1 ? 'attack' : 'attacks'}`}
@@ -89,7 +87,10 @@ export const RotationResultContainer = ({
               value="summary"
               className="flex min-h-0 w-full md:overflow-hidden"
             >
-              <RotationSummaryTab result={result} />
+              <RotationSummaryTab
+                result={result}
+                inspectorPortalNode={inspectorPortalNode}
+              />
             </TabsContent>
             <TabsContent
               value="data-table"
@@ -122,25 +123,21 @@ export const RotationResultContainer = ({
           </Tabs>
         </Stack>
       </Stack>
-      {selectedTab !== 'summary' && (
-        <>
-          <Separator className="md:hidden" />
-          <Separator orientation="vertical" className="hidden self-stretch md:block" />
-          <Stack className="min-h-0 flex-1">
-            <DashboardSectionHeader
-              title="Details"
-              description="Use this inspector to drill into the row selected in Results. It updates with the detailed stat math, hit data, or scenario deltas behind that selection."
-              icon={<ListTree />}
-            />
-            <ScrollArea className="min-h-0 md:flex-1" orientation="both">
-              <div
-                className="p-page"
-                ref={(node) => setInspectorPortalNode(node ?? undefined)}
-              />
-            </ScrollArea>
-          </Stack>
-        </>
-      )}
+      <Separator className="md:hidden" />
+      <Separator orientation="vertical" className="hidden self-stretch md:block" />
+      <Stack className="min-h-0 flex-1">
+        <DashboardSectionHeader
+          title="Details"
+          description="Use this inspector to drill into the row selected in Results. It updates with the detailed stat math, hit data, or scenario deltas behind that selection."
+          icon={<ListTree />}
+        />
+        <ScrollArea className="min-h-0 md:flex-1" orientation="both">
+          <div
+            className="p-page"
+            ref={(node) => setInspectorPortalNode(node ?? undefined)}
+          />
+        </ScrollArea>
+      </Stack>
     </Container>
   );
 };

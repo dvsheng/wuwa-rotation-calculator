@@ -111,13 +111,13 @@ const SaveRotationActions = ({
       onClick={onSaveNew}
       disabled={!isLoggedIn}
     >
-      <Save className="mr-1 h-4 w-4" />
-      Save Rotation
+      <Save />
+      <span className="hidden md:inline">Save Rotation</span>
     </Button>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button size="sm" className="rounded-l-none px-2" disabled={!isLoggedIn}>
-          <ChevronDown className="h-4 w-4" />
+          <ChevronDown />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -170,12 +170,14 @@ export const SaveRotationButton = () => {
         />
       ) : (
         <Tooltip>
-          <TooltipTrigger>
-            <SaveRotationActions
-              isLoggedIn={isLoggedIn}
-              onSaveNew={() => setIsSaveDialogOpen(true)}
-              onUpdateExisting={() => setIsUpdateDialogOpen(true)}
-            />
+          <TooltipTrigger asChild>
+            <div>
+              <SaveRotationActions
+                isLoggedIn={isLoggedIn}
+                onSaveNew={() => setIsSaveDialogOpen(true)}
+                onUpdateExisting={() => setIsUpdateDialogOpen(true)}
+              />
+            </div>
           </TooltipTrigger>
           <TooltipContent>Log in to save or update a rotation.</TooltipContent>
         </Tooltip>

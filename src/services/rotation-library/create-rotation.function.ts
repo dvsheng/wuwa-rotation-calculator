@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start';
 
-import { authMiddleware } from '@/middleware/auth';
+import { authRequiredMiddleware } from '@/middleware/auth';
 import { CreateRotationRequestSchema } from '@/schemas/rotation-library';
 
 import { createRotationHandler } from './create-rotation.server';
@@ -8,8 +8,8 @@ import { createRotationHandler } from './create-rotation.server';
 export const createRotation = createServerFn({
   method: 'POST',
 })
-  .middleware([authMiddleware])
+  .middleware([authRequiredMiddleware])
   .inputValidator(CreateRotationRequestSchema)
   .handler(async ({ data, context }) => {
-    return createRotationHandler(data, context.user.id);
+    return createRotationHandler(data, context.session.user.id);
   });

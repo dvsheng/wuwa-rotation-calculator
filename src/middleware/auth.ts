@@ -11,23 +11,29 @@ export interface AuthContext {
   };
 }
 
-export const authMiddleware = createMiddleware({ type: 'function' })
-  .client(async ({ next }) => next())
-  .server(async ({ next }) => {
+export const authRequiredMiddleware = createMiddleware({ type: 'function' }).server(
+  async ({ next }) => {
     const request = getRequest();
     const session = await auth.api.getSession({ headers: request.headers });
-
     if (!session) {
       throw new Error('Unauthorized');
     }
-
     return next({
       context: {
-        user: {
-          id: session.user.id,
-          email: session.user.email,
-          username: session.user.username ?? undefined,
-        },
+        session,
       },
     });
-  });
+  },
+);
+
+export const authOptionalMiddleware = createMiddleware({ type: 'function' }).server(
+  async ({ next }) => {
+    const request = getRequest();
+    const session = await auth.api.getSession({ headers: request.headers });
+    return next({
+      context: {
+        session,
+      },
+    });
+  },
+);

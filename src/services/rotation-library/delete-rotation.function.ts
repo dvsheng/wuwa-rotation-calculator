@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start';
 
-import { authMiddleware } from '@/middleware/auth';
+import { authRequiredMiddleware } from '@/middleware/auth';
 import { DeleteRotationRequestSchema } from '@/schemas/rotation-library';
 
 import { deleteRotationHandler } from './delete-rotation.server';
@@ -8,8 +8,8 @@ import { deleteRotationHandler } from './delete-rotation.server';
 export const deleteRotation = createServerFn({
   method: 'POST',
 })
-  .middleware([authMiddleware])
+  .middleware([authRequiredMiddleware])
   .inputValidator(DeleteRotationRequestSchema)
   .handler(async ({ data, context }) => {
-    return deleteRotationHandler(data, context.user.id);
+    return deleteRotationHandler(data, context.session.user.id);
   });

@@ -37,8 +37,6 @@ export const SubstatSensitivityBarChart = ({
           color: 'var(--chart-1)',
         },
       }}
-      style={{ height: Math.max(320, trimmedData.length * 34) }}
-      className="aspect-auto w-full"
     >
       <BarChart data={trimmedData} layout="vertical">
         <CartesianGrid horizontal={false} />
@@ -48,13 +46,7 @@ export const SubstatSensitivityBarChart = ({
           axisLine={false}
           tickFormatter={(value) => formatPercentDelta(Number(value))}
         />
-        <YAxis
-          type="category"
-          dataKey="shortLabel"
-          width={160}
-          tickLine={false}
-          axisLine={false}
-        />
+        <YAxis type="category" dataKey="shortLabel" tickLine={false} axisLine={false} />
         <ChartTooltip
           cursor={false}
           content={

@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import { useStore } from '@/store';
 
 import { useRotationCalculation } from './useRotationCalculation';
-import { useRotationMutations } from './useRotationMutations';
+import { useRotationMutations } from './useRotations';
 
 interface SaveRotationInput {
   name?: string;

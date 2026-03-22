@@ -89,7 +89,6 @@ describe('updateRotationHandler', () => {
       },
       {
         id: 'dev-local-owner',
-        isAnonymous: false,
         username: 'dev-local-owner',
       },
     );
@@ -121,7 +120,6 @@ describe('updateRotationHandler', () => {
         { id: 999, name: 'New Name' },
         {
           id: 'dev-local-owner',
-          isAnonymous: false,
           username: 'dev-local-owner',
         },
       ),
@@ -170,7 +168,6 @@ describe('updateRotationHandler', () => {
       { id: 1, totalDamage: 0 },
       {
         id: 'dev-local-owner',
-        isAnonymous: false,
         username: undefined,
       },
     );
@@ -206,34 +203,10 @@ describe('updateRotationHandler', () => {
         { id: 1, visibility: 'private' },
         {
           id: 'dev-local-owner',
-          isAnonymous: false,
           username: 'dev-local-owner',
         },
       ),
     ).rejects.toThrow('Rotation 1 does not belong to the current user');
-  });
-
-  it('blocks anonymous users from making rotations public', async () => {
-    const { updateRotationHandler } = await import('./update-rotation.server');
-
-    mocks.findFirst.mockResolvedValue({
-      id: 1,
-      ownerId: 'dev-local-owner',
-      visibility: 'private',
-    });
-
-    await expect(
-      updateRotationHandler(
-        { id: 1, visibility: 'public' },
-        {
-          id: 'dev-local-owner',
-          isAnonymous: true,
-          username: undefined,
-        },
-      ),
-    ).rejects.toThrow('Anonymous users cannot make rotations public');
-
-    expect(mocks.update).not.toHaveBeenCalled();
   });
 
   it('blocks users without usernames from making rotations public', async () => {
@@ -250,7 +223,6 @@ describe('updateRotationHandler', () => {
         { id: 1, visibility: 'public' },
         {
           id: 'dev-local-owner',
-          isAnonymous: false,
           username: undefined,
         },
       ),

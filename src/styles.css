@@ -3,6 +3,7 @@
 @import 'tw-animate-css';
 @import 'react-grid-layout/css/styles.css';
 @import 'react-resizable/css/styles.css';
+@import '@daveyplate/better-auth-ui/css';
 
 @import './styles/game-tokens.css';
 

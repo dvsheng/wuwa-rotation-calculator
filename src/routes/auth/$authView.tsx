@@ -1,29 +1,17 @@
+import { AuthView } from '@daveyplate/better-auth-ui';
 import { createFileRoute } from '@tanstack/react-router';
-import { z } from 'zod';
-
-import { AuthPage } from '@/components/auth/AuthPage';
-import type { AuthView } from '@/lib/auth-routing';
-
-const authSearchSchema = z.object({
-  redirectTo: z.string().optional(),
-});
-
-const AUTH_VIEWS = new Set<AuthView>([
-  'callback',
-  'complete-profile',
-  'sign-in',
-  'sign-up',
-]);
-
-function AuthRoutePage() {
-  const { authView } = Route.useParams();
-  const { redirectTo } = Route.useSearch();
-  const view = AUTH_VIEWS.has(authView as AuthView) ? authView : 'sign-in';
-  return <AuthPage view={view as AuthView} redirectTo={redirectTo} />;
-}
 
 export const Route = createFileRoute('/auth/$authView')({
-  validateSearch: authSearchSchema,
-  ssr: false,
-  component: AuthRoutePage,
+  component: RouteComponent,
 });
+
+function RouteComponent() {
+  const { authView } = Route.useParams();
+  const redirectTo = '/builds';
+
+  return (
+    <main className="container mx-auto flex grow flex-col items-center justify-center gap-3 self-center p-4 md:p-6">
+      <AuthView pathname={authView} redirectTo={redirectTo} />
+    </main>
+  );
+}

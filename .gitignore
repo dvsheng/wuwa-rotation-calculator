@@ -17,6 +17,7 @@ count.txt
 .codex
 .claude
 .specify
+.tmp
 todos.json
 wuwa-rotation-builder.code-workspace
 TODO.md

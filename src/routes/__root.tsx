@@ -1,11 +1,15 @@
+import { AuthQueryProvider } from '@daveyplate/better-auth-tanstack';
+import { AuthUIProviderTanstack } from '@daveyplate/better-auth-ui/tanstack';
 import { TanStackDevtools } from '@tanstack/react-devtools';
 import type { QueryClient } from '@tanstack/react-query';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools';
 import {
   HeadContent,
+  Link,
   Scripts,
   createRootRouteWithContext,
+  useRouter,
 } from '@tanstack/react-router';
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 import { AlertTriangle } from 'lucide-react';
@@ -15,6 +19,7 @@ import { AppShell } from '@/components/AppShell';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { themeInitScript } from '@/hooks/useTheme';
+import { authClient } from '@/lib/auth-client';
 import appCss from '@/styles.css?url';
 
 export const Route = createRootRouteWithContext<{
@@ -72,6 +77,7 @@ function RootErrorFallback() {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -82,28 +88,50 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
-            <AppShell>
-              <ErrorBoundary FallbackComponent={RootErrorFallback}>
-                {children}
-              </ErrorBoundary>
-            </AppShell>
-          </TooltipProvider>
-          <TanStackDevtools
-            config={{
-              position: 'bottom-right',
-            }}
-            plugins={[
-              {
-                name: 'Tanstack Router',
-                render: <TanStackRouterDevtoolsPanel />,
-              },
-              {
-                name: 'React Query',
-                render: <ReactQueryDevtoolsPanel />,
-              },
-            ]}
-          />
+          <AuthQueryProvider>
+            <AuthUIProviderTanstack
+              authClient={authClient}
+              social={{
+                providers: ['google'],
+              }}
+              account={true}
+              emailVerification={false}
+              credentials={{
+                forgotPassword: false,
+                confirmPassword: true,
+                username: true,
+                usernameRequired: true,
+                rememberMe: true,
+              }}
+              avatar={false}
+              navigate={(href) => router.navigate({ href })}
+              replace={(href) => router.navigate({ href, replace: true })}
+              Link={({ href, ...properties }) => <Link to={href} {...properties} />}
+            >
+              <TooltipProvider>
+                <AppShell>
+                  <ErrorBoundary FallbackComponent={RootErrorFallback}>
+                    {children}
+                  </ErrorBoundary>
+                </AppShell>
+              </TooltipProvider>
+              <TanStackDevtools
+                config={{
+                  position: 'bottom-right',
+                }}
+                plugins={[
+                  {
+                    name: 'Tanstack Router',
+                    render: <TanStackRouterDevtoolsPanel />,
+                  },
+                  {
+                    name: 'React Query',
+                    render: <ReactQueryDevtoolsPanel />,
+                  },
+                ]}
+              />
+            </AuthUIProviderTanstack>
+          </AuthQueryProvider>
         </QueryClientProvider>
         <Toaster position="bottom-left" />
         <Scripts />

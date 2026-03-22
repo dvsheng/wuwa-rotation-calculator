@@ -123,32 +123,11 @@ describe('SavedRotationCard', () => {
     });
   });
 
-  it('hides the public toggle for anonymous owners', () => {
-    vi.mocked(mockUseSession).mockReturnValue({
-      data: {
-        user: {
-          id: 'owner-123',
-          isAnonymous: true,
-        },
-      },
-    } as any);
-
-    render(<SavedRotationCard rotation={mockRotation} />);
-
-    expect(
-      screen.queryByRole('button', { name: /make rotation public/i }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /delete rotation/i }),
-    ).toBeInTheDocument();
-  });
-
   it('updates visibility when the owner toggles the public switch', async () => {
     vi.mocked(mockUseSession).mockReturnValue({
       data: {
         user: {
           id: 'owner-123',
-          isAnonymous: false,
         },
       },
     } as any);

@@ -7,7 +7,6 @@ export interface AuthContext {
   user: {
     email: string;
     id: string;
-    isAnonymous: boolean;
     username?: string;
   };
 }
@@ -27,7 +26,6 @@ export const authMiddleware = createMiddleware({ type: 'function' })
         user: {
           id: session.user.id,
           email: session.user.email,
-          isAnonymous: session.user.isAnonymous ?? false,
           username: session.user.username ?? undefined,
         },
       },

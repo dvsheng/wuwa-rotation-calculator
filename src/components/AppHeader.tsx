@@ -1,3 +1,4 @@
+import { UserButton } from '@daveyplate/better-auth-ui';
 import { Link, useRouterState } from '@tanstack/react-router';
 import { Menu, SunMoon } from 'lucide-react';
 import { useState } from 'react';
@@ -6,7 +7,6 @@ import {
   APP_HEADER_HOME,
   APP_HEADER_NAV_ITEMS,
 } from '@/components/app-header-navigation';
-import { LoginButton } from '@/components/auth/LoginButton';
 import { Button } from '@/components/ui/button';
 import {
   NavigationMenu,
@@ -66,7 +66,7 @@ export const AppHeader = () => {
         <Toggle onClick={toggleTheme} aria-label="Toggle dark mode">
           <SunMoon className="size-4" />
         </Toggle>
-        <LoginButton compactOnMobile />
+        <UserButton variant="ghost" />
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetTrigger asChild>
             <Button

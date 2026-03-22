@@ -16,6 +16,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EntitiesIdRouteImport } from './routes/entities_.$id'
 import { Route as AuthAuthViewRouteImport } from './routes/auth/$authView'
+import { Route as AccountAccountViewRouteImport } from './routes/account/$accountView'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const EntitiesRoute = EntitiesRouteImport.update({
@@ -53,6 +54,11 @@ const AuthAuthViewRoute = AuthAuthViewRouteImport.update({
   path: '/auth/$authView',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountAccountViewRoute = AccountAccountViewRouteImport.update({
+  id: '/account/$accountView',
+  path: '/account/$accountView',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/builds': typeof BuildsRoute
   '/create': typeof CreateRoute
   '/entities': typeof EntitiesRoute
+  '/account/$accountView': typeof AccountAccountViewRoute
   '/auth/$authView': typeof AuthAuthViewRoute
   '/entities/$id': typeof EntitiesIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/builds': typeof BuildsRoute
   '/create': typeof CreateRoute
   '/entities': typeof EntitiesRoute
+  '/account/$accountView': typeof AccountAccountViewRoute
   '/auth/$authView': typeof AuthAuthViewRoute
   '/entities/$id': typeof EntitiesIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/builds': typeof BuildsRoute
   '/create': typeof CreateRoute
   '/entities': typeof EntitiesRoute
+  '/account/$accountView': typeof AccountAccountViewRoute
   '/auth/$authView': typeof AuthAuthViewRoute
   '/entities_/$id': typeof EntitiesIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -98,6 +107,7 @@ export interface FileRouteTypes {
     | '/builds'
     | '/create'
     | '/entities'
+    | '/account/$accountView'
     | '/auth/$authView'
     | '/entities/$id'
     | '/api/auth/$'
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/builds'
     | '/create'
     | '/entities'
+    | '/account/$accountView'
     | '/auth/$authView'
     | '/entities/$id'
     | '/api/auth/$'
@@ -118,6 +129,7 @@ export interface FileRouteTypes {
     | '/builds'
     | '/create'
     | '/entities'
+    | '/account/$accountView'
     | '/auth/$authView'
     | '/entities_/$id'
     | '/api/auth/$'
@@ -129,6 +141,7 @@ export interface RootRouteChildren {
   BuildsRoute: typeof BuildsRoute
   CreateRoute: typeof CreateRoute
   EntitiesRoute: typeof EntitiesRoute
+  AccountAccountViewRoute: typeof AccountAccountViewRoute
   AuthAuthViewRoute: typeof AuthAuthViewRoute
   EntitiesIdRoute: typeof EntitiesIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -185,6 +198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAuthViewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account/$accountView': {
+      id: '/account/$accountView'
+      path: '/account/$accountView'
+      fullPath: '/account/$accountView'
+      preLoaderRoute: typeof AccountAccountViewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -201,6 +221,7 @@ const rootRouteChildren: RootRouteChildren = {
   BuildsRoute: BuildsRoute,
   CreateRoute: CreateRoute,
   EntitiesRoute: EntitiesRoute,
+  AccountAccountViewRoute: AccountAccountViewRoute,
   AuthAuthViewRoute: AuthAuthViewRoute,
   EntitiesIdRoute: EntitiesIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,

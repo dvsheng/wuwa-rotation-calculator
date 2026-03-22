@@ -24,6 +24,7 @@ export default [
       'prettier.config.js',
       'infra/node_modules/**',
       'infra/cdk.out',
+      '.tmp/**',
     ],
   },
   ...tanstackConfig,

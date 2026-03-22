@@ -11,7 +11,6 @@ export const updateRotationHandler = async (
   input: UpdateRotationRequest,
   owner: {
     id: string;
-    isAnonymous: boolean;
     username?: string;
   },
 ): Promise<SavedRotation> => {
@@ -25,10 +24,6 @@ export const updateRotationHandler = async (
 
   if (existing.ownerId !== owner.id) {
     throw new Error(`Rotation ${input.id} does not belong to the current user`);
-  }
-
-  if (owner.isAnonymous && input.visibility === 'public') {
-    throw new Error('Anonymous users cannot make rotations public');
   }
 
   if (!owner.username && input.visibility === 'public') {

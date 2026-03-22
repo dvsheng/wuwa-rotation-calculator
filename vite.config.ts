@@ -38,7 +38,6 @@ const config = defineConfig({
       srcDirectory: 'src',
     }),
     viteReact(),
-    // @ts-expect-error - RolldownBabelPreset is not assignable to PluginOptions due to incomplete types
     babel({ presets: [reactCompilerPreset()] }),
   ],
 });

@@ -84,8 +84,6 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
 
   const userId = session?.user.id;
   const isOwner = !isNil(userId) && userId === rotation.ownerId;
-  const canChangeVisibility =
-    isOwner && (!session?.user.isAnonymous || rotation.visibility === 'public');
   const configuredCharacters = rotation.data.team.filter(
     (character) => character.id > 0,
   );
@@ -104,30 +102,28 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
         </CardDescription>
         {isOwner && (
           <Row gap="trim" className="absolute top-6 right-6">
-            {canChangeVisibility && (
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                disabled={isUpdating}
-                aria-label={
-                  rotation.visibility === 'public'
-                    ? 'Make rotation private'
-                    : 'Make rotation public'
-                }
-                title={
-                  rotation.visibility === 'public'
-                    ? 'Make rotation private'
-                    : 'Make rotation public'
-                }
-                onClick={() => void handleVisibilityChange(nextVisibility)}
-              >
-                {rotation.visibility === 'public' ? (
-                  <Eye className="size-4" />
-                ) : (
-                  <EyeOff className="size-4" />
-                )}
-              </Button>
-            )}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              disabled={isUpdating}
+              aria-label={
+                rotation.visibility === 'public'
+                  ? 'Make rotation private'
+                  : 'Make rotation public'
+              }
+              title={
+                rotation.visibility === 'public'
+                  ? 'Make rotation private'
+                  : 'Make rotation public'
+              }
+              onClick={() => void handleVisibilityChange(nextVisibility)}
+            >
+              {rotation.visibility === 'public' ? (
+                <Eye className="size-4" />
+              ) : (
+                <EyeOff className="size-4" />
+              )}
+            </Button>
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
               <DialogTrigger asChild>
                 <Button
@@ -231,14 +227,12 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
       </CardContent>
       <CardFooter className="justify-end pt-0">
         <Row gap="inset">
-          <ShareRotationButton rotationId={rotation.id} rotationName={rotation.name} />
+          <ShareRotationButton rotationId={rotation.id} />
           <Button
-            onClick={() => {
-              void navigate(getRotationLoaderRouteOptions(rotation.id));
-            }}
+            onClick={() => navigate(getRotationLoaderRouteOptions(rotation.id))}
             size="sm"
           >
-            <Play className="mr-2 h-4 w-4" />
+            <Play />
             Load
           </Button>
         </Row>

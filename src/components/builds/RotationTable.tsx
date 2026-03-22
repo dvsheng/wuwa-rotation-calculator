@@ -318,13 +318,11 @@ export function RotationTable({
           <Row justify="end" gap="inset">
             {showOwnerActions && (
               <>
-                {!session?.user.isAnonymous && (
-                  <RotationVisibilityButton
-                    visibility={row.original.visibility}
-                    isDisabled={!session?.user.username || isUpdating}
-                    onClick={() => handleVisibilityChange(row.original)}
-                  />
-                )}
+                <RotationVisibilityButton
+                  visibility={row.original.visibility}
+                  isDisabled={!session?.user.username || isUpdating}
+                  onClick={() => handleVisibilityChange(row.original)}
+                />
                 <DeleteRotationButton
                   rotation={row.original}
                   deleteRotation={deleteRotation}

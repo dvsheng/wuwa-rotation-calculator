@@ -35,114 +35,112 @@ export const RotationResultContainer = ({
   }
 
   return (
-    <Container className="h-full min-h-0">
-      <Row align="stretch" className="h-full min-h-0">
-        <Stack className="min-h-0 flex-1 overflow-hidden">
-          <DashboardSectionHeader
-            title="Results"
-            subtitle={`${result.attackCount} ${result.attackCount === 1 ? 'attack' : 'attacks'}`}
-            description="Review the calculated output for the current build here. Use the tabs to switch between summary, per-attack, per-character, and sensitivity views."
-            icon={<BarChart2 />}
-            action={
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => downloadRotationResultCsv(result.mergedDamageDetails)}
-                disabled={result.mergedDamageDetails.length === 0}
-              >
-                <Download />
-                Export as CSV
-              </Button>
-            }
-          />
-          <Stack gap="component" className="p-page min-h-0 flex-1">
-            {isPlaceholderData && (
-              <Row className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-amber-500">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                <Stack>
-                  <Text variant="label" className="text-amber-500">
-                    Outdated Result
-                  </Text>
-                  <Text variant="caption" className="text-amber-500/80">
-                    The rotation has changed. Recalculate to see updated damage.
-                  </Text>
-                </Stack>
-              </Row>
-            )}
-
-            <RotationResultSummary
-              totalDamage={result.totalDamage}
-              attackCount={result.attackCount}
-              damageInstanceCount={result.damageDetails.length}
-            />
-            <Tabs
-              value={selectedTab}
-              onValueChange={setSelectedTab}
-              className="min-h-0 flex-1 overflow-hidden"
+    <Container className="flex h-full min-h-0 w-full flex-col-reverse overflow-y-auto md:flex-row md:overflow-hidden">
+      <Stack className="min-h-0 flex-2 md:overflow-hidden">
+        <DashboardSectionHeader
+          title="Results"
+          subtitle={`${result.attackCount} ${result.attackCount === 1 ? 'attack' : 'attacks'}`}
+          description="Review the calculated output for the current build here. Use the tabs to switch between summary, per-attack, per-character, and sensitivity views."
+          icon={<BarChart2 />}
+          action={
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => downloadRotationResultCsv(result.mergedDamageDetails)}
+              disabled={result.mergedDamageDetails.length === 0}
             >
-              <TabsList className="shrink-0">
-                <TabsTrigger value="summary">Summary</TabsTrigger>
-                <TabsTrigger value="data-table">By Attack</TabsTrigger>
-                <TabsTrigger value="character-breakdown">By Character</TabsTrigger>
-                <TabsTrigger value="sensitivity-analysis">Sensitivity</TabsTrigger>
-              </TabsList>
-              <TabsContent
-                value="summary"
-                className="flex min-h-0 w-full overflow-hidden"
-              >
-                <RotationSummaryTab result={result} />
-              </TabsContent>
-              <TabsContent
-                value="data-table"
-                className="flex min-h-0 w-full overflow-hidden"
-              >
-                <AttackBreakdownDataTable
-                  mergedDamageDetails={result.mergedDamageDetails}
-                  inspectorPortalNode={inspectorPortalNode}
-                />
-              </TabsContent>
-              <TabsContent
-                value="character-breakdown"
-                className="flex min-h-0 w-full overflow-hidden"
-              >
-                <CharacterBreakdownDataTable
-                  result={result.mergedDamageDetails}
-                  totalDamage={result.totalDamage}
-                  inspectorPortalNode={inspectorPortalNode}
-                />
-              </TabsContent>
-              <TabsContent
-                value="sensitivity-analysis"
-                className="flex min-h-0 w-full overflow-hidden"
-              >
-                <SensitivityAnalysisTable
-                  sensitivityAnalysis={result.sensitivityAnalysis}
-                  inspectorPortalNode={inspectorPortalNode}
-                />
-              </TabsContent>
-            </Tabs>
-          </Stack>
-        </Stack>
+              <Download />
+              Export as CSV
+            </Button>
+          }
+        />
+        <Stack gap="component" className="p-page min-h-0 md:flex-1">
+          {isPlaceholderData && (
+            <Row className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-amber-500">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <Stack>
+                <Text variant="label" className="text-amber-500">
+                  Outdated Result
+                </Text>
+                <Text variant="caption" className="text-amber-500/80">
+                  The rotation has changed. Recalculate to see updated damage.
+                </Text>
+              </Stack>
+            </Row>
+          )}
 
-        {selectedTab !== 'summary' && (
-          <>
-            <Separator orientation="vertical" className="self-stretch" />
-            <Stack className="w-md">
-              <DashboardSectionHeader
-                title="Details"
-                description="Use this inspector to drill into the row selected in Results. It updates with the detailed stat math, hit data, or scenario deltas behind that selection."
-                icon={<ListTree />}
+          <RotationResultSummary
+            totalDamage={result.totalDamage}
+            attackCount={result.attackCount}
+            damageInstanceCount={result.damageDetails.length}
+          />
+          <Tabs
+            value={selectedTab}
+            onValueChange={setSelectedTab}
+            className="min-h-0 md:flex-1 md:overflow-hidden"
+          >
+            <TabsList className="shrink-0">
+              <TabsTrigger value="summary">Summary</TabsTrigger>
+              <TabsTrigger value="data-table">By Attack</TabsTrigger>
+              <TabsTrigger value="character-breakdown">By Character</TabsTrigger>
+              <TabsTrigger value="sensitivity-analysis">Sensitivity</TabsTrigger>
+            </TabsList>
+            <TabsContent
+              value="summary"
+              className="flex min-h-0 w-full md:overflow-hidden"
+            >
+              <RotationSummaryTab result={result} />
+            </TabsContent>
+            <TabsContent
+              value="data-table"
+              className="flex min-h-0 w-full md:overflow-hidden"
+            >
+              <AttackBreakdownDataTable
+                mergedDamageDetails={result.mergedDamageDetails}
+                inspectorPortalNode={inspectorPortalNode}
               />
-              <ScrollArea className="min-h-0 flex-1">
-                <Stack
-                  ref={(node) => setInspectorPortalNode(node ?? undefined)}
-                  className="p-page"
-                />
-              </ScrollArea>
-            </Stack>
-          </>
-        )}
-      </Row>
+            </TabsContent>
+            <TabsContent
+              value="character-breakdown"
+              className="flex min-h-0 w-full md:overflow-hidden"
+            >
+              <CharacterBreakdownDataTable
+                result={result.mergedDamageDetails}
+                totalDamage={result.totalDamage}
+                inspectorPortalNode={inspectorPortalNode}
+              />
+            </TabsContent>
+            <TabsContent
+              value="sensitivity-analysis"
+              className="flex min-h-0 w-full md:overflow-hidden"
+            >
+              <SensitivityAnalysisTable
+                sensitivityAnalysis={result.sensitivityAnalysis}
+                inspectorPortalNode={inspectorPortalNode}
+              />
+            </TabsContent>
+          </Tabs>
+        </Stack>
+      </Stack>
+      {selectedTab !== 'summary' && (
+        <>
+          <Separator className="md:hidden" />
+          <Separator orientation="vertical" className="hidden self-stretch md:block" />
+          <Stack className="min-h-0 flex-1">
+            <DashboardSectionHeader
+              title="Details"
+              description="Use this inspector to drill into the row selected in Results. It updates with the detailed stat math, hit data, or scenario deltas behind that selection."
+              icon={<ListTree />}
+            />
+            <ScrollArea className="min-h-0 md:flex-1" orientation="both">
+              <div
+                className="p-page"
+                ref={(node) => setInspectorPortalNode(node ?? undefined)}
+              />
+            </ScrollArea>
+          </Stack>
+        </>
+      )}
     </Container>
   );
 };

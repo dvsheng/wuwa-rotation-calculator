@@ -38,6 +38,9 @@ import { useSession } from '@/lib/auth-client';
 import type { SavedRotation } from '@/schemas/library';
 import { Attribute } from '@/types';
 
+import { getRotationLoaderRouteOptions } from './rotation-loader-link';
+import { ShareRotationButton } from './ShareRotationButton';
+
 interface SavedRotationCardProperties {
   rotation: SavedRotation;
 }
@@ -227,18 +230,18 @@ export function SavedRotationCard({ rotation }: SavedRotationCardProperties) {
         </Row>
       </CardContent>
       <CardFooter className="justify-end pt-0">
-        <Button
-          onClick={() => {
-            void navigate({
-              to: '/create',
-              search: { rotationId: rotation.id, tab: 'results' },
-            });
-          }}
-          size="sm"
-        >
-          <Play className="mr-2 h-4 w-4" />
-          Load
-        </Button>
+        <Row gap="inset">
+          <ShareRotationButton rotationId={rotation.id} rotationName={rotation.name} />
+          <Button
+            onClick={() => {
+              void navigate(getRotationLoaderRouteOptions(rotation.id));
+            }}
+            size="sm"
+          >
+            <Play className="mr-2 h-4 w-4" />
+            Load
+          </Button>
+        </Row>
       </CardFooter>
     </Card>
   );

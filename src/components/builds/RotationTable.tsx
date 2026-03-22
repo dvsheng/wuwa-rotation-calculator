@@ -38,6 +38,9 @@ import { useRotationMutations } from '@/hooks/useRotationMutations';
 import { useSession } from '@/lib/auth-client';
 import type { ListedRotation, SavedRotation } from '@/schemas/library';
 
+import { getRotationLoaderRouteOptions } from './rotation-loader-link';
+import { ShareRotationButton } from './ShareRotationButton';
+
 interface RotationTableProperties {
   title: string;
   description: string;
@@ -329,13 +332,11 @@ export function RotationTable({
                 />
               </>
             )}
+            <ShareRotationButton rotationId={row.original.id} />
             <Button
               size="sm"
               onClick={() => {
-                navigate({
-                  to: '/create',
-                  search: { rotationId: row.original.id, tab: 'results' },
-                });
+                navigate(getRotationLoaderRouteOptions(row.original.id));
               }}
             >
               <Play />

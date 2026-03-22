@@ -8,7 +8,7 @@ import rotationResultsImage from '@/assets/about/RotationResults.png';
 import saveRotationImage from '@/assets/about/SaveRotation.png';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Container, Row, Stack } from '@/components/ui/layout';
+import { Container, Grid, Row, Stack } from '@/components/ui/layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Text } from '@/components/ui/typography';
 
@@ -115,7 +115,7 @@ function AboutPage() {
               theorycrafting.
             </Text>
           </Stack>
-          <Row gap="component" wrap={true} align="stretch">
+          <Grid gap="component" className="md:grid-cols-3">
             <Card className="min-w-0 flex-1">
               <CardHeader>
                 <Row gap="inset" align="center">
@@ -173,7 +173,7 @@ function AboutPage() {
                 </Stack>
               </CardContent>
             </Card>
-          </Row>
+          </Grid>
 
           <Card>
             <CardHeader>
@@ -181,7 +181,7 @@ function AboutPage() {
             </CardHeader>
             <CardContent>
               <Tabs defaultValue={WORKFLOW_STEPS[0].value} className="gap-component">
-                <TabsList className="h-auto w-full flex-wrap justify-start">
+                <TabsList className="flex h-auto! w-full flex-wrap justify-start">
                   {WORKFLOW_STEPS.map((step) => (
                     <TabsTrigger
                       key={step.value}

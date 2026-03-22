@@ -8,6 +8,7 @@ import { SavedRotationCard } from './SavedRotationCard';
 
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: vi.fn(),
+  useRouter: vi.fn(),
 }));
 
 vi.mock('@/lib/auth-client', () => ({
@@ -26,7 +27,8 @@ vi.mock('@/components/common/AssetIcon', () => ({
   AttributeIcon: () => <div data-testid="attribute-icon" />,
 }));
 
-const { useNavigate: mockUseNavigate } = await import('@tanstack/react-router');
+const { useNavigate: mockUseNavigate, useRouter: mockUseRouter } =
+  await import('@tanstack/react-router');
 const { useSession: mockUseSession } = await import('@/lib/auth-client');
 const { useRotationMutations: mockUseRotationMutations } =
   await import('@/hooks/useRotationMutations');
@@ -67,6 +69,9 @@ describe('SavedRotationCard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(mockUseNavigate).mockReturnValue(mockNavigate);
+    vi.mocked(mockUseRouter).mockReturnValue({
+      buildLocation: vi.fn(),
+    } as any);
     vi.mocked(mockUseRotationMutations).mockReturnValue({
       deleteRotation: mockDeleteRotation,
       updateRotation: mockUpdateRotation,

@@ -59,7 +59,7 @@ export const useTeamDetails = () => {
   const result = useQueries({
     queries: team.flatMap((character) => [
       {
-        queryKey: ['team-details', 'character', character.id, character.sequence],
+        queryKey: ['entity', character.id, character.sequence],
         queryFn: () =>
           getClientEntityById({
             data: {
@@ -69,9 +69,10 @@ export const useTeamDetails = () => {
             },
           }),
         staleTime: Infinity,
+        retry: 10,
       },
       {
-        queryKey: ['team-details', 'weapon', character.id, character.weapon.id],
+        queryKey: ['entity', character.weapon.id, character.weapon.refine],
         queryFn: () =>
           getClientEntityById({
             data: {
@@ -81,9 +82,10 @@ export const useTeamDetails = () => {
             },
           }),
         staleTime: Infinity,
+        retry: 10,
       },
       {
-        queryKey: ['team-details', 'echo', character.id, character.primarySlotEcho.id],
+        queryKey: ['entity', character.primarySlotEcho.id],
         queryFn: () =>
           getClientEntityById({
             data: {
@@ -92,9 +94,10 @@ export const useTeamDetails = () => {
             },
           }),
         staleTime: Infinity,
+        retry: 10,
       },
       ...character.echoSets.map((set) => ({
-        queryKey: ['team-details', 'echo-set', character.id, set.id, set.requirement],
+        queryKey: ['entity', set.id, set.requirement],
         queryFn: () =>
           getClientEntityById({
             data: {
@@ -104,6 +107,7 @@ export const useTeamDetails = () => {
             },
           }),
         staleTime: Infinity,
+        retry: 10,
       })),
     ]),
     combine: (results) => {

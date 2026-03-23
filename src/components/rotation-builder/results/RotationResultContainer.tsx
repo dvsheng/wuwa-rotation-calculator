@@ -52,7 +52,7 @@ export const RotationResultContainer = ({
           </Button>
         }
       />
-      <div className="relative min-h-0 w-full">
+      <div className="relative h-full min-h-0 w-full">
         <Stack
           fullHeight
           fullWidth
@@ -84,7 +84,7 @@ export const RotationResultContainer = ({
           <Tabs
             value={selectedTab}
             onValueChange={setSelectedTab}
-            className="min-h-0 md:flex-1 md:overflow-hidden"
+            className="h-full min-h-0 md:flex-1 md:overflow-hidden"
           >
             <TabsList>
               <TabsTrigger value="summary">Summary</TabsTrigger>

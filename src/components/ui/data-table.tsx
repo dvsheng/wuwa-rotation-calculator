@@ -1,6 +1,11 @@
-import type { ColumnDef, Row } from '@tanstack/react-table';
-import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
-import type { ReactNode } from 'react';
+import type { ColumnDef, Row, SortingState } from '@tanstack/react-table';
+import {
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
+import { useState, type ReactNode } from 'react';
 
 import {
   Table,
@@ -45,11 +50,18 @@ export function DataTable<TData, TValue>({
   classNames,
   emptyMessage = 'No results.',
 }: DataTableProperties<TData, TValue>) {
+  const [sorting, setSorting] = useState<SortingState>([]);
+
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,
+    state: {
+      sorting,
+    },
+    onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
   });
 
   return (

@@ -1,9 +1,10 @@
 import type { ColumnDef } from '@tanstack/react-table';
-import { ChevronDown } from 'lucide-react';
+import { ArrowUpDown, ChevronDown } from 'lucide-react';
 import { Fragment, useState } from 'react';
 
 import { InfoTooltip } from '@/components/common/InfoTooltip';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { Row, Stack } from '@/components/ui/layout';
 import { Text } from '@/components/ui/typography';
@@ -98,7 +99,22 @@ export const AttackBreakdownDataTable = ({
     },
     {
       id: 'damage',
-      header: () => <div className="text-right"> Damage </div>,
+      accessorFn: (row) => row.totalDamage,
+      enableSorting: true,
+      header: ({ column }) => (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="-mr-2 px-2"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Damage
+            <ArrowUpDown className="size-4" />
+          </Button>
+        </div>
+      ),
       meta: {
         headerClassName: rotationResultTableColumnLayout.damage,
         cellClassName: rotationResultTableColumnLayout.damage,

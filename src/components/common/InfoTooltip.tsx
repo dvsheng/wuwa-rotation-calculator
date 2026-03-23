@@ -4,6 +4,8 @@ import type { MouseEventHandler, ReactNode } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
+import { Button } from '../ui/button';
+
 interface InfoTooltipProperties {
   children: ReactNode;
   onClick?: MouseEventHandler<HTMLButtonElement>;
@@ -21,9 +23,13 @@ export const InfoTooltip = ({
         {children}
       </TooltipContent>
       <TooltipTrigger asChild>
-        <button type="button" onClick={onClick} className="items-center justify-center">
+        {onClick ? (
+          <Button variant="ghost" size="icon-sm" onClick={onClick}>
+            <Info className="text-muted-foreground size-4" />
+          </Button>
+        ) : (
           <Info className="text-muted-foreground size-4" />
-        </button>
+        )}
       </TooltipTrigger>
     </Tooltip>
   );

@@ -165,14 +165,11 @@ const baseGetEntityByIdHandler = async <T extends GetEntityDetailsRequest>(
     console.error(`Entity not found for ID ${options.id}`);
     throw new Error(`Entity not found for ID ${options.id}`);
   }
-  const sequence =
-    options.entityType === EntityType.CHARACTER ? options.activatedSequence : 0;
+  const sequence = 'activatedSequence' in options ? options.activatedSequence : 0;
   const refineLevel =
-    options.entityType === EntityType.WEAPON
-      ? refineLevelToNumber(options.refineLevel)
-      : 0;
+    'refineLevel' in options ? refineLevelToNumber(options.refineLevel) : 0;
   const activatedSetBonus =
-    options.entityType === EntityType.ECHO_SET ? options.activatedSetBonus : 0;
+    'activatedSetBonus' in options ? options.activatedSetBonus : 0;
 
   const firstCapability = databaseCapabilities[0];
 

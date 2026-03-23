@@ -2,6 +2,8 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
+import type { EntityListRow } from '@/services/game-data';
+
 import { EntitySelectionDialog } from './EntitySelectionDialog';
 
 beforeAll(() => {
@@ -14,40 +16,22 @@ beforeAll(() => {
 });
 
 const CHARACTER_ITEMS = [
-  {
-    id: 1,
-    name: 'Jiyan',
-    attribute: 'aero',
-    weaponType: 'Broadblade',
-    rank: 5,
-  } as const,
-  {
-    id: 2,
-    name: 'Calcharo',
-    attribute: 'electro',
-    weaponType: 'Broadblade',
-    rank: 5,
-  } as const,
-  {
-    id: 3,
-    name: 'Baizhi',
-    attribute: 'glacio',
-    weaponType: 'Rectifier',
-    rank: 4,
-  } as const,
-];
+  { id: 1, name: 'Jiyan', attribute: 'aero', weaponType: 'Broadblade', rank: 5 },
+  { id: 2, name: 'Calcharo', attribute: 'electro', weaponType: 'Broadblade', rank: 5 },
+  { id: 3, name: 'Baizhi', attribute: 'glacio', weaponType: 'Rectifier', rank: 4 },
+] as unknown as EntityListRow[];
 
 const ECHO_ITEMS = [
   { id: 10, name: 'Tempest Mephis', cost: 4 },
   { id: 11, name: 'Feilian Beringal', cost: 3 },
   { id: 12, name: 'Excarat', cost: 1 },
-];
+] as unknown as EntityListRow[];
 
 const ECHO_ITEMS_UNSORTED = [
   { id: 12, name: 'Excarat', cost: 1 },
   { id: 10, name: 'Tempest Mephis', cost: 4 },
   { id: 11, name: 'Feilian Beringal', cost: 3 },
-];
+] as unknown as EntityListRow[];
 
 const openDialog = async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Jiyan' }));

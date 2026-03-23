@@ -114,7 +114,6 @@ export const BuffCanvasItem = ({ buff, onRemove }: BuffCanvasItemProperties) => 
                 {isBuffConfigurable && (
                   <ParameterConfigurationDialog
                     capability={buff}
-                    disabled={!isBuffConfigurable}
                     buffedAttacks={attacks.slice(buff.x, buff.x + buff.w)}
                     open={isDialogOpen}
                     onOpenChange={setIsDialogOpen}

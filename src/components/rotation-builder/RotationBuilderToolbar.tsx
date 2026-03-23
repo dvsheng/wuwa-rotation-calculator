@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import type { RotationBuilderTab } from '@/store/rotationBuilderUiSlice';
 
 import { Badge } from '../ui/badge';
-import { Box, Row } from '../ui/layout';
+import { Row } from '../ui/layout';
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
 import { Text } from '../ui/typography';
 
@@ -51,7 +51,7 @@ export function RotationBuilderToolbar({
           </TabsList>
         </Tabs>
         {result && (
-          <Box gap="inset" direction="row" className="hidden font-semibold md:flex">
+          <Row gap="inset" className="hidden font-semibold md:flex">
             <Text>Total Damage:</Text>
             <Text
               className={cn(
@@ -66,7 +66,7 @@ export function RotationBuilderToolbar({
             {isPlaceholderData && (
               <Badge className="bg-warning text-warning-foreground">Stale</Badge>
             )}
-          </Box>
+          </Row>
         )}
       </Row>
       <ButtonGroup>

@@ -40,20 +40,31 @@ const WEAPON_TYPE_ICON_MAP: Record<WeaponType, string> = {
   Sword: weaponSword,
 };
 
+const MONOCHROME_ICON_CLASSNAME =
+  'shrink-0 object-contain brightness-0 dark:brightness-0 dark:invert';
+
+const IconImg = ({
+  src,
+  size,
+  alt,
+  className,
+}: {
+  src: string;
+  size: number;
+  alt: string;
+  className?: string;
+}) => <img src={src} width={size} height={size} alt={alt} className={className} />;
+
 interface AssetIconProperties {
   name: keyof typeof ICON_MAP;
   size?: number;
   className?: string;
 }
 
-const MONOCHROME_ICON_CLASSNAME =
-  'shrink-0 object-contain brightness-0 dark:brightness-0 dark:invert';
-
 export const AssetIcon = ({ name, size = 24, className }: AssetIconProperties) => (
-  <img
+  <IconImg
     src={ICON_MAP[name]}
-    width={size}
-    height={size}
+    size={size}
     alt={name}
     className={cn(MONOCHROME_ICON_CLASSNAME, className)}
   />
@@ -70,10 +81,9 @@ export const AttributeIcon = ({
   size = 24,
   className,
 }: AttributeIconProperties) => (
-  <img
+  <IconImg
     src={ATTRIBUTE_ICON_MAP[attribute]}
-    width={size}
-    height={size}
+    size={size}
     alt={attribute}
     className={cn('shrink-0 object-contain', className)}
   />
@@ -90,10 +100,9 @@ export const WeaponTypeIcon = ({
   size = 24,
   className,
 }: WeaponTypeIconProperties) => (
-  <img
+  <IconImg
     src={WEAPON_TYPE_ICON_MAP[weaponType]}
-    width={size}
-    height={size}
+    size={size}
     alt={weaponType}
     className={cn(MONOCHROME_ICON_CLASSNAME, className)}
   />

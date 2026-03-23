@@ -134,7 +134,7 @@ export const AttackCanvasItem = ({
         stopPropagation={true}
       />
       {shouldShowWarning && (
-        <AlertTriangle className="absolute top-1 right-1 h-5 w-5 text-amber-500" />
+        <AlertTriangle className="absolute top-1 right-1 h-5 w-5 text-warning" />
       )}
     </BaseAttackCanvasItem>
   );

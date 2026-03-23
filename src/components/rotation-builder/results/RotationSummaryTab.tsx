@@ -9,7 +9,6 @@ import {
   tidy,
 } from '@tidyjs/tidy';
 import type { PropsWithChildren } from 'react';
-import { createPortal } from 'react-dom';
 
 import {
   Card,
@@ -19,7 +18,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Grid, Stack } from '@/components/ui/layout';
-import { Text } from '@/components/ui/typography';
 import { useCharacterByTeamSlotNumber } from '@/hooks/useCharacter';
 import type {
   RotationCalculationResult,
@@ -96,7 +94,6 @@ const toPieChartData = (
 
 interface RotationSummaryTabProperties {
   result: RotationCalculationResult;
-  inspectorPortalNode?: HTMLDivElement;
 }
 
 const SummaryChartCard = ({
@@ -118,10 +115,7 @@ const SummaryChartCard = ({
 
 const isCharacterZero = (d: DamageRow) => d.characterIndex === 0;
 
-export const RotationSummaryTab = ({
-  result,
-  inspectorPortalNode,
-}: RotationSummaryTabProperties) => {
+export const RotationSummaryTab = ({ result }: RotationSummaryTabProperties) => {
   const substatChartData = substatSensitivityChartData(result.sensitivityAnalysis);
   const character = useCharacterByTeamSlotNumber(0);
   if (!character) {
@@ -134,58 +128,46 @@ export const RotationSummaryTab = ({
     damageDistribution(result.mergedDamageDetails, 'damageType', isCharacterZero, 4),
   );
   return (
-    <>
-      <Stack gap="component" className="min-h-0 flex-1 overflow-y-auto">
-        <Grid gap="component" className="md:grid-cols-2">
-          <SummaryChartCard
-            title="Damage by Character"
-            description="Share of total rotation damage contributed by each character."
-          >
-            <CharacterDamageSummaryRow
-              mergedDamageDetails={result.mergedDamageDetails}
-              totalDamage={result.totalDamage}
-            />
-          </SummaryChartCard>
-          <SummaryChartCard
-            title={`${character.name} Damage Increase by Substat`}
-            description={`Estimated damage increase for ${character.name} by substat`}
-          >
-            <SubstatSensitivityBarChart data={substatChartData} />
-          </SummaryChartCard>
+    <Stack gap="component" className="min-h-0 flex-1 overflow-y-auto">
+      <Grid gap="component" className="md:grid-cols-2">
+        <SummaryChartCard
+          title="Damage by Character"
+          description="Share of total rotation damage contributed by each character."
+        >
+          <CharacterDamageSummaryRow
+            mergedDamageDetails={result.mergedDamageDetails}
+            totalDamage={result.totalDamage}
+          />
+        </SummaryChartCard>
+        <SummaryChartCard
+          title={`${character.name} Damage Increase by Substat`}
+          description={`Estimated damage increase for ${character.name} by substat`}
+        >
+          <SubstatSensitivityBarChart data={substatChartData} />
+        </SummaryChartCard>
 
-          <SummaryChartCard
-            title={`${character.name} Damage by Talent`}
-            description={`${character.name}'s damage distribution by talent nodes.`}
-          >
-            <DistributionPieChart
-              data={skillOriginData}
-              emptyTitle="Skill Origin Distribution"
-              emptyDescription="Team slot 1 has no recorded damage in this rotation."
-            />
-          </SummaryChartCard>
+        <SummaryChartCard
+          title={`${character.name} Damage by Talent`}
+          description={`${character.name}'s damage distribution by talent nodes.`}
+        >
+          <DistributionPieChart
+            data={skillOriginData}
+            emptyTitle="Skill Origin Distribution"
+            emptyDescription="Team slot 1 has no recorded damage in this rotation."
+          />
+        </SummaryChartCard>
 
-          <SummaryChartCard
-            title={`${character.name} Damage by Damage Type`}
-            description={`${character.name}'s damage distribution by damage type.`}
-          >
-            <DistributionPieChart
-              data={damageTypeData}
-              emptyTitle="Damage Type Breakdown"
-              emptyDescription="No damage type data is available for this rotation."
-            />
-          </SummaryChartCard>
-        </Grid>
-      </Stack>
-      {inspectorPortalNode &&
-        createPortal(
-          <Stack align="center" className="h-full justify-center">
-            <Text variant="heading">No Details Available</Text>
-            <Text variant="bodySm" tone="muted">
-              The summary tab does not have any viewable details.
-            </Text>
-          </Stack>,
-          inspectorPortalNode,
-        )}
-    </>
+        <SummaryChartCard
+          title={`${character.name} Damage by Damage Type`}
+          description={`${character.name}'s damage distribution by damage type.`}
+        >
+          <DistributionPieChart
+            data={damageTypeData}
+            emptyTitle="Damage Type Breakdown"
+            emptyDescription="No damage type data is available for this rotation."
+          />
+        </SummaryChartCard>
+      </Grid>
+    </Stack>
   );
 };

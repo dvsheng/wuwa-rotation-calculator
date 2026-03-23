@@ -1,6 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import { Fragment, useState } from 'react';
-import { createPortal } from 'react-dom';
 
 import { DataTable } from '@/components/ui/data-table';
 import { Row, Stack } from '@/components/ui/layout';
@@ -13,11 +12,11 @@ import type {
 
 import { RelativeMagnitudeBar } from './RelativeMagnitudeBar';
 import { formatPercentDelta, formatSignedDamage } from './result-chart.utilities';
+import { InspectorContent } from './RotationResultInspectorContext';
 import { sensitivitySections as buildSensitivitySections } from './sensitivity-pipelines';
 
 interface SensitivityAnalysisTableProperties {
   sensitivityAnalysis: ClientSensitivityAnalysis;
-  inspectorPortalNode: HTMLDivElement | undefined;
 }
 
 const tableClassNames = {
@@ -116,19 +115,8 @@ const SensitivityAnalysisDetails = ({
   scenario,
 }: {
   baselineTotalDamage: number;
-  scenario: ClientSensitivityAnalysisScenario | undefined;
+  scenario: ClientSensitivityAnalysisScenario;
 }) => {
-  if (!scenario) {
-    return (
-      <Stack align="center" className="h-full justify-center">
-        <Text variant="heading">No Scenario Selected</Text>
-        <Text variant="bodySm" tone="muted">
-          Click any sensitivity row to inspect its before-and-after totals here.
-        </Text>
-      </Stack>
-    );
-  }
-
   return (
     <Stack gap="component">
       <Stack gap="trim">
@@ -186,7 +174,6 @@ const SensitivityAnalysisDetails = ({
 
 export const SensitivityAnalysisTable = ({
   sensitivityAnalysis,
-  inspectorPortalNode,
 }: SensitivityAnalysisTableProperties) => {
   const [selectedScenarioId, setSelectedScenarioId] = useState<string | undefined>();
   const sections = buildSensitivitySections(sensitivityAnalysis);
@@ -225,16 +212,14 @@ export const SensitivityAnalysisTable = ({
           </Stack>
         ))}
       </Stack>
-
-      {inspectorPortalNode
-        ? createPortal(
-            <SensitivityAnalysisDetails
-              baselineTotalDamage={sensitivityAnalysis.baselineTotalDamage}
-              scenario={selectedScenario}
-            />,
-            inspectorPortalNode,
-          )
-        : undefined}
+      {selectedScenario && (
+        <InspectorContent>
+          <SensitivityAnalysisDetails
+            baselineTotalDamage={sensitivityAnalysis.baselineTotalDamage}
+            scenario={selectedScenario}
+          />
+        </InspectorContent>
+      )}
     </Fragment>
   );
 };

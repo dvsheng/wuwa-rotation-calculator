@@ -352,7 +352,7 @@ export const AttackCalculationStatsBreakdown = ({
   const characterGroups = buildCharContributors(characterStats, CHARACTER_STATS);
   const enemyGroups = buildEnemyContributors(enemyStats, ENEMY_STATS);
   return (
-    <Stack gap="inset" fullWidth className="p-panel">
+    <Stack gap="inset" fullWidth>
       <Text variant="heading" className="border-border border-b">
         Stat Breakdown
       </Text>

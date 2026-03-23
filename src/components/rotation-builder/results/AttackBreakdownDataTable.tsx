@@ -1,7 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import { ChevronDown } from 'lucide-react';
 import { Fragment, useState } from 'react';
-import { createPortal } from 'react-dom';
 
 import { InfoTooltip } from '@/components/common/InfoTooltip';
 import { Badge } from '@/components/ui/badge';
@@ -20,17 +19,16 @@ import {
 } from './data-table.style';
 import { RelativeMagnitudeBar } from './RelativeMagnitudeBar';
 import { attackGroups as buildAttackGroups } from './result-pipelines';
+import { InspectorContent } from './RotationResultInspectorContext';
 
 type DamageDetail = Parameters<typeof AttackCalculationStatsBreakdown>[0]['detail'];
 
 interface AttackBreakdownDataTableProperties {
   mergedDamageDetails: Array<RotationResultMergedDamageDetail>;
-  inspectorPortalNode: HTMLDivElement | undefined;
 }
 
 export const AttackBreakdownDataTable = ({
   mergedDamageDetails,
-  inspectorPortalNode,
 }: AttackBreakdownDataTableProperties) => {
   const [selectedDetail, setSelectedDetail] = useState<DamageDetail | undefined>();
   const [expandedGroups, setExpandedGroups] = useState<Set<number>>(new Set());
@@ -191,21 +189,11 @@ export const AttackBreakdownDataTable = ({
           </Fragment>
         )}
       />
-      {inspectorPortalNode
-        ? createPortal(
-            selectedDetail ? (
-              <AttackCalculationStatsBreakdown detail={selectedDetail} />
-            ) : (
-              <Stack align="center" className="h-full justify-center">
-                <Text variant="heading">No Detail Selected</Text>
-                <Text variant="bodySm" tone="muted">
-                  Click Details on any row to view stat breakdown data here.
-                </Text>
-              </Stack>
-            ),
-            inspectorPortalNode,
-          )
-        : undefined}
+      {selectedDetail && (
+        <InspectorContent>
+          <AttackCalculationStatsBreakdown detail={selectedDetail} />
+        </InspectorContent>
+      )}
     </>
   );
 };

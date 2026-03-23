@@ -133,7 +133,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             </AuthUIProviderTanstack>
           </AuthQueryProvider>
         </QueryClientProvider>
-        <Toaster position="bottom-left" />
+        <Toaster position="bottom-right" />
         <Scripts />
       </body>
     </html>

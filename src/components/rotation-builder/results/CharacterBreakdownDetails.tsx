@@ -8,20 +8,8 @@ import { toDisplayName } from './character-breakdown.types';
 export const CharacterBreakdownDetails = ({
   selectedCharacter,
 }: {
-  selectedCharacter: CharacterBreakdownRow | undefined;
+  selectedCharacter: CharacterBreakdownRow;
 }) => {
-  if (!selectedCharacter) {
-    return (
-      <Stack align="center" className="h-full justify-center">
-        <Text variant="heading">Character Breakdown</Text>
-        <Text variant="bodySm" tone="muted">
-          Click the info icon to view a character&apos;s attack breakdown by damage
-          type.
-        </Text>
-      </Stack>
-    );
-  }
-
   return (
     <Stack className="h-full min-h-0" gap="component">
       <Row align="center" gap="trim">
@@ -50,7 +38,11 @@ export const CharacterBreakdownDetails = ({
 
             <Stack gap="trim">
               {damageType.attacks.map((attack) => (
-                <Row key={attack.attackIndex} justify="between" gap="trim">
+                <Row
+                  key={`${damageType.damageType}-${attack.attackIndex}-${attack.attackName}`}
+                  justify="between"
+                  gap="trim"
+                >
                   <Stack gap="none" className="min-w-0">
                     <Text variant="bodySm" className="truncate">
                       {attack.attackName}

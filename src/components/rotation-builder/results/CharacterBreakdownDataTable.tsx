@@ -1,7 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import { ChevronDown } from 'lucide-react';
 import { Fragment, useState } from 'react';
-import { createPortal } from 'react-dom';
 
 import { CharacterIconDisplay } from '@/components/common/CharacterIcon';
 import { InfoTooltip } from '@/components/common/InfoTooltip';
@@ -20,16 +19,14 @@ import {
 } from './data-table.style';
 import { RelativeMagnitudeBar } from './RelativeMagnitudeBar';
 import { characterBreakdown } from './result-pipelines';
+import { InspectorContent } from './RotationResultInspectorContext';
 
 interface CharacterBreakdownDataTableProperties {
   result: Array<RotationResultMergedDamageDetail>;
-  totalDamage: number;
-  inspectorPortalNode: HTMLDivElement | undefined;
 }
 
 export const CharacterBreakdownDataTable = ({
   result,
-  inspectorPortalNode,
 }: CharacterBreakdownDataTableProperties) => {
   const [expandedCharacters, setExpandedCharacters] = useState<Set<string>>(
     new Set(result.map((row) => row.characterName)),
@@ -187,12 +184,11 @@ export const CharacterBreakdownDataTable = ({
           </Fragment>
         )}
       />
-      {inspectorPortalNode
-        ? createPortal(
-            <CharacterBreakdownDetails selectedCharacter={selectedCharacter} />,
-            inspectorPortalNode,
-          )
-        : undefined}
+      {selectedCharacter && (
+        <InspectorContent>
+          <CharacterBreakdownDetails selectedCharacter={selectedCharacter} />
+        </InspectorContent>
+      )}
     </Fragment>
   );
 };

@@ -5,7 +5,6 @@ import {
   RefineLevel,
   SetEffectRequirement,
 } from '@/services/game-data/types';
-import { WeaponType } from '@/types';
 
 import { EnemySchema } from './enemy';
 import { AttackInstanceSchema, ModifierInstanceSchema } from './rotation';
@@ -34,28 +33,6 @@ export const GetEntityDetailsRequestSchema = z.discriminatedUnion('entityType', 
 ]);
 
 export type GetEntityDetailsRequest = z.infer<typeof GetEntityDetailsRequestSchema>;
-
-export const ListEntitiesRequestSchema = z.discriminatedUnion('entityType', [
-  z.object({
-    entityType: z.literal(EntityType.CHARACTER),
-    weaponType: z.enum(WeaponType).optional(),
-  }),
-  z.object({
-    entityType: z.literal(EntityType.WEAPON),
-    weaponType: z.enum(WeaponType).optional(),
-  }),
-  z.object({
-    entityType: z.literal(EntityType.ECHO),
-  }),
-  z.object({
-    entityType: z.literal(EntityType.ECHO_SET),
-  }),
-  z.object({
-    entityType: z.undefined(),
-  }),
-]);
-
-export type ListEntitiesRequest = z.infer<typeof ListEntitiesRequestSchema>;
 
 export const CalculateRotationInputSchema = z.object({
   team: TeamSchema,

@@ -19,34 +19,34 @@ const CHARACTER_ITEMS = [
     name: 'Jiyan',
     attribute: 'aero',
     weaponType: 'Broadblade',
-    rarity: 5,
+    rank: 5,
   } as const,
   {
     id: 2,
     name: 'Calcharo',
     attribute: 'electro',
     weaponType: 'Broadblade',
-    rarity: 5,
+    rank: 5,
   } as const,
   {
     id: 3,
     name: 'Baizhi',
     attribute: 'glacio',
     weaponType: 'Rectifier',
-    rarity: 4,
+    rank: 4,
   } as const,
 ];
 
 const ECHO_ITEMS = [
-  { id: 10, name: 'Tempest Mephis', cost: 4, sets: [1] },
-  { id: 11, name: 'Feilian Beringal', cost: 3, sets: [1] },
-  { id: 12, name: 'Excarat', cost: 1, sets: [2] },
+  { id: 10, name: 'Tempest Mephis', cost: 4 },
+  { id: 11, name: 'Feilian Beringal', cost: 3 },
+  { id: 12, name: 'Excarat', cost: 1 },
 ];
 
 const ECHO_ITEMS_UNSORTED = [
-  { id: 12, name: 'Excarat', cost: 1, sets: [2] },
-  { id: 10, name: 'Tempest Mephis', cost: 4, sets: [1] },
-  { id: 11, name: 'Feilian Beringal', cost: 3, sets: [1] },
+  { id: 12, name: 'Excarat', cost: 1 },
+  { id: 10, name: 'Tempest Mephis', cost: 4 },
+  { id: 11, name: 'Feilian Beringal', cost: 3 },
 ];
 
 const openDialog = async () => {
@@ -147,7 +147,7 @@ describe('EntitySelectionDialog', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('sorts echoes by cost descending when rarity is not present', async () => {
+  it('sorts echoes by cost descending', async () => {
     render(
       <EntitySelectionDialog
         items={ECHO_ITEMS_UNSORTED}

@@ -52,7 +52,7 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
     const oldId = selectedEchoSets[setIndex].id;
     if (oldId && oldId !== id) clearForEntity(oldId);
     const selectedSetConfig = echoSetList.find((set) => set.id === id);
-    const availableTiers = selectedSetConfig?.tiers || [2, 5];
+    const availableTiers = selectedSetConfig?.setBonusThresholds || [2, 5];
     setEchoSet(index, setIndex, id);
     setEchoSetRequirement(index, setIndex, String(availableTiers[0]));
   };
@@ -61,7 +61,7 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
     <>
       {selectedEchoSets.map((set, setIndex) => {
         const selectedSetConfig = echoSetList.find((s) => s.id === set.id);
-        const availableTiers = selectedSetConfig?.tiers || [2, 5];
+        const availableTiers = selectedSetConfig?.setBonusThresholds || [2, 5];
         const echoSetUrl = echoSetList.find((s) => s.id === set.id)?.iconUrl;
         return (
           <Stack fullWidth key={setIndex}>

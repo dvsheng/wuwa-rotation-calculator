@@ -22,7 +22,7 @@ export const PrimaryEchoSelector = ({ index }: PrimaryEchoSelectorProperties) =>
     selectedEchoSets.map((set) => echoSetList.find((s) => s.id === set.id)?.gameId),
   );
   const primaryEchoOptions = echoList.filter((_echo) =>
-    _echo.sets.some((set) => selectedSetIds.has(set)),
+    _echo.echoSetIds?.some((set) => selectedSetIds.has(set)),
   );
   const echoIconUrl = echoList.find((s) => s.id === echo.id)?.iconUrl;
   return (

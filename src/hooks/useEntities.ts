@@ -1,7 +1,8 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 
-import { getEntityDetails, listEntities } from '@/services/admin';
+import { getEntityDetails } from '@/services/admin';
 import type { EntityType } from '@/services/game-data';
+import { listEntities } from '@/services/game-data';
 
 export interface UseEntitiesOptions {
   entityType?: EntityType;

@@ -4,8 +4,6 @@ import type { ReactNode } from 'react';
 import { Suspense } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { WeaponType } from '@/types';
-
 import { useEntityList } from './useEntityList';
 
 vi.mock('@/services/game-data', async () => {
@@ -39,65 +37,109 @@ describe('useEntityList', () => {
   });
 
   it('fetches one shared entity catalog and filters lists client-side', async () => {
-    mockListEntities.mockResolvedValue({
-      characters: [
-        {
-          id: 1,
-          name: 'Aalto',
-          iconUrl: '/characters/aalto.png',
-          weaponType: WeaponType.PISTOLS,
-          rarity: 4,
-          attribute: 'aero',
-        },
-        {
-          id: 2,
-          name: 'Rover',
-          iconUrl: '/characters/rover.png',
-          weaponType: WeaponType.SWORD,
-          rarity: 5,
-          attribute: 'spectro',
-        },
-      ],
-      weapons: [
-        {
-          id: 10,
-          name: 'Pistol A',
-          iconUrl: '/weapons/pistol-a.png',
-          weaponType: WeaponType.PISTOLS,
-          rarity: 4,
-        },
-        {
-          id: 11,
-          name: 'Sword A',
-          iconUrl: '/weapons/sword-a.png',
-          weaponType: WeaponType.SWORD,
-          rarity: 5,
-        },
-      ],
-      echoes: [
-        { id: 100, name: 'Echo A', iconUrl: '/echoes/echo-a.png', cost: 3, sets: [1] },
-      ],
-      echoSets: [
-        {
-          id: 200,
-          gameId: 9001,
-          name: 'Set A',
-          iconUrl: '/echo-sets/set-a.png',
-          tiers: [2, 5],
-        },
-      ],
-    });
+    mockListEntities.mockResolvedValue([
+      {
+        id: 1,
+        name: 'Aalto',
+        type: EntityType.CHARACTER,
+        iconUrl: '/characters/aalto.png',
+        weaponType: 'pistols',
+        rank: 4,
+        attribute: 'aero',
+        gameId: undefined,
+        description: undefined,
+        echoSetIds: undefined,
+        cost: undefined,
+        setBonusThresholds: undefined,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 2,
+        name: 'Rover',
+        type: EntityType.CHARACTER,
+        iconUrl: '/characters/rover.png',
+        weaponType: 'sword',
+        rank: 5,
+        attribute: 'spectro',
+        gameId: undefined,
+        description: undefined,
+        echoSetIds: undefined,
+        cost: undefined,
+        setBonusThresholds: undefined,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 10,
+        name: 'Pistol A',
+        type: EntityType.WEAPON,
+        iconUrl: '/weapons/pistol-a.png',
+        weaponType: 'pistols',
+        rank: 4,
+        attribute: undefined,
+        gameId: undefined,
+        description: undefined,
+        echoSetIds: undefined,
+        cost: undefined,
+        setBonusThresholds: undefined,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 11,
+        name: 'Sword A',
+        type: EntityType.WEAPON,
+        iconUrl: '/weapons/sword-a.png',
+        weaponType: 'sword',
+        rank: 5,
+        attribute: undefined,
+        gameId: undefined,
+        description: undefined,
+        echoSetIds: undefined,
+        cost: undefined,
+        setBonusThresholds: undefined,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 100,
+        name: 'Echo A',
+        type: EntityType.ECHO,
+        iconUrl: '/echoes/echo-a.png',
+        cost: 3,
+        echoSetIds: [1],
+        rank: undefined,
+        weaponType: undefined,
+        attribute: undefined,
+        gameId: undefined,
+        description: undefined,
+        setBonusThresholds: undefined,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 200,
+        name: 'Set A',
+        type: EntityType.ECHO_SET,
+        iconUrl: '/echo-sets/set-a.png',
+        gameId: 9001,
+        setBonusThresholds: [2, 5],
+        rank: undefined,
+        weaponType: undefined,
+        attribute: undefined,
+        echoSetIds: undefined,
+        cost: undefined,
+        description: undefined,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]);
 
     const { result } = renderHook(
       () => ({
-        characters: useEntityList({
-          entityType: EntityType.CHARACTER,
-          weaponType: WeaponType.SWORD,
-        }),
-        weapons: useEntityList({
-          entityType: EntityType.WEAPON,
-          weaponType: WeaponType.PISTOLS,
-        }),
+        characters: useEntityList({ entityType: EntityType.CHARACTER }),
+        weapons: useEntityList({ entityType: EntityType.WEAPON }),
         echoes: useEntityList({ entityType: EntityType.ECHO }),
         echoSets: useEntityList({ entityType: EntityType.ECHO_SET }),
         allEntities: useEntityList({ entityType: undefined }),
@@ -106,15 +148,13 @@ describe('useEntityList', () => {
     );
 
     await waitFor(() => {
-      expect(result.current.characters.data).toHaveLength(1);
-      expect(result.current.weapons.data).toHaveLength(1);
+      expect(result.current.characters.data).toHaveLength(2);
+      expect(result.current.weapons.data).toHaveLength(2);
       expect(result.current.echoes.data).toHaveLength(1);
       expect(result.current.echoSets.data).toHaveLength(1);
       expect(result.current.allEntities.data).toHaveLength(6);
     });
 
-    expect(result.current.characters.data[0]?.name).toBe('Rover');
-    expect(result.current.weapons.data[0]?.name).toBe('Pistol A');
     expect(result.current.allEntities.data.map((entity) => entity.iconUrl)).toEqual([
       '/characters/aalto.png',
       '/characters/rover.png',

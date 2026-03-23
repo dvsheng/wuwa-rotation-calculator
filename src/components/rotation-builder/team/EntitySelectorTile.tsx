@@ -12,10 +12,10 @@ import {
 import { Row } from '@/components/ui/layout';
 import { Text } from '@/components/ui/typography';
 import { cn } from '@/lib/utils';
-import type { ListEntityResponseItem } from '@/services/game-data';
+import type { EntityListRow } from '@/services/game-data';
 
 interface EntitySelectorTileProperties extends ComponentPropsWithRef<'div'> {
-  entity: ListEntityResponseItem;
+  entity: EntityListRow;
   onClick?: () => void;
 }
 
@@ -31,7 +31,7 @@ export const EntitySelectorTile = ({
   entity,
   onClick,
 }: EntitySelectorTileProperties) => {
-  const resolvedRarity = 'rarity' in entity ? entity.rarity : 1;
+  const resolvedRarity = entity.rank ?? 1;
 
   return (
     <Item
@@ -46,15 +46,15 @@ export const EntitySelectorTile = ({
         <ItemContent>
           <ItemTitle>{entity.name}</ItemTitle>
           <ItemDescription className="flex">
-            {'cost' in entity && (
+            {entity.cost !== undefined && (
               <Text as="span" variant="caption">
                 Cost {entity.cost}
               </Text>
             )}
-            {'weaponType' in entity && (
+            {entity.weaponType !== undefined && (
               <WeaponTypeIcon weaponType={entity.weaponType} />
             )}
-            {'attribute' in entity && entity.attribute !== 'physical' && (
+            {entity.attribute !== undefined && entity.attribute !== 'physical' && (
               <AttributeIcon attribute={entity.attribute} />
             )}
           </ItemDescription>

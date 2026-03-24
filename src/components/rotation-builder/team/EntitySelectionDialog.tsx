@@ -15,22 +15,20 @@ import {
 import { Grid, Row } from '@/components/ui/layout';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Text } from '@/components/ui/typography';
-import type { ListEntityResponseItem } from '@/services/game-data';
+import type { EntityListRow } from '@/services/game-data';
 import { Attribute, WeaponType } from '@/types';
 
 import { EntitySelectorTile } from './EntitySelectorTile';
 
 export interface EntitySelectionDialogProperties {
-  items: Array<ListEntityResponseItem>;
+  items: Array<EntityListRow>;
   value: number;
   onValueChange: (value: number) => void;
   excludeIds?: Array<number>;
 }
 
-const getItemTier = (item: ListEntityResponseItem): number | undefined => {
-  if ('rarity' in item) return item.rarity;
-  if ('cost' in item) return item.cost;
-  return undefined;
+const getItemTier = (item: EntityListRow): number | undefined => {
+  return item.rank ?? item.cost;
 };
 
 export const EntitySelectionDialog = ({
@@ -45,7 +43,7 @@ export const EntitySelectionDialog = ({
     new Map(),
   );
 
-  const handleSelect = (item: ListEntityResponseItem) => {
+  const handleSelect = (item: EntityListRow) => {
     onValueChange(item.id);
     setIsOpen(false);
   };
@@ -67,10 +65,10 @@ export const EntitySelectionDialog = ({
     setActiveFilters(new Map());
   };
 
-  const shouldShowWeaponTypeFilter = items[0] && 'weaponType' in items[0];
-  const shouldShowAttributeFilter = items[0] && 'attribute' in items[0];
+  const shouldShowWeaponTypeFilter = items[0]?.weaponType !== undefined;
+  const shouldShowAttributeFilter = items[0]?.attribute !== undefined;
   const costFilterOptions = compact([
-    ...new Set(items.map((item) => ('cost' in item ? item.cost : undefined))),
+    ...new Set(items.map((item) => item.cost)),
   ]).toSorted();
 
   const filteredItems = items

@@ -2,7 +2,6 @@ import { isNil } from 'es-toolkit/predicate';
 
 import { EntityIconDisplay } from '@/components/common/EntityIcon';
 import { useEntityList } from '@/hooks/useEntityList';
-import type { ListWeaponsResponseItem } from '@/services/game-data';
 import { EntityType } from '@/services/game-data';
 import { useStore } from '@/store';
 
@@ -35,7 +34,7 @@ export const WeaponSelector = ({ index }: WeaponSelectorProperties) => {
     ? weaponList
     : weaponList
         .filter((w) => w.weaponType === characterWeaponType)
-        .map(({ weaponType, ...rest }) => ({ ...rest }) as ListWeaponsResponseItem);
+        .map((w) => ({ ...w, weaponType: undefined }));
 
   return (
     <SelectorLayout

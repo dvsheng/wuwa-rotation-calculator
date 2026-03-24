@@ -1,63 +1,19 @@
+import { asc } from 'drizzle-orm';
+
 import { database } from '@/db/client';
+import type { DatabaseEntity } from '@/db/schema';
+import { entities } from '@/db/schema';
 
-import type { ListEntitiesResponse } from './list-entities.types';
-import { EntityType } from './types';
+import type { RecursivelyReplaceNullWithUndefined } from './database-type-adapters';
+import { replaceNullsWithUndefined } from './database-type-adapters';
 
-export const listEntitiesHandler = async (): Promise<ListEntitiesResponse> => {
-  const rows = await database.query.entities.findMany();
+export type EntityListRow = RecursivelyReplaceNullWithUndefined<DatabaseEntity>;
 
-  const catalog: ListEntitiesResponse = {
-    characters: [],
-    weapons: [],
-    echoes: [],
-    echoSets: [],
-  };
+export const listEntitiesHandler = async (): Promise<Array<EntityListRow>> => {
+  const databaseEntities = await database
+    .select({ entity: entities })
+    .from(entities)
+    .orderBy(asc(entities.name));
 
-  for (const row of rows) {
-    switch (row.type) {
-      case EntityType.CHARACTER: {
-        catalog.characters.push({
-          id: row.id,
-          name: row.name,
-          weaponType: row.weaponType!,
-          rarity: row.rank!,
-          attribute: row.attribute!,
-          iconUrl: row.iconUrl ?? undefined,
-        });
-        break;
-      }
-      case EntityType.WEAPON: {
-        catalog.weapons.push({
-          id: row.id,
-          name: row.name,
-          weaponType: row.weaponType!,
-          rarity: row.rank!,
-          iconUrl: row.iconUrl ?? undefined,
-        });
-        break;
-      }
-      case EntityType.ECHO: {
-        catalog.echoes.push({
-          id: row.id,
-          name: row.name,
-          cost: row.cost!,
-          sets: row.echoSetIds!,
-          iconUrl: row.iconUrl ?? undefined,
-        });
-        break;
-      }
-      case EntityType.ECHO_SET: {
-        catalog.echoSets.push({
-          id: row.id,
-          gameId: row.gameId!,
-          name: row.name,
-          tiers: row.setBonusThresholds!,
-          iconUrl: row.iconUrl ?? undefined,
-        });
-        break;
-      }
-    }
-  }
-
-  return catalog;
+  return replaceNullsWithUndefined(databaseEntities.map((row) => row.entity));
 };

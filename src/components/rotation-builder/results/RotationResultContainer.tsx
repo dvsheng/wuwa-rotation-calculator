@@ -54,13 +54,13 @@ export const RotationResultContainer = ({
         />
         <Stack gap="component" className="p-page min-h-0 md:flex-1">
           {isPlaceholderData && (
-            <Row className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-amber-500">
+            <Row className="border-warning/20 bg-warning/10 text-warning rounded-lg border px-4 py-3">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <Stack>
-                <Text variant="label" className="text-amber-500">
+                <Text variant="label" className="text-warning">
                   Outdated Result
                 </Text>
-                <Text variant="caption" className="text-amber-500/80">
+                <Text variant="caption" className="text-warning/80">
                   The rotation has changed. Recalculate to see updated damage.
                 </Text>
               </Stack>

@@ -27,18 +27,16 @@ export const DashboardSectionHeader = ({
       className="bg-background px-panel h-icon-md shrink-0 border-b"
     >
       <Row align="center" gap="inset" className="min-w-0">
-        {icon ?? <div className="text-muted-foreground size-icon-sm">{icon}</div>}
+        {icon && <div className="text-muted-foreground size-icon-sm">{icon}</div>}
         <Text as="span" variant="heading">
           {title}
         </Text>
-        {subtitle ?? (
+        {subtitle && (
           <Text as="span" variant="caption" tone="muted">
             {subtitle}
           </Text>
         )}
-        {description ? (
-          <InfoTooltip contentClassName="max-w-md">{description}</InfoTooltip>
-        ) : undefined}
+        {description && <InfoTooltip>{description}</InfoTooltip>}
       </Row>
       {action}
     </Row>

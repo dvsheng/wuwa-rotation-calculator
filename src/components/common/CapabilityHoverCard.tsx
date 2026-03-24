@@ -318,7 +318,7 @@ const CursorHoverCard = ({
   return (
     <>
       <div
-        style={{ display: 'contents' }}
+        className="contents"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onMouseMove={handleMouseMove}

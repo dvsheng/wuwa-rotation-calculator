@@ -135,9 +135,7 @@ const CapabilitySection = ({
           <InfoTooltip>{description}</InfoTooltip>
         ) : undefined}
       </Row>
-      {children ? (
-        <Stack>{children}</Stack>
-      ) : (
+      {children ?? (
         <Text
           as="div"
           variant="bodySm"
@@ -197,9 +195,11 @@ const CapabilityCard = ({
         size="xs"
         data-testid={`sidebar-capability-card-${capability.id}`}
         data-capability-type={capability.capabilityType}
-        className={`draggable bg-background size-28 flex-col border-l-4 ${
-          onClick ? 'cursor-pointer' : ''
-        } ${isDragging ? 'opacity-0' : ''}`}
+        className={cn(
+          'draggable bg-background size-28 flex-col border-l-4',
+          onClick && 'cursor-pointer',
+          isDragging && 'opacity-0',
+        )}
         style={
           accentColor
             ? ({

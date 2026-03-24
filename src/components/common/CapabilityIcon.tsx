@@ -17,14 +17,16 @@ export const SIZE_CLASSES = {
 
 interface CapabilityIconDisplayProperties {
   url?: string;
+  size?: IconSize;
   className?: string;
 }
 
 export const CapabilityIconDisplay = ({
   url,
+  size = 'medium',
   className,
 }: CapabilityIconDisplayProperties) => (
-  <Box className={cn('bg-foreground/30 size-icon-md rounded-md', className)}>
+  <Box className={cn('bg-foreground/30 rounded-md', SIZE_CLASSES[size], className)}>
     {url ? (
       <img src={url} className="p-trim" draggable={false} />
     ) : (

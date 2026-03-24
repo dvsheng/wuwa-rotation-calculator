@@ -160,24 +160,22 @@ export const SaveRotationButton = () => {
   const { data: session } = useSession();
 
   const isLoggedIn = session?.user.id !== undefined;
+  const actions = (
+    <SaveRotationActions
+      isLoggedIn={isLoggedIn}
+      onSaveNew={() => setIsSaveDialogOpen(true)}
+      onUpdateExisting={() => setIsUpdateDialogOpen(true)}
+    />
+  );
+
   return (
     <>
       {isLoggedIn ? (
-        <SaveRotationActions
-          isLoggedIn={isLoggedIn}
-          onSaveNew={() => setIsSaveDialogOpen(true)}
-          onUpdateExisting={() => setIsUpdateDialogOpen(true)}
-        />
+        actions
       ) : (
         <Tooltip>
           <TooltipTrigger asChild>
-            <div>
-              <SaveRotationActions
-                isLoggedIn={isLoggedIn}
-                onSaveNew={() => setIsSaveDialogOpen(true)}
-                onUpdateExisting={() => setIsUpdateDialogOpen(true)}
-              />
-            </div>
+            <div>{actions}</div>
           </TooltipTrigger>
           <TooltipContent>Log in to save or update a rotation.</TooltipContent>
         </Tooltip>

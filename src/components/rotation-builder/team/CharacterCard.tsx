@@ -36,7 +36,7 @@ export const CharacterCard = ({ index }: CharacterCardProperties) => {
           <PrimaryEchoSelector index={index} />
         </Suspense>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         <Stack gap="component" className="p-component">
           <Text variant="title">Echo Stats</Text>
           <Stack className="gap-component divide-border divide-y">

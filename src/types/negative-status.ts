@@ -1,5 +1,8 @@
 import { Attribute } from './attribute';
 
+/**
+ * A negative status that certain characters may inflict on enemies and react to
+ */
 export const NegativeStatus = {
   FUSION_BURST: 'fusionBurst',
   GLACIO_CHAFE: 'glacioChafe',

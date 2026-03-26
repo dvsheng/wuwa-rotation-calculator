@@ -1,5 +1,6 @@
-import type { TaggedStatValue } from './tag';
-
+/**
+ * A stat belonging to a character
+ */
 export const CharacterStat = {
   ATTACK_FLAT: 'attackFlat',
   ATTACK_SCALING_BONUS: 'attackScalingBonus',
@@ -26,27 +27,3 @@ export const CharacterStat = {
 } as const;
 
 export type CharacterStat = (typeof CharacterStat)[keyof typeof CharacterStat];
-
-/**
- * A comprehensive record of a character's stats, where each value is an array of tagged instances
- * to allow for conditional application during damage calculations.
- */
-export type CharacterStats<T extends {} = {}> = Record<
-  CharacterStat,
-  Array<TaggedStatValue<T>>
->;
-
-/**
- * Represents a character in the simulation context.
- */
-export interface Character<T extends {} = {}> {
-  /** Progression level. */
-  level: number;
-  /** Current calculated stats. */
-  stats: CharacterStats<T>;
-}
-
-/**
- * A standard three-character team composition.
- */
-export type Team<T extends {} = {}> = Array<Character<T>>;

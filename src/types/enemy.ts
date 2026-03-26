@@ -1,6 +1,8 @@
 import { NegativeStatus } from './negative-status';
-import type { TaggedStatValue } from './tag';
 
+/**
+ * A stat belonging to an enemy
+ */
 export const EnemyStat = {
   BASE_RESISTANCE: 'baseResistance',
   RESISTANCE_REDUCTION: 'resistanceReduction',
@@ -10,21 +12,3 @@ export const EnemyStat = {
 } as const;
 
 export type EnemyStat = (typeof EnemyStat)[keyof typeof EnemyStat];
-
-/**
- * Defines the stats of an enemy, primarily focusing on resistances and reductions.
- */
-export type EnemyStats<T extends {} = {}> = Record<
-  EnemyStat,
-  Array<TaggedStatValue<T>>
->;
-
-/**
- * Represents an enemy target in the simulation.
- */
-export interface Enemy<T extends {} = {}> {
-  /** Progression level of the enemy. */
-  level: number;
-  /** Current defensive stats. */
-  stats: EnemyStats<T>;
-}

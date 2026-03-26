@@ -8,6 +8,7 @@ import { Row, Stack } from '@/components/ui/layout';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Text } from '@/components/ui/typography';
 import { cn } from '@/lib/utils';
+import type { CharacterStats, EnemyStats } from '@/services/rotation-calculator';
 import type { StatMeta } from '@/services/rotation-calculator/client-input-adapter/adapt-client-input-to-rotation';
 import type {
   ClientCharacterStats,
@@ -15,7 +16,6 @@ import type {
   ClientRotationResult,
 } from '@/services/rotation-calculator/client-output-adapter/adapt-rotation-result-to-client-output';
 import { AttackScalingProperty, CharacterStat, EnemyStat } from '@/types';
-import type { CharacterStats, EnemyStats } from '@/types';
 
 type DamageDetail = ClientRotationResult['damageDetails'][number];
 

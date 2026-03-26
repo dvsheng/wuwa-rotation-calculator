@@ -1,8 +1,8 @@
 import { intersection } from 'es-toolkit/array';
-import { mapValues } from 'es-toolkit/object';
 
-import type { Enemy, TaggedStatValue, Team } from '@/types';
 import { AttackScalingProperty, CharacterStat, EnemyStat, Tag } from '@/types';
+
+import type { Character, Enemy, Stat } from './types';
 
 /**
  * Declarative mapping of each stat key to the list of tags allowed for that stat
@@ -25,15 +25,13 @@ const CONDITIONAL_SCALING_PROPERTIES = [
  * @param configuration - Per-stat tag allowlist.
  * @returns A new stat record containing only entries with at least one matching tag.
  */
-const filterStats = <TStat extends CharacterStat | EnemyStat, TMeta extends object>(
-  stats: Record<TStat, Array<TaggedStatValue<TMeta>>>,
+const filterStats = <TMeta extends object>(
+  stats: Array<Stat<TMeta>>,
   configuration: StatFilterConfiguration,
-): Record<TStat, Array<TaggedStatValue<TMeta>>> => {
-  return mapValues(stats, (statValues, stat) => {
-    const tags = configuration[stat];
-    return statValues.filter((statValue) => {
-      return intersection(tags, statValue.tags).length > 0;
-    });
+): Array<Stat<TMeta>> => {
+  return stats.filter((stat) => {
+    const tags = configuration[stat.stat];
+    return intersection(tags, stat.tags).length > 0;
   });
 };
 
@@ -44,7 +42,7 @@ const filterStats = <TStat extends CharacterStat | EnemyStat, TMeta extends obje
  * @returns Function that filters both team and enemy stats for the same context.
  */
 const createStatFilterer = (configuration: StatFilterConfiguration) => {
-  return <TMeta extends object>(team: Team<TMeta>, enemy: Enemy<TMeta>) => {
+  return <TMeta extends object>(team: Array<Character<TMeta>>, enemy: Enemy<TMeta>) => {
     const filteredTeam = team.map((character) => {
       return {
         ...character,

@@ -4,9 +4,9 @@ import type { Enemy as ClientEnemy } from '@/schemas/enemy';
 import { CalculateRotationInputSchema } from '@/schemas/game-data-service';
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import type { Team as ClientTeam } from '@/schemas/team';
-import type { CharacterStat, TaggedStatValue } from '@/types';
 
 import { calculateRotationSensitivityAnalysis } from './calculate-rotation-sensitivity';
+import type { StatMeta } from './client-input-adapter/adapt-client-input-to-rotation';
 import { adaptClientInputToRotation } from './client-input-adapter/adapt-client-input-to-rotation';
 import { GameDataNotFoundError } from './client-input-adapter/enrich-rotation-data';
 import type {
@@ -14,13 +14,11 @@ import type {
   ClientRotationResult,
 } from './client-output-adapter/adapt-rotation-result-to-client-output';
 import { adaptRotationResultToClientOutput } from './client-output-adapter/adapt-rotation-result-to-client-output';
+import type { Stat } from './core';
 import { calculateRotationDamage } from './core/calculate-rotation-damage';
 
-export type InjectedCharacterStat = TaggedStatValue & {
-  stat: CharacterStat;
+export type InjectedCharacterStat = Omit<Stat<StatMeta>, 'value'> & {
   value: number;
-  name?: string;
-  description?: string;
 };
 
 export type RotationCalculationTeam = Array<

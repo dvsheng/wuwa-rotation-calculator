@@ -1,23 +1,25 @@
 import { clamp } from 'es-toolkit/math';
 
 import { AttackScalingProperty } from '@/types';
-import type {
-  CharacterDamageInstance,
-  CharacterStat,
-  EnemyStat,
-  NegativeStatus,
-} from '@/types';
+import type { CharacterStat, EnemyStat, NegativeStatus } from '@/types';
 
+import type { CalculateDamageProperties } from '../damage-calculator';
 import { calculateDamage } from '../damage-calculator';
 import { getNegativeStatusBaseDamage } from '../damage-calculator/calculate-negative-status-damage';
 
 import { calculateAttackScalingPropertyValue } from './calculate-stat-total';
 import { getAttackScalingType } from './type-converters';
+import type { Attack } from './types';
 import { AttackScalingType } from './types';
 
 const HAVOC_BANE_DEFENSE_REDUCTION_PER_STACK = 0.02;
 
-type DamageInstance = Pick<CharacterDamageInstance, 'scalingStat' | 'motionValue'>;
+type DamageInstance = Pick<Attack, 'scalingStat' | 'motionValue'>;
+
+type DamageCalculator = (
+  stats: ReturnType<typeof convertResolvedStatsToCalculateDamageProperties>,
+  instance: DamageInstance,
+) => { inputs: CalculateDamageProperties; result: number };
 
 export const calculateAttackDamage = (
   damageInstance: DamageInstance,
@@ -34,7 +36,7 @@ export const calculateAttackDamage = (
   return _calculateDamage(damageCalculationStats, damageInstance);
 };
 
-const getBaseScalingStat = (scalingStat: CharacterDamageInstance['scalingStat']) => {
+const getBaseScalingStat = (scalingStat: AttackScalingProperty) => {
   switch (scalingStat) {
     case AttackScalingProperty.TUNE_RUPTURE_ATK: {
       return AttackScalingProperty.ATK;
@@ -132,7 +134,7 @@ const calculateFixedDamage = (
   };
 };
 
-const getDamageCalculationStrategy = (instance: DamageInstance) => {
+const getDamageCalculationStrategy = (instance: DamageInstance): DamageCalculator => {
   const attackScalingType = getAttackScalingType(instance.scalingStat);
   switch (attackScalingType) {
     case AttackScalingType.NEGATIVE_STATUS: {

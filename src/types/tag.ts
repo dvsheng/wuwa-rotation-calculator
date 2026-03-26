@@ -1,5 +1,3 @@
-import type { NumberNode } from '@/services/rotation-calculator/core/resolve-runtime-number';
-
 import { Attribute } from './attribute';
 import { DamageType } from './damage-instance';
 import { NegativeStatus } from './negative-status';
@@ -25,18 +23,3 @@ export const Tag = {
 } as const;
 
 export type Tag = (typeof Tag)[keyof typeof Tag];
-
-/**
- * Common interface for items that can be categorized by tags.
- */
-export interface Tagged {
-  /** The set of tags associated with the entry. */
-  tags: Array<string>;
-}
-
-/**
- * Combines a value with classification tags to allow for conditional logic.
- */
-export type TaggedStatValue<T extends {} = {}> = Tagged & {
-  value: NumberNode;
-} & T;

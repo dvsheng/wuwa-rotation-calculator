@@ -1,50 +1,56 @@
-import { mapValues } from 'es-toolkit/object';
+import { mapValues, mergeWith } from 'es-toolkit/object';
+
+import { CharacterStat, EnemyStat } from '@/types';
 
 import { applyModifiers } from './apply-modifiers';
 import { calculateAttackDamage } from './calculate-attack-damage';
 import { getStatFilterer } from './filter-stats';
 import { resolveStats } from './resolve-runtime-number';
-import type { Rotation, RotationResult } from './types';
+import type { CharacterStats, EnemyStats, Rotation, RotationResult } from './types';
 
-export const calculateRotationDamage = <T extends {} = {}>(
-  rotation: Rotation<T>,
-): RotationResult<T> => {
-  const flattenedDamageInstances = rotation.attacks.flatMap(
-    ({ attack, modifiers }, attackIndex) => {
-      return attack.damageInstances.map((instance, index) => ({
-        instance: {
-          ...instance,
-          characterIndex: attack.characterIndex,
-        },
-        modifiers,
-        attackIndex: attackIndex,
-        damageInstanceIndex: index,
-      }));
-    },
-  );
-  return flattenedDamageInstances.reduce(
-    (reducer, { instance, modifiers, ...instanceMetadata }) => {
+export const calculateRotationDamage = <
+  TStatMeta extends object = {},
+  TAttackMeta extends object = {},
+>(
+  rotation: Rotation<TStatMeta, TAttackMeta>,
+): RotationResult<TStatMeta, TAttackMeta> => {
+  return rotation.attacks.reduce(
+    (reducer, { attack, modifiers }, index) => {
       const [teamWithModifiers, enemyWithModifiers] = applyModifiers(
         rotation.team,
         rotation.enemy,
         modifiers,
       );
-      const filterStats = getStatFilterer(instance.scalingStat, instance.tags);
+      const filterStats = getStatFilterer(attack.scalingStat, attack.tags);
       const { filteredTeam, filteredEnemy } = filterStats(
         teamWithModifiers,
         enemyWithModifiers,
       );
-      const { team: teamStats, enemy: enemyStats } = resolveStats(
-        filteredTeam.map((character) =>
-          mapValues(character.stats, (values) => values.map((value) => value.value)),
+
+      const teamStatsGroupedByStat = filteredTeam.map((character) =>
+        mergeWith(
+          Object.groupBy(character.stats, (stat) => stat.stat),
+          createEmptyCharacterStats(),
+          (argument1, argument2) => [...(argument1 ?? []), ...argument2],
         ),
-        mapValues(filteredEnemy.stats, (values) => values.map((value) => value.value)),
+      ) as Array<CharacterStats<TStatMeta>>;
+      const enemyStatsGroupedByStat = mergeWith(
+        Object.groupBy(filteredEnemy.stats, (stat) => stat.stat),
+        createEmptyEnemyStats(),
+        (argument1, argument2) => [...(argument1 ?? []), ...argument2],
+      ) as EnemyStats<TStatMeta>;
+
+      const { team: teamStats, enemy: enemyStats } = resolveStats(
+        teamStatsGroupedByStat.map((character) =>
+          mapValues(character, (stats) => stats.map((stat) => stat.value)),
+        ),
+        mapValues(enemyStatsGroupedByStat, (stats) => stats.map((stat) => stat.value)),
       );
       const { result, inputs } = calculateAttackDamage(
-        instance,
+        attack,
         {
-          ...teamStats[instance.characterIndex],
-          level: filteredTeam[instance.characterIndex].level,
+          ...teamStats[attack.characterIndex],
+          level: filteredTeam[attack.characterIndex].level,
         },
         { ...enemyStats, level: filteredEnemy.level },
       );
@@ -54,18 +60,30 @@ export const calculateRotationDamage = <T extends {} = {}>(
           ...reducer.damageDetails,
           {
             ...inputs,
-            ...instance,
-            ...instanceMetadata,
+            ...attack,
+            index,
             damage: result,
-            teamDetails: filteredTeam.map((character) => character.stats),
-            enemyDetails: filteredEnemy.stats,
+            teamDetails: teamStatsGroupedByStat,
+            enemyDetails: enemyStatsGroupedByStat,
           },
         ],
       };
     },
     {
       totalDamage: 0,
-      damageDetails: new Array<RotationResult<T>['damageDetails'][number]>(),
+      damageDetails: new Array<
+        RotationResult<TStatMeta, TAttackMeta>['damageDetails'][number]
+      >(),
     },
   );
 };
+
+const createEmptyCharacterStats = (): CharacterStats =>
+  Object.fromEntries(
+    Object.values(CharacterStat).map((stat) => [stat, []]),
+  ) as unknown as CharacterStats;
+
+const createEmptyEnemyStats = (): EnemyStats =>
+  Object.fromEntries(
+    Object.values(EnemyStat).map((stat) => [stat, []]),
+  ) as unknown as EnemyStats;

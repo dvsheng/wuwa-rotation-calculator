@@ -79,8 +79,7 @@ export const useRotationCalculation = () => {
           const character = characters.find((c) => c.index === detail.characterIndex);
           if (!attack) return;
           if (!character) return;
-          const damageInstance =
-            attack.capabilityJson.damageInstances[detail.damageInstanceIndex];
+          const damageInstance = attack.capabilityJson.damageInstances[detail.index];
           return {
             ...attack,
             ...damageInstance,

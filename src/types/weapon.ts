@@ -1,3 +1,6 @@
+/**
+ * The type of weapon used by a character
+ */
 export const WeaponType = {
   BROADBLADE: 'Broadblade',
   SWORD: 'Sword',

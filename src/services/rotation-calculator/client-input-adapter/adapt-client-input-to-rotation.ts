@@ -1,5 +1,3 @@
-import { mergeWith } from 'es-toolkit/object';
-
 import { deepTransform } from '@/lib/deepTransform';
 import { EchoSubstatOption } from '@/schemas/echo';
 import type { EchoMainStatOptionType, EchoSubstatOptionType } from '@/schemas/echo';
@@ -9,17 +7,14 @@ import type { Team as ClientTeam } from '@/schemas/team';
 import type { Attack, Modifier, PermanentStat } from '@/services/game-data';
 import { getEchoStats, isStatParameterizedNumber } from '@/services/game-data';
 import type { ResolveRefineScalableNumber } from '@/services/game-data/database-type-adapters';
-import { CharacterStat, Tag } from '@/types';
 import type {
-  CharacterAttack,
-  CharacterStats,
-  EnemyStat,
+  Attack as RotationAttack,
   Modifier as RotationModifier,
-  TaggedStatValue,
-} from '@/types';
+} from '@/services/rotation-calculator/core/types';
+import { CharacterStat, EnemyStat, Tag } from '@/types';
 
 import type { NumberNode } from '../core/resolve-runtime-number';
-import type { Rotation } from '../core/types';
+import type { Enemy, Rotation, Stat } from '../core/types';
 
 import { createGameDataEnricher } from './enrich-rotation-data';
 import { expandModifiersByValueConfiguration } from './expand-modifiers-by-value-configuration';
@@ -35,6 +30,10 @@ export interface StatMeta {
   name: string;
   /** Additional context about the stat source (e.g. "Augusta base attack"). */
   description: string;
+}
+
+export interface AttackMeta {
+  attackIndex: number;
 }
 
 /**
@@ -81,11 +80,6 @@ export const normalizeEchoSubstatValue = (
 ) => {
   return FLAT_ECHO_SUBSTAT_OPTIONS.has(stat) ? value : value / 100;
 };
-
-const createEmptyCharacterStats = (): CharacterStats<StatMeta> =>
-  Object.fromEntries(
-    Object.values(CharacterStat).map((stat) => [stat, []]),
-  ) as unknown as CharacterStats<StatMeta>;
 
 /**
  * Converts game-data statParameterizedNumber nodes into runtime stat references.
@@ -148,13 +142,16 @@ const resolveModifierTarget = (
 export const toRotationModifier = (
   modifier: ModifierInstance &
     ResolveUserParameterizedType<ResolveRefineScalableNumber<Modifier>>,
-  attack: Pick<AttackInstance, 'characterId'>,
+  attackCharacterId: number,
   characterIdToSlotNumberMap: Record<number, number>,
 ): Array<RotationModifier<StatMeta>> => {
   const characterSlotNumber = characterIdToSlotNumberMap[modifier.characterId];
-  const activeCharacterSlotNumber = characterIdToSlotNumberMap[attack.characterId];
+  const activeCharacterSlotNumber = characterIdToSlotNumberMap[attackCharacterId];
   const flattened = modifier.capabilityJson.modifiedStats.flatMap(
-    ({ target, value, stat, tags }) => ({
+    ({ target, stat, value, tags }) => ({
+      tags,
+      stat,
+      value: resolveStatReferences(value, characterSlotNumber) as NumberNode,
       name: modifier.name,
       description: modifier.description ?? '',
       targets: resolveModifierTarget(
@@ -162,9 +159,6 @@ export const toRotationModifier = (
         characterSlotNumber,
         activeCharacterSlotNumber,
       ),
-      modifiedStats: {
-        [stat]: [{ tags, value: resolveStatReferences(value, characterSlotNumber) }],
-      },
     }),
   );
   return flattened;
@@ -177,7 +171,7 @@ export const toRotationModifier = (
 export const toRotationPermanentStat = (
   permanentStat: ResolveRefineScalableNumber<PermanentStat>,
   characterIndex: number,
-): TaggedStatValue<StatMeta> & { stat: CharacterStat | EnemyStat } => {
+): Stat<StatMeta> => {
   const resolvedStat = resolveUserParameterizedValues(permanentStat);
   const { stat, tags, value } = resolvedStat.capabilityJson;
   return {
@@ -192,27 +186,29 @@ export const toRotationPermanentStat = (
 /**
  * Converts an attack instance to a CharacterAttack for the rotation calculator.
  */
-export const toRotationAttack = (
-  instance: AttackInstance &
+export const toRotationAttacks = (
+  attack: AttackInstance &
     ResolveUserParameterizedType<ResolveRefineScalableNumber<Attack>> & {
       modifiers: Array<RotationModifier<StatMeta>>;
     },
   characterIdToSlotNumberMap: Record<number, number>,
-): CharacterAttack => {
-  return {
-    characterIndex: characterIdToSlotNumberMap[instance.characterId],
-    damageInstances: instance.capabilityJson.damageInstances.map((damageInstance) => ({
-      ...damageInstance,
+  attackIndex: number,
+): Array<RotationAttack<AttackMeta>> => {
+  return attack.capabilityJson.damageInstances.map((instance) => {
+    return {
+      characterIndex: characterIdToSlotNumberMap[attack.characterId],
+      attackIndex,
+      ...instance,
       tags: [
         ...new Set([
-          ...damageInstance.tags,
-          instance.name,
-          damageInstance.attribute,
-          damageInstance.damageType,
+          ...instance.tags,
+          attack.name,
+          instance.damageType,
+          instance.attribute,
         ]),
-      ],
-    })),
-  };
+      ] as Array<Tag>,
+    };
+  });
 };
 
 /**
@@ -245,13 +241,13 @@ export const shouldModifierApplyToAttack = (
 export const adaptClientInputToRotation = async (
   clientTeam: Array<
     ClientTeam[number] & {
-      additionalStats?: Array<TaggedStatValue & { stat: CharacterStat }>;
+      additionalStats?: Array<Stat>;
     }
   >,
   clientEnemy: ClientEnemy,
   attacks: Array<AttackInstance>,
   buffs: Array<ModifierInstance>,
-): Promise<Rotation<StatMeta>> => {
+): Promise<Rotation<StatMeta, AttackMeta>> => {
   // 1. Create game data enricher with all necessary game data
   const enricher = await createGameDataEnricher(clientTeam);
 
@@ -261,9 +257,7 @@ export const adaptClientInputToRotation = async (
     const permanentStats = enricher.getPermanentStatsForCharacter(charIndex);
 
     // 2b. Gather Echo Stats (main stat + substats) with StatMeta descriptions
-    const echoStats: Array<
-      TaggedStatValue<StatMeta> & { stat: CharacterStat | EnemyStat }
-    > = clientChar.echoStats.flatMap((echo) => {
+    const echoStats: Array<Stat<StatMeta>> = clientChar.echoStats.flatMap((echo) => {
       const { primary, secondary } = getEchoStats(echo.cost, echo.mainStatType);
       if (!primary) throw new Error('Invalid Echo Stat Configuration Provided');
       const mainStatEntry = {
@@ -289,50 +283,32 @@ export const adaptClientInputToRotation = async (
       return [mainStatEntry, secondaryEntry, ...subStatEntries];
     });
 
-    // 2c. Group all stats by their stat type and merge with base stats
-    const characterInstancePermanentStats = Object.groupBy(
-      [
-        ...permanentStats.map((stat) => toRotationPermanentStat(stat, charIndex)),
-        ...echoStats,
-        ...(clientChar.additionalStats ?? []),
-      ],
-      (item) => item.stat,
-    );
-    const finalStats = mergeWith(
-      createEmptyCharacterStats(),
-      characterInstancePermanentStats,
-      (objectValue, sourceValue) => [...objectValue, ...(sourceValue ?? [])],
-    );
-
+    const characterPermanentStats = [
+      ...permanentStats.map((stat) => toRotationPermanentStat(stat, charIndex)),
+      ...echoStats,
+      ...(clientChar.additionalStats?.map((stat) => ({
+        ...stat,
+        name: '',
+        description: '',
+      })) ?? []),
+    ];
     return {
       id: clientChar.id,
       level: 90,
-      stats: finalStats,
+      stats: characterPermanentStats,
     };
   });
 
   // 3. Map Client Enemy to Rotation Enemy
-  const enemy = {
+  const enemy: Enemy<StatMeta> = {
     level: clientEnemy.level,
-    stats: {
-      baseResistance: Object.entries(clientEnemy.resistances).map(
-        ([attribute, value]) => ({
-          value: value / 100,
-          tags: [attribute],
-          name: attribute,
-          description: 'Base Resistance',
-        }),
-      ),
-      defenseReduction: [] as Array<TaggedStatValue<StatMeta>>,
-      resistanceReduction: [] as Array<TaggedStatValue<StatMeta>>,
-      glacioChafe: [] as Array<TaggedStatValue<StatMeta>>,
-      spectroFrazzle: [] as Array<TaggedStatValue<StatMeta>>,
-      fusionBurst: [] as Array<TaggedStatValue<StatMeta>>,
-      havocBane: [] as Array<TaggedStatValue<StatMeta>>,
-      aeroErosion: [] as Array<TaggedStatValue<StatMeta>>,
-      electroFlare: [] as Array<TaggedStatValue<StatMeta>>,
-      tuneStrainStacks: [] as Array<TaggedStatValue<StatMeta>>,
-    },
+    stats: Object.entries(clientEnemy.resistances).map(([attribute, value]) => ({
+      value: value / 100,
+      stat: EnemyStat.BASE_RESISTANCE,
+      tags: [attribute],
+      name: attribute,
+      description: 'Base Resistance',
+    })),
   };
 
   // 4. Map Attacks and Buffs to Damage Instances
@@ -360,7 +336,7 @@ export const adaptClientInputToRotation = async (
         );
         return toRotationModifier(
           resolveUserParameterizedValues(enrichedModifier, parameterValues),
-          { characterId: activeCharacterId },
+          activeCharacterId,
           characterIdToSlotNumberMap,
         );
       });
@@ -375,15 +351,14 @@ export const adaptClientInputToRotation = async (
     );
     const resolved = resolveUserParameterizedValues(enriched, parameterValues);
     const modifiers = buildModifiers(storedIndex, attack.characterId);
-    return [
-      {
-        attack: toRotationAttack(
-          { ...resolved, modifiers },
-          characterIdToSlotNumberMap,
-        ),
-        modifiers,
-      },
-    ];
+    return toRotationAttacks(
+      { ...resolved, modifiers },
+      characterIdToSlotNumberMap,
+      storedIndex,
+    ).map((instance) => ({
+      attack: instance,
+      modifiers,
+    }));
   });
 
   return {

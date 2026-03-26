@@ -1,8 +1,7 @@
-import type { Attribute } from './attribute';
 import { NegativeStatus } from './negative-status';
 
 /**
- * Defines the base stat used for damage scaling.
+ * The stat by which an attack scales
  */
 export const AttackScalingProperty = {
   /** Scales with Max HP. */
@@ -23,14 +22,10 @@ export const AttackScalingProperty = {
 export type AttackScalingProperty =
   (typeof AttackScalingProperty)[keyof typeof AttackScalingProperty];
 
-export const AttackScalingType = {
-  REGULAR: 'regular',
-  NEGATIVE_STATUS: 'negativeStatus',
-  FLAT: 'flat',
-};
-
 /**
- * Categorizes the source of damage for tag-based filtering.
+ * The type of damage dealt for a given attack. An damage instance can only
+ * have one damage type, and many modifiers and permanent stats may target
+ * specific damage types.
  */
 export const DamageType = {
   /** Standard normal attacks. */
@@ -54,31 +49,3 @@ export const DamageType = {
 } as const;
 
 export type DamageType = (typeof DamageType)[keyof typeof DamageType];
-
-/**
- * A single instance of damage, including its motion values and classification tags.
- */
-export interface CharacterDamageInstance {
-  /** The primary stat this damage scales with. */
-  scalingStat: AttackScalingProperty;
-  /**
-   * Motion value / scaling value for the attack
-   * For fixed damage, the motion value is the damage dealt by the fixed damage
-   * For negative attributes, the motion value is the number of negative status stacks
-   */
-  motionValue: number;
-  /** The elemental attribute of this damage instance. */
-  attribute: Attribute;
-  /** The damage type of this instance (e.g. basicAttack, resonanceSkill). */
-  damageType: DamageType;
-  tags: Array<string>;
-}
-
-/**
- * A single damage-dealing attack, including its motion values and classification tags.
- */
-export interface CharacterAttack {
-  /** Index of the character performing the attack in the team array (0-2). */
-  characterIndex: number;
-  damageInstances: Array<CharacterDamageInstance>;
-}

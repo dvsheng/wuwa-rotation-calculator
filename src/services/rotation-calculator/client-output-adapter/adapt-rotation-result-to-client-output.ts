@@ -1,6 +1,9 @@
 import { AttackScalingProperty, CharacterStat, EnemyStat } from '@/types';
 
-import type { StatMeta } from '../client-input-adapter/adapt-client-input-to-rotation';
+import type {
+  AttackMeta,
+  StatMeta,
+} from '../client-input-adapter/adapt-client-input-to-rotation';
 import { getAttackScalingType } from '../core/type-converters';
 import { AttackScalingType } from '../core/types';
 import type { RotationResult } from '../core/types';
@@ -16,7 +19,7 @@ export type ClientCharacterStats = Partial<
 export type ClientEnemyStats = Partial<Record<EnemyStat | 'level', number>>;
 
 export type ClientDamageDetail = Omit<
-  RotationResult<StatMeta>['damageDetails'][number],
+  RotationResult<StatMeta, AttackMeta>['damageDetails'][number],
   'character' | 'enemy'
 > & {
   character: ClientCharacterStats;
@@ -155,7 +158,7 @@ const filterEnemyStats = (
 // ---------------------------------------------------------------------------
 
 export const adaptRotationResultToClientOutput = (
-  result: RotationResult<StatMeta>,
+  result: RotationResult<StatMeta, AttackMeta>,
 ): ClientRotationCalculationOutput => ({
   totalDamage: result.totalDamage,
   damageDetails: result.damageDetails.map((detail) => ({

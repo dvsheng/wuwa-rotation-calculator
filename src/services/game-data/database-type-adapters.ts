@@ -1,17 +1,11 @@
+import { deepTransform } from '@/lib/deepTransform';
+
 import type { RefineScalableNumber } from './types';
 import { Sequence } from './types';
 
-export type ResolveRefineScalableNumber<T> = T extends RefineScalableNumber
-  ? number
-  : T extends number
-    ? number
-    : T extends readonly [any, ...Array<any>]
-      ? { [K in keyof T]: ResolveRefineScalableNumber<T[K]> }
-      : T extends Array<infer U>
-        ? Array<ResolveRefineScalableNumber<U>>
-        : T extends object
-          ? { [K in keyof T]: ResolveRefineScalableNumber<T[K]> }
-          : T;
+export type ResolveRefineScalableNumber<T> = ReturnType<
+  typeof resolveStoreNumberType<T>
+>;
 
 /**
  * Runtime type guard to check if a value is a RefineScalableNumber.
@@ -60,60 +54,25 @@ export const isRefineScalableNumber = (
  * // Result: [18, 100]
  */
 
-export const resolveStoreNumberType = <T>(
-  value: T,
-  refineLevel = 1,
-): ResolveRefineScalableNumber<T> => {
-  // Handle RefineScalableNumber - resolve to plain number
-  if (isRefineScalableNumber(value)) {
-    return (value.base +
-      (refineLevel - 1) * value.increment) as ResolveRefineScalableNumber<T>;
-  }
-
-  // Handle arrays recursively
-  if (Array.isArray(value)) {
-    return value.map((item) =>
-      resolveStoreNumberType(item, refineLevel),
-    ) as ResolveRefineScalableNumber<T>;
-  }
-
-  // Handle objects recursively
-  if (typeof value === 'object' && value !== null) {
-    const resolved: Record<string, unknown> = {};
-    for (const [key, nestedValue] of Object.entries(value)) {
-      resolved[key] = resolveStoreNumberType(nestedValue, refineLevel);
-    }
-    return resolved as ResolveRefineScalableNumber<T>;
-  }
-
-  // Pass through primitives (numbers, strings, booleans, null, undefined)
-  return value as ResolveRefineScalableNumber<T>;
+export const resolveStoreNumberType = <T>(data: T, refineLevel = 1) => {
+  return deepTransform(
+    data,
+    isRefineScalableNumber,
+    (value) => value.base + (refineLevel - 1) * value.increment,
+  );
 };
 
-export type RecursivelyReplaceNullWithUndefined<T> = T extends null
-  ? undefined
-  : T extends Date
-    ? T
-    : {
-        [K in keyof T]: T[K] extends Array<infer U>
-          ? Array<RecursivelyReplaceNullWithUndefined<U>>
-          : RecursivelyReplaceNullWithUndefined<T[K]>;
-      };
+export type RecursivelyReplaceNullWithUndefined<T> = ReturnType<
+  typeof replaceNullsWithUndefined<T>
+>;
 
-export const replaceNullsWithUndefined = <T>(
-  object: T,
-): RecursivelyReplaceNullWithUndefined<T> => {
-  if (object === null) {
-    return undefined as any;
-  }
-
-  // object check based on: https://stackoverflow.com/a/51458052/6489012
-  if (object?.constructor.name === 'Object') {
-    for (const key in object) {
-      object[key] = replaceNullsWithUndefined(object[key]) as any;
-    }
-  }
-  return object as any;
+export const replaceNullsWithUndefined = <T>(data: T) => {
+  return deepTransform(
+    data,
+    (value) => value === null,
+    // eslint-disable-next-line unicorn/no-useless-undefined
+    (_) => undefined,
+  );
 };
 
 /**
@@ -169,7 +128,7 @@ export const resolveAlternativeDefinitions = <T extends { capabilityJson: any }>
   const json = capability.capabilityJson;
 
   // Only attacks and modifiers have alternativeDefinitions
-  if (!('alternativeDefinitions' in json) || !json.alternativeDefinitions) {
+  if (!('alternativeDefinitions' in json)) {
     return capability as ResolveAlternativeDefinitions<T>;
   }
 
@@ -188,7 +147,6 @@ export const resolveAlternativeDefinitions = <T extends { capabilityJson: any }>
   const override = json.alternativeDefinitions[applicableSeq];
   const { alternativeDefinitions, ...baseJson } = json;
   const nextDescription = override?.description;
-
   return {
     ...capability,
     ...('capabilityDescription' in capability

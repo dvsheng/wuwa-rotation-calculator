@@ -1,8 +1,7 @@
 import { clamp } from 'es-toolkit';
 
-import type { ParameterInstance } from '@/schemas/rotation';
+import { deepTransform } from '@/lib/deepTransform';
 import { isResolvedUserParameterizedNumber } from '@/services/game-data';
-import type { UserParameterizedNumber } from '@/services/game-data';
 
 /**
  * Converts user-parameterized number types to plain numbers.
@@ -30,17 +29,9 @@ import type { UserParameterizedNumber } from '@/services/game-data';
  * type ModifierOutput = ResolveUserParameterizedType<ModifierInput>;
  * // Output: { modifiedStats: Array<{ value: number }> }
  */
-export type ResolveUserParameterizedType<T> =
-  // convert first (before object recursion)
-  T extends UserParameterizedNumber
-    ? number
-    : T extends number
-      ? number
-      : T extends Array<infer U>
-        ? Array<ResolveUserParameterizedType<U>>
-        : T extends object
-          ? { [K in keyof T]: ResolveUserParameterizedType<T[K]> }
-          : T;
+export type ResolveUserParameterizedType<T> = ReturnType<
+  typeof resolveUserParameterizedValues<T>
+>;
 
 /**
  * Resolves userParameterizedNumber nodes in a GameDataNumberNode tree to plain numbers
@@ -55,57 +46,19 @@ export type ResolveUserParameterizedType<T> =
  * @param currentParameterValues - Parameter values from the current or parent scope
  * @returns The resolved value with all userParameterizedNumber nodes converted to numbers
  */
-
-export function resolveUserParameterizedValues<T>(
-  value: T,
-  currentParameterValues?: Record<string, number>,
-): ResolveUserParameterizedType<T> {
-  // Handle userParameterizedNumber node - resolve to plain number
-  if (isResolvedUserParameterizedNumber(value)) {
-    if (!currentParameterValues) {
+export const resolveUserParameterizedValues = <T>(
+  data: T,
+  parameterValues?: Partial<Record<string, number>>,
+) => {
+  return deepTransform(data, isResolvedUserParameterizedNumber, (value) => {
+    const parameterValue = parameterValues?.[value.parameterId];
+    if (!parameterValue) {
       throw new Error(
         'Encountered userParameterizedNumber without parameterValues in any parent object',
       );
     }
-    const parameterValue = currentParameterValues[value.parameterId];
     const minimum = value.minimum ?? Number.NEGATIVE_INFINITY;
     const maximum = value.maximum ?? Number.POSITIVE_INFINITY;
-
-    return (clamp(parameterValue, minimum, maximum) *
-      (value.scale ?? 1)) as ResolveUserParameterizedType<T>;
-  }
-
-  // Handle arrays recursively
-  if (Array.isArray(value)) {
-    return value.map((item) =>
-      resolveUserParameterizedValues(item, currentParameterValues),
-    ) as ResolveUserParameterizedType<T>;
-  }
-
-  // Handle objects recursively
-  if (typeof value === 'object' && value !== null) {
-    const object = value as Record<string, unknown>;
-
-    // Check if this object has a parameterValues field
-    let parameterValues = currentParameterValues;
-    if ('parameterValues' in object && Array.isArray(object.parameterValues)) {
-      parameterValues = Object.fromEntries(
-        (object.parameterValues as Array<ParameterInstance>).map((parameter) => [
-          parameter.id,
-          parameter.value,
-        ]),
-      ) as Record<string, number>;
-    }
-
-    const resolved: Record<string, unknown> = {};
-    for (const [key, nestedValue] of Object.entries(object)) {
-      // Skip the parameterValues field itself in the output
-      if (key === 'parameterValues') continue;
-      resolved[key] = resolveUserParameterizedValues(nestedValue, parameterValues);
-    }
-    return resolved as ResolveUserParameterizedType<T>;
-  }
-
-  // Pass through primitives (numbers, strings, booleans, null, undefined)
-  return value as ResolveUserParameterizedType<T>;
-}
+    return clamp(parameterValue, minimum, maximum) * (value.scale ?? 1);
+  });
+};

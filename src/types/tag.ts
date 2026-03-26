@@ -35,11 +35,6 @@ export interface Tagged {
 }
 
 /**
- * A stat value can either be a static number or a dynamically resolved value in the rotation.
- */
-export type StatValue = NumberNode;
-
-/**
  * Combines a value with classification tags to allow for conditional logic.
  */
 export type TaggedStatValue<T extends {} = {}> = Tagged & {

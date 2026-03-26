@@ -2,9 +2,13 @@ import { EchoMainStatOption } from '@/schemas/echo';
 import type { EchoCost, EchoMainStatOptionType } from '@/schemas/echo';
 import { CharacterStat, Tag } from '@/types';
 
-import type { PermanentStatBase } from './types';
+type PermanentStat = {
+  stat: CharacterStat;
+  value: number;
+  tags: Array<Tag>;
+};
 
-const ECHO_SECONDARY_STAT_BY_COST: Record<EchoCost, PermanentStatBase> = {
+const ECHO_SECONDARY_STAT_BY_COST: Record<EchoCost, PermanentStat> = {
   1: { stat: CharacterStat.HP_FLAT, value: 2280, tags: [Tag.ALL] },
   3: { stat: CharacterStat.ATTACK_FLAT, value: 100, tags: [Tag.ALL] },
   4: { stat: CharacterStat.ATTACK_FLAT, value: 150, tags: [Tag.ALL] },
@@ -12,7 +16,7 @@ const ECHO_SECONDARY_STAT_BY_COST: Record<EchoCost, PermanentStatBase> = {
 
 const ECHO_PRIMARY_STAT_BY_COST_BY_STAT: Record<
   EchoCost,
-  Partial<Record<EchoMainStatOptionType, PermanentStatBase>>
+  Partial<Record<EchoMainStatOptionType, PermanentStat>>
 > = {
   1: {
     [EchoMainStatOption.HP_PERCENT]: {
@@ -125,8 +129,8 @@ export const getEchoStats = (
   cost: EchoCost,
   mainStatOption: EchoMainStatOptionType,
 ): {
-  primary: PermanentStatBase | undefined;
-  secondary: PermanentStatBase;
+  primary: PermanentStat | undefined;
+  secondary: PermanentStat;
 } => {
   return {
     primary: ECHO_PRIMARY_STAT_BY_COST_BY_STAT[cost][mainStatOption],

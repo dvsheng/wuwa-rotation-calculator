@@ -19,11 +19,7 @@ const makeEntity = (overrides: Record<string, unknown> = {}) =>
       preferredThreeCostScalingMainStat: EchoMainStatOption.ATK_PERCENT,
       preferredThreeCostAttributeMainStat: EchoMainStatOption.DAMAGE_BONUS_FUSION,
     },
-    capabilities: {
-      attacks: [],
-      modifiers: [],
-      permanentStats: [],
-    },
+    capabilities: [],
     runtimeStatTargets: [],
     ...overrides,
   }) as any;
@@ -31,10 +27,14 @@ const makeEntity = (overrides: Record<string, unknown> = {}) =>
 const makeAttack = (overrides: Record<string, unknown> = {}) =>
   ({
     id: 1,
-    capabilityType: 'attack',
     name: 'Attack',
     originType: 'Normal Attack',
-    damageInstances: [],
+    skillId: 1,
+    entityId: 1,
+    capabilityJson: {
+      type: 'attack',
+      damageInstances: [],
+    },
     ...overrides,
   }) as any;
 
@@ -42,9 +42,10 @@ describe('buildEchoPieces', () => {
   it('uses ER 3-cost mains for Shorekeeper-style 250% ER runtime scaling', () => {
     const response = buildEchoPieces(
       makeEntity({
-        capabilities: {
-          attacks: [
-            makeAttack({
+        capabilities: [
+          makeAttack({
+            capabilityJson: {
+              type: 'attack',
               damageInstances: [
                 {
                   attribute: 'spectro',
@@ -68,9 +69,9 @@ describe('buildEchoPieces', () => {
                   tags: [],
                 },
               ],
-            }),
-          ],
-        },
+            },
+          }),
+        ],
         runtimeStatTargets: [
           {
             requiredTotal: 2.5,
@@ -114,9 +115,10 @@ describe('buildEchoPieces', () => {
   it('uses the approximated substat roll value index', () => {
     const response = buildEchoPieces(
       makeEntity({
-        capabilities: {
-          attacks: [
-            makeAttack({
+        capabilities: [
+          makeAttack({
+            capabilityJson: {
+              type: 'attack',
               damageInstances: [
                 {
                   attribute: 'fusion',
@@ -126,9 +128,9 @@ describe('buildEchoPieces', () => {
                   tags: [],
                 },
               ],
-            }),
-          ],
-        },
+            },
+          }),
+        ],
       }),
     );
 
@@ -159,9 +161,10 @@ describe('buildEchoPieces', () => {
   it('uses ER 3-cost mains for Mornye-style 260% ER runtime scaling', () => {
     const response = buildEchoPieces(
       makeEntity({
-        capabilities: {
-          attacks: [
-            makeAttack({
+        capabilities: [
+          makeAttack({
+            capabilityJson: {
+              type: 'attack',
               damageInstances: [
                 {
                   attribute: 'fusion',
@@ -171,9 +174,9 @@ describe('buildEchoPieces', () => {
                   tags: [],
                 },
               ],
-            }),
-          ],
-        },
+            },
+          }),
+        ],
         runtimeStatTargets: [
           {
             requiredTotal: 2.6,
@@ -208,9 +211,10 @@ describe('buildEchoPieces', () => {
   it('keeps elemental 3-cost mains when the runtime scaling target is only 150%', () => {
     const response = buildEchoPieces(
       makeEntity({
-        capabilities: {
-          attacks: [
-            makeAttack({
+        capabilities: [
+          makeAttack({
+            capabilityJson: {
+              type: 'attack',
               damageInstances: [
                 {
                   attribute: 'aero',
@@ -220,9 +224,9 @@ describe('buildEchoPieces', () => {
                   tags: [],
                 },
               ],
-            }),
-          ],
-        },
+            },
+          }),
+        ],
         runtimeStatTargets: [
           {
             requiredTotal: 1.5,
@@ -262,10 +266,11 @@ describe('buildEchoPieces', () => {
   it('heavily favors damage types that do not match the parent origin type', () => {
     const response = buildEchoPieces(
       makeEntity({
-        capabilities: {
-          attacks: [
-            makeAttack({
-              originType: 'Normal Attack',
+        capabilities: [
+          makeAttack({
+            originType: 'Normal Attack',
+            capabilityJson: {
+              type: 'attack',
               damageInstances: [
                 {
                   attribute: 'fusion',
@@ -289,9 +294,9 @@ describe('buildEchoPieces', () => {
                   tags: [],
                 },
               ],
-            }),
-          ],
-        },
+            },
+          }),
+        ],
       }),
     );
 
@@ -307,9 +312,10 @@ describe('buildEchoPieces', () => {
   it('fills non-specialized pieces from the end of the ranked substat list', () => {
     const response = buildEchoPieces(
       makeEntity({
-        capabilities: {
-          attacks: [
-            makeAttack({
+        capabilities: [
+          makeAttack({
+            capabilityJson: {
+              type: 'attack',
               damageInstances: [
                 {
                   attribute: 'fusion',
@@ -319,9 +325,9 @@ describe('buildEchoPieces', () => {
                   tags: [],
                 },
               ],
-            }),
-          ],
-        },
+            },
+          }),
+        ],
         runtimeStatTargets: [
           {
             requiredTotal: 2,

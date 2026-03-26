@@ -7,7 +7,13 @@ import { useStore } from '@/store';
 
 import { useTeamAttackInstances } from './useTeamAttackInstances';
 
-vi.mock('./useTeamDetails');
+vi.mock('./useTeamDetails', async () => {
+  const actual = await vi.importActual('./useTeamDetails');
+  return {
+    ...actual,
+    useTeamDetails: vi.fn(),
+  };
+});
 
 const { useTeamDetails } = await import('./useTeamDetails');
 const mockUseTeamDetails = vi.mocked(useTeamDetails);
@@ -16,35 +22,40 @@ describe('useTeamAttackInstances', () => {
   it('resolves the correct character when two characters share the same capability id', () => {
     // Two different characters both have a capability with id=10 (e.g. a shared echo skill)
     mockUseTeamDetails.mockReturnValue({
-      attacks: [
+      capabilities: [
         {
           id: 10,
           characterId: 1001,
           entityId: 501,
+          skillId: 1,
           characterName: 'Rover',
           name: 'Echo Skill',
           parentName: 'Echo',
           description: '',
           originType: OriginType.ECHO,
-          capabilityType: CapabilityType.ATTACK,
-          damageInstances: [],
+          capabilityJson: {
+            type: CapabilityType.ATTACK,
+            damageInstances: [],
+          },
           parameters: [],
         } as any,
         {
           id: 10,
           characterId: 1002,
           entityId: 501,
+          skillId: 1,
           characterName: 'Calcharo',
           name: 'Echo Skill',
           parentName: 'Echo',
           description: '',
           originType: OriginType.ECHO,
-          capabilityType: CapabilityType.ATTACK,
-          damageInstances: [],
+          capabilityJson: {
+            type: CapabilityType.ATTACK,
+            damageInstances: [],
+          },
           parameters: [],
         } as any,
       ],
-      buffs: [],
       isLoading: false,
       isError: false,
     });

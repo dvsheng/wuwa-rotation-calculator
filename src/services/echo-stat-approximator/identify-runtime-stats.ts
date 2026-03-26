@@ -1,5 +1,9 @@
-import type { BaseEntity, GameDataNumberNode } from '@/services/game-data';
-import { isGameDataStatParameterizedNumber } from '@/services/game-data';
+import type { BaseEntity, NumberNode } from '@/services/game-data';
+import {
+  isModifier,
+  isPermanentStat,
+  isStatParameterizedNumber,
+} from '@/services/game-data';
 import { CharacterStat } from '@/types';
 import type { CharacterStat as CharacterStatType, EnemyStat } from '@/types';
 
@@ -19,14 +23,12 @@ const isCharacterStat = (
   return Object.values(CharacterStat).includes(stat as CharacterStatType);
 };
 
-const getReferencedSelfStats = (
-  node: GameDataNumberNode | number,
-): Set<CharacterStatType> => {
+const getReferencedSelfStats = (node: NumberNode | number): Set<CharacterStatType> => {
   if (typeof node === 'number') {
     return new Set();
   }
 
-  if (isGameDataStatParameterizedNumber(node)) {
+  if (isStatParameterizedNumber(node)) {
     return node.resolveWith === 'self' && isCharacterStat(node.stat)
       ? new Set([node.stat])
       : new Set();
@@ -91,14 +93,14 @@ const scaleLinearForm = (form: LinearForm, scale: number): LinearForm => ({
 });
 
 const toLinearForm = (
-  node: GameDataNumberNode | number,
+  node: NumberNode,
   stat: CharacterStatType,
 ): LinearForm | undefined => {
   if (typeof node === 'number') {
     return { coefficient: 0, constant: node };
   }
 
-  if (isGameDataStatParameterizedNumber(node)) {
+  if (isStatParameterizedNumber(node)) {
     if (node.resolveWith === 'self' && node.stat === stat) {
       return { coefficient: 1, constant: 0 };
     }
@@ -183,7 +185,7 @@ const maybeAddRuntimeTarget = (
 };
 
 const extractRuntimeTargetsFromNode = (
-  node: GameDataNumberNode | number,
+  node: NumberNode,
   runtimeTargets: Map<CharacterStatType, number>,
 ) => {
   if (typeof node === 'number' || !isObject(node) || !('type' in node)) {
@@ -245,13 +247,16 @@ const extractRuntimeTargetsFromNode = (
 
 export const identifyRuntimeStats = (entity: BaseEntity): Array<RuntimeStatTarget> => {
   const runtimeTargets = new Map<CharacterStatType, number>();
-
-  for (const permanentStat of entity.capabilities.permanentStats) {
-    extractRuntimeTargetsFromNode(permanentStat.value, runtimeTargets);
+  const permanentStats = entity.capabilities.filter((capability) =>
+    isPermanentStat(capability),
+  );
+  for (const permanentStat of permanentStats) {
+    extractRuntimeTargetsFromNode(permanentStat.capabilityJson.value, runtimeTargets);
   }
 
-  for (const modifier of entity.capabilities.modifiers) {
-    for (const modifiedStat of modifier.modifiedStats) {
+  const modifiers = entity.capabilities.filter((capability) => isModifier(capability));
+  for (const modifier of modifiers) {
+    for (const modifiedStat of modifier.capabilityJson.modifiedStats) {
       extractRuntimeTargetsFromNode(modifiedStat.value, runtimeTargets);
     }
   }

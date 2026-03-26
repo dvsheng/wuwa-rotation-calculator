@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import type { DetailedAttack } from '@/hooks/useTeamDetails';
+import type { CharacterAttack } from '@/hooks/useTeamDetails';
 import { CapabilityType } from '@/services/game-data/types';
 
 import { CapabilityHoverCard } from './CapabilityHoverCard';
@@ -16,20 +16,25 @@ beforeAll(() => {
   };
 });
 
-const makeAttack = (overrides: Record<string, unknown> = {}): DetailedAttack =>
+const makeAttack = (overrides: Record<string, unknown> = {}): CharacterAttack =>
   ({
     id: 1,
     name: 'Test Buff',
     description: 'Increases ATK by 10%',
     parentName: 'Weapon',
-    parameters: [],
-    capabilityType: CapabilityType.ATTACK,
-    damageInstances: [],
-    characterId: 1,
+    originType: 'Weapon',
+    skillId: 1,
     entityId: 1,
+    iconUrl: '',
+    parameters: [],
+    characterId: 1,
     characterName: 'Rover',
+    capabilityJson: {
+      type: CapabilityType.ATTACK,
+      damageInstances: [],
+    },
     ...overrides,
-  }) as unknown as DetailedAttack;
+  }) as unknown as CharacterAttack;
 
 // The cursor hover card wraps children in a display:contents div. Because mouseenter
 // does not bubble, events must be fired on that wrapper div, not the child trigger.

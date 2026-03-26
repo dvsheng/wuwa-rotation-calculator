@@ -1,15 +1,15 @@
-import { mapAsync, zip } from 'es-toolkit/array';
+import { mapAsync } from 'es-toolkit/array';
 
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import type { Team as ClientTeam } from '@/schemas/team';
-import type {
-  Attack,
-  BaseCapability,
-  BaseEntity,
-  Modifier as GameDataModifier,
-  PermanentStat,
+import {
+  filterAndResolveCapabilities,
+  isAttack,
+  isModifier,
+  isPermanentStat,
+  listEntityCapabilities,
 } from '@/services/game-data';
-import { getEntityById } from '@/services/game-data';
+import type { ResolvedCapability } from '@/services/game-data/list-entity-capabilities.function';
 
 /**
  * Error thrown when game data is not found.
@@ -25,6 +25,30 @@ export class GameDataNotFoundError extends Error {
   }
 }
 
+type IndexedResolvedCapability = ResolvedCapability & { characterIndex: number };
+type IndexedAttack = Extract<
+  IndexedResolvedCapability,
+  { capabilityJson: { type: 'attack' } }
+>;
+type IndexedModifier = Extract<
+  IndexedResolvedCapability,
+  { capabilityJson: { type: 'modifier' } }
+>;
+type IndexedPermanentStat = Extract<
+  IndexedResolvedCapability,
+  { capabilityJson: { type: 'permanent_stat' } }
+>;
+
+const withCharacterId = <TCapability extends ResolvedCapability>(
+  capabilities: Array<TCapability>,
+  characterIndex: number,
+) => {
+  return capabilities.map((capability) => ({
+    ...capability,
+    characterIndex,
+  }));
+};
+
 /**
  * Creates a game data enricher for a specific team configuration.
  * Fetches all necessary game data upfront and returns curried methods for enrichment.
@@ -33,17 +57,17 @@ export class GameDataNotFoundError extends Error {
  * @returns Object with methods to enrich attacks, modifiers, and get permanent stats
  */
 export const createGameDataEnricher = async (clientTeam: ClientTeam) => {
-  const { entityDetailsByCharacterIndex, modifierDetails, attackDetails } =
+  const { attacks, modifiers, permanentStats } =
     await fetchRotationGameData(clientTeam);
 
-  const attackEnricher = createEnricher(attackDetails, 'attack');
-  const modifierEnricher = createEnricher(modifierDetails, 'modifier');
+  const attackEnricher = createEnricher(attacks, 'attack');
+  const modifierEnricher = createEnricher(modifiers, 'modifier');
 
   return {
     /**
      * Enriches an attack instance with its full attack details.
      */
-    enrichAttack: (attack: AttackInstance): AttackInstance & Attack => {
+    enrichAttack: (attack: AttackInstance): AttackInstance & IndexedAttack => {
       return attackEnricher(attack);
     },
 
@@ -52,7 +76,7 @@ export const createGameDataEnricher = async (clientTeam: ClientTeam) => {
      */
     enrichModifier: (
       modifier: ModifierInstance,
-    ): ModifierInstance & GameDataModifier => {
+    ): ModifierInstance & IndexedModifier => {
       return modifierEnricher(modifier);
     },
 
@@ -60,10 +84,10 @@ export const createGameDataEnricher = async (clientTeam: ClientTeam) => {
      * Gets permanent stats for a character at the specified index.
      * Includes stats from the character, weapon, echo, and echo sets.
      */
-    getPermanentStatsForCharacter: (characterIndex: number): Array<PermanentStat> => {
-      return entityDetailsByCharacterIndex[characterIndex].flatMap(
-        (entity) => entity.capabilities.permanentStats,
-      );
+    getPermanentStatsForCharacter: (
+      characterIndex: number,
+    ): Array<IndexedPermanentStat> => {
+      return permanentStats.filter((stat) => stat.characterIndex === characterIndex);
     },
   };
 };
@@ -72,70 +96,92 @@ export const createGameDataEnricher = async (clientTeam: ClientTeam) => {
  * Fetches all game data needed for rotation calculation.
  * Retrieves entity details for characters, weapons, echoes, and echo sets.
  * @throws GameDataFetchError if any entity data fails to load
+ * TODO: There has to be a cleaner way to do this...
  */
 const fetchRotationGameData = async (clientTeam: ClientTeam) => {
   try {
-    const [echoDetails, characterDetails, weaponDetails, echoSetDetails] =
-      await Promise.all([
-        mapAsync(clientTeam, (c) =>
-          getEntityById({
-            data: { id: c.primarySlotEcho.id, entityType: 'echo' },
-          }),
+    const [
+      echoCapabilities,
+      characterCapabilities,
+      weaponCapabilities,
+      echoSetCapabilities,
+    ] = await Promise.all([
+      mapAsync(clientTeam, async (c, index) =>
+        withCharacterId(
+          filterAndResolveCapabilities(
+            await listEntityCapabilities({
+              data: {
+                id: c.primarySlotEcho.id,
+              },
+            }),
+            {},
+          ),
+          index,
         ),
-        mapAsync(clientTeam, (c) =>
-          getEntityById({
-            data: {
-              id: c.id,
-              entityType: 'character',
-              activatedSequence: c.sequence,
-            },
-          }),
+      ),
+      mapAsync(clientTeam, async (c, index) =>
+        withCharacterId(
+          filterAndResolveCapabilities(
+            await listEntityCapabilities({
+              data: {
+                id: c.id,
+              },
+            }),
+            { sequence: c.sequence },
+          ),
+          index,
         ),
-        mapAsync(clientTeam, (c) =>
-          getEntityById({
-            data: {
-              id: c.weapon.id,
-              entityType: 'weapon',
-              refineLevel: c.weapon.refine,
-            },
-          }),
+      ),
+      mapAsync(clientTeam, async (c, index) =>
+        withCharacterId(
+          filterAndResolveCapabilities(
+            await listEntityCapabilities({
+              data: {
+                id: c.weapon.id,
+              },
+            }),
+            { refineLevel: c.weapon.refine },
+          ),
+          index,
         ),
-        mapAsync(clientTeam, (c) =>
-          Promise.all(
-            c.echoSets.map((set) =>
-              getEntityById({
-                data: {
-                  id: set.id,
-                  entityType: 'echo_set',
-                  activatedSetBonus: Number.parseInt(set.requirement),
+      ),
+      mapAsync(clientTeam, (c, index) =>
+        Promise.all(
+          c.echoSets.map(async (set) =>
+            withCharacterId(
+              filterAndResolveCapabilities(
+                await listEntityCapabilities({
+                  data: {
+                    id: set.id,
+                  },
+                }),
+                {
+                  activatedSetBonus: Number.parseInt(set.requirement) as 2 | 3 | 5,
                 },
-              }),
+              ),
+              index,
             ),
           ),
         ),
-      ]);
+      ),
+    ]);
 
-    const entityDetailsByCharacterIndex: Array<Array<BaseEntity>> = zip(
-      characterDetails,
-      weaponDetails,
-      echoDetails,
-      echoSetDetails,
-    ).map(([character, weapon, echo, echoSets]) => {
-      return [character, weapon, echo, ...echoSets];
-    });
-
-    const allEntityDetails = entityDetailsByCharacterIndex.flat();
-    const modifierDetails = allEntityDetails.flatMap(
-      (entity) => entity.capabilities.modifiers,
-    );
-    const attackDetails = allEntityDetails.flatMap(
-      (entity) => entity.capabilities.attacks,
+    const capabilities = [
+      ...echoCapabilities.flat(),
+      ...characterCapabilities.flat(),
+      ...weaponCapabilities.flat(),
+      ...echoSetCapabilities.flat().flat(),
+    ];
+    const modifiers = capabilities.filter((capability) => isModifier(capability));
+    const attacks = capabilities.filter((capability) => isAttack(capability));
+    const permanentStats = capabilities.filter((capability) =>
+      isPermanentStat(capability),
     );
 
     return {
-      entityDetailsByCharacterIndex,
-      modifierDetails,
-      attackDetails,
+      modifiers,
+      attacks,
+      permanentStats,
     };
   } catch {
     throw new GameDataNotFoundError(
@@ -153,7 +199,7 @@ const fetchRotationGameData = async (clientTeam: ClientTeam) => {
  * @returns Function that enriches an instance with its details
  * @throws GameDataNotFoundError if capability details are not found for a given ID
  */
-const createEnricher = <TCapability extends BaseCapability>(
+const createEnricher = <TCapability extends { id: number }>(
   store: Array<TCapability>,
   entityType: 'attack' | 'modifier',
 ) => {

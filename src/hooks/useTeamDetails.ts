@@ -1,169 +1,166 @@
 import { useQueries } from '@tanstack/react-query';
+import { compact } from 'es-toolkit';
 
-import type {
-  ClientAttack,
-  ClientModifier,
-  GetClientEntityDetailsResponse,
+import type { Capability } from '@/services/game-data';
+import {
+  CapabilityType,
+  isResolvedUserParameterizedNumber,
 } from '@/services/game-data';
-import { EntityType, Target, getClientEntityById } from '@/services/game-data';
+import type {
+  CapabilityResolverOptions,
+  ResolvedCapability,
+} from '@/services/game-data/list-entity-capabilities.function';
+import {
+  filterAndResolveCapabilities,
+  listEntityCapabilities,
+} from '@/services/game-data/list-entity-capabilities.function';
 import { useStore } from '@/store';
 
-interface ClientCharacterDetails {
-  characterId: number;
-  entityId: number;
-  characterName: string;
-  characterIconUrl?: string;
+import { useEntities } from './useEntities';
+
+/**
+ * Interfaces for client-facing entity details outputs.
+ */
+export interface Parameter {
+  id: string;
+  minimum: number;
+  maximum: number;
 }
 
-export type DetailedAttack = ClientCharacterDetails & ClientAttack;
+export type UseTeamDetailsResult = {
+  capabilities: Array<
+    ResolvedCapability & {
+      parameters: Array<Parameter>;
+      characterId: number;
+      characterName: string;
+      characterIconUrl?: string;
+      entityId: number;
+    }
+  >;
+  isLoading: boolean;
+  isError: boolean;
+};
 
-export type DetailedModifier = ClientCharacterDetails & ClientModifier;
+export type CharacterCapability = UseTeamDetailsResult['capabilities'][number];
 
-export type UseTeamDetailsResult = ReturnType<typeof useTeamDetails>;
+export type CharacterAttack = Extract<
+  CharacterCapability,
+  { capabilityJson: { type: typeof CapabilityType.ATTACK } }
+>;
 
-const TARGET_ORDERING = [
-  Target.TEAM,
-  Target.ENEMY,
-  Target.ACTIVE_CHARACTER,
-  Target.SELF,
-];
+export type CharacterModifier = Extract<
+  CharacterCapability,
+  { capabilityJson: { type: typeof CapabilityType.MODIFIER } }
+>;
 
-export const useTeamDetails = () => {
+const LIST_ENTITY_CAPABILITIES_RETRY_COUNT = 10;
+
+export const isDetailedAttack = (
+  capability: CharacterCapability,
+): capability is CharacterAttack =>
+  capability.capabilityJson.type === CapabilityType.ATTACK;
+
+export const isDetailedModifier = (
+  capability: CharacterCapability,
+): capability is CharacterModifier =>
+  capability.capabilityJson.type === CapabilityType.MODIFIER;
+
+export const useTeamDetails = (): UseTeamDetailsResult => {
   const team = useStore((state) => state.team);
-  const queryMetadata = team.flatMap((character) => {
-    return [
-      {
-        characterId: character.id,
-        entityId: character.id,
-        queryType: 'character',
-      },
-      {
-        characterId: character.id,
-        entityId: character.weapon.id,
-        queryType: 'weapon',
-      },
-      {
-        characterId: character.id,
-        entityId: character.primarySlotEcho.id,
-        queryType: 'echo',
-      },
-      ...character.echoSets.map((set) => ({
-        characterId: character.id,
-        entityId: set.id,
-        queryType: 'echo-set',
-        requirement: set.requirement,
-      })),
-    ];
-  });
-
+  const { data: entities } = useEntities({});
   const result = useQueries({
     queries: team.flatMap((character) => [
-      {
-        queryKey: ['entity', character.id, character.sequence],
-        queryFn: () =>
-          getClientEntityById({
-            data: {
-              id: character.id,
-              entityType: EntityType.CHARACTER,
-              activatedSequence: character.sequence,
-            },
-          }),
-        staleTime: Infinity,
-        retry: 10,
-      },
-      {
-        queryKey: ['entity', character.weapon.id, character.weapon.refine],
-        queryFn: () =>
-          getClientEntityById({
-            data: {
-              id: character.weapon.id,
-              entityType: EntityType.WEAPON,
-              refineLevel: character.weapon.refine,
-            },
-          }),
-        staleTime: Infinity,
-        retry: 10,
-      },
-      {
-        queryKey: ['entity', character.primarySlotEcho.id],
-        queryFn: () =>
-          getClientEntityById({
-            data: {
-              id: character.primarySlotEcho.id,
-              entityType: EntityType.ECHO,
-            },
-          }),
-        staleTime: Infinity,
-        retry: 10,
-      },
-      ...character.echoSets.map((set) => ({
-        queryKey: ['entity', set.id, set.requirement],
-        queryFn: () =>
-          getClientEntityById({
-            data: {
-              id: set.id,
-              entityType: EntityType.ECHO_SET,
-              activatedSetBonus: Number.parseInt(set.requirement),
-            },
-          }),
-        staleTime: Infinity,
-        retry: 10,
-      })),
+      getQueryOptions(character.id, {
+        characterId: character.id,
+        resolveConfig: { sequence: character.sequence },
+      }),
+      getQueryOptions(character.weapon.id, {
+        characterId: character.id,
+        resolveConfig: { refineLevel: character.weapon.refine },
+      }),
+      getQueryOptions(character.primarySlotEcho.id, {
+        characterId: character.id,
+        resolveConfig: {},
+      }),
+      ...character.echoSets.map((set) =>
+        getQueryOptions(set.id, {
+          characterId: character.id,
+          resolveConfig: {
+            activatedSetBonus: Number.parseInt(set.requirement) as 2 | 3 | 5,
+          },
+        }),
+      ),
     ]),
     combine: (results) => {
-      const characterMap = new Map<number, GetClientEntityDetailsResponse>();
-      for (const [index, characterResult] of results.entries()) {
-        const meta = queryMetadata[index];
-        if (meta.queryType !== 'character') continue;
-        if (!characterResult.data) continue;
-        characterMap.set(meta.characterId, characterResult.data);
-      }
-
-      const attacks = results.flatMap((queryResult, index) => {
-        const data = queryResult.data;
-        if (!data) return [];
-
-        const { characterId, entityId } = queryMetadata[index];
-        const character = characterMap.get(characterId);
-        return data.attacks.map((attack) => ({
-          ...attack,
-          entityId,
-          characterId,
-          characterName: character?.name ?? '',
-          characterIconUrl: character?.iconUrl,
-        }));
+      const allCapabilities = results.flatMap((queryResult) => {
+        const queryCapabilities = queryResult.data;
+        if (!queryCapabilities) return [];
+        const enrichedCapabilities = compact(
+          queryCapabilities.map((capability) => {
+            const character = entities.find(
+              (entity) => entity.id === capability.characterId,
+            );
+            if (!character) return;
+            return {
+              ...capability,
+              characterName: character.name,
+              characterIconUrl: character.iconUrl,
+            };
+          }),
+        );
+        return enrichedCapabilities;
       });
-
-      const buffs = results.flatMap((queryResult, index) => {
-        const data = queryResult.data;
-        if (!data) return [];
-
-        const { characterId, entityId } = queryMetadata[index];
-        const character = characterMap.get(characterId);
-        return data.modifiers.map((modifier) => {
-          const target = modifier.modifiedStats
-            .map((stat) => stat.target)
-            .toSorted(
-              (a, b) => TARGET_ORDERING.indexOf(a) - TARGET_ORDERING.indexOf(b),
-            )[0];
-          const modifierWithTarget = { ...modifier, target };
-          return {
-            ...modifierWithTarget,
-            entityId,
-            characterId,
-            characterName: character?.name ?? '',
-            characterIconUrl: character?.iconUrl,
-          };
-        });
-      });
-
       return {
-        attacks,
-        buffs,
-        isLoading: results.some((r) => r.isLoading),
-        isError: results.some((r) => r.isError),
+        capabilities: allCapabilities,
+        isLoading: results.some((queryResult) => queryResult.isLoading),
+        isError: results.every((queryResult) => queryResult.isError),
       };
     },
   });
   return result;
+};
+
+const extractUserParameters = (capability: ResolvedCapability): Array<Parameter> => {
+  const parameters = new Map<string, Parameter>();
+  const visit = (value: unknown) => {
+    if (isResolvedUserParameterizedNumber(value)) {
+      parameters.set(value.parameterId, {
+        id: value.parameterId,
+        minimum: value.minimum ?? 0,
+        maximum: value.maximum ?? 100,
+      });
+      return;
+    }
+    if (Array.isArray(value)) {
+      for (const item of value) visit(item);
+      return;
+    }
+    if (typeof value === 'object' && value !== null) {
+      for (const nestedValue of Object.values(value)) visit(nestedValue);
+    }
+  };
+  visit(capability.capabilityJson);
+  return [...parameters.values()];
+};
+
+const getQueryOptions = (
+  entityId: number,
+  metadata: { characterId: number; resolveConfig: CapabilityResolverOptions },
+) => {
+  return {
+    queryKey: ['entity', entityId],
+    queryFn: () => listEntityCapabilities({ data: { id: entityId } }),
+    staleTime: Infinity,
+    retry: LIST_ENTITY_CAPABILITIES_RETRY_COUNT,
+    select: (data: Array<Capability>) => {
+      return filterAndResolveCapabilities(data, metadata.resolveConfig).map(
+        (capability) => ({
+          ...capability,
+          entityId,
+          characterId: metadata.characterId,
+          parameters: extractUserParameters(capability),
+        }),
+      );
+    },
+  };
 };

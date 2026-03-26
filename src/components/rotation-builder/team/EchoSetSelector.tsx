@@ -4,7 +4,7 @@ import { EntityIconDisplay } from '@/components/common/EntityIcon';
 import { TrashButton } from '@/components/common/TrashButton';
 import { Button } from '@/components/ui/button';
 import { Stack } from '@/components/ui/layout';
-import { useEntityList } from '@/hooks/useEntityList';
+import { useEntities } from '@/hooks/useEntities';
 import { EntityType } from '@/services/game-data';
 import { useStore } from '@/store';
 
@@ -22,7 +22,7 @@ interface EchoSetSelectorProperties {
 
 export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
   const selectedEchoSets = useStore((state) => state.team[index].echoSets);
-  const { data: echoSetList = [] } = useEntityList({ entityType: EntityType.ECHO_SET });
+  const { data: echoSetList = [] } = useEntities({ entityType: EntityType.ECHO_SET });
   const setEchoSet = useStore((state) => state.setEchoSet);
   const setEchoSetRequirement = useStore((state) => state.setEchoSetRequirement);
   const updateCharacter = useStore((state) => state.updateCharacter);

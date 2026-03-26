@@ -1,13 +1,10 @@
 import { asc } from 'drizzle-orm';
 
 import { database } from '@/db/client';
-import type { DatabaseEntity } from '@/db/schema';
 import { entities } from '@/db/schema';
 
-import type { RecursivelyReplaceNullWithUndefined } from './database-type-adapters';
 import { replaceNullsWithUndefined } from './database-type-adapters';
-
-export type EntityListRow = RecursivelyReplaceNullWithUndefined<DatabaseEntity>;
+import type { EntityListRow } from './list-entities.function';
 
 export const listEntitiesHandler = async (): Promise<Array<EntityListRow>> => {
   const databaseEntities = await database

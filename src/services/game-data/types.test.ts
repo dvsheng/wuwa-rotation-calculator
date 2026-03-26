@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import { CharacterStat } from '@/types';
 
-import { DatabaseNumberNodeSchema } from './database';
+import { NumberNodeSchema } from './types';
 
-describe('DatabaseNumberNodeSchema', () => {
+describe('NumberNodeSchema', () => {
   describe('recursive number nodes', () => {
     it('parses a stat-based expression tree', () => {
       const input = {
@@ -30,7 +30,7 @@ describe('DatabaseNumberNodeSchema', () => {
         ],
       };
 
-      const result = DatabaseNumberNodeSchema.safeParse(input);
+      const result = NumberNodeSchema.safeParse(input);
       expect(result.success).toBe(true);
     });
 
@@ -54,7 +54,7 @@ describe('DatabaseNumberNodeSchema', () => {
         },
       };
 
-      const result = DatabaseNumberNodeSchema.safeParse(input);
+      const result = NumberNodeSchema.safeParse(input);
       expect(result.success).toBe(true);
     });
 
@@ -76,7 +76,7 @@ describe('DatabaseNumberNodeSchema', () => {
         valueIfFalse: 0,
       };
 
-      const result = DatabaseNumberNodeSchema.safeParse(input);
+      const result = NumberNodeSchema.safeParse(input);
       expect(result.success).toBe(true);
     });
 
@@ -92,7 +92,7 @@ describe('DatabaseNumberNodeSchema', () => {
         ],
       };
 
-      const result = DatabaseNumberNodeSchema.safeParse(input);
+      const result = NumberNodeSchema.safeParse(input);
       expect(result.success).toBe(false);
     });
   });

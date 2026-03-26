@@ -1,202 +1,165 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { DatabaseFullCapability } from '@/db/schema';
 import { EchoMainStatOption } from '@/schemas/echo';
 
-import { CapabilityType, OriginType } from './types';
+const mocks = vi.hoisted(() => {
+  const findFirst = vi.fn();
 
-// Mock the database and schema modules before importing the module under test.
-vi.mock('@/db/client', () => ({
-  database: {
-    select: vi.fn(),
-  },
-}));
-vi.mock('@/db/schema', () => ({
-  fullCapabilities: { entityId: 'entity_id' },
-}));
-vi.mock('drizzle-orm', async (importOriginal) => {
-  const original = (await importOriginal()) as any;
-  return { ...original, eq: vi.fn() };
-});
-
-const { database } = await import('@/db/client');
-const { getEntityByIdHandler } = await import('./get-entity-details.server');
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-const makeMockAttackRow = (overrides: Partial<DatabaseFullCapability> = {}) => ({
-  capabilityId: 1,
-  capabilityType: CapabilityType.ATTACK,
-  capabilityName: 'Blazing Slash',
-  capabilityDescription: undefined,
-  skillId: 10,
-  skillName: 'Normal Attack',
-  skillDescription: undefined,
-  skillOriginType: OriginType.NORMAL_ATTACK,
-  skillIconUrl: undefined,
-  entityId: 100,
-  entityName: 'Test Character',
-  entityType: 'character',
-  entityIconUrl: undefined,
-  entityDescription: undefined,
-  rank: 5,
-  weaponType: 'sword',
-  attribute: 'fusion',
-  echoSetIds: undefined,
-  cost: undefined,
-  setBonusThresholds: undefined,
-  capabilityJson: {
-    type: 'attack',
-    damageInstances: [
-      {
-        attribute: 'fusion',
-        damageType: 'basicAttack',
-        tags: ['aerial'],
-        motionValue: 1.5,
-        scalingStat: 'atk',
+  return {
+    findFirst,
+    database: {
+      query: {
+        entities: {
+          findFirst,
+        },
       },
-    ],
-  },
-  ...overrides,
+    },
+  };
 });
 
-const mockDatabaseSelect = (rows: Array<unknown>) => {
-  const where = vi.fn().mockResolvedValue(rows);
-  const from = vi.fn().mockReturnValue({ where });
-  vi.mocked(database.select).mockReturnValue({ from } as any);
-};
+vi.mock('@/db/client', () => ({
+  database: mocks.database,
+}));
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
-describe('getEntityByIdHandler — attack damage instance fields', () => {
+describe('listEntityCapabilitiesHandler', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    mocks.findFirst.mockReset();
   });
 
-  it('preserves attribute and damageType as dedicated typed fields', async () => {
-    mockDatabaseSelect([makeMockAttackRow({ entityId: 100 })]);
+  it('returns flattened capabilities with skill metadata', async () => {
+    const { listEntityCapabilitiesHandler } =
+      await import('./list-entity-capabilities.server');
 
-    const entity = await getEntityByIdHandler({
+    mocks.findFirst.mockResolvedValue({
       id: 100,
-      entityType: 'character',
-      activatedSequence: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      gameId: 1100,
+      name: 'Aalto',
+      type: 'character',
+      description: undefined,
+      iconUrl: '/entity.png',
+      rank: 5,
+      weaponType: 'pistols',
+      attribute: 'aero',
+      echoSetIds: undefined,
+      cost: undefined,
+      setBonusThresholds: undefined,
+      skills: [
+        {
+          id: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          gameId: 12,
+          entityId: 100,
+          name: 'Normal Attack',
+          description: 'Skill description',
+          iconUrl: '/skill.png',
+          originType: 'Normal Attack',
+          capabilities: [
+            {
+              id: 1,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              skillId: 12,
+              name: 'Strike',
+              description: 'Attack description',
+              capabilityJson: {
+                type: 'attack',
+                damageInstances: [
+                  {
+                    motionValue: 1,
+                    attribute: 'aero',
+                    damageType: 'basicAttack',
+                    tags: ['basicAttack'],
+                    scalingStat: 'atk',
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      ],
     });
 
-    const [instance] = entity.capabilities.attacks[0].damageInstances;
-    expect(instance.attribute).toBe('fusion');
-    expect(instance.damageType).toBe('basicAttack');
-  });
-
-  it('injects attribute and damageType into the tags array for the calculation engine', async () => {
-    mockDatabaseSelect([makeMockAttackRow({ entityId: 101 })]);
-
-    const entity = await getEntityByIdHandler({
-      id: 101,
-      entityType: 'character',
-      activatedSequence: 0,
+    const result = await listEntityCapabilitiesHandler({
+      id: 100,
     });
 
-    const { tags } = entity.capabilities.attacks[0].damageInstances[0];
-    expect(tags).toContain('fusion');
-    expect(tags).toContain('basicAttack');
-  });
-
-  it('preserves existing tags and appends the capability name', async () => {
-    mockDatabaseSelect([makeMockAttackRow({ entityId: 102 })]);
-
-    const entity = await getEntityByIdHandler({
-      id: 102,
-      entityType: 'character',
-      activatedSequence: 0,
-    });
-
-    const { tags } = entity.capabilities.attacks[0].damageInstances[0];
-    expect(tags).toContain('aerial');
-    expect(tags).toContain('Blazing Slash');
-  });
-
-  it('handles multiple damage instances with different attributes and damage types', async () => {
-    mockDatabaseSelect([
-      makeMockAttackRow({
-        entityId: 103,
+    expect(result).toEqual([
+      {
+        id: 1,
+        name: 'Strike',
+        description: 'Attack description',
+        parentName: 'Normal Attack',
+        iconUrl: '/skill.png',
+        originType: 'Normal Attack',
+        skillId: 12,
+        entityId: 100,
+        skillDescription: 'Skill description',
         capabilityJson: {
           type: 'attack',
           damageInstances: [
             {
-              attribute: 'glacio',
-              damageType: 'heavyAttack',
-              tags: [],
-              motionValue: 2,
-              scalingStat: 'atk',
-            },
-            {
-              attribute: 'fusion',
-              damageType: 'resonanceSkill',
-              tags: ['coordinatedAttack'],
               motionValue: 1,
-              scalingStat: 'hp',
+              attribute: 'aero',
+              damageType: 'basicAttack',
+              tags: ['basicAttack'],
+              scalingStat: 'atk',
             },
           ],
         },
-      }),
+      },
     ]);
-
-    const entity = await getEntityByIdHandler({
-      id: 103,
-      entityType: 'character',
-      activatedSequence: 0,
-    });
-
-    const [first, second] = entity.capabilities.attacks[0].damageInstances;
-    expect(first.attribute).toBe('glacio');
-    expect(first.damageType).toBe('heavyAttack');
-    expect(first.tags).toContain('glacio');
-    expect(first.tags).toContain('heavyAttack');
-
-    expect(second.attribute).toBe('fusion');
-    expect(second.damageType).toBe('resonanceSkill');
-    expect(second.tags).toContain('fusion');
-    expect(second.tags).toContain('resonanceSkill');
-    expect(second.tags).toContain('coordinatedAttack');
-  });
-});
-
-describe('getEntityByIdHandler — caching', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+    expect(mocks.findFirst).toHaveBeenCalledTimes(1);
   });
 
   it('memoizes repeated identical requests', async () => {
-    mockDatabaseSelect([makeMockAttackRow({ entityId: 107 })]);
+    const { listEntityCapabilitiesHandler } =
+      await import('./list-entity-capabilities.server');
 
-    const first = await getEntityByIdHandler({
-      id: 107,
-      entityType: 'character',
-      activatedSequence: 0,
+    mocks.findFirst.mockResolvedValue({
+      id: 101,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      gameId: 1100,
+      name: 'Aalto',
+      type: 'character',
+      description: undefined,
+      iconUrl: undefined,
+      rank: 5,
+      weaponType: 'pistols',
+      attribute: 'aero',
+      echoSetIds: undefined,
+      cost: undefined,
+      setBonusThresholds: undefined,
+      skills: [],
     });
-    const second = await getEntityByIdHandler({
-      id: 107,
-      entityType: 'character',
-      activatedSequence: 0,
+
+    const first = await listEntityCapabilitiesHandler({
+      id: 101,
+    });
+    const second = await listEntityCapabilitiesHandler({
+      id: 101,
     });
 
     expect(first).toEqual(second);
-    expect(database.select).toHaveBeenCalledTimes(1);
+    expect(mocks.findFirst).toHaveBeenCalledTimes(1);
   });
 });
 
-describe('getEntityByIdHandler — character derivedAttributes', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+describe('deriveCharacterAttributes', () => {
+  it('derives attributes for character entities from attack capabilities', async () => {
+    const { deriveCharacterAttributes } =
+      await import('./character-derived-attributes');
 
-  it('includes derivedAttributes for character entities', async () => {
-    mockDatabaseSelect([
-      makeMockAttackRow({
+    const result = deriveCharacterAttributes([
+      {
+        id: 1,
+        name: 'Blazing Slash',
+        originType: 'Normal Attack',
+        parentName: 'Normal Attack',
+        skillId: 10,
         entityId: 104,
         capabilityJson: {
           type: 'attack',
@@ -217,17 +180,10 @@ describe('getEntityByIdHandler — character derivedAttributes', () => {
             },
           ],
         },
-      }),
+      } as any,
     ]);
 
-    const entity = await getEntityByIdHandler({
-      id: 104,
-      entityType: 'character',
-      activatedSequence: 0,
-    });
-
-    expect(entity).toHaveProperty('derivedAttributes');
-    expect((entity as any).derivedAttributes).toEqual({
+    expect(result).toEqual({
       preferredScalingStat: 'atk',
       dominantAttribute: 'fusion',
       preferredThreeCostScalingMainStat: EchoMainStatOption.ATK_PERCENT,
@@ -235,9 +191,17 @@ describe('getEntityByIdHandler — character derivedAttributes', () => {
     });
   });
 
-  it('prioritizes hp/def scaling over atk when deriving scaling main stats', async () => {
-    mockDatabaseSelect([
-      makeMockAttackRow({
+  it('prioritizes hp or defense scaling over atk when deriving main stats', async () => {
+    const { deriveCharacterAttributes } =
+      await import('./character-derived-attributes');
+
+    const result = deriveCharacterAttributes([
+      {
+        id: 1,
+        name: 'Spectral Burst',
+        originType: 'Resonance Liberation',
+        parentName: 'Resonance Liberation',
+        skillId: 10,
         entityId: 105,
         capabilityJson: {
           type: 'attack',
@@ -258,38 +222,15 @@ describe('getEntityByIdHandler — character derivedAttributes', () => {
             },
           ],
         },
-      }),
+      } as any,
     ]);
 
-    const entity = await getEntityByIdHandler({
-      id: 105,
-      entityType: 'character',
-      activatedSequence: 0,
-    });
-
-    expect((entity as any).derivedAttributes.preferredScalingStat).toBe('hp');
-    expect((entity as any).derivedAttributes.preferredThreeCostScalingMainStat).toBe(
+    expect(result.preferredScalingStat).toBe('hp');
+    expect(result.preferredThreeCostScalingMainStat).toBe(
       EchoMainStatOption.HP_PERCENT,
     );
-    expect((entity as any).derivedAttributes.preferredThreeCostAttributeMainStat).toBe(
+    expect(result.preferredThreeCostAttributeMainStat).toBe(
       EchoMainStatOption.DAMAGE_BONUS_SPECTRO,
     );
-  });
-
-  it('does not include derivedAttributes for non-character entities', async () => {
-    mockDatabaseSelect([
-      makeMockAttackRow({
-        entityId: 106,
-        entityType: 'weapon',
-      }),
-    ]);
-
-    const entity = await getEntityByIdHandler({
-      id: 106,
-      entityType: 'weapon',
-      refineLevel: '1',
-    });
-
-    expect(entity).not.toHaveProperty('derivedAttributes');
   });
 });

@@ -6,6 +6,11 @@ import type {
   Attribute as AttributeType,
 } from '@/types';
 
+import {
+  filterAndResolveCapabilities,
+  listEntityCapabilities,
+} from './list-entity-capabilities.function';
+import { isAttack } from './types';
 import type { Attack, CharacterDerivedAttributes } from './types';
 
 const ATTRIBUTE_MAIN_STAT_BY_ATTRIBUTE: Partial<
@@ -75,7 +80,7 @@ export const deriveCharacterAttributes = (
   const attributeWeights = new Map<AttributeType, number>();
 
   for (const attack of attacks) {
-    for (const instance of attack.damageInstances) {
+    for (const instance of attack.capabilityJson.damageInstances) {
       const scalingStat = normalizeScalingProperty(instance.scalingStat);
       if (scalingStat) {
         addWeight(scalingWeights, scalingStat, 1);
@@ -110,4 +115,17 @@ export const deriveCharacterAttributes = (
     preferredThreeCostAttributeMainStat:
       ATTRIBUTE_MAIN_STAT_BY_ATTRIBUTE[dominantAttribute],
   };
+};
+
+export const getDerivedCharacterAttributesById = async (id: number) => {
+  const capabilities = filterAndResolveCapabilities(
+    await listEntityCapabilities({
+      data: {
+        id,
+      },
+    }),
+    { sequence: 0 },
+  );
+  const attacks = capabilities.filter((capability) => isAttack(capability));
+  return deriveCharacterAttributes(attacks);
 };

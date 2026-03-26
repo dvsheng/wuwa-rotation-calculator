@@ -98,13 +98,12 @@ export const AttackCanvasItem = ({
     },
   });
 
-  const isAttackConfigurable = (attack.parameters?.length ?? 0) > 0;
+  const isAttackConfigurable = attack.parameters.length > 0;
   const shouldShowWarning =
     isAttackConfigurable &&
-    (attack.parameters?.some(
+    attack.parameters.some(
       (parameter) => Number.isNaN(parameter.value) || isNil(parameter.value),
-    ) ??
-      false);
+    );
 
   return (
     <BaseAttackCanvasItem
@@ -134,7 +133,7 @@ export const AttackCanvasItem = ({
         stopPropagation={true}
       />
       {shouldShowWarning && (
-        <AlertTriangle className="absolute top-1 right-1 h-5 w-5 text-warning" />
+        <AlertTriangle className="text-warning absolute top-1 right-1 h-5 w-5" />
       )}
     </BaseAttackCanvasItem>
   );

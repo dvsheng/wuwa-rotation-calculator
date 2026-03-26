@@ -7,9 +7,10 @@ import type { EchoCost, EchoMainStatOptionType } from '@/schemas/echo';
 import type { Enemy as ClientEnemy } from '@/schemas/enemy';
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import { getEchoStats } from '@/services/game-data';
-import type { CharacterDerivedAttributes, CharacterEntity } from '@/services/game-data';
-import { getEntityById } from '@/services/game-data/get-entity-details.function';
+import type { CharacterDerivedAttributes } from '@/services/game-data';
 import type { CharacterStat } from '@/types';
+
+import { getDerivedCharacterAttributesById } from '../game-data/character-derived-attributes';
 
 import { calculateClientRotationResult } from './calculate-client-rotation-damage';
 import type {
@@ -357,13 +358,9 @@ export const calculateRotationSensitivityAnalysis = async ({
   baselineTotalDamage,
   characterIndex = 0,
 }: CalculateRotationSensitivityProperties): Promise<ClientSensitivityAnalysis> => {
-  const characterDetails = (await getEntityById({
-    data: {
-      id: clientTeam[characterIndex].id,
-      entityType: 'character',
-      activatedSequence: clientTeam[characterIndex].sequence,
-    },
-  })) as CharacterEntity;
+  const derivedAttributes = await getDerivedCharacterAttributesById(
+    clientTeam[characterIndex].id,
+  );
 
   const [substatScenarios, threeCostScenarios, fourCostScenarios] = await Promise.all([
     buildSubstatScenarios({
@@ -381,7 +378,7 @@ export const calculateRotationSensitivityAnalysis = async ({
       buffs,
       baselineTotalDamage,
       characterIndex,
-      derivedAttributes: characterDetails.derivedAttributes,
+      derivedAttributes,
     }),
     buildFourCostMainStatScenarios({
       clientTeam,

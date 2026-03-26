@@ -1,7 +1,7 @@
 import { isNil } from 'es-toolkit/predicate';
 
 import { EntityIconDisplay } from '@/components/common/EntityIcon';
-import { useEntityList } from '@/hooks/useEntityList';
+import { useEntities } from '@/hooks/useEntities';
 import { EntityType } from '@/services/game-data';
 import { useStore } from '@/store';
 
@@ -19,8 +19,8 @@ export const WeaponSelector = ({ index }: WeaponSelectorProperties) => {
   const setWeapon = useStore((state) => state.setWeapon);
   const clearForEntity = useStore((state) => state.clearForEntity);
   const setRefine = useStore((state) => state.setRefine);
-  const { data: weaponList = [] } = useEntityList({ entityType: EntityType.WEAPON });
-  const { data: characterList = [] } = useEntityList({
+  const { data: weaponList = [] } = useEntities({ entityType: EntityType.WEAPON });
+  const { data: characterList = [] } = useEntities({
     entityType: EntityType.CHARACTER,
   });
 

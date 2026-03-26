@@ -2,7 +2,7 @@ import { useShallow } from 'zustand/react/shallow';
 
 import { EntityIconDisplay } from '@/components/common/EntityIcon';
 import { useCharacterEchoes } from '@/hooks/useCharacterEchoes';
-import { useEntityList } from '@/hooks/useEntityList';
+import { useEntities } from '@/hooks/useEntities';
 import { EntityType } from '@/services/game-data';
 import { useStore } from '@/store';
 
@@ -24,7 +24,7 @@ export const CharacterSelector = ({ index }: CharacterSelectorProperties) => {
   const clearAllForCharacter = useStore((state) => state.clearAllForCharacter);
   const setSequence = useStore((state) => state.setSequence);
   const { syncCharacterEchoes } = useCharacterEchoes(index);
-  const { data: characterList = [] } = useEntityList({
+  const { data: characterList = [] } = useEntities({
     entityType: EntityType.CHARACTER,
   });
 

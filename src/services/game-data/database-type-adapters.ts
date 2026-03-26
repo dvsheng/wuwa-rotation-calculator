@@ -1,18 +1,14 @@
-import type {
-  DatabaseLeafNumber,
-  DatabaseRefineScalableNumber,
-} from '@/schemas/database';
-
+import type { RefineScalableNumber } from './types';
 import { Sequence } from './types';
 
-export type ResolveRefineScalableNumber<T> = T extends DatabaseLeafNumber
+export type ResolveRefineScalableNumber<T> = T extends RefineScalableNumber
   ? number
   : T extends number
     ? number
     : T extends readonly [any, ...Array<any>]
       ? { [K in keyof T]: ResolveRefineScalableNumber<T[K]> }
-      : T extends ReadonlyArray<infer U>
-        ? ReadonlyArray<ResolveRefineScalableNumber<U>>
+      : T extends Array<infer U>
+        ? Array<ResolveRefineScalableNumber<U>>
         : T extends object
           ? { [K in keyof T]: ResolveRefineScalableNumber<T[K]> }
           : T;
@@ -22,7 +18,7 @@ export type ResolveRefineScalableNumber<T> = T extends DatabaseLeafNumber
  */
 export const isRefineScalableNumber = (
   value: unknown,
-): value is DatabaseRefineScalableNumber => {
+): value is RefineScalableNumber => {
   return (
     typeof value === 'object' &&
     value !== null &&

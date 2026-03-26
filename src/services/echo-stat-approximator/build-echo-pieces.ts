@@ -12,7 +12,7 @@ import type {
   EchoSubstatOptionType,
 } from '@/schemas/echo';
 import type { OriginType as OriginTypeType } from '@/services/game-data';
-import { OriginType } from '@/services/game-data';
+import { OriginType, isAttack } from '@/services/game-data';
 import { CharacterStat, DamageType } from '@/types';
 import type {
   CharacterStat as CharacterStatType,
@@ -133,11 +133,12 @@ const rankDamageTypes = (
   entity: CharacterDetailsWithRuntimeStats,
 ): Array<EchoSubstatOptionType> => {
   const weights = new Map<EchoSubstatOptionType, number>();
+  const attacks = entity.capabilities.filter((capability) => isAttack(capability));
 
-  for (const attack of entity.capabilities.attacks) {
+  for (const attack of attacks) {
     const expectedDamageType = DAMAGE_TYPE_BY_ORIGIN_TYPE[attack.originType];
 
-    for (const instance of attack.damageInstances) {
+    for (const instance of attack.capabilityJson.damageInstances) {
       const substat = DAMAGE_TYPE_SUBSTAT_BY_DAMAGE_TYPE[instance.damageType];
       if (!substat) continue;
       addWeight(

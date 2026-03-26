@@ -3,10 +3,10 @@ import { compact } from 'es-toolkit/array';
 import { EntityType } from '@/services/game-data';
 import { useStore } from '@/store';
 
-import { useEntityList } from './useEntityList';
+import { useEntities } from './useEntities';
 
-export const useCharacterByCharacterId = (characterId: number) => {
-  const { data: characters } = useEntityList({ entityType: EntityType.CHARACTER });
+const useCharacterByCharacterId = (characterId: number) => {
+  const { data: characters } = useEntities({ entityType: EntityType.CHARACTER });
   return characters.find((character) => character.id === characterId);
 };
 

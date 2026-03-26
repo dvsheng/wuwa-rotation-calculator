@@ -48,3 +48,23 @@ export const GetEchoStatsRequestSchema = z.object({
 });
 
 export type GetEchoStatsRequest = z.infer<typeof GetEchoStatsRequestSchema>;
+
+export const ResolveConfigSchema = z
+  .object({
+    sequence: z.number().min(0).max(6).optional(),
+    refineLevel: z.enum(RefineLevel).optional(),
+    activatedSetBonus: z.enum(SetEffectRequirement).optional(),
+  })
+  .describe(
+    'Optional capability resolution parameters. An empty object returns stored capabilities without applying sequence, refine, or set-bonus resolution.',
+  );
+
+export type ResolveConfig = z.infer<typeof ResolveConfigSchema>;
+
+export const ListEntityCapabilitiesRequestSchema = z.object({
+  id: z.int().positive().describe('The ID of the entity to fetch capabilities for'),
+});
+
+export type ListEntityCapabilitiesRequest = z.infer<
+  typeof ListEntityCapabilitiesRequestSchema
+>;

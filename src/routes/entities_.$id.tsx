@@ -10,9 +10,8 @@ const entitySearchSchema = z.object({
 
 function EntityDetailsPage() {
   const { id } = Route.useParams();
-  const { capabilityId } = Route.useSearch();
 
-  return <AdminEntity id={Number.parseInt(id)} capabilityId={capabilityId} />;
+  return <AdminEntity id={Number.parseInt(id)} />;
 }
 
 export const Route = createFileRoute('/entities_/$id')({

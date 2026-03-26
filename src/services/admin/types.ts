@@ -1,4 +1,1 @@
-export type {
-  AdminGetEntityDetailsRequest,
-  AdminUpdateCapabilityRequest,
-} from '@/schemas/admin';
+export type { AdminUpdateCapabilityRequest } from '@/schemas/admin';

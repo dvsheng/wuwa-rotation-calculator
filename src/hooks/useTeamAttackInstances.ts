@@ -2,7 +2,7 @@ import { compact } from 'es-toolkit/array';
 
 import { useStore } from '@/store';
 
-import { useTeamDetails } from './useTeamDetails';
+import { isDetailedAttack, useTeamDetails } from './useTeamDetails';
 
 export type DetailedAttackInstance = ReturnType<
   typeof useTeamAttackInstances
@@ -16,17 +16,19 @@ export type DetailedAttackInstance = ReturnType<
  */
 export const useTeamAttackInstances = () => {
   const storedAttacks = useStore((state) => state.attacks);
-  const { attacks: gameDataAttacks, isLoading, isError } = useTeamDetails();
+  const { capabilities, isLoading, isError } = useTeamDetails();
 
   const attackMap = new Map(
-    gameDataAttacks.map((attack) => [`${attack.characterId}:${attack.id}`, attack]),
+    capabilities
+      .filter((capability) => isDetailedAttack(capability))
+      .map((attack) => [`${attack.characterId}:${attack.id}`, attack]),
   );
   const fullAttacks = compact(
     storedAttacks.map((stored) => {
       const gameData = attackMap.get(`${stored.characterId}:${stored.id}`);
       if (!gameData) return;
 
-      const parameters = gameData.parameters?.map((parameter) => ({
+      const parameters = gameData.parameters.map((parameter) => ({
         ...parameter,
         value: stored.parameterValues?.find((p) => p.id === parameter.id)?.value,
         valueConfiguration: stored.parameterValues?.find((p) => p.id === parameter.id)

@@ -19,19 +19,19 @@ const CHARACTER_ITEMS = [
   { id: 1, name: 'Jiyan', attribute: 'aero', weaponType: 'Broadblade', rank: 5 },
   { id: 2, name: 'Calcharo', attribute: 'electro', weaponType: 'Broadblade', rank: 5 },
   { id: 3, name: 'Baizhi', attribute: 'glacio', weaponType: 'Rectifier', rank: 4 },
-] as unknown as EntityListRow[];
+] as unknown as Array<EntityListRow>;
 
 const ECHO_ITEMS = [
   { id: 10, name: 'Tempest Mephis', cost: 4 },
   { id: 11, name: 'Feilian Beringal', cost: 3 },
   { id: 12, name: 'Excarat', cost: 1 },
-] as unknown as EntityListRow[];
+] as unknown as Array<EntityListRow>;
 
 const ECHO_ITEMS_UNSORTED = [
   { id: 12, name: 'Excarat', cost: 1 },
   { id: 10, name: 'Tempest Mephis', cost: 4 },
   { id: 11, name: 'Feilian Beringal', cost: 3 },
-] as unknown as EntityListRow[];
+] as unknown as Array<EntityListRow>;
 
 const openDialog = async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Jiyan' }));

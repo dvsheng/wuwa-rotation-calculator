@@ -2,7 +2,7 @@ import { compact } from 'es-toolkit/array';
 
 import { useStore } from '@/store';
 
-import { useTeamDetails } from './useTeamDetails';
+import { isDetailedModifier, useTeamDetails } from './useTeamDetails';
 
 export type DetailedModifierInstance = ReturnType<
   typeof useTeamModifierInstances
@@ -16,29 +16,24 @@ export type DetailedModifierInstance = ReturnType<
  */
 export const useTeamModifierInstances = () => {
   const storedBuffs = useStore((state) => state.buffs);
-  const { buffs: gameDataBuffs, isLoading, isError } = useTeamDetails();
+  const { capabilities, isLoading, isError } = useTeamDetails();
 
   const buffMap = new Map(
-    gameDataBuffs.map((buff) => [`${buff.characterId}:${buff.id}`, buff]),
+    capabilities
+      .filter((capability) => isDetailedModifier(capability))
+      .map((buff) => [`${buff.characterId}:${buff.id}`, buff]),
   );
   const fullBuffs = compact(
     storedBuffs.map((stored) => {
       const gameData = buffMap.get(`${stored.characterId}:${stored.id}`);
       if (!gameData) return;
-      const parameters = gameData.parameters?.map((parameter) => {
+      const parameters = gameData.parameters.map((parameter) => {
         const storedParameter = stored.parameterValues?.find(
           (p) => p.id === parameter.id,
         );
-        return {
-          ...parameter,
-          ...storedParameter,
-        };
+        return { ...parameter, ...storedParameter };
       });
-      return {
-        ...stored,
-        ...gameData,
-        parameters,
-      };
+      return { ...stored, ...gameData, parameters };
     }),
   );
 

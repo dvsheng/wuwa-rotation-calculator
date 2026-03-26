@@ -1,6 +1,8 @@
 import { startCase } from 'es-toolkit';
 import { useState } from 'react';
 
+import type { Capability } from '@/services/game-data';
+
 import { EntityIcon } from '../common/EntityIcon';
 import {
   Accordion,
@@ -12,51 +14,25 @@ import { Badge } from '../ui/badge';
 import { Row, Stack } from '../ui/layout';
 import { Text } from '../ui/typography';
 
-import {
-  CapabilityList,
-  buildEntriesForSkill,
-  capabilityTypeLabel,
-  getCapabilityTypeCounts,
-  sortSkills,
-  useSelectedCapabilityScroll,
-} from './AdminEntityViewShared';
-import type { Skill } from './CapabilityItem';
+import { CapabilityList } from './AdminEntityViewShared';
 import { TableOfContentsSidebar } from './TableOfContentsSidebar';
 
-export const BySkillView = ({
-  skills,
-  entityId,
-  selectedCapabilityId,
-}: {
-  skills: Array<Skill>;
-  entityId: number;
-  selectedCapabilityId?: number;
-}) => {
-  const sorted = sortSkills(skills);
-  const skillEntries = sorted.map((skill) => ({
-    skill,
-    entries: buildEntriesForSkill(skill, skills),
-  }));
-  const defaultOpenValues = skillEntries
-    .filter(({ entries }) => entries.length > 0)
-    .map(({ skill }) => String(skill.id));
+export const BySkillView = ({ capabilities }: { capabilities: Array<Capability> }) => {
+  const skills = Object.groupBy(capabilities, (capability) => capability.skillId);
+  const skillEntries = Object.entries(skills).filter(
+    (entry): entry is [string, Array<Capability>] => {
+      const skillCapabilities = entry[1];
+      return skillCapabilities !== undefined && skillCapabilities.length > 0;
+    },
+  );
+  const defaultOpenValues = skillEntries.map(([skillId, _]) => skillId);
   const [openSkillValues, setOpenSkillValues] = useState(defaultOpenValues);
-  const selectedSkillValues = selectedCapabilityId
-    ? skillEntries
-        .filter(({ entries }) =>
-          entries.some(({ capability }) => capability.id === selectedCapabilityId),
-        )
-        .map(({ skill }) => String(skill.id))
-    : [];
-  const effectiveOpenSkillValues = [
-    ...new Set([...openSkillValues, ...selectedSkillValues]),
-  ];
-  useSelectedCapabilityScroll(selectedCapabilityId, effectiveOpenSkillValues.join('|'));
-  const tocItems = skillEntries.map(({ skill }) => ({
-    id: `skill-${skill.id}`,
-    label: skill.name,
-    caption: startCase(skill.originType),
-    accordionValue: String(skill.id),
+
+  const tocItems = skillEntries.map(([skillId, skillCapabilities]) => ({
+    id: `skill-${skillId}`,
+    label: skillCapabilities[0].name,
+    caption: startCase(skillCapabilities[0].originType),
+    accordionValue: skillId,
   }));
 
   return (
@@ -77,58 +53,55 @@ export const BySkillView = ({
       <div className="min-w-0 flex-1">
         <Accordion
           type="multiple"
-          value={effectiveOpenSkillValues}
+          value={openSkillValues}
           onValueChange={setOpenSkillValues}
         >
-          {skillEntries.map(({ skill, entries }) => {
-            const typeCounts = getCapabilityTypeCounts(entries);
+          {skillEntries.map(([skillId, skillCapabilities]) => {
+            const capabilityTypes = Object.groupBy(
+              skillCapabilities,
+              (capability) => capability.capabilityJson.type,
+            );
+            const skillProperties = skillCapabilities[0];
+
             return (
-              <AccordionItem
-                key={skill.id}
-                id={`skill-${skill.id}`}
-                value={String(skill.id)}
-              >
+              <AccordionItem key={skillId} id={`skill-${skillId}`} value={skillId}>
                 <AccordionTrigger>
                   <Row gap="inset" align="center" wrap>
-                    {skill.iconUrl && (
+                    {skillCapabilities[0].iconUrl && (
                       <EntityIcon
-                        iconUrl={skill.iconUrl}
+                        iconUrl={skillProperties.iconUrl}
                         size="small"
                         className="bg-secondary/60 ring-border/60 ring-1"
                       />
                     )}
                     <Stack gap="none">
-                      <Text variant="title">{skill.name}</Text>
+                      <Text variant="title">{skillProperties.parentName}</Text>
                       <Text variant="caption" tone="muted">
-                        {startCase(skill.originType)}
+                        {startCase(skillProperties.originType)}
                       </Text>
                     </Stack>
                     <Row gap="trim" wrap>
-                      {typeCounts
-                        .filter(({ count }) => count > 0)
-                        .map(({ type, count }) => (
+                      {Object.entries(capabilityTypes)
+                        .filter(([_, entries]) => entries.length > 0)
+                        .map(([type, entries]) => (
                           <Badge key={type} variant="outline">
-                            {count} {capabilityTypeLabel[type]}
+                            {entries.length} {startCase(type)}
                           </Badge>
                         ))}
                     </Row>
                   </Row>
                 </AccordionTrigger>
                 <AccordionContent>
-                  {skill.description && (
+                  {skillProperties.skillDescription && (
                     <Text
                       variant="bodySm"
                       tone="muted"
                       className="mb-3 whitespace-pre-wrap"
                     >
-                      {skill.description}
+                      {skillProperties.skillDescription}
                     </Text>
                   )}
-                  <CapabilityList
-                    entries={entries}
-                    entityId={entityId}
-                    showCapabilityTypeBadge
-                  />
+                  <CapabilityList entries={skillCapabilities} showCapabilityTypeBadge />
                 </AccordionContent>
               </AccordionItem>
             );

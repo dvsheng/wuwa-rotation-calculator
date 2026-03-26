@@ -8,8 +8,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type { DetailedEntity } from '@/hooks/useEntities';
-import type { Sequence } from '@/services/game-data';
+import { isAttack, isModifier } from '@/services/game-data';
+import type {
+  Attack,
+  Capability,
+  Modifier,
+  PermanentStat,
+  Sequence,
+} from '@/services/game-data';
 
 import { EntityIcon } from '../common/EntityIcon';
 import { Badge } from '../ui/badge';
@@ -18,32 +24,10 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from '../ui/hover-card'
 
 import { CapabilityCard } from './CapabilityCard';
 
-type Entity = DetailedEntity['entity'];
-
-export type Skill = Entity['skills'][number];
-
-export type Capability = Skill['capabilities'][number];
-
-type CapabilityJson = Capability['capabilityJson'];
-
-type Attack = Extract<CapabilityJson, { type: 'attack' }>;
-
-type Modifier = Extract<CapabilityJson, { type: 'modifier' }>;
-
-export type PermanentStatArray = Array<
-  Extract<CapabilityJson, { type: 'permanent_stat' }> & {
-    id: number;
-    name: string;
-    description?: string;
-    isAlternativePlacement?: boolean;
-  }
->;
-
 export const CapabilityItem = ({
   capability,
   entityId,
   isAlternativePlacement = false,
-  skill,
   defaultAlternativeDefinition = 'base',
   showCapabilityTypeBadge = false,
   showSkillIcon = false,
@@ -51,7 +35,6 @@ export const CapabilityItem = ({
   capability: Capability;
   entityId: number;
   isAlternativePlacement?: boolean;
-  skill: Skill;
   defaultAlternativeDefinition?: 'base' | Sequence;
   showCapabilityTypeBadge?: boolean;
   showSkillIcon?: boolean;
@@ -71,9 +54,9 @@ export const CapabilityItem = ({
         defaultAlternativeDefinition={defaultAlternativeDefinition}
         entityId={entityId}
         titlePrefix={
-          showSkillIcon && skill.iconUrl ? (
+          showSkillIcon && capability.iconUrl ? (
             <EntityIcon
-              iconUrl={skill.iconUrl}
+              iconUrl={capability.iconUrl}
               size="small"
               className="bg-secondary/60 ring-border/60 ring-1"
             />
@@ -89,11 +72,11 @@ export const CapabilityItem = ({
       >
         {(resolvedCapability) => (
           <>
-            {resolvedCapability.capabilityJson.type === 'attack' && (
-              <AttackContent content={resolvedCapability.capabilityJson} />
+            {isAttack(resolvedCapability) && (
+              <AttackContent content={resolvedCapability} />
             )}
-            {resolvedCapability.capabilityJson.type === 'modifier' && (
-              <ModifierContent content={resolvedCapability.capabilityJson} />
+            {isModifier(resolvedCapability) && (
+              <ModifierContent content={resolvedCapability} />
             )}
           </>
         )}
@@ -112,7 +95,7 @@ const AttackContent = ({ content }: { content: Attack }) => {
         <TableHead className="w-1/4"> Tags </TableHead>
       </TableHeader>
       <TableBody>
-        {content.damageInstances.map((instance, index) => (
+        {content.capabilityJson.damageInstances.map((instance, index) => (
           <TableRow key={index}>
             <TableCell>
               <span className="font-mono">
@@ -143,7 +126,7 @@ const ModifierContent = ({ content }: { content: Modifier }) => {
         <TableHead className="w-1/4"> Applied To </TableHead>
       </TableHeader>
       <TableBody>
-        {content.modifiedStats.map((stat, index) => (
+        {content.capabilityJson.modifiedStats.map((stat, index) => (
           <TableRow key={index}>
             <TableCell>
               <span className="font-mono">
@@ -164,7 +147,11 @@ const ModifierContent = ({ content }: { content: Modifier }) => {
   );
 };
 
-export const PermanentStatContent = ({ content }: { content: PermanentStatArray }) => {
+export const PermanentStatContent = ({
+  content,
+}: {
+  content: Array<PermanentStat>;
+}) => {
   return (
     <Card>
       <CardHeader>
@@ -188,26 +175,23 @@ export const PermanentStatContent = ({ content }: { content: PermanentStatArray 
           </TableHeader>
           <TableBody>
             {content.map((stat, index) => (
-              <TableRow
-                key={index}
-                data-capability-id={stat.id}
-                data-capability-placement={
-                  stat.isAlternativePlacement ? 'alternative' : 'direct'
-                }
-              >
+              <TableRow key={index} data-capability-id={stat.id}>
                 <TableCell>{stat.name}</TableCell>
                 <TableCell>{stat.description}</TableCell>
                 <TableCell>
                   <span className="font-mono">
-                    {typeof stat.value === 'number' ? (
-                      String(stat.value)
+                    {typeof stat.capabilityJson.value === 'number' ? (
+                      String(stat.capabilityJson.value)
                     ) : (
-                      <FormulaTooltip label="Dynamic" formula={stat.value} />
+                      <FormulaTooltip
+                        label="Dynamic"
+                        formula={stat.capabilityJson.value}
+                      />
                     )}
                   </span>
                 </TableCell>
-                <TableCell>{startCase(stat.stat)}</TableCell>
-                <TableCell>{stat.tags.join(', ')}</TableCell>
+                <TableCell>{startCase(stat.capabilityJson.stat)}</TableCell>
+                <TableCell>{stat.capabilityJson.tags.join(', ')}</TableCell>
               </TableRow>
             ))}
           </TableBody>

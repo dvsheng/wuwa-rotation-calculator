@@ -8,33 +8,37 @@ const makeEntity = (overrides: Record<string, unknown> = {}) =>
   ({
     id: 1,
     name: 'Test Character',
-    capabilities: {
-      attacks: [],
-      modifiers: [],
-      permanentStats: [],
-    },
+    capabilities: [],
     ...overrides,
   }) as any;
 
 const makeModifier = (overrides: Record<string, unknown> = {}) =>
   ({
     id: 1,
-    capabilityType: 'modifier',
     name: 'Modifier',
     originType: 'Inherent Skill',
-    modifiedStats: [],
+    skillId: 1,
+    entityId: 1,
+    capabilityJson: {
+      type: 'modifier',
+      modifiedStats: [],
+    },
     ...overrides,
   }) as any;
 
 const makePermanentStat = (overrides: Record<string, unknown> = {}) =>
   ({
     id: 1,
-    capabilityType: 'permanent_stat',
     name: 'Permanent Stat',
     originType: 'Inherent Skill',
-    stat: CharacterStat.DAMAGE_BONUS,
-    tags: ['all'],
-    value: 0,
+    skillId: 1,
+    entityId: 1,
+    capabilityJson: {
+      type: 'permanent_stat',
+      stat: CharacterStat.DAMAGE_BONUS,
+      tags: ['all'],
+      value: 0,
+    },
     ...overrides,
   }) as any;
 
@@ -42,10 +46,10 @@ describe('identifyRuntimeStats', () => {
   it('identifies a 250% energy regen requirement from a clamp', () => {
     const runtimeStats = identifyRuntimeStats(
       makeEntity({
-        capabilities: {
-          attacks: [],
-          modifiers: [
-            makeModifier({
+        capabilities: [
+          makeModifier({
+            capabilityJson: {
+              type: 'modifier',
               modifiedStats: [
                 {
                   stat: CharacterStat.CRITICAL_RATE,
@@ -69,10 +73,9 @@ describe('identifyRuntimeStats', () => {
                   },
                 },
               ],
-            }),
-          ],
-          permanentStats: [],
-        },
+            },
+          }),
+        ],
       }),
     );
 
@@ -87,10 +90,10 @@ describe('identifyRuntimeStats', () => {
   it('identifies a 260% energy regen requirement from an offset conditional', () => {
     const runtimeStats = identifyRuntimeStats(
       makeEntity({
-        capabilities: {
-          attacks: [],
-          modifiers: [
-            makeModifier({
+        capabilities: [
+          makeModifier({
+            capabilityJson: {
+              type: 'modifier',
               modifiedStats: [
                 {
                   stat: CharacterStat.DAMAGE_BONUS,
@@ -127,10 +130,9 @@ describe('identifyRuntimeStats', () => {
                   },
                 },
               ],
-            }),
-          ],
-          permanentStats: [],
-        },
+            },
+          }),
+        ],
       }),
     );
 
@@ -145,11 +147,10 @@ describe('identifyRuntimeStats', () => {
   it('identifies a 150% energy regen requirement from a permanent stat conversion', () => {
     const runtimeStats = identifyRuntimeStats(
       makeEntity({
-        capabilities: {
-          attacks: [],
-          modifiers: [],
-          permanentStats: [
-            makePermanentStat({
+        capabilities: [
+          makePermanentStat({
+            capabilityJson: {
+              type: 'permanent_stat',
               stat: CharacterStat.DAMAGE_BONUS,
               tags: ['echo'],
               value: {
@@ -174,9 +175,9 @@ describe('identifyRuntimeStats', () => {
                   ],
                 },
               },
-            }),
-          ],
-        },
+            },
+          }),
+        ],
       }),
     );
 
@@ -191,10 +192,10 @@ describe('identifyRuntimeStats', () => {
   it('ignores enemy stat references and keeps the highest requirement per stat', () => {
     const runtimeStats = identifyRuntimeStats(
       makeEntity({
-        capabilities: {
-          attacks: [],
-          modifiers: [
-            makeModifier({
+        capabilities: [
+          makeModifier({
+            capabilityJson: {
+              type: 'modifier',
               modifiedStats: [
                 {
                   stat: CharacterStat.CRITICAL_DAMAGE,
@@ -240,8 +241,11 @@ describe('identifyRuntimeStats', () => {
                   },
                 },
               ],
-            }),
-            makeModifier({
+            },
+          }),
+          makeModifier({
+            capabilityJson: {
+              type: 'modifier',
               modifiedStats: [
                 {
                   stat: CharacterStat.CRITICAL_RATE,
@@ -259,10 +263,9 @@ describe('identifyRuntimeStats', () => {
                   },
                 },
               ],
-            }),
-          ],
-          permanentStats: [],
-        },
+            },
+          }),
+        ],
       }),
     );
 

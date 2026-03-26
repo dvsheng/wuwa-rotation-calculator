@@ -22,7 +22,7 @@ import {
 import { Stack } from '@/components/ui/layout';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Text } from '@/components/ui/typography';
-import { useEntityList } from '@/hooks/useEntityList';
+import { useEntities } from '@/hooks/useEntities';
 import { useRotations } from '@/hooks/useRotations';
 import { useSession } from '@/lib/auth-client';
 import { EntityType } from '@/services/game-data';
@@ -130,7 +130,7 @@ export const LibraryContainer = () => {
   const [selectedCharacterIds, setSelectedCharacterIds] = useState<Array<number>>([]);
   const [publicOffset, setPublicOffset] = useState(0);
   const { data: session } = useSession();
-  const { data: characters } = useEntityList({ entityType: EntityType.CHARACTER });
+  const { data: characters } = useEntities({ entityType: EntityType.CHARACTER });
 
   const handleSetCharactersFilter = (
     _characters: Array<(typeof characters)[number]>,

@@ -1,6 +1,6 @@
 import { CircleUser } from 'lucide-react';
 
-import { useEntityList } from '@/hooks/useEntityList';
+import { useEntities } from '@/hooks/useEntities';
 import { cn } from '@/lib/utils';
 
 import type { IconSize } from './CapabilityIcon';
@@ -49,7 +49,7 @@ export const EntityIcon = ({
   size = 'medium',
   className,
 }: EntityIconProperties) => {
-  const { data: entities } = useEntityList({ entityType: undefined });
+  const { data: entities } = useEntities({});
   const url = entities.find((entity) => entity.id === entityId)?.iconUrl ?? iconUrl;
   return <EntityIconDisplay url={url} size={size} className={className} />;
 };

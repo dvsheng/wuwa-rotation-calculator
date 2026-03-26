@@ -1,5 +1,11 @@
-import { EntityType } from '@/services/game-data';
-import { getEntityByIdHandler } from '@/services/game-data/get-entity-details.server';
+import {
+  filterAndResolveCapabilities,
+  isAttack,
+  listEntities,
+} from '@/services/game-data';
+
+import { deriveCharacterAttributes } from '../game-data/character-derived-attributes';
+import { listEntityCapabilities } from '../game-data/list-entity-capabilities.function';
 
 import { buildEchoPieces } from './build-echo-pieces';
 import { identifyRuntimeStats } from './identify-runtime-stats';
@@ -9,14 +15,27 @@ import type { GetEchoStatsRequest, GetEchoStatsResponse } from './types';
 export const getEchoStatsHandler = async (
   request: GetEchoStatsRequest,
 ): Promise<GetEchoStatsResponse> => {
-  const characterDetails = await getEntityByIdHandler({
-    activatedSequence: 0,
-    entityType: EntityType.CHARACTER,
-    id: request.characterId,
-  });
+  const capabilities = filterAndResolveCapabilities(
+    await listEntityCapabilities({
+      data: {
+        id: request.characterId,
+      },
+    }),
+    { sequence: 0 },
+  );
+  const entities = await listEntities({});
+  const character = entities.find((entity) => entity.id === request.characterId);
+  if (!character) throw new Error(`Character not found for ID ${request.characterId}`);
+  const characterWithCapabilities = {
+    ...character,
+    capabilities,
+  };
+  const attacks = capabilities.filter((capability) => isAttack(capability));
+  const derivedAttributes = deriveCharacterAttributes(attacks);
   const characterDetailsWithRuntimeStats = {
-    ...characterDetails,
-    runtimeStatTargets: identifyRuntimeStats(characterDetails),
+    ...characterWithCapabilities,
+    derivedAttributes,
+    runtimeStatTargets: identifyRuntimeStats(characterWithCapabilities),
   };
 
   return {

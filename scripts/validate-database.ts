@@ -2,8 +2,7 @@ import { z } from 'zod';
 
 import { database } from '@/db/client';
 import type { DatabaseCapability, DatabaseEntity, DatabaseSkill } from '@/db/schema';
-import { DatabaseCapabilitySchema } from '@/schemas/database';
-import { CapabilityType, EntityType } from '@/services/game-data';
+import { CapabilityDataSchema, CapabilityType, EntityType } from '@/services/game-data';
 import { Attribute, Tag, WeaponType } from '@/types';
 
 /**
@@ -107,7 +106,7 @@ const BaseCapabilitySchema = z.object({
 });
 
 const CapabilityValidationSchema = BaseCapabilitySchema.extend({
-  capabilityJson: DatabaseCapabilitySchema,
+  capabilityJson: CapabilityDataSchema,
 }).strict();
 
 // ============================================================================

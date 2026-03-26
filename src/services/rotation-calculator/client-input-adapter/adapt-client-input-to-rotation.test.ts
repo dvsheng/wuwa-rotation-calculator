@@ -1,12 +1,12 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
+import { CapabilityType } from '@/services/game-data';
 import type {
   Attack,
   Modifier as GameDataModifier,
-  GameDataNumberNode,
+  PermanentStat,
 } from '@/services/game-data';
-import { CapabilityType } from '@/services/game-data';
 import {
   AttackScalingProperty,
   Attribute,
@@ -17,14 +17,11 @@ import {
 
 import {
   normalizeEchoSubstatValue,
+  toRotationAttack,
   toRotationModifier,
   toRotationPermanentStat,
 } from './adapt-client-input-to-rotation';
 import type { ResolveUserParameterizedType } from './resolve-user-parameterized-values';
-
-vi.mock('./enrich-rotation-data', () => ({
-  createGameDataEnricher: vi.fn(),
-}));
 
 type GameDataStatReference = {
   type: 'statParameterizedNumber';
@@ -47,42 +44,74 @@ const createMockModifier = (
     value: number | GameDataStatReference;
     tags: Array<string>;
   }>,
-): ModifierInstance & ResolveUserParameterizedType<GameDataModifier> => ({
-  instanceId: `modifier-${id}`,
-  id,
-  characterId,
-  x: 0,
-  y: 0,
-  w: 1,
-  h: 1,
-  description: 'Test modifier description',
-  modifiedStats: statList.map((s) => ({ ...s, target })),
-  name: `Modifier ${id}`,
-  originType: 'Echo',
-  capabilityType: CapabilityType.MODIFIER,
-});
+): ModifierInstance & ResolveUserParameterizedType<GameDataModifier> =>
+  ({
+    instanceId: `modifier-${id}`,
+    id,
+    characterId,
+    x: 0,
+    y: 0,
+    w: 1,
+    h: 1,
+    name: `Modifier ${id}`,
+    description: 'Test modifier description',
+    originType: 'Echo',
+    parentName: 'Test Skill',
+    skillId: 1,
+    entityId: 1,
+    capabilityJson: {
+      type: CapabilityType.MODIFIER,
+      modifiedStats: statList.map((stat) => ({ ...stat, target })),
+    },
+  }) as any;
 
 const createMockAttack = (
   id: number,
   characterId: number,
-): AttackInstance & ResolveUserParameterizedType<Attack> => ({
-  instanceId: `attack-${id}`,
-  id,
-  characterId,
-  description: 'Test attack description',
-  damageInstances: [
-    {
-      motionValue: 1,
-      tags: [Tag.BASIC_ATTACK],
-      damageType: DamageType.BASIC_ATTACK,
-      attribute: Attribute.PHYSICAL,
-      scalingStat: AttackScalingProperty.ATK,
+): AttackInstance & ResolveUserParameterizedType<Attack> =>
+  ({
+    instanceId: `attack-${id}`,
+    id,
+    characterId,
+    name: `Attack ${id}`,
+    description: 'Test attack description',
+    originType: 'Echo',
+    parentName: 'Test Skill',
+    skillId: 1,
+    entityId: 1,
+    capabilityJson: {
+      type: CapabilityType.ATTACK,
+      damageInstances: [
+        {
+          motionValue: 1,
+          tags: [Tag.BASIC_ATTACK],
+          damageType: DamageType.BASIC_ATTACK,
+          attribute: Attribute.ELECTRO,
+          scalingStat: AttackScalingProperty.ATK,
+        },
+      ],
     },
-  ],
-  name: `Attack ${id}`,
-  originType: 'Echo',
-  capabilityType: CapabilityType.ATTACK,
-});
+  }) as any;
+
+const createMockPermanentStat = (
+  value: unknown,
+  stat: CharacterStat = CharacterStat.ATTACK_FLAT,
+  tags: Array<string> = [Tag.ALL],
+): ResolveUserParameterizedType<PermanentStat> =>
+  ({
+    id: 1,
+    name: 'Test Stat',
+    description: undefined,
+    originType: 'Base Stats',
+    skillId: 1,
+    entityId: 1,
+    capabilityJson: {
+      type: CapabilityType.PERMANENT_STAT,
+      stat,
+      tags,
+      value,
+    },
+  }) as any;
 
 const characterIdToSlotNumberMap = {
   32_132: 0,
@@ -90,40 +119,25 @@ const characterIdToSlotNumberMap = {
   5678: 2,
 } as Record<number, 0 | 1 | 2>;
 
-const permanentStatBase = {
-  id: 1,
-  name: 'Test Stat',
-  originType: 'Base Stats' as const,
-  capabilityType: CapabilityType.PERMANENT_STAT,
-};
-
 describe('toRotationPermanentStat', () => {
   it('maps literal number values unchanged', () => {
-    const stat = {
-      ...permanentStatBase,
-      stat: CharacterStat.ATTACK_FLAT,
-      tags: [Tag.ALL],
-      value: 500,
-    };
+    const stat = createMockPermanentStat(500);
 
-    const result = toRotationPermanentStat(stat, 0);
+    const result = toRotationPermanentStat(stat as any, 0);
 
-    expect(result.stat).toBe(stat.stat);
-    expect(result.tags).toEqual(stat.tags);
-    expect(result.value).toBe(stat.value);
+    expect(result.stat).toBe(CharacterStat.ATTACK_FLAT);
+    expect(result.tags).toEqual([Tag.ALL]);
+    expect(result.value).toBe(500);
     expect(result.name).toBe(stat.name);
     expect(result.description).toBe('');
   });
 
   it('maps self stat references to the provided character index', () => {
-    const stat = {
-      ...permanentStatBase,
-      stat: CharacterStat.DAMAGE_BONUS,
-      tags: [Tag.ELECTRO],
-      value: statReference(),
-    };
+    const stat = createMockPermanentStat(statReference(), CharacterStat.DAMAGE_BONUS, [
+      Tag.ELECTRO,
+    ]);
 
-    const result = toRotationPermanentStat(stat, 2);
+    const result = toRotationPermanentStat(stat as any, 2);
 
     expect(typeof result.value).toBe('object');
     if (typeof result.value === 'number') {
@@ -138,11 +152,8 @@ describe('toRotationPermanentStat', () => {
   });
 
   it('recursively maps nested stat references while preserving tree shape', () => {
-    const stat = {
-      ...permanentStatBase,
-      stat: CharacterStat.DAMAGE_BONUS,
-      tags: [Tag.ELECTRO],
-      value: {
+    const stat = createMockPermanentStat(
+      {
         type: 'sum',
         operands: [
           0.5,
@@ -164,10 +175,12 @@ describe('toRotationPermanentStat', () => {
             ],
           },
         ],
-      } satisfies GameDataNumberNode<number>,
-    };
+      } as const,
+      CharacterStat.DAMAGE_BONUS,
+      [Tag.ELECTRO],
+    );
 
-    const result = toRotationPermanentStat(stat, 2);
+    const result = toRotationPermanentStat(stat as any, 2);
 
     expect(typeof result.value).toBe('object');
     if (typeof result.value === 'number') {
@@ -222,7 +235,11 @@ describe('toRotationModifier', () => {
     ]);
     const attack = createMockAttack(15_678, 32_132);
 
-    const [result] = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
+    const [result] = toRotationModifier(
+      modifier as any,
+      attack as any,
+      characterIdToSlotNumberMap,
+    );
 
     expect(result.targets).toEqual([0]);
     const damageBonus = result.modifiedStats[CharacterStat.DAMAGE_BONUS]![0];
@@ -248,7 +265,11 @@ describe('toRotationModifier', () => {
     ]);
     const attack = createMockAttack(15_678, 1234);
 
-    const [result] = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
+    const [result] = toRotationModifier(
+      modifier as any,
+      attack as any,
+      characterIdToSlotNumberMap,
+    );
 
     expect(result.targets).toEqual([1]);
     const damageBonus = result.modifiedStats[CharacterStat.DAMAGE_BONUS]![0];
@@ -271,7 +292,11 @@ describe('toRotationModifier', () => {
     ]);
     const attack = createMockAttack(15_678, 32_132);
 
-    const [result] = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
+    const [result] = toRotationModifier(
+      modifier as any,
+      attack as any,
+      characterIdToSlotNumberMap,
+    );
 
     expect(result.targets).toEqual([0, 1, 2]);
     expect(result.modifiedStats[CharacterStat.DAMAGE_AMPLIFICATION]).toBeDefined();
@@ -287,7 +312,11 @@ describe('toRotationModifier', () => {
     ]);
     const attack = createMockAttack(15_678, 1234);
 
-    const [result] = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
+    const [result] = toRotationModifier(
+      modifier as any,
+      attack as any,
+      characterIdToSlotNumberMap,
+    );
 
     expect(result.targets).toEqual([1]);
   });
@@ -302,7 +331,11 @@ describe('toRotationModifier', () => {
     ]);
     const attack = createMockAttack(15_678, 32_132);
 
-    const [result] = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
+    const [result] = toRotationModifier(
+      modifier as any,
+      attack as any,
+      characterIdToSlotNumberMap,
+    );
 
     expect(result.targets).toEqual(['enemy']);
   });
@@ -322,7 +355,11 @@ describe('toRotationModifier', () => {
     ]);
     const attack = createMockAttack(15_678, 1234);
 
-    const [result] = toRotationModifier(modifier, attack, characterIdToSlotNumberMap);
+    const [result] = toRotationModifier(
+      modifier as any,
+      attack as any,
+      characterIdToSlotNumberMap,
+    );
 
     expect(result.targets).toEqual([1]);
 
@@ -337,6 +374,27 @@ describe('toRotationModifier', () => {
 
     const critRate = result.modifiedStats[CharacterStat.CRITICAL_RATE]![0];
     expect(critRate.value).toBe(0.05);
+  });
+});
+
+describe('toRotationAttack', () => {
+  it('appends attack metadata tags used by stat filtering', () => {
+    const attack = createMockAttack(15_678, 32_132);
+
+    const result = toRotationAttack(
+      { ...attack, modifiers: [] } as any,
+      characterIdToSlotNumberMap,
+    );
+
+    expect(result.characterIndex).toBe(0);
+    expect(result.damageInstances[0].tags).toEqual(
+      expect.arrayContaining([
+        Tag.BASIC_ATTACK,
+        'Attack 15678',
+        Attribute.ELECTRO,
+        DamageType.BASIC_ATTACK,
+      ]),
+    );
   });
 });
 

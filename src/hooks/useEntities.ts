@@ -1,8 +1,8 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 
-import { getEntityDetails } from '@/services/admin';
 import type { EntityType } from '@/services/game-data';
 import { listEntities } from '@/services/game-data';
+import { listEntityCapabilities } from '@/services/game-data/list-entity-capabilities.function';
 
 export interface UseEntitiesOptions {
   entityType?: EntityType;
@@ -10,8 +10,6 @@ export interface UseEntitiesOptions {
 }
 
 export type EntityListItem = Awaited<ReturnType<typeof useEntities>>['data'][number];
-
-export type DetailedEntity = ReturnType<typeof useEntity>['data'];
 
 export const useEntities = ({ entityType, search }: UseEntitiesOptions) => {
   const query = useSuspenseQuery({
@@ -34,10 +32,10 @@ export const useEntities = ({ entityType, search }: UseEntitiesOptions) => {
   return { ...query, data: filteredData };
 };
 
-export const useEntity = (entityId: number) => {
+export const useEntityCapabilities = (entityId: number) => {
   return useSuspenseQuery({
     queryKey: ['entity-details', entityId],
-    queryFn: () => getEntityDetails({ data: { id: entityId } }),
+    queryFn: () => listEntityCapabilities({ data: { id: entityId } }),
     staleTime: Infinity,
   });
 };

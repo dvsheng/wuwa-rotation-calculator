@@ -11,14 +11,9 @@ import {
   timestamp,
 } from 'drizzle-orm/pg-core';
 
-import type {
-  DatabaseAttackData,
-  DatabaseCapability as DatabaseCapabilityType,
-  DatabaseModifierData,
-  DatabasePermanentStatData,
-} from '@/schemas/database';
 import type { RotationVisibility, SavedRotationData } from '@/schemas/library';
 import type {
+  CapabilityData,
   CapabilityType,
   EntityType,
   OriginType,
@@ -161,7 +156,7 @@ export const capabilities = pgTable('capabilities', {
     .notNull(),
   name: text('name'),
   description: text('description'),
-  capabilityJson: jsonb('capability_json').notNull().$type<DatabaseCapabilityType>(),
+  capabilityJson: jsonb('capability_json').notNull().$type<CapabilityData>(),
 });
 
 /**
@@ -218,7 +213,7 @@ export const fullCapabilities = pgView('full_capabilities', {
   capabilityName: text('capability_name'),
   capabilityDescription: text('capability_description'),
   capabilityType: text('capability_type').notNull().$type<CapabilityType>(),
-  capabilityJson: jsonb('capability_json').notNull().$type<DatabaseCapabilityType>(),
+  capabilityJson: jsonb('capability_json').notNull().$type<CapabilityData>(),
 
   // Skill fields (nullable if entity has no skills)
   skillId: integer('skill_id').notNull(),
@@ -286,15 +281,3 @@ export type NewDatabaseCapability = typeof capabilities.$inferInsert;
 export type DatabaseFullCapability = typeof fullCapabilities.$inferSelect;
 export type DatabaseRotation = typeof rotations.$inferSelect;
 export type NewDatabaseRotation = typeof rotations.$inferInsert;
-
-export type DatabaseFullCapabilityByType<T extends CapabilityType> = Omit<
-  DatabaseFullCapability,
-  'capabilityType' | 'capabilityJson'
-> & {
-  capabilityType: T;
-  capabilityJson: T extends 'attack'
-    ? DatabaseAttackData
-    : T extends 'modifier'
-      ? DatabaseModifierData
-      : DatabasePermanentStatData;
-};

@@ -4,7 +4,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CapabilityType, OriginType, Target } from '@/services/game-data';
 import { useStore } from '@/store';
-import { Attribute } from '@/types';
+import { AttackScalingProperty, Attribute, CharacterStat, DamageType } from '@/types';
 
 import { BaseBuffCanvasItem, BuffCanvasItem } from './BuffCanvasItem';
 
@@ -26,14 +26,24 @@ beforeAll(() => {
 const commonAttackProperties = {
   characterId: 1001,
   entityId: 1001,
+  skillId: 1,
   iconUrl: '',
   characterIconUrl: '',
   description: '',
   characterName: 'Rover',
-  capabilityType: CapabilityType.ATTACK,
-  attribute: Attribute.SPECTRO,
-  damageInstances: [],
   parameters: [] as [],
+  capabilityJson: {
+    type: CapabilityType.ATTACK,
+    damageInstances: [
+      {
+        motionValue: 1,
+        tags: [],
+        attribute: Attribute.SPECTRO,
+        damageType: DamageType.BASIC_ATTACK,
+        scalingStat: AttackScalingProperty.ATK,
+      },
+    ],
+  },
 };
 
 const MOCK_ATTACKS = [
@@ -63,42 +73,52 @@ const MOCK_ATTACKS = [
   },
 ];
 
-const makeBuff = (x: number, w: number, withStackConfig = false) => ({
-  instanceId: 'buff-1',
-  id: 10,
-  characterId: 1001,
-  entityId: 701,
-  name: 'ATK Buff',
-  parentName: 'Weapon',
-  description: 'Increases ATK',
-  characterName: 'Rover',
-  originType: OriginType.WEAPON,
-  capabilityType: CapabilityType.MODIFIER,
-  target: Target.TEAM,
-  modifiedStats: [],
-  parameters: [
-    {
-      id: '0',
-      minimum: 0,
-      maximum: 100,
-      value: withStackConfig ? undefined : 50,
-      valueConfiguration: withStackConfig
-        ? Array.from({ length: w }, (_, index) => (index + 1) * 10)
-        : undefined,
+const makeBuff = (x: number, w: number, withStackConfig = false) =>
+  ({
+    instanceId: 'buff-1',
+    id: 10,
+    characterId: 1001,
+    entityId: 701,
+    skillId: 1,
+    name: 'ATK Buff',
+    parentName: 'Weapon',
+    description: 'Increases ATK',
+    characterName: 'Rover',
+    originType: OriginType.WEAPON,
+    capabilityJson: {
+      type: CapabilityType.MODIFIER,
+      modifiedStats: [
+        {
+          target: Target.TEAM,
+          stat: CharacterStat.DAMAGE_BONUS,
+          value: 0.1,
+          tags: ['all'],
+        },
+      ],
     },
-  ],
-  x,
-  y: 0,
-  w,
-  h: 1,
-  iconUrl: '',
-  characterIconUrl: '',
-});
+    parameters: [
+      {
+        id: '0',
+        minimum: 0,
+        maximum: 100,
+        value: withStackConfig ? undefined : 50,
+        valueConfiguration: withStackConfig
+          ? Array.from({ length: w }, (_, index) => (index + 1) * 10)
+          : undefined,
+      },
+    ],
+    x,
+    y: 0,
+    w,
+    h: 1,
+    iconUrl: '',
+    characterIconUrl: '',
+  }) as any;
 
 beforeEach(() => {
   useStore.setState({ updateBuffLayout: originalUpdateBuffLayout });
   mockUseTeamAttackInstances.mockReturnValue({
-    attacks: [...MOCK_ATTACKS],
+    attacks: [...MOCK_ATTACKS] as any,
     isLoading: false,
     isError: false,
   });

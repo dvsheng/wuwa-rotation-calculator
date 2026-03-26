@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ParameterInstance } from '@/schemas/rotation';
-import type { GameDataNumberNode, GameDataUserNumber } from '@/services/game-data';
+import type {
+  NumberNode as GameDataNumberNode,
+  UserResolvableNumber,
+} from '@/services/game-data';
 import type { NumberNode } from '@/services/rotation-calculator/core/resolve-runtime-number';
 import { CharacterStat } from '@/types';
 
@@ -12,7 +15,7 @@ const parameterNode = (
   minimum?: number,
   maximum?: number,
   scale?: number,
-): GameDataUserNumber => ({
+): UserResolvableNumber => ({
   type: 'userParameterizedNumber',
   parameterId,
   scale,

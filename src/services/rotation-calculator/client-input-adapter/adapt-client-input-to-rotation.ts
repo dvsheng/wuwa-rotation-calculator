@@ -7,11 +7,13 @@ import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import type { Team as ClientTeam } from '@/schemas/team';
 import type {
   Attack,
-  GameDataStatParameterizedNumber,
+  NumberNode as GameDataNumberNode,
+  StatParameterizedNumber as GameDataStatParameterizedNumber,
   Modifier,
   PermanentStat,
 } from '@/services/game-data';
-import { getEchoStats, isGameDataStatParameterizedNumber } from '@/services/game-data';
+import { getEchoStats, isStatParameterizedNumber } from '@/services/game-data';
+import type { ResolveRefineScalableNumber } from '@/services/game-data/database-type-adapters';
 import { CharacterStat, Tag } from '@/types';
 import type {
   CharacterAttack,
@@ -107,6 +109,11 @@ export type ResolveStatParameterizedType<T> = T extends GameDataStatParameterize
       ? { [K in keyof T]: ResolveStatParameterizedType<T[K]> }
       : T;
 
+type ResolvedGameDataNumberNode = ResolveUserParameterizedType<
+  ResolveRefineScalableNumber<GameDataNumberNode>
+>;
+type RuntimeNumberNode = TaggedStatValue<StatMeta>['value'];
+
 /**
  * Resolves statParameterizedNumber nodes in a value tree to runtime stat references.
  *
@@ -116,22 +123,24 @@ export type ResolveStatParameterizedType<T> = T extends GameDataStatParameterize
  * - Recursively processes arrays and objects
  * - Preserves all other values
  */
+export function resolveStatReferences(
+  value: ResolvedGameDataNumberNode,
+  index: number,
+): RuntimeNumberNode;
 export function resolveStatReferences<T>(
   value: T,
   index: number,
-): ResolveStatParameterizedType<T> {
-  if (isGameDataStatParameterizedNumber(value)) {
+): ResolveStatParameterizedType<T>;
+export function resolveStatReferences(value: unknown, index: number) {
+  if (isStatParameterizedNumber(value)) {
     return {
-      type: 'statParameterizedNumber',
-      stat: value.stat,
+      ...value,
       characterIndex: value.resolveWith === 'self' ? index : undefined,
-    } as ResolveStatParameterizedType<T>;
+    };
   }
 
   if (Array.isArray(value)) {
-    return value.map((item) =>
-      resolveStatReferences(item, index),
-    ) as ResolveStatParameterizedType<T>;
+    return value.map((item) => resolveStatReferences(item, index));
   }
 
   if (typeof value === 'object' && value !== null) {
@@ -139,10 +148,10 @@ export function resolveStatReferences<T>(
     for (const [key, nestedValue] of Object.entries(value as Record<string, unknown>)) {
       resolved[key] = resolveStatReferences(nestedValue, index);
     }
-    return resolved as ResolveStatParameterizedType<T>;
+    return resolved;
   }
 
-  return value as ResolveStatParameterizedType<T>;
+  return value;
 }
 
 /**
@@ -175,16 +184,20 @@ const resolveModifierTarget = (
  * Attaches the modifier's name and description to each stat value as StatMeta.
  */
 export const toRotationModifier = (
-  modifier: ModifierInstance & ResolveUserParameterizedType<Modifier>,
+  modifier: ModifierInstance &
+    ResolveUserParameterizedType<ResolveRefineScalableNumber<Modifier>>,
   attack: Pick<AttackInstance, 'characterId'>,
   characterIdToSlotNumberMap: Record<number, number>,
 ): Array<RotationModifier<StatMeta>> => {
   const characterSlotNumber = characterIdToSlotNumberMap[modifier.characterId];
   const activeCharacterSlotNumber = characterIdToSlotNumberMap[attack.characterId];
 
-  const statsByTarget = Object.groupBy(modifier.modifiedStats, (stat) => stat.target);
+  const statsByTarget = Object.groupBy(
+    modifier.capabilityJson.modifiedStats,
+    (stat) => stat.target,
+  );
 
-  return Object.entries(statsByTarget).map(([target, statsForTarget]) => {
+  return Object.entries(statsByTarget).flatMap(([target, statsForTarget]) => {
     const modifiedStats = Object.groupBy(
       statsForTarget.map((stat) => ({
         ...stat,
@@ -211,14 +224,17 @@ export const toRotationModifier = (
  * Attaches the stat's name and description as StatMeta.
  */
 export const toRotationPermanentStat = (
-  stat: ResolveUserParameterizedType<PermanentStat>,
+  stat: ResolveRefineScalableNumber<PermanentStat>,
   characterIndex: number,
 ): TaggedStatValue<StatMeta> & { stat: CharacterStat | EnemyStat } => {
+  const resolvedStat = resolveUserParameterizedValues(stat);
+
   return {
-    ...stat,
-    value: resolveStatReferences(stat.value, characterIndex),
-    name: stat.name,
-    description: stat.description ?? '',
+    stat: resolvedStat.capabilityJson.stat,
+    tags: resolvedStat.capabilityJson.tags,
+    value: resolveStatReferences(resolvedStat.capabilityJson.value, characterIndex),
+    name: resolvedStat.name,
+    description: resolvedStat.description ?? '',
   };
 };
 
@@ -227,14 +243,24 @@ export const toRotationPermanentStat = (
  */
 export const toRotationAttack = (
   instance: AttackInstance &
-    ResolveUserParameterizedType<Attack> & {
+    ResolveUserParameterizedType<ResolveRefineScalableNumber<Attack>> & {
       modifiers: Array<RotationModifier<StatMeta>>;
     },
   characterIdToSlotNumberMap: Record<number, number>,
 ): CharacterAttack => {
   return {
     characterIndex: characterIdToSlotNumberMap[instance.characterId],
-    damageInstances: instance.damageInstances,
+    damageInstances: instance.capabilityJson.damageInstances.map((damageInstance) => ({
+      ...damageInstance,
+      tags: [
+        ...new Set([
+          ...damageInstance.tags,
+          instance.name,
+          damageInstance.attribute,
+          damageInstance.damageType,
+        ]),
+      ],
+    })),
   };
 };
 

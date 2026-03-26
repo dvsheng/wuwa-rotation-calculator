@@ -2,8 +2,8 @@ import { Link } from '@tanstack/react-router';
 import { ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 
-import { useEntity } from '@/hooks/useEntities';
-import type { DetailedEntity } from '@/hooks/useEntities';
+import { useEntities, useEntityCapabilities } from '@/hooks/useEntities';
+import type { EntityListRow } from '@/services/game-data';
 import { EntityType } from '@/services/game-data';
 
 import { EntityIcon } from '../common/EntityIcon';
@@ -15,25 +15,21 @@ import { Text } from '../ui/typography';
 import { BySkillView } from './BySkillView';
 import { ByTypeView } from './ByTypeView';
 
-type GroupMode = 'skill' | 'type';
+const TYPE_VIEW = 'type';
+const SKILL_VIEW = 'skill';
 
-type Entity = DetailedEntity['entity'];
+export const AdminEntity = ({ id }: { id: number }) => {
+  const { data: capabilities } = useEntityCapabilities(id);
+  const { data: entities } = useEntities({});
 
-export const AdminEntity = ({
-  id,
-  capabilityId,
-}: {
-  id: number;
-  capabilityId?: number;
-}) => {
-  const { data } = useEntity(id);
-  const supportsBySkill = data.entity.type === EntityType.CHARACTER;
-  const [groupMode, setGroupMode] = useState<GroupMode>(
-    supportsBySkill ? 'skill' : 'type',
-  );
-  const activeGroupMode: GroupMode = supportsBySkill ? groupMode : 'type';
+  const [view, setView] = useState(TYPE_VIEW);
 
-  const { skills } = data.entity;
+  const entity = entities.find(({ id: entityId }) => entityId === id);
+
+  if (!entity) {
+    return;
+  }
+  const shouldShowSkillView = entity.type === EntityType.CHARACTER;
   return (
     <ScrollArea className="h-full min-w-0">
       <Stack className="mx-auto w-6xl shrink-0" gap="panel">
@@ -49,45 +45,33 @@ export const AdminEntity = ({
             Entities
           </Link>
           <ChevronRight className="text-muted-foreground size-4" />
-          <Text variant="bodySm">{data.entity.name}</Text>
+          <Text variant="bodySm">{entity.name}</Text>
         </Row>
         <Row justify="between">
-          <AdminEntityHeader entity={data.entity} />
-          {supportsBySkill && (
+          <AdminEntityHeader entity={entity} />
+          {shouldShowSkillView && (
             <ToggleGroup
               type="single"
               variant="outline"
-              value={groupMode}
-              onValueChange={(value) => {
-                if (value) setGroupMode(value as GroupMode);
-              }}
+              value={view}
+              onValueChange={setView}
             >
-              <ToggleGroupItem value="skill">By Skill</ToggleGroupItem>
-              <ToggleGroupItem value="type">By Type</ToggleGroupItem>
+              <ToggleGroupItem value={SKILL_VIEW}>By Skill</ToggleGroupItem>
+              <ToggleGroupItem value={TYPE_VIEW}>By Type</ToggleGroupItem>
             </ToggleGroup>
           )}
         </Row>
-        {activeGroupMode === 'skill' ? (
-          <BySkillView
-            skills={skills}
-            entityId={id}
-            selectedCapabilityId={capabilityId}
-          />
+        {view === SKILL_VIEW ? (
+          <BySkillView capabilities={capabilities} />
         ) : (
-          <ByTypeView
-            skills={skills}
-            entityId={id}
-            selectedCapabilityId={capabilityId}
-          />
+          <ByTypeView capabilities={capabilities} />
         )}
       </Stack>
     </ScrollArea>
   );
 };
 
-const AdminEntityHeader = (properties: {
-  entity: Pick<Entity, 'name' | 'iconUrl' | 'description'>;
-}) => {
+const AdminEntityHeader = (properties: { entity: EntityListRow }) => {
   const { entity } = properties;
   return (
     <Row gap="component" align="center">

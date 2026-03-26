@@ -1,4 +1,5 @@
 import { useDragOperation, useDraggable } from '@dnd-kit/react';
+import { uniq } from 'es-toolkit';
 import { SwatchBook } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
 
@@ -19,9 +20,17 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Text } from '@/components/ui/typography';
-import type { DetailedAttack, DetailedModifier } from '@/hooks/useTeamDetails';
-import { useTeamDetails } from '@/hooks/useTeamDetails';
-import { getChartColorByIndex } from '@/lib/utils';
+import type {
+  CharacterAttack,
+  CharacterCapability,
+  CharacterModifier,
+} from '@/hooks/useTeamDetails';
+import {
+  isDetailedAttack,
+  isDetailedModifier,
+  useTeamDetails,
+} from '@/hooks/useTeamDetails';
+import { cn, getChartColorByIndex } from '@/lib/utils';
 import type { Capability } from '@/schemas/rotation';
 import { Target } from '@/services/game-data';
 import type { OriginType as CapabilityOriginType } from '@/services/game-data';
@@ -80,15 +89,12 @@ interface CapabilityGroupProperties {
 }
 
 interface CapabilityCardProperties {
-  capability: DetailedAttack | DetailedModifier;
+  capability: CharacterAttack | CharacterModifier;
   accentColor?: string;
   onClick?: () => void;
 }
 
-const matchesSearchText = (
-  capability: DetailedAttack | DetailedModifier,
-  searchText: string,
-) => {
+const matchesSearchText = (capability: CharacterCapability, searchText: string) => {
   if (!searchText) return true;
 
   const normalizedSearchText = searchText.trim().toLowerCase();
@@ -179,7 +185,7 @@ const CapabilityCard = ({
   const id = useId();
   const { ref, isDragging } = useDraggable<SidebarCapabilityDragData>({
     id,
-    type: capability.capabilityType,
+    type: capability.capabilityJson.type,
     feedback: 'clone',
     data: {
       kind: 'sidebar-capability',
@@ -194,7 +200,7 @@ const CapabilityCard = ({
         variant="outline"
         size="xs"
         data-testid={`sidebar-capability-card-${capability.id}`}
-        data-capability-type={capability.capabilityType}
+        data-capability-type={capability.capabilityJson.type}
         className={cn(
           'draggable bg-background size-28 flex-col border-l-4',
           onClick && 'cursor-pointer',
@@ -226,22 +232,25 @@ export const CapabilitySidebar = ({
   const [searchText, setSearchText] = useState('');
   const paletteViewportReference = useRef<HTMLDivElement>(null);
   const dragOperation = useDragOperation();
-  const { attacks, buffs } = useTeamDetails();
-  const characterNames = [
-    ...new Set([
-      ...attacks.map((attack) => attack.characterName),
-      ...buffs.map((buff) => buff.characterName),
-    ]),
-  ].toSorted((left, right) => left.localeCompare(right));
+  const { capabilities } = useTeamDetails();
+  useEffect(() => {
+    if (dragOperation.source?.data.kind !== 'sidebar-capability') return;
+    if (paletteViewportReference.current) {
+      paletteViewportReference.current.scrollLeft = 0;
+    }
+  }, [dragOperation]);
+
+  const characterNames = uniq(capabilities.map((c) => c.characterName));
 
   const matchesCharacterFilter = (characterName: string) =>
     !selectedCharacter || characterName === selectedCharacter;
-  const matchesCapabilityFilters = (capability: DetailedAttack | DetailedModifier) =>
+  const matchesCapabilityFilters = (capability: CharacterCapability) =>
     matchesCharacterFilter(capability.characterName) &&
     matchesSearchText(capability, searchText);
 
-  const filteredAttacks = attacks.filter((attack) => matchesCapabilityFilters(attack));
-  const filteredBuffs = buffs.filter((buff) => matchesCapabilityFilters(buff));
+  const filteredCapabilities = capabilities.filter((c) => matchesCapabilityFilters(c));
+  const filteredAttacks = filteredCapabilities.filter((c) => isDetailedAttack(c));
+  const filteredBuffs = filteredCapabilities.filter((c) => isDetailedModifier(c));
   const attacksByCharacter = Object.groupBy(
     filteredAttacks,
     (attack) => attack.characterName,
@@ -250,19 +259,6 @@ export const CapabilitySidebar = ({
     filteredBuffs,
     (buff) => buff.characterName,
   );
-  const orderedAttackCharacterNames = characterNames.filter(
-    (characterName) => (attacksByCharacter[characterName]?.length ?? 0) > 0,
-  );
-  const orderedBuffCharacterNames = characterNames.filter(
-    (characterName) => (filteredBuffsByCharacter[characterName]?.length ?? 0) > 0,
-  );
-
-  useEffect(() => {
-    if (dragOperation.source?.data.kind !== 'sidebar-capability') return;
-    if (paletteViewportReference.current) {
-      paletteViewportReference.current.scrollLeft = 0;
-    }
-  }, [dragOperation]);
 
   return (
     <Stack fullHeight fullWidth gap="component" className="bg-muted/30">
@@ -302,7 +298,7 @@ export const CapabilitySidebar = ({
           description="Use Attacks to build the rotation order. Click a card to add it or drag it into a specific spot on the top lane, then it becomes part of the timeline and contributes damage in Results. Attack accents are derived from the shared chart palette and stay consistent for each origin type."
           legend={ATTACK_COLOR_LEGEND}
         >
-          {orderedAttackCharacterNames.map((characterName) => {
+          {characterNames.map((characterName) => {
             const characterAttacks = attacksByCharacter[characterName] ?? [];
             const orderedAttacks = characterAttacks.toSorted(
               (a, b) =>
@@ -332,7 +328,7 @@ export const CapabilitySidebar = ({
           description="Use Buffs to place modifiers under the attacks they should influence. Click to add one with a default placement or drag it onto a specific span, then it will apply to the attacks covered by that layout."
           legend={BUFF_COLOR_LEGEND}
         >
-          {orderedBuffCharacterNames.map((characterName) => {
+          {characterNames.map((characterName) => {
             const characterBuffs = filteredBuffsByCharacter[characterName] ?? [];
             const buffsByOrigin = Object.groupBy(
               characterBuffs,
@@ -348,8 +344,10 @@ export const CapabilitySidebar = ({
               .flatMap((origin) => buffsByOrigin[origin] ?? [])
               .toSorted(
                 (left, right) =>
-                  TARGET_ORDER.indexOf(left.target) -
-                    TARGET_ORDER.indexOf(right.target) ||
+                  TARGET_ORDER.indexOf(left.capabilityJson.modifiedStats[0].target) -
+                    TARGET_ORDER.indexOf(
+                      right.capabilityJson.modifiedStats[0].target,
+                    ) ||
                   left.name.localeCompare(right.name) ||
                   left.id - right.id,
               );
@@ -360,7 +358,9 @@ export const CapabilitySidebar = ({
                   <CapabilityCard
                     key={buff.id}
                     capability={buff}
-                    accentColor={BUFF_ACCENT_COLORS[buff.target]}
+                    accentColor={
+                      BUFF_ACCENT_COLORS[buff.capabilityJson.modifiedStats[0].target]
+                    }
                     onClick={onClickBuff ? () => onClickBuff(buff) : undefined}
                   />
                 ))}

@@ -1,86 +1,97 @@
-import { compact } from 'es-toolkit';
+import { compact, startCase } from 'es-toolkit';
 import { useState } from 'react';
 
+import { CapabilityType } from '@/services/game-data';
+import type { Capability } from '@/services/game-data';
+
 import {
-  CapabilityTypeAccordion,
-  capabilityTypeLabel,
-  groupCapabilitiesByType,
-  sortSkills,
-  typeOrder,
-} from './AdminEntityViewShared';
-import type { Skill } from './CapabilityItem';
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '../ui/accordion';
+import { Text } from '../ui/typography';
+
+import { CapabilityList, typeOrder } from './AdminEntityViewShared';
 import { TableOfContentsSidebar } from './TableOfContentsSidebar';
 
-export const ByTypeView = ({
-  skills,
-  entityId,
-  selectedCapabilityId,
-}: {
-  skills: Array<Skill>;
-  entityId: number;
-  selectedCapabilityId?: number;
-}) => {
-  const sortedSkills = sortSkills(skills);
-  const allCapabilities = sortedSkills.flatMap((skill) =>
-    skill.capabilities.map((capability) => ({
-      capability,
-      skill,
-      defaultAlternativeDefinition: 'base' as const,
-      isAlternativePlacement: false,
-    })),
+export const ByTypeView = ({ capabilities }: { capabilities: Array<Capability> }) => {
+  const groups = Object.groupBy(
+    capabilities,
+    (capability) => capability.capabilityJson.type,
   );
-  const groups = groupCapabilitiesByType(allCapabilities);
-  const defaultOpenValues = typeOrder.filter(
-    (type) => (groups.get(type)?.length ?? 0) > 0,
+  const [openTypeValues, setOpenTypeValues] = useState<Array<string>>(
+    Object.values(CapabilityType),
   );
-  const [openTypeValues, setOpenTypeValues] =
-    useState<Array<string>>(defaultOpenValues);
-  const selectedTypeValue = selectedCapabilityId
-    ? allCapabilities.find(({ capability }) => capability.id === selectedCapabilityId)
-        ?.capability.capabilityJson.type
-    : undefined;
-  const effectiveOpenTypeValues = selectedTypeValue
-    ? [...new Set([...openTypeValues, selectedTypeValue])]
-    : openTypeValues;
   const tocItems = compact(
-    typeOrder.map((type) => {
-      const entries = groups.get(type) ?? [];
-      if (entries.length === 0) {
-        return;
-      }
-      return {
-        id: `type-${type}`,
-        label: capabilityTypeLabel[type],
-        accordionValue: type,
-      };
-    }),
+    Object.entries(groups)
+      .filter(([_, entries]) => entries.length > 0)
+      .map(([type, _]) => {
+        return {
+          id: `type-${type}`,
+          label: startCase(type),
+          accordionValue: type,
+        };
+      }),
   );
 
   return (
     <div className="gap-panel flex flex-col lg:flex-row lg:items-start">
-      <TableOfContentsSidebar
-        items={tocItems}
-        onItemSelect={(item) => {
-          if (!item.accordionValue) return;
-          const accordionValue = item.accordionValue;
-          setOpenTypeValues((currentValues) =>
-            currentValues.includes(accordionValue)
-              ? currentValues
-              : [...currentValues, accordionValue],
-          );
-        }}
-      />
+      <TableOfContentsSidebar items={tocItems} />
       <div className="min-w-0 flex-1">
         <CapabilityTypeAccordion
           groups={groups}
-          entityId={entityId}
-          idPrefix="type"
-          selectedCapabilityId={selectedCapabilityId}
+          entityId={capabilities[0].entityId}
           showSkillIcon
-          value={effectiveOpenTypeValues}
+          value={openTypeValues}
           onValueChange={setOpenTypeValues}
         />
       </div>
     </div>
+  );
+};
+
+const CapabilityTypeAccordion = ({
+  groups,
+  showCapabilityTypeBadge = false,
+  showSkillIcon = false,
+  value,
+  onValueChange,
+}: {
+  groups: Partial<Record<CapabilityType, Array<Capability>>>;
+  entityId: number;
+  showCapabilityTypeBadge?: boolean;
+  showSkillIcon?: boolean;
+  value?: Array<string>;
+  onValueChange?: (value: Array<string>) => void;
+}) => {
+  return (
+    <Accordion type="multiple" value={value} onValueChange={onValueChange}>
+      {typeOrder.map((type) => {
+        const capabilities = groups[type];
+        if (!capabilities || capabilities.length === 0) return;
+        return (
+          <AccordionItem
+            key={type}
+            id={`type-${type}`}
+            value={type}
+            disabled={capabilities.length === 0}
+          >
+            <AccordionTrigger>
+              <Text variant="title">
+                {startCase(type)} ({capabilities.length})
+              </Text>
+            </AccordionTrigger>
+            <AccordionContent>
+              <CapabilityList
+                entries={capabilities}
+                showCapabilityTypeBadge={showCapabilityTypeBadge}
+                showSkillIcon={showSkillIcon}
+              />
+            </AccordionContent>
+          </AccordionItem>
+        );
+      })}
+    </Accordion>
   );
 };

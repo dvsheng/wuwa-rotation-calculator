@@ -1,5 +1,5 @@
 import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
-import type { DetailedAttack, DetailedModifier } from '@/hooks/useTeamDetails';
+import type { CharacterAttack, CharacterModifier } from '@/hooks/useTeamDetails';
 
 interface DragPreviewData {
   characterIconUrl?: string;
@@ -9,7 +9,7 @@ interface DragPreviewData {
 
 export interface SidebarCapabilityDragData {
   kind: 'sidebar-capability';
-  capability: DetailedAttack | DetailedModifier;
+  capability: CharacterAttack | CharacterModifier;
 }
 
 export interface CanvasAttackDragData extends DragPreviewData {

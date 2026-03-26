@@ -27,7 +27,13 @@ vi.mock('@dnd-kit/react', () => ({
   useDragOperation: mockUseDragOperation,
 }));
 
-vi.mock('@/hooks/useTeamDetails');
+vi.mock('@/hooks/useTeamDetails', async () => {
+  const actual = await vi.importActual('@/hooks/useTeamDetails');
+  return {
+    ...actual,
+    useTeamDetails: vi.fn(),
+  };
+});
 
 const { useDraggable } = await import('@dnd-kit/react');
 const { useTeamDetails } = await import('@/hooks/useTeamDetails');
@@ -44,13 +50,17 @@ const makeAttack = (
     id,
     name,
     originType,
-    capabilityType: CapabilityType.ATTACK,
     characterId: 1,
     characterName,
     entityId: 1,
+    skillId: 1,
     parentName: 'Skill',
     description: '',
-    damageInstances: [],
+    parameters: [],
+    capabilityJson: {
+      type: CapabilityType.ATTACK,
+      damageInstances: [],
+    },
   }) as any;
 
 const makeBuff = (
@@ -63,15 +73,25 @@ const makeBuff = (
   ({
     id,
     name,
-    target,
     originType,
-    capabilityType: CapabilityType.MODIFIER,
     characterId: 1,
     characterName,
     entityId: 1,
+    skillId: 1,
     parentName: 'Passive',
     description: '',
-    modifiedStats: [],
+    parameters: [],
+    capabilityJson: {
+      type: CapabilityType.MODIFIER,
+      modifiedStats: [
+        {
+          target,
+          stat: 'damageBonus',
+          value: 0.1,
+          tags: ['all'],
+        },
+      ],
+    },
   }) as any;
 
 const getSectionCapabilityNames = (sectionName: 'Attacks' | 'Buffs') => {
@@ -116,8 +136,7 @@ describe('CapabilitySidebar', () => {
       target: undefined,
     });
     mockUseTeamDetails.mockReturnValue({
-      attacks: [],
-      buffs: [],
+      capabilities: [],
       isLoading: false,
       isError: false,
     });
@@ -125,13 +144,12 @@ describe('CapabilitySidebar', () => {
 
   it('sorts attacks by origin and then by name', () => {
     mockUseTeamDetails.mockReturnValue({
-      attacks: [
+      capabilities: [
         makeAttack(1, 'Zeta Skill', OriginType.RESONANCE_SKILL),
         makeAttack(2, 'Beta Slash', OriginType.NORMAL_ATTACK),
         makeAttack(3, 'Echo Burst', OriginType.ECHO),
         makeAttack(4, 'Alpha Slash', OriginType.NORMAL_ATTACK),
       ],
-      buffs: [],
       isLoading: false,
       isError: false,
     });
@@ -148,8 +166,7 @@ describe('CapabilitySidebar', () => {
 
   it('sorts buffs by target order', () => {
     mockUseTeamDetails.mockReturnValue({
-      attacks: [],
-      buffs: [
+      capabilities: [
         makeBuff(1, 'Enemy Debuff', Target.ENEMY),
         makeBuff(2, 'Team Buff', Target.TEAM),
         makeBuff(3, 'Self Buff', Target.SELF),
@@ -171,8 +188,10 @@ describe('CapabilitySidebar', () => {
 
   it('configures palette drags to use clone feedback', () => {
     mockUseTeamDetails.mockReturnValue({
-      attacks: [makeAttack(1, 'Basic Attack', OriginType.NORMAL_ATTACK)],
-      buffs: [makeBuff(2, 'Team Buff', Target.TEAM)],
+      capabilities: [
+        makeAttack(1, 'Basic Attack', OriginType.NORMAL_ATTACK),
+        makeBuff(2, 'Team Buff', Target.TEAM),
+      ],
       isLoading: false,
       isError: false,
     });
@@ -188,8 +207,7 @@ describe('CapabilitySidebar', () => {
 
   it('resets palette horizontal scroll while dragging a capability from the sidebar', () => {
     mockUseTeamDetails.mockReturnValue({
-      attacks: [makeAttack(1, 'Basic Attack', OriginType.NORMAL_ATTACK)],
-      buffs: [],
+      capabilities: [makeAttack(1, 'Basic Attack', OriginType.NORMAL_ATTACK)],
       isLoading: false,
       isError: false,
     });

@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 
-import type { Sequence } from '@/services/game-data';
+import type { Capability, Sequence } from '@/services/game-data';
 import {
   resolveAlternativeDefinitions,
   sequenceToNumber,
@@ -16,17 +16,11 @@ import { Textarea } from '../ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group';
 import { Text } from '../ui/typography';
 
-import type { Capability } from './CapabilityItem';
 import { ReportCapabilityIssueDialog } from './ReportCapabilityIssueDialog';
-
-type CardCapability = Pick<
-  Capability,
-  'id' | 'name' | 'description' | 'capabilityJson'
->;
 
 type AlternativeDefinitionValue = 'base' | Sequence;
 
-const getAlternativeDefinitions = (capability: CardCapability) => {
+const getAlternativeDefinitions = (capability: Capability) => {
   if (capability.capabilityJson.type === 'permanent_stat') {
     return [];
   }
@@ -66,12 +60,12 @@ export const CapabilityCard = ({
   titleSuffix,
   children,
 }: {
-  capability: CardCapability;
+  capability: Capability;
   defaultAlternativeDefinition?: AlternativeDefinitionValue;
   entityId?: number;
   titlePrefix?: ReactNode;
   titleSuffix?: ReactNode;
-  children: (capability: CardCapability) => ReactNode;
+  children: (capability: Capability) => ReactNode;
 }) => {
   const [isJsonView, setIsJsonView] = useState(false);
   const alternativeDefinitions = getAlternativeDefinitions(capability);

@@ -1,10 +1,8 @@
 import { clamp } from 'es-toolkit';
 
 import type { ParameterInstance } from '@/schemas/rotation';
-import type {
-  GameDataUserNumber,
-  GameDataUserParameterizedNumberNode,
-} from '@/services/game-data';
+import { isResolvedUserParameterizedNumber } from '@/services/game-data';
+import type { UserParameterizedNumber } from '@/services/game-data';
 
 /**
  * Converts user-parameterized number types to plain numbers.
@@ -34,7 +32,7 @@ import type {
  */
 export type ResolveUserParameterizedType<T> =
   // convert first (before object recursion)
-  T extends GameDataUserNumber
+  T extends UserParameterizedNumber
     ? number
     : T extends number
       ? number
@@ -43,18 +41,6 @@ export type ResolveUserParameterizedType<T> =
         : T extends object
           ? { [K in keyof T]: ResolveUserParameterizedType<T[K]> }
           : T;
-
-/**
- * Type guard for userParameterizedNumber nodes in the GameDataNumberNode format.
- */
-const isUserParameterizedNode = (
-  value: unknown,
-): value is GameDataUserParameterizedNumberNode =>
-  typeof value === 'object' &&
-  value !== null &&
-  'type' in value &&
-  (value as Record<string, unknown>).type === 'userParameterizedNumber' &&
-  'parameterId' in value;
 
 /**
  * Resolves userParameterizedNumber nodes in a GameDataNumberNode tree to plain numbers
@@ -75,7 +61,7 @@ export function resolveUserParameterizedValues<T>(
   currentParameterValues?: Record<string, number>,
 ): ResolveUserParameterizedType<T> {
   // Handle userParameterizedNumber node - resolve to plain number
-  if (isUserParameterizedNode(value)) {
+  if (isResolvedUserParameterizedNumber(value)) {
     if (!currentParameterValues) {
       throw new Error(
         'Encountered userParameterizedNumber without parameterValues in any parent object',

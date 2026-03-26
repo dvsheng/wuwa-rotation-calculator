@@ -74,18 +74,17 @@ export const BuffCanvasItem = ({ buff, onRemove }: BuffCanvasItemProperties) => 
   const { attacks } = useTeamAttackInstances();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const isBuffConfigurable = buff.parameters && buff.parameters.length > 0;
-  const hasIncompleteConfiguration =
-    buff.parameters?.some((parameter) => {
-      const valueMissing = isNil(parameter.value) || Number.isNaN(parameter.value);
-      const configMissingOrIncomplete =
-        !parameter.valueConfiguration ||
-        parameter.valueConfiguration.some(
-          (v) => v === 0 || isNil(v) || Number.isNaN(v),
-        ) ||
-        parameter.valueConfiguration.length !== buff.w;
-      return valueMissing && configMissingOrIncomplete;
-    }) ?? false;
+  const isBuffConfigurable = buff.parameters.length > 0;
+  const hasIncompleteConfiguration = buff.parameters.some((parameter) => {
+    const valueMissing = isNil(parameter.value) || Number.isNaN(parameter.value);
+    const configMissingOrIncomplete =
+      !parameter.valueConfiguration ||
+      parameter.valueConfiguration.some(
+        (v) => v === 0 || isNil(v) || Number.isNaN(v),
+      ) ||
+      parameter.valueConfiguration.length !== buff.w;
+    return valueMissing && configMissingOrIncomplete;
+  });
 
   const openConfiguration = () => {
     setIsDialogOpen(true);
@@ -107,7 +106,10 @@ export const BuffCanvasItem = ({ buff, onRemove }: BuffCanvasItemProperties) => 
             characterIconUrl={buff.characterIconUrl}
             iconUrl={buff.iconUrl}
             name={buff.name}
-            style={{ backgroundColor: BUFF_BACKGROUND_COLORS[buff.target] }}
+            style={{
+              backgroundColor:
+                BUFF_BACKGROUND_COLORS[buff.capabilityJson.modifiedStats[0].target],
+            }}
             className={cn(hasIncompleteConfiguration && 'border-warning')}
             actions={
               <>

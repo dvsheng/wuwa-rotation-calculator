@@ -1,12 +1,18 @@
+import { z } from 'zod';
+
 import type { EchoMainStatOptionType } from '@/schemas/echo';
-import type {
+import {
   AttackScalingProperty,
   Attribute,
   CharacterStat,
   DamageType,
   EnemyStat,
-  Tagged,
+  Tag,
 } from '@/types';
+
+import type { ResolveRefineScalableNumber } from './database-type-adapters';
+
+const USER_PARAMETER_KEYS = ['0', '1', '2'] as const;
 
 /**
  * Entity types supported in the database
@@ -59,7 +65,7 @@ export const SetEffectRequirement = {
   TWO: 2,
   THREE: 3,
   FIVE: 5,
-};
+} as const;
 
 export type SetEffectRequirement =
   (typeof SetEffectRequirement)[keyof typeof SetEffectRequirement];
@@ -97,110 +103,6 @@ export const OriginType = {
 
 export type OriginType = (typeof OriginType)[keyof typeof OriginType];
 
-export type AttackOriginType = Exclude<OriginType, 'Inherent Skill' | 'Base Stats'>;
-
-/**
- * Base properties for any capability (Attack, Modifier, PermanentStat)
- */
-export interface BaseCapability {
-  /** Unique identifier for the capability */
-  id: number;
-  /** Name of the capability */
-  name: string;
-  /** Where this capability originates from in an entity */
-  originType: OriginType;
-  /** The name of the parent skill or node (e.g., "Ground State Calibration"). */
-  parentName?: string;
-  /** Description of the capability */
-  description?: string;
-  capabilityType: CapabilityType;
-  /** Icon URL for this capability (coalesced from skill icon then entity icon) */
-  iconUrl?: string;
-}
-
-// ============================================================================
-// Game-data number types (after Tier 1 / refine-scalable resolution)
-//
-// All DatabaseLeafNumber values are plain `number` at this layer.
-// DatabaseUserNumber  → GameDataUserNumber  (bounds now plain numbers)
-// DatabaseNumberNode  → GameDataNumberNode  (same tree, no refine-scalable leaves)
-//
-// statParameterizedNumber still uses resolveWith: 'self' | 'enemy'; this is
-// resolved to a concrete characterIndex at rotation-enrich time.
-// ============================================================================
-
-/** A user-parameterized number node after refine-scalable values are resolved. */
-export interface GameDataUserParameterizedNumberNode {
-  type: 'userParameterizedNumber';
-  parameterId: '0' | '1' | '2';
-  scale?: number;
-  minimum?: number;
-  maximum?: number;
-}
-
-/**
- * Tier-1-or-Tier-2 number at the game-data layer.
- * All refine-scalable numbers have been resolved to plain numbers.
- */
-export type GameDataUserNumber = number | GameDataUserParameterizedNumberNode;
-
-/** A stat-parameterized reference at the game-data layer. */
-export interface GameDataStatParameterizedNumber {
-  type: 'statParameterizedNumber';
-  stat: CharacterStat | EnemyStat;
-  /** Resolved to a concrete characterIndex at enrich time. */
-  resolveWith: 'self' | 'enemy';
-}
-
-export const isGameDataStatParameterizedNumber = (
-  value: unknown,
-): value is GameDataStatParameterizedNumber =>
-  typeof value === 'object' &&
-  value !== null &&
-  'type' in value &&
-  (value as Record<string, unknown>).type === 'statParameterizedNumber' &&
-  'resolveWith' in value;
-
-/**
- * Full expression tree at the game-data layer.
- * All refine-scalable numbers are plain numbers; user params and stat refs
- * are still present and resolved in subsequent pipeline steps.
- */
-export type GameDataNumberNode<T = GameDataUserNumber> =
-  | T
-  | { type: 'sum'; operands: Array<GameDataNumberNode<T>> }
-  | { type: 'product'; operands: Array<GameDataNumberNode<T>> }
-  | {
-      type: 'clamp';
-      operand: T;
-      minimum: T;
-      maximum: T;
-    }
-  | {
-      type: 'conditional';
-      operand: T;
-      operator: '>' | '>=' | '<' | '<=';
-      threshold: T;
-      valueIfTrue: T;
-      valueIfFalse: T;
-    }
-  | GameDataStatParameterizedNumber;
-
-/**
- * Internal base for permanent stats.
- */
-export interface PermanentStatBase extends Tagged {
-  /** The specific stat being modified */
-  stat: CharacterStat | EnemyStat;
-  /** The value of the stat — a full expression tree (may reference character/enemy stats). */
-  value: GameDataNumberNode<number>;
-}
-
-/**
- * A permanent stat bonus, often from passive nodes, base stats, or equipment.
- */
-export type PermanentStat<T = {}> = PermanentStatBase & BaseCapability & T;
-
 /**
  * Defines the potential targets for a modifier.
  */
@@ -217,81 +119,245 @@ export const Target = {
 export type Target = (typeof Target)[keyof typeof Target];
 
 /**
- * A stat and its value on a character or enemy for a modifier, with its own target.
+ * Base properties for any capability (Attack, Modifier, PermanentStat)
  */
-export interface ModifierStat extends Tagged {
-  /** The entity this stat applies to */
-  target: Target;
-  /** The specific stat being modified */
-  stat: CharacterStat | EnemyStat;
-  /** The value — a full expression tree (may be stat-dependent or user-parameterized). */
-  value: GameDataNumberNode;
+export interface BaseCapability {
+  /** Unique identifier for the capability */
+  id: number;
+  /** Name of the capability */
+  name: string;
+  /** Where this capability originates from in an entity */
+  originType: OriginType;
+  /** The name of the parent skill or node (e.g., "Ground State Calibration"). */
+  parentName?: string;
+  /** Description of the capability */
+  description?: string;
+  /** Icon URL for this capability (coalesced from skill icon then entity icon) */
+  iconUrl?: string;
+  skillDescription?: string;
+  skillId: number;
+  entityId: number;
 }
 
+// ============================================================================
+// Tier 1 — Refine-scalable numbers
+// Resolved at game-data fetch time using the weapon's refinement level.
+// ============================================================================
+
 /**
- * Internal base for modifiers.
+ * A number that scales linearly with weapon refinement level.
+ * Resolves to: base + (refineLevel - 1) * increment
  */
-interface ModifierBase extends BaseCapability {
-  /** The list of stats modified by this effect, each with its own target */
-  modifiedStats: Array<ModifierStat>;
-}
+export const RefineScalableNumberSchema = z
+  .object({
+    base: z.number(),
+    increment: z.number(),
+  })
+  .strict();
+
+export type RefineScalableNumber = z.infer<typeof RefineScalableNumberSchema>;
+
+export const BaseNumberSchema = z.union([z.number(), RefineScalableNumberSchema]);
+
+export type BaseNumber = z.infer<typeof BaseNumberSchema>;
+
+// ============================================================================
+// Tier 2 — User-parameterized numbers (DatabaseUserNumber)
+// Wraps Tier 1. Resolved after the user provides parameter values via the UI.
+// The minimum/maximum bounds are Tier 1 numbers (refine-scalable supported)
+// and are enforced when user parameter values are resolved.
+// ============================================================================
+
+export const UserParameterizedNumberSchema = z
+  .object({
+    type: z.literal('userParameterizedNumber'),
+    parameterId: z.enum(USER_PARAMETER_KEYS),
+    scale: z.number().optional(),
+    minimum: BaseNumberSchema.optional(),
+    maximum: BaseNumberSchema.optional(),
+  })
+  .strict();
+
+export type UserParameterizedNumber = z.infer<typeof UserParameterizedNumberSchema>;
+
+/** A Tier-1-or-Tier-2 number: static, refine-scalable, or user-parameterized. */
+export const UserResolvableNumberSchema = z.union([
+  BaseNumberSchema,
+  UserParameterizedNumberSchema,
+]);
+
+export type UserResolvableNumber = z.infer<typeof UserResolvableNumberSchema>;
+
+// ============================================================================
+// Tier 3 — Full expression tree (DatabaseNumberNode)
+// Resolved during rotation calculation using the topological stat resolver.
+// DatabaseUserNumber is used in "constant" positions (CLAMP bounds, CONDITIONAL
+// threshold) so those scalars can themselves be user-parameterized.
+// ============================================================================
+
+export const StatParameterizedNumberSchema = z.object({
+  type: z.literal('statParameterizedNumber'),
+  stat: z.enum({ ...CharacterStat, ...EnemyStat }),
+  resolveWith: z.enum(['self', 'enemy']),
+});
+
+export type StatParameterizedNumber = z.infer<typeof StatParameterizedNumberSchema>;
+
+/**
+ * Full expression tree at the game-data layer.
+ * All refine-scalable numbers are plain numbers; user params and stat refs
+ * are still present and resolved in subsequent pipeline steps.
+ */
+export type NumberNode =
+  | StatParameterizedNumber
+  | UserResolvableNumber
+  | { type: 'sum'; operands: Array<NumberNode> }
+  | { type: 'product'; operands: Array<NumberNode> }
+  | {
+      type: 'clamp';
+      operand: NumberNode;
+      minimum: NumberNode;
+      maximum: NumberNode;
+    }
+  | {
+      type: 'conditional';
+      operator: '>' | '>=' | '<' | '<=';
+      operand: NumberNode;
+      threshold: NumberNode;
+      valueIfTrue: NumberNode;
+      valueIfFalse: NumberNode;
+    };
+
+export const NumberNodeSchema: z.ZodType<NumberNode> = z.lazy(() =>
+  z.union([
+    // Tier 2 leaf must come before the object-discriminated variants to allow
+    // z.union to match plain numbers and refine-scalable numbers first.
+    UserResolvableNumberSchema,
+    StatParameterizedNumberSchema,
+    z.object({ type: z.literal('sum'), operands: z.array(NumberNodeSchema) }),
+    z.object({
+      type: z.literal('product'),
+      operands: z.array(NumberNodeSchema),
+    }),
+    z.object({
+      type: z.literal('clamp'),
+      operand: NumberNodeSchema,
+      minimum: NumberNodeSchema,
+      maximum: NumberNodeSchema,
+    }),
+    z.object({
+      type: z.literal('conditional'),
+      operand: NumberNodeSchema,
+      operator: z.enum(['>', '>=', '<', '<=']),
+      threshold: NumberNodeSchema,
+      valueIfTrue: NumberNodeSchema,
+      valueIfFalse: NumberNodeSchema,
+    }),
+  ]),
+);
+
+// ============================================================================
+// Capability Schemas
+// ============================================================================
+
+export const AttackDamageInstanceSchema = z.object({
+  // motionValue is Tier 2 only — attack coefficients are never stat-dependent.
+  motionValue: UserResolvableNumberSchema,
+  /** The elemental attribute of this damage instance. Always required. */
+  attribute: z.enum(Attribute),
+  /** The damage type for this instance (e.g. basicAttack, resonanceSkill). */
+  damageType: z.enum(DamageType),
+  tags: z.array(z.enum(Tag)),
+  scalingStat: z.enum(AttackScalingProperty),
+});
+
+export type AttackDamageInstance = z.infer<typeof AttackDamageInstanceSchema>;
+
+const BaseAttackDataSchema = z
+  .object({
+    damageInstances: z.array(AttackDamageInstanceSchema),
+  })
+  .strict();
+
+export const AttackDataSchema = BaseAttackDataSchema.extend({
+  type: z.literal(CapabilityType.ATTACK),
+  alternativeDefinitions: z
+    .partialRecord(
+      z.enum(Sequence),
+      BaseAttackDataSchema.partial()
+        .extend({
+          description: z.string().optional(),
+        })
+        .strict(),
+    )
+    .optional(),
+}).strict();
+
+export type AttackData = z.infer<typeof AttackDataSchema>;
+
+const StatSchema = z.object({
+  stat: z.enum({ ...CharacterStat, ...EnemyStat }),
+  tags: z.array(z.string()),
+  value: NumberNodeSchema,
+});
+
+export const PermanentStatDataSchema = StatSchema.extend({
+  type: z.literal(CapabilityType.PERMANENT_STAT),
+}).strict();
+
+export type PermanentStatData = z.infer<typeof PermanentStatDataSchema>;
+
+const BaseModifierDataSchema = z
+  .object({
+    modifiedStats: z.array(
+      StatSchema.extend({
+        target: z.enum(Target),
+      }),
+    ),
+  })
+  .strict();
+
+export const ModifierDataSchema = BaseModifierDataSchema.extend({
+  type: z.literal(CapabilityType.MODIFIER),
+  alternativeDefinitions: z
+    .partialRecord(
+      z.enum(Sequence),
+      BaseModifierDataSchema.partial()
+        .extend({
+          description: z.string().optional(),
+        })
+        .strict(),
+    )
+    .optional(),
+}).strict();
+
+export type ModifierData = z.infer<typeof ModifierDataSchema>;
+
+export const CapabilityDataSchema = z.discriminatedUnion('type', [
+  AttackDataSchema,
+  PermanentStatDataSchema,
+  ModifierDataSchema,
+]);
+
+export type CapabilityData = z.infer<typeof CapabilityDataSchema>;
 
 /**
  * A temporary or conditional effect that modifies stats.
  */
-export type Modifier<T = {}> = ModifierBase & T;
-
-export interface AttackDamageInstance {
-  /** Motion value — Tier 2 only: fixed, refine-scalable, or user-parameterized. */
-  motionValue: GameDataUserNumber;
-  /** The elemental attribute of this damage instance. */
-  attribute: Attribute;
-  /** The damage type of this instance (e.g. basicAttack, resonanceSkill). */
-  damageType: DamageType;
-  tags: Array<string>;
-  scalingStat: AttackScalingProperty;
-}
-
-/**
- * Internal base for attacks.
- */
-interface AttackBase extends BaseCapability {
-  /** Individual damage instances, each with their own motion value, tags, and scaling stat */
-  damageInstances: Array<AttackDamageInstance>;
-}
+export type Modifier<T = {}> = BaseCapability & {
+  capabilityJson: ModifierData;
+} & T;
 
 /**
  * An offensive capability that deals damage based on a character's permanent stats and active modifiers.
  */
-export type Attack<T = {}> = AttackBase & T;
+export type Attack<T = {}> = BaseCapability & { capabilityJson: AttackData } & T;
 
-export type Capability = Attack | Modifier | PermanentStat;
+export type PermanentStat<T = {}> = BaseCapability & {
+  capabilityJson: PermanentStatData;
+} & T;
 
-export const isAttack = (capability: Capability): capability is Attack => {
-  return capability.capabilityType === CapabilityType.ATTACK;
-};
-
-export const isModifier = (capability: Capability): capability is Modifier => {
-  return capability.capabilityType === CapabilityType.MODIFIER;
-};
-
-export const isPermanentStat = (
-  capability: Capability,
-): capability is PermanentStat => {
-  return capability.capabilityType === CapabilityType.PERMANENT_STAT;
-};
-
-/**
- * Container for all types of capabilities associated with an entity.
- */
-export interface Capabilities<T = {}> {
-  /** List of offensive capabilities */
-  attacks: Array<Attack<T>>;
-  /** List of temporary/conditional stat modifiers */
-  modifiers: Array<Modifier<T>>;
-  /** List of permanent stat bonuses */
-  permanentStats: Array<PermanentStat<T>>;
-}
+export type Capability<T = {}> = Attack<T> | Modifier<T> | PermanentStat<T>;
 
 export interface CharacterDerivedAttributes {
   preferredScalingStat: 'atk' | 'def' | 'hp';
@@ -312,9 +378,51 @@ export interface BaseEntity<T = {}> {
   name: string;
   /** Icon URL for this entity */
   iconUrl?: string;
-  capabilities: Capabilities<T>;
+  capabilities: Array<Capability<T>>;
 }
 
 export interface CharacterEntity<T = {}> extends BaseEntity<T> {
   derivedAttributes: CharacterDerivedAttributes;
 }
+
+export const isAttack = (capability: Capability): capability is Attack => {
+  return capability.capabilityJson.type === CapabilityType.ATTACK;
+};
+
+export const isModifier = (capability: Capability): capability is Modifier => {
+  return capability.capabilityJson.type === CapabilityType.MODIFIER;
+};
+
+export const isPermanentStat = (
+  capability: Capability,
+): capability is PermanentStat => {
+  return capability.capabilityJson.type === CapabilityType.PERMANENT_STAT;
+};
+
+export const isStatParameterizedNumber = (
+  value: unknown,
+): value is StatParameterizedNumber =>
+  typeof value === 'object' &&
+  value !== null &&
+  'type' in value &&
+  (value as Record<string, unknown>).type === 'statParameterizedNumber' &&
+  'resolveWith' in value;
+
+export const isUserParameterizedNumber = (
+  value: unknown,
+): value is UserParameterizedNumber =>
+  typeof value === 'object' &&
+  value !== null &&
+  'type' in value &&
+  (value as Record<string, unknown>).type === 'userParameterizedNumber';
+
+export const isRefineScalableNumber = (value: unknown): value is RefineScalableNumber =>
+  typeof value === 'object' &&
+  value !== null &&
+  'base' in value &&
+  'increment' in value;
+
+export const isResolvedUserParameterizedNumber = (
+  value: unknown,
+): value is ResolveRefineScalableNumber<UserParameterizedNumber> =>
+  isUserParameterizedNumber(value) && !isRefineScalableNumber(value);

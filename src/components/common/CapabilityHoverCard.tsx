@@ -18,13 +18,10 @@ import {
 import { Row, Stack } from '@/components/ui/layout';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/typography';
-import type { DetailedAttack, DetailedModifier } from '@/hooks/useTeamDetails';
+import { isDetailedAttack } from '@/hooks/useTeamDetails';
+import type { CharacterAttack, CharacterModifier } from '@/hooks/useTeamDetails';
 import { cn } from '@/lib/utils';
-import type {
-  GameDataNumberNode,
-  GameDataUserNumber,
-} from '@/services/game-data/types';
-import { CapabilityType, Target } from '@/services/game-data/types';
+import { Target } from '@/services/game-data/types';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -39,24 +36,9 @@ const formatNumber = (value: number): string => {
   return Number.isInteger(value) ? `${value}` : value.toFixed(3).replace(/\.?0+$/, '');
 };
 
-const formatMotionValue = (value: GameDataUserNumber): string => {
+const formatValue = (value: unknown): string => {
   if (typeof value === 'number') return formatNumber(value);
-  return `P${value.parameterId}`;
-};
-
-const formatNodeValue = (node: GameDataNumberNode): string => {
-  if (typeof node === 'number') return formatNumber(node);
-  switch (node.type) {
-    case 'userParameterizedNumber': {
-      return `P${node.parameterId}`;
-    }
-    case 'statParameterizedNumber': {
-      return formatLabel(node.stat);
-    }
-    default: {
-      return 'Variable';
-    }
-  }
+  return 'Dynamic';
 };
 
 const TARGET_LABELS: Record<Target, string> = {
@@ -72,23 +54,17 @@ const CURSOR_HOVER_CARD_VIEWPORT_PADDING = 16;
 const CURSOR_HOVER_CARD_ANIMATION_CLASS_NAME =
   'animate-in fade-in-0 zoom-in-95 duration-200';
 
-// ─── Type guard ───────────────────────────────────────────────────────────────
-
-const isDetailedAttack = (
-  capability: DetailedAttack | DetailedModifier,
-): capability is DetailedAttack => capability.capabilityType === CapabilityType.ATTACK;
-
 // ─── Content components ───────────────────────────────────────────────────────
 
-const AttackCapabilityContent = ({ capability }: { capability: DetailedAttack }) => {
-  if (capability.damageInstances.length === 0) return;
+const AttackCapabilityContent = ({ capability }: { capability: CharacterAttack }) => {
+  if (capability.capabilityJson.damageInstances.length === 0) return;
   return (
     <Stack gap="trim">
       <Text as="div" variant="overline" tone="muted">
         Damage Instances
       </Text>
       <Stack gap="trim">
-        {capability.damageInstances.map((di, index) => (
+        {capability.capabilityJson.damageInstances.map((di, index) => (
           <Row key={index} gap="inset" className="w-full">
             <Row gap="trim" className="min-w-0 flex-1">
               <Text as="span" variant="caption" className="capitalize">
@@ -107,7 +83,7 @@ const AttackCapabilityContent = ({ capability }: { capability: DetailedAttack })
               tabular={true}
               className="shrink-0 font-mono"
             >
-              {formatMotionValue(di.motionValue)}
+              {formatValue(di.motionValue)}
             </Text>
             <Text
               as="span"
@@ -127,16 +103,16 @@ const AttackCapabilityContent = ({ capability }: { capability: DetailedAttack })
 const ModifierCapabilityContent = ({
   capability,
 }: {
-  capability: DetailedModifier;
+  capability: CharacterModifier;
 }) => {
-  if (capability.modifiedStats.length === 0) return;
+  if (capability.capabilityJson.modifiedStats.length === 0) return;
   return (
     <Stack gap="trim">
       <Text as="div" variant="overline" tone="muted">
         Modified Stats
       </Text>
       <Stack gap="trim">
-        {capability.modifiedStats.map((stat, index) => (
+        {capability.capabilityJson.modifiedStats.map((stat, index) => (
           <Row key={index} gap="inset" className="w-full">
             <Text as="span" variant="overline" tone="muted" className="w-12">
               {TARGET_LABELS[stat.target]}
@@ -150,7 +126,7 @@ const ModifierCapabilityContent = ({
               tabular={true}
               className="shrink-0 font-mono"
             >
-              {formatNodeValue(stat.value)}
+              {formatValue(stat.value)}
             </Text>
           </Row>
         ))}
@@ -162,12 +138,12 @@ const ModifierCapabilityContent = ({
 const CapabilityCardContent = ({
   capability,
 }: {
-  capability: DetailedAttack | DetailedModifier;
+  capability: CharacterAttack | CharacterModifier;
 }) => {
-  const isParameterized = (capability.parameters?.length ?? 0) > 0;
+  const isParameterized = capability.parameters.length > 0;
   const hasDetails = isDetailedAttack(capability)
-    ? capability.damageInstances.length > 0
-    : capability.modifiedStats.length > 0;
+    ? capability.capabilityJson.damageInstances.length > 0
+    : capability.capabilityJson.modifiedStats.length > 0;
   const entityCapabilityHref = `/entities/${capability.entityId}?capabilityId=${capability.id}`;
 
   return (
@@ -353,7 +329,7 @@ const CursorHoverCard = ({
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 interface CapabilityHoverCardProperties {
-  capability: DetailedAttack | DetailedModifier;
+  capability: CharacterAttack | CharacterModifier;
   children: React.ReactNode;
   className?: string;
   followCursor?: boolean;
@@ -368,8 +344,8 @@ export const CapabilityHoverCard = ({
   const hasDescription = !!capability.description;
   const hasParent = !!capability.parentName;
   const hasDetails = isDetailedAttack(capability)
-    ? capability.damageInstances.length > 0
-    : capability.modifiedStats.length > 0;
+    ? capability.capabilityJson.damageInstances.length > 0
+    : capability.capabilityJson.modifiedStats.length > 0;
 
   if (!hasDescription && !hasParent && !hasDetails) {
     return children;

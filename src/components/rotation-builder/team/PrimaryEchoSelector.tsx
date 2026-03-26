@@ -1,5 +1,5 @@
 import { EntityIconDisplay } from '@/components/common/EntityIcon';
-import { useEntityList } from '@/hooks/useEntityList';
+import { useEntities } from '@/hooks/useEntities';
 import { EntityType } from '@/services/game-data';
 import { useStore } from '@/store';
 
@@ -15,8 +15,8 @@ export const PrimaryEchoSelector = ({ index }: PrimaryEchoSelectorProperties) =>
   const selectedEchoSets = useStore((state) => state.team[index].echoSets);
   const setEcho = useStore((state) => state.setPrimaryEcho);
   const clearForEntity = useStore((state) => state.clearForEntity);
-  const { data: echoList = [] } = useEntityList({ entityType: EntityType.ECHO });
-  const { data: echoSetList = [] } = useEntityList({ entityType: EntityType.ECHO_SET });
+  const { data: echoList = [] } = useEntities({ entityType: EntityType.ECHO });
+  const { data: echoSetList = [] } = useEntities({ entityType: EntityType.ECHO_SET });
 
   const selectedSetIds = new Set(
     selectedEchoSets.map((set) => echoSetList.find((s) => s.id === set.id)?.gameId),

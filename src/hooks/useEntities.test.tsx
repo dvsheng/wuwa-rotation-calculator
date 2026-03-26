@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { Suspense } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useEntityList } from './useEntityList';
+import { useEntities, useEntityCapabilities } from './useEntities';
 
 vi.mock('@/services/game-data', async () => {
   const actual = await vi.importActual('@/services/game-data');
@@ -14,10 +14,18 @@ vi.mock('@/services/game-data', async () => {
   };
 });
 
-const { EntityType, listEntities } = await import('@/services/game-data');
-const mockListEntities = vi.mocked(listEntities);
+vi.mock('@/services/game-data/list-entity-capabilities.function', () => ({
+  listEntityCapabilities: vi.fn(),
+}));
 
-describe('useEntityList', () => {
+const { EntityType, listEntities } = await import('@/services/game-data');
+const { listEntityCapabilities } =
+  await import('@/services/game-data/list-entity-capabilities.function');
+
+const mockListEntities = vi.mocked(listEntities);
+const mockListEntityCapabilities = vi.mocked(listEntityCapabilities);
+
+describe('useEntities', () => {
   let queryClient: QueryClient;
 
   const wrapper = ({ children }: { children: ReactNode }) => (
@@ -134,15 +142,16 @@ describe('useEntityList', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       },
-    ]);
+    ] as any);
 
     const { result } = renderHook(
       () => ({
-        characters: useEntityList({ entityType: EntityType.CHARACTER }),
-        weapons: useEntityList({ entityType: EntityType.WEAPON }),
-        echoes: useEntityList({ entityType: EntityType.ECHO }),
-        echoSets: useEntityList({ entityType: EntityType.ECHO_SET }),
-        allEntities: useEntityList({ entityType: undefined }),
+        characters: useEntities({ entityType: EntityType.CHARACTER }),
+        weapons: useEntities({ entityType: EntityType.WEAPON }),
+        echoes: useEntities({ entityType: EntityType.ECHO }),
+        echoSets: useEntities({ entityType: EntityType.ECHO_SET }),
+        search: useEntities({ search: 'rov' }),
+        allEntities: useEntities({}),
       }),
       { wrapper },
     );
@@ -152,9 +161,11 @@ describe('useEntityList', () => {
       expect(result.current.weapons.data).toHaveLength(2);
       expect(result.current.echoes.data).toHaveLength(1);
       expect(result.current.echoSets.data).toHaveLength(1);
+      expect(result.current.search.data).toHaveLength(1);
       expect(result.current.allEntities.data).toHaveLength(6);
     });
 
+    expect(result.current.search.data[0]?.name).toBe('Rover');
     expect(result.current.allEntities.data.map((entity) => entity.iconUrl)).toEqual([
       '/characters/aalto.png',
       '/characters/rover.png',
@@ -164,5 +175,33 @@ describe('useEntityList', () => {
       '/echo-sets/set-a.png',
     ]);
     expect(mockListEntities).toHaveBeenCalledTimes(1);
+  });
+
+  it('fetches capabilities for a single entity', async () => {
+    mockListEntityCapabilities.mockResolvedValue([
+      {
+        id: 501,
+        name: 'Strike',
+        parentName: 'Normal Attack',
+        originType: 'Normal Attack',
+        skillId: 12,
+        entityId: 42,
+        capabilityJson: {
+          type: 'attack',
+          damageInstances: [],
+        },
+      },
+    ] as any);
+
+    const { result } = renderHook(() => useEntityCapabilities(42), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.data).toHaveLength(1);
+    });
+
+    expect(result.current.data[0]?.id).toBe(501);
+    expect(mockListEntityCapabilities).toHaveBeenCalledWith({
+      data: { id: 42 },
+    });
   });
 });

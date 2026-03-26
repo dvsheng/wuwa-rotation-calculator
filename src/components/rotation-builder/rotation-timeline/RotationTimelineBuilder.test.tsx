@@ -35,9 +35,13 @@ const dndHarness = vi.hoisted(() => ({
   >(),
 }));
 
-vi.mock('@/hooks/useTeamDetails', () => ({
-  useTeamDetails: dndHarness.mockUseTeamDetails,
-}));
+vi.mock('@/hooks/useTeamDetails', async () => {
+  const actual = await vi.importActual('@/hooks/useTeamDetails');
+  return {
+    ...actual,
+    useTeamDetails: dndHarness.mockUseTeamDetails,
+  };
+});
 
 vi.mock('@dnd-kit/react', () => ({
   DragDropProvider: ({

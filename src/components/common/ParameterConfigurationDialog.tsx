@@ -16,9 +16,9 @@ import {
 } from '@/components/ui/sheet';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
+import type { Parameter } from '@/hooks/useTeamDetails';
 import type { DetailedModifierInstance } from '@/hooks/useTeamModifierInstances';
 import { CapabilityType } from '@/services/game-data';
-import type { Parameter } from '@/services/game-data';
 import { useStore } from '@/store';
 
 import { Row, Stack } from '../ui/layout';
@@ -160,7 +160,7 @@ const ParameterConfigurationForm = ({
 
   const onSubmit = (parameters_: Array<Parameter>) => {
     const updateParameters =
-      capability.capabilityType === CapabilityType.ATTACK
+      capability.capabilityJson.type === CapabilityType.ATTACK
         ? updateAttackParameters
         : updateBuffParameters;
     updateParameters(capability.instanceId, parameters_);

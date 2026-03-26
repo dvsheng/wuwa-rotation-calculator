@@ -1,19 +1,12 @@
-import { useQueries } from '@tanstack/react-query';
-import { compact } from 'es-toolkit';
+import { useQuery } from '@tanstack/react-query';
+import { keyBy } from 'es-toolkit';
 
-import type { Capability } from '@/services/game-data';
 import {
   CapabilityType,
   isResolvedUserParameterizedNumber,
 } from '@/services/game-data';
-import type {
-  CapabilityResolverOptions,
-  ResolvedCapability,
-} from '@/services/game-data/list-entity-capabilities.function';
-import {
-  filterAndResolveCapabilities,
-  listEntityCapabilities,
-} from '@/services/game-data/list-entity-capabilities.function';
+import type { ResolvedCapability } from '@/services/game-data/list-capabilities.function';
+import { listOwnedCapabilitiesForTeam } from '@/services/game-data/list-owned-team-capabilities';
 import { useStore } from '@/store';
 
 import { useEntities } from './useEntities';
@@ -53,7 +46,7 @@ export type CharacterModifier = Extract<
   { capabilityJson: { type: typeof CapabilityType.MODIFIER } }
 >;
 
-const LIST_ENTITY_CAPABILITIES_RETRY_COUNT = 10;
+const LIST_CAPABILITIES_RETRY_COUNT = 10;
 
 export const isDetailedAttack = (
   capability: CharacterCapability,
@@ -68,56 +61,33 @@ export const isDetailedModifier = (
 export const useTeamDetails = (): UseTeamDetailsResult => {
   const team = useStore((state) => state.team);
   const { data: entities } = useEntities({});
-  const result = useQueries({
-    queries: team.flatMap((character) => [
-      getQueryOptions(character.id, {
+  const characterDetailsById = keyBy(entities, (entity) => entity.id);
+  const query = useQuery({
+    queryKey: ['team-details', team],
+    queryFn: () =>
+      listOwnedCapabilitiesForTeam(team, (character) => ({
         characterId: character.id,
-        resolveConfig: { sequence: character.sequence },
+      })),
+    enabled: team.length > 0,
+    staleTime: Infinity,
+    retry: LIST_CAPABILITIES_RETRY_COUNT,
+    select: (data) =>
+      data.map((capability) => {
+        const character = characterDetailsById[capability.characterId];
+
+        return {
+          ...capability,
+          characterName: character.name,
+          characterIconUrl: character.iconUrl,
+          parameters: extractUserParameters(capability),
+        };
       }),
-      getQueryOptions(character.weapon.id, {
-        characterId: character.id,
-        resolveConfig: { refineLevel: character.weapon.refine },
-      }),
-      getQueryOptions(character.primarySlotEcho.id, {
-        characterId: character.id,
-        resolveConfig: {},
-      }),
-      ...character.echoSets.map((set) =>
-        getQueryOptions(set.id, {
-          characterId: character.id,
-          resolveConfig: {
-            activatedSetBonus: Number.parseInt(set.requirement) as 2 | 3 | 5,
-          },
-        }),
-      ),
-    ]),
-    combine: (results) => {
-      const allCapabilities = results.flatMap((queryResult) => {
-        const queryCapabilities = queryResult.data;
-        if (!queryCapabilities) return [];
-        const enrichedCapabilities = compact(
-          queryCapabilities.map((capability) => {
-            const character = entities.find(
-              (entity) => entity.id === capability.characterId,
-            );
-            if (!character) return;
-            return {
-              ...capability,
-              characterName: character.name,
-              characterIconUrl: character.iconUrl,
-            };
-          }),
-        );
-        return enrichedCapabilities;
-      });
-      return {
-        capabilities: allCapabilities,
-        isLoading: results.some((queryResult) => queryResult.isLoading),
-        isError: results.every((queryResult) => queryResult.isError),
-      };
-    },
   });
-  return result;
+  return {
+    capabilities: query.data ?? [],
+    isLoading: query.isLoading,
+    isError: query.isError,
+  };
 };
 
 const extractUserParameters = (capability: ResolvedCapability): Array<Parameter> => {
@@ -141,26 +111,4 @@ const extractUserParameters = (capability: ResolvedCapability): Array<Parameter>
   };
   visit(capability.capabilityJson);
   return [...parameters.values()];
-};
-
-const getQueryOptions = (
-  entityId: number,
-  metadata: { characterId: number; resolveConfig: CapabilityResolverOptions },
-) => {
-  return {
-    queryKey: ['entity', entityId],
-    queryFn: () => listEntityCapabilities({ data: { id: entityId } }),
-    staleTime: Infinity,
-    retry: LIST_ENTITY_CAPABILITIES_RETRY_COUNT,
-    select: (data: Array<Capability>) => {
-      return filterAndResolveCapabilities(data, metadata.resolveConfig).map(
-        (capability) => ({
-          ...capability,
-          entityId,
-          characterId: metadata.characterId,
-          parameters: extractUserParameters(capability),
-        }),
-      );
-    },
-  };
 };

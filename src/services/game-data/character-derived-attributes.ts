@@ -8,8 +8,8 @@ import type {
 
 import {
   filterAndResolveCapabilities,
-  listEntityCapabilities,
-} from './list-entity-capabilities.function';
+  listCapabilities,
+} from './list-capabilities.function';
 import { isAttack } from './types';
 import type { Attack, CharacterDerivedAttributes } from './types';
 
@@ -119,11 +119,7 @@ export const deriveCharacterAttributes = (
 
 export const getDerivedCharacterAttributesById = async (id: number) => {
   const capabilities = filterAndResolveCapabilities(
-    await listEntityCapabilities({
-      data: {
-        id,
-      },
-    }),
+    await listCapabilities({ data: { entityIds: [id] } }),
     { sequence: 0 },
   );
   const attacks = capabilities.filter((capability) => isAttack(capability));

@@ -61,10 +61,11 @@ export const ResolveConfigSchema = z
 
 export type ResolveConfig = z.infer<typeof ResolveConfigSchema>;
 
-export const ListEntityCapabilitiesRequestSchema = z.object({
-  id: z.int().positive().describe('The ID of the entity to fetch capabilities for'),
+export const ListCapabilitiesRequestSchema = z.object({
+  entityIds: z
+    .array(z.int().positive())
+    .min(1)
+    .describe('The non-empty list of entity IDs to fetch capabilities for'),
 });
 
-export type ListEntityCapabilitiesRequest = z.infer<
-  typeof ListEntityCapabilitiesRequestSchema
->;
+export type ListCapabilitiesRequest = z.infer<typeof ListCapabilitiesRequestSchema>;

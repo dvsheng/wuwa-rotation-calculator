@@ -3,14 +3,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EchoMainStatOption } from '@/schemas/echo';
 
 const mocks = vi.hoisted(() => {
-  const findFirst = vi.fn();
+  const findMany = vi.fn();
 
   return {
-    findFirst,
+    findMany,
     database: {
       query: {
         entities: {
-          findFirst,
+          findMany,
         },
       },
     },
@@ -21,69 +21,113 @@ vi.mock('@/db/client', () => ({
   database: mocks.database,
 }));
 
-describe('listEntityCapabilitiesHandler', () => {
+describe('listCapabilitiesHandler', () => {
   beforeEach(() => {
-    mocks.findFirst.mockReset();
+    mocks.findMany.mockReset();
   });
 
-  it('returns flattened capabilities with skill metadata', async () => {
-    const { listEntityCapabilitiesHandler } =
-      await import('./list-entity-capabilities.server');
+  it('returns flattened capabilities with skill metadata for multiple entities', async () => {
+    const { listCapabilitiesHandler } = await import('./list-capabilities.server');
 
-    mocks.findFirst.mockResolvedValue({
-      id: 100,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      gameId: 1100,
-      name: 'Aalto',
-      type: 'character',
-      description: undefined,
-      iconUrl: '/entity.png',
-      rank: 5,
-      weaponType: 'pistols',
-      attribute: 'aero',
-      echoSetIds: undefined,
-      cost: undefined,
-      setBonusThresholds: undefined,
-      skills: [
-        {
-          id: 12,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          gameId: 12,
-          entityId: 100,
-          name: 'Normal Attack',
-          description: 'Skill description',
-          iconUrl: '/skill.png',
-          originType: 'Normal Attack',
-          capabilities: [
-            {
-              id: 1,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              skillId: 12,
-              name: 'Strike',
-              description: 'Attack description',
-              capabilityJson: {
-                type: 'attack',
-                damageInstances: [
-                  {
-                    motionValue: 1,
-                    attribute: 'aero',
-                    damageType: 'basicAttack',
-                    tags: ['basicAttack'],
-                    scalingStat: 'atk',
-                  },
-                ],
+    mocks.findMany.mockResolvedValue([
+      {
+        id: 100,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        gameId: 1100,
+        name: 'Aalto',
+        type: 'character',
+        description: undefined,
+        iconUrl: '/entity.png',
+        rank: 5,
+        weaponType: 'pistols',
+        attribute: 'aero',
+        echoSetIds: undefined,
+        cost: undefined,
+        setBonusThresholds: undefined,
+        skills: [
+          {
+            id: 12,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            gameId: 12,
+            entityId: 100,
+            name: 'Normal Attack',
+            description: 'Skill description',
+            iconUrl: '/skill.png',
+            originType: 'Normal Attack',
+            capabilities: [
+              {
+                id: 1,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                skillId: 12,
+                name: 'Strike',
+                description: 'Attack description',
+                capabilityJson: {
+                  type: 'attack',
+                  damageInstances: [
+                    {
+                      motionValue: 1,
+                      attribute: 'aero',
+                      damageType: 'basicAttack',
+                      tags: ['basicAttack'],
+                      scalingStat: 'atk',
+                    },
+                  ],
+                },
               },
-            },
-          ],
-        },
-      ],
-    });
+            ],
+          },
+        ],
+      },
+      {
+        id: 101,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        gameId: 1101,
+        name: 'Novablade',
+        type: 'weapon',
+        description: undefined,
+        iconUrl: '/weapon.png',
+        rank: 5,
+        weaponType: 'sword',
+        attribute: undefined,
+        echoSetIds: undefined,
+        cost: undefined,
+        setBonusThresholds: undefined,
+        skills: [
+          {
+            id: 13,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            gameId: 13,
+            entityId: 101,
+            name: 'Weapon Passive',
+            description: 'Weapon skill description',
+            iconUrl: '/weapon-skill.png',
+            originType: 'Weapon Passive',
+            capabilities: [
+              {
+                id: 2,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                skillId: 13,
+                name: 'Sharpen',
+                description: 'Modifier description',
+                capabilityJson: {
+                  type: 'modifier',
+                  modifiedStats: [],
+                },
+              },
+            ],
+          },
+        ],
+      },
+    ]);
 
-    const result = await listEntityCapabilitiesHandler({
-      id: 100,
+    const result = await listCapabilitiesHandler({
+      entityIds: [100, 101],
     });
 
     expect(result).toEqual([
@@ -110,41 +154,87 @@ describe('listEntityCapabilitiesHandler', () => {
           ],
         },
       },
+      {
+        id: 2,
+        name: 'Sharpen',
+        description: 'Modifier description',
+        parentName: 'Weapon Passive',
+        iconUrl: '/weapon-skill.png',
+        originType: 'Weapon Passive',
+        skillId: 13,
+        entityId: 101,
+        skillDescription: 'Weapon skill description',
+        capabilityJson: {
+          type: 'modifier',
+          modifiedStats: [],
+        },
+      },
     ]);
-    expect(mocks.findFirst).toHaveBeenCalledTimes(1);
+    expect(mocks.findMany).toHaveBeenCalledTimes(1);
   });
 
   it('memoizes repeated identical requests', async () => {
-    const { listEntityCapabilitiesHandler } =
-      await import('./list-entity-capabilities.server');
+    const { listCapabilitiesHandler } = await import('./list-capabilities.server');
 
-    mocks.findFirst.mockResolvedValue({
-      id: 101,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      gameId: 1100,
-      name: 'Aalto',
-      type: 'character',
-      description: undefined,
-      iconUrl: undefined,
-      rank: 5,
-      weaponType: 'pistols',
-      attribute: 'aero',
-      echoSetIds: undefined,
-      cost: undefined,
-      setBonusThresholds: undefined,
-      skills: [],
-    });
+    mocks.findMany.mockResolvedValue([
+      {
+        id: 101,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        gameId: 1100,
+        name: 'Aalto',
+        type: 'character',
+        description: undefined,
+        iconUrl: undefined,
+        rank: 5,
+        weaponType: 'pistols',
+        attribute: 'aero',
+        echoSetIds: undefined,
+        cost: undefined,
+        setBonusThresholds: undefined,
+        skills: [],
+      },
+    ]);
 
-    const first = await listEntityCapabilitiesHandler({
-      id: 101,
+    const first = await listCapabilitiesHandler({
+      entityIds: [101],
     });
-    const second = await listEntityCapabilitiesHandler({
-      id: 101,
+    const second = await listCapabilitiesHandler({
+      entityIds: [101],
     });
 
     expect(first).toEqual(second);
-    expect(mocks.findFirst).toHaveBeenCalledTimes(1);
+    expect(mocks.findMany).toHaveBeenCalledTimes(1);
+  });
+
+  it('throws when any requested entity is missing', async () => {
+    const { listCapabilitiesHandler } = await import('./list-capabilities.server');
+
+    mocks.findMany.mockResolvedValue([
+      {
+        id: 100,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        gameId: 1100,
+        name: 'Aalto',
+        type: 'character',
+        description: undefined,
+        iconUrl: '/entity.png',
+        rank: 5,
+        weaponType: 'pistols',
+        attribute: 'aero',
+        echoSetIds: undefined,
+        cost: undefined,
+        setBonusThresholds: undefined,
+        skills: [],
+      },
+    ]);
+
+    await expect(
+      listCapabilitiesHandler({
+        entityIds: [100, 999],
+      }),
+    ).rejects.toThrow('Entity not found for ID 999');
   });
 });
 

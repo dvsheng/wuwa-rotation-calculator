@@ -5,7 +5,7 @@ import {
 } from '@/services/game-data';
 
 import { deriveCharacterAttributes } from '../game-data/character-derived-attributes';
-import { listEntityCapabilities } from '../game-data/list-entity-capabilities.function';
+import { listCapabilities } from '../game-data/list-capabilities.function';
 
 import { buildEchoPieces } from './build-echo-pieces';
 import { identifyRuntimeStats } from './identify-runtime-stats';
@@ -16,11 +16,7 @@ export const getEchoStatsHandler = async (
   request: GetEchoStatsRequest,
 ): Promise<GetEchoStatsResponse> => {
   const capabilities = filterAndResolveCapabilities(
-    await listEntityCapabilities({
-      data: {
-        id: request.characterId,
-      },
-    }),
+    await listCapabilities({ data: { entityIds: [request.characterId] } }),
     { sequence: 0 },
   );
   const entities = await listEntities({});

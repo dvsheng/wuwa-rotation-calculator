@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 
 import type { ResolveConfig } from '@/schemas/game-data-service';
-import { ListEntityCapabilitiesRequestSchema } from '@/schemas/game-data-service';
+import { ListCapabilitiesRequestSchema } from '@/schemas/game-data-service';
 
 import {
   resolveAlternativeDefinitions,
@@ -12,7 +12,7 @@ import type {
   ResolveAlternativeDefinitions,
   ResolveRefineScalableNumber,
 } from './database-type-adapters';
-import { listEntityCapabilitiesHandler } from './list-entity-capabilities.server';
+import { listCapabilitiesHandler } from './list-capabilities.server';
 import type { Capability, RefineLevel, Sequence } from './types';
 
 export type CapabilityResolverOptions = ResolveConfig;
@@ -42,14 +42,14 @@ export const filterAndResolveCapabilities = (
 };
 
 /**
- * Lists all stored capabilities for an entity.
+ * Lists all stored capabilities for one or more entities.
  */
-export const listEntityCapabilities = createServerFn({
+export const listCapabilities = createServerFn({
   method: 'GET',
 })
-  .inputValidator(ListEntityCapabilitiesRequestSchema)
+  .inputValidator(ListCapabilitiesRequestSchema)
   .handler(async ({ data }) => {
-    return await listEntityCapabilitiesHandler(data);
+    return await listCapabilitiesHandler(data);
   });
 
 const refineLevelToNumber = (refineLevel?: RefineLevel): number => {

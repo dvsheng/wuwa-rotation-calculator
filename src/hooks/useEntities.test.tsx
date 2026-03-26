@@ -14,16 +14,16 @@ vi.mock('@/services/game-data', async () => {
   };
 });
 
-vi.mock('@/services/game-data/list-entity-capabilities.function', () => ({
-  listEntityCapabilities: vi.fn(),
+vi.mock('@/services/game-data/list-capabilities.function', () => ({
+  listCapabilities: vi.fn(),
 }));
 
 const { EntityType, listEntities } = await import('@/services/game-data');
-const { listEntityCapabilities } =
-  await import('@/services/game-data/list-entity-capabilities.function');
+const { listCapabilities } =
+  await import('@/services/game-data/list-capabilities.function');
 
 const mockListEntities = vi.mocked(listEntities);
-const mockListEntityCapabilities = vi.mocked(listEntityCapabilities);
+const mockListCapabilities = vi.mocked(listCapabilities);
 
 describe('useEntities', () => {
   let queryClient: QueryClient;
@@ -178,7 +178,7 @@ describe('useEntities', () => {
   });
 
   it('fetches capabilities for a single entity', async () => {
-    mockListEntityCapabilities.mockResolvedValue([
+    mockListCapabilities.mockResolvedValue([
       {
         id: 501,
         name: 'Strike',
@@ -200,8 +200,8 @@ describe('useEntities', () => {
     });
 
     expect(result.current.data[0]?.id).toBe(501);
-    expect(mockListEntityCapabilities).toHaveBeenCalledWith({
-      data: { id: 42 },
+    expect(mockListCapabilities).toHaveBeenCalledWith({
+      data: { entityIds: [42] },
     });
   });
 });

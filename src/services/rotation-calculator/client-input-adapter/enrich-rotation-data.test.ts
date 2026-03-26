@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Team as ClientTeam } from '@/schemas/team';
-import { CapabilityType } from '@/services/game-data';
+import { CapabilityType, filterAndResolveCapabilities } from '@/services/game-data';
 import {
   AttackScalingProperty,
   Attribute,
@@ -12,18 +12,13 @@ import {
 
 import { GameDataNotFoundError, createGameDataEnricher } from './enrich-rotation-data';
 
-const { mockListEntityCapabilities } = vi.hoisted(() => ({
-  mockListEntityCapabilities: vi.fn(),
+const { mockListOwnedCapabilitiesForTeam } = vi.hoisted(() => ({
+  mockListOwnedCapabilitiesForTeam: vi.fn(),
 }));
 
-vi.mock('@/services/game-data', async () => {
-  const actual = await vi.importActual('@/services/game-data');
-  return {
-    ...actual,
-    listEntityCapabilities: ({ data }: { data: { id: number } }) =>
-      mockListEntityCapabilities(data),
-  };
-});
+vi.mock('@/services/game-data/list-owned-team-capabilities', () => ({
+  listOwnedCapabilitiesForTeam: mockListOwnedCapabilitiesForTeam,
+}));
 
 const createAttackCapability = (id: number, entityId: number) => ({
   id,
@@ -166,8 +161,52 @@ const setupCapabilities = () => {
     [3, []],
   ]);
 
-  mockListEntityCapabilities.mockImplementation(({ id }: { id: number }) =>
-    Promise.resolve(capabilitiesByEntityId.get(id) ?? []),
+  mockListOwnedCapabilitiesForTeam.mockImplementation(
+    (
+      team: ClientTeam,
+      getCharacterOwner: (character: ClientTeam[number], characterIndex: number) => any,
+    ) =>
+      Promise.resolve(
+        team.flatMap((character, characterIndex) => {
+          const characterOwner = getCharacterOwner(character, characterIndex);
+
+          return [
+            ...filterAndResolveCapabilities(
+              capabilitiesByEntityId.get(character.primarySlotEcho.id) ?? [],
+              {},
+            ).map((capability) => ({
+              ...capability,
+              ...characterOwner,
+              entityId: character.primarySlotEcho.id,
+            })),
+            ...filterAndResolveCapabilities(
+              capabilitiesByEntityId.get(character.id) ?? [],
+              { sequence: character.sequence },
+            ).map((capability) => ({
+              ...capability,
+              ...characterOwner,
+              entityId: character.id,
+            })),
+            ...filterAndResolveCapabilities(
+              capabilitiesByEntityId.get(character.weapon.id) ?? [],
+              { refineLevel: character.weapon.refine },
+            ).map((capability) => ({
+              ...capability,
+              ...characterOwner,
+              entityId: character.weapon.id,
+            })),
+            ...character.echoSets.flatMap((set) =>
+              filterAndResolveCapabilities(capabilitiesByEntityId.get(set.id) ?? [], {
+                activatedSetBonus: Number.parseInt(set.requirement) as 2 | 3 | 5,
+              }).map((capability) => ({
+                ...capability,
+                ...characterOwner,
+                entityId: set.id,
+              })),
+            ),
+          ];
+        }),
+      ),
   );
 };
 
@@ -183,6 +222,7 @@ describe('createGameDataEnricher', () => {
     expect(enricher.enrichAttack).toBeTypeOf('function');
     expect(enricher.enrichModifier).toBeTypeOf('function');
     expect(enricher.getPermanentStatsForCharacter).toBeTypeOf('function');
+    expect(mockListOwnedCapabilitiesForTeam).toHaveBeenCalledTimes(1);
   });
 
   it('enriches attack instances with resolved capability details', async () => {
@@ -243,29 +283,52 @@ describe('createGameDataEnricher', () => {
   });
 
   it('filters echo set capabilities using parentName requirements', async () => {
-    mockListEntityCapabilities.mockImplementation(({ id }: { id: number }) => {
-      if (id === 1) {
-        return Promise.resolve([
-          createPermanentStatCapability(
-            701,
-            1,
-            CharacterStat.CRITICAL_RATE,
-            0.05,
-            [Tag.ALL],
-            'Lingering Tunes - 2',
-          ),
-          createPermanentStatCapability(
-            702,
-            1,
-            CharacterStat.CRITICAL_DAMAGE,
-            0.2,
-            [Tag.ALL],
-            'Lingering Tunes - 5',
-          ),
-        ]);
-      }
-      return Promise.resolve([]);
-    });
+    mockListOwnedCapabilitiesForTeam.mockImplementation(
+      (
+        team: ClientTeam,
+        getCharacterOwner: (
+          character: ClientTeam[number],
+          characterIndex: number,
+        ) => any,
+      ) =>
+        Promise.resolve(
+          team.flatMap((character, characterIndex) => {
+            const characterOwner = getCharacterOwner(character, characterIndex);
+
+            return character.echoSets.flatMap((set) =>
+              filterAndResolveCapabilities(
+                (set.id === 1
+                  ? [
+                      createPermanentStatCapability(
+                        701,
+                        1,
+                        CharacterStat.CRITICAL_RATE,
+                        0.05,
+                        [Tag.ALL],
+                        'Lingering Tunes - 2',
+                      ),
+                      createPermanentStatCapability(
+                        702,
+                        1,
+                        CharacterStat.CRITICAL_DAMAGE,
+                        0.2,
+                        [Tag.ALL],
+                        'Lingering Tunes - 5',
+                      ),
+                    ]
+                  : []) as any,
+                {
+                  activatedSetBonus: Number.parseInt(set.requirement) as 2 | 3 | 5,
+                },
+              ).map((capability) => ({
+                ...capability,
+                ...characterOwner,
+                entityId: set.id,
+              })),
+            );
+          }),
+        ),
+    );
 
     const teamWithTwoPiece = [
       {

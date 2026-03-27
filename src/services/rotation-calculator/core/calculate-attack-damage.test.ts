@@ -69,7 +69,6 @@ describe('calculateAttackDamage', () => {
       enemyStats,
     );
 
-    expect(inputs.character.attackScalingPropertyValue).toBe(1000);
     expect(inputs.baseDamage).toBe(1000);
     expect(result).toBeCloseTo(626.65, 2);
   });
@@ -100,9 +99,7 @@ describe('calculateAttackDamage', () => {
       enemyStats,
     );
 
-    expect(hpResult.inputs.character.attackScalingPropertyValue).toBe(2000);
     expect(hpResult.inputs.baseDamage).toBe(2000);
-    expect(defenseResult.inputs.character.attackScalingPropertyValue).toBe(500);
     expect(defenseResult.inputs.baseDamage).toBe(500);
   });
 });

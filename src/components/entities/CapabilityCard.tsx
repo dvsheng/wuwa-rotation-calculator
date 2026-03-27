@@ -1,4 +1,3 @@
-import { Link } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 
@@ -37,21 +36,6 @@ const getAlternativeDefinitions = (capability: Capability) => {
     .toSorted((a, b) => sequenceToNumber(a) - sequenceToNumber(b));
 };
 
-const formatAlternativeDefinitionLabel = (definition: AlternativeDefinitionValue) => {
-  return definition === 'base' ? 'Base' : definition.toUpperCase();
-};
-
-const normalizeAlternativeDefinitionValue = (
-  alternativeDefinitions: Array<Sequence>,
-  value: AlternativeDefinitionValue,
-): AlternativeDefinitionValue => {
-  if (value === 'base') {
-    return value;
-  }
-
-  return alternativeDefinitions.includes(value) ? value : 'base';
-};
-
 export const CapabilityCard = ({
   capability,
   defaultAlternativeDefinition = 'base',
@@ -69,13 +53,13 @@ export const CapabilityCard = ({
 }) => {
   const [isJsonView, setIsJsonView] = useState(false);
   const alternativeDefinitions = getAlternativeDefinitions(capability);
-  const normalizedDefaultAlternativeDefinition = normalizeAlternativeDefinitionValue(
-    alternativeDefinitions,
-    defaultAlternativeDefinition,
-  );
+  const normalizedDefaultAlternativeDefinition =
+    defaultAlternativeDefinition === 'base' ||
+    alternativeDefinitions.includes(defaultAlternativeDefinition)
+      ? defaultAlternativeDefinition
+      : 'base';
   const [selectedAlternativeDefinition, setSelectedAlternativeDefinition] =
     useState<AlternativeDefinitionValue>(normalizedDefaultAlternativeDefinition);
-
   const resolvedCapability =
     alternativeDefinitions.length > 0
       ? resolveAlternativeDefinitions(
@@ -91,20 +75,7 @@ export const CapabilityCard = ({
           <Row gap="inset" align="center">
             {titlePrefix}
             <Row gap="trim" align="center">
-              <CardTitle>
-                {entityId ? (
-                  <Link
-                    to="/entities/$id"
-                    params={{ id: String(entityId) }}
-                    search={{ capabilityId: capability.id }}
-                    className="hover:text-foreground text-foreground transition-colors hover:underline"
-                  >
-                    {capability.name}
-                  </Link>
-                ) : (
-                  capability.name
-                )}
-              </CardTitle>
+              <CardTitle>{capability.name}</CardTitle>
               {titleSuffix}
             </Row>
           </Row>
@@ -143,12 +114,10 @@ export const CapabilityCard = ({
                   }
                 }}
               >
-                <ToggleGroupItem value="base">
-                  {formatAlternativeDefinitionLabel('base')}
-                </ToggleGroupItem>
+                <ToggleGroupItem value="base">Base</ToggleGroupItem>
                 {alternativeDefinitions.map((definition) => (
                   <ToggleGroupItem key={definition} value={definition}>
-                    {formatAlternativeDefinitionLabel(definition)}
+                    {definition.toUpperCase()}
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>

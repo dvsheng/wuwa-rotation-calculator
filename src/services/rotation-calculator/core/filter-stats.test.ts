@@ -8,62 +8,47 @@ import {
   NegativeStatus,
   Tag,
 } from '@/types';
-import type {
-  Character,
-  CharacterStats,
-  Enemy,
-  EnemyStats,
-  TaggedStatValue,
-} from '@/types';
 
 import { getStatFilterer } from './filter-stats';
+import type { Character, Enemy, Stat } from './types';
 
-const createEmptyCharacterStats = (): CharacterStats => {
-  return Object.fromEntries(
-    Object.values(CharacterStat).map((stat) => [stat, [] as Array<TaggedStatValue>]),
-  ) as CharacterStats;
-};
-
-const createEmptyEnemyStats = (): EnemyStats => {
-  return Object.fromEntries(
-    Object.values(EnemyStat).map((stat) => [stat, [] as Array<TaggedStatValue>]),
-  ) as EnemyStats;
-};
-
-const createCharacter = (stats: Partial<CharacterStats> = {}): Character => ({
-  level: 90,
-  stats: {
-    ...createEmptyCharacterStats(),
-    ...stats,
-  },
+const createStat = (
+  stat: CharacterStat | EnemyStat,
+  value: number,
+  tags: Array<string>,
+): Stat => ({
+  stat,
+  value,
+  tags,
 });
 
-const createEnemy = (stats: Partial<EnemyStats> = {}): Enemy => ({
+const getStatsFor = (stats: Array<Stat>, stat: CharacterStat | EnemyStat) =>
+  stats.filter((entry) => entry.stat === stat);
+
+const createCharacter = (stats: Array<Stat> = []): Character => ({
+  level: 90,
+  stats,
+});
+
+const createEnemy = (stats: Array<Stat> = []): Enemy => ({
   level: 100,
-  stats: {
-    ...createEmptyEnemyStats(),
-    ...stats,
-  },
+  stats,
 });
 
 describe('getStatFilterer', () => {
   it('keeps tag-matching and Tag.ALL stats for regular scaling', () => {
     const team = [
-      createCharacter({
-        [CharacterStat.DAMAGE_BONUS]: [
-          { tags: [Tag.ELECTRO], value: 0.2 },
-          { tags: [Tag.GLACIO], value: 0.1 },
-          { tags: [Tag.ALL], value: 0.05 },
-        ],
-      }),
+      createCharacter([
+        createStat(CharacterStat.DAMAGE_BONUS, 0.2, [Tag.ELECTRO]),
+        createStat(CharacterStat.DAMAGE_BONUS, 0.1, [Tag.GLACIO]),
+        createStat(CharacterStat.DAMAGE_BONUS, 0.05, [Tag.ALL]),
+      ]),
     ];
-    const enemy = createEnemy({
-      [EnemyStat.BASE_RESISTANCE]: [
-        { tags: [Tag.ELECTRO], value: 0.1 },
-        { tags: [Tag.GLACIO], value: 0.2 },
-        { tags: [Tag.ALL], value: 0.05 },
-      ],
-    });
+    const enemy = createEnemy([
+      createStat(EnemyStat.BASE_RESISTANCE, 0.1, [Tag.ELECTRO]),
+      createStat(EnemyStat.BASE_RESISTANCE, 0.2, [Tag.GLACIO]),
+      createStat(EnemyStat.BASE_RESISTANCE, 0.05, [Tag.ALL]),
+    ]);
 
     const filterStats = getStatFilterer(AttackScalingProperty.ATK, [
       Tag.ELECTRO,
@@ -71,45 +56,43 @@ describe('getStatFilterer', () => {
     ]);
     const { filteredTeam, filteredEnemy } = filterStats(team, enemy);
 
-    expect(filteredTeam[0].stats[CharacterStat.DAMAGE_BONUS]).toEqual([
-      { tags: [Tag.ELECTRO], value: 0.2 },
-      { tags: [Tag.ALL], value: 0.05 },
+    expect(getStatsFor(filteredTeam[0].stats, CharacterStat.DAMAGE_BONUS)).toEqual([
+      createStat(CharacterStat.DAMAGE_BONUS, 0.2, [Tag.ELECTRO]),
+      createStat(CharacterStat.DAMAGE_BONUS, 0.05, [Tag.ALL]),
     ]);
-    expect(filteredEnemy.stats[EnemyStat.BASE_RESISTANCE]).toEqual([
-      { tags: [Tag.ELECTRO], value: 0.1 },
-      { tags: [Tag.ALL], value: 0.05 },
+    expect(getStatsFor(filteredEnemy.stats, EnemyStat.BASE_RESISTANCE)).toEqual([
+      createStat(EnemyStat.BASE_RESISTANCE, 0.1, [Tag.ELECTRO]),
+      createStat(EnemyStat.BASE_RESISTANCE, 0.05, [Tag.ALL]),
     ]);
   });
 
   it('removes all tagged stats for fixed scaling', () => {
     const team = [
-      createCharacter({
-        [CharacterStat.FINAL_DAMAGE_BONUS]: [{ tags: [Tag.ALL], value: 0.5 }],
-      }),
+      createCharacter([createStat(CharacterStat.FINAL_DAMAGE_BONUS, 0.5, [Tag.ALL])]),
     ];
-    const enemy = createEnemy({
-      [EnemyStat.DEFENSE_REDUCTION]: [{ tags: [Tag.ALL], value: 0.5 }],
-    });
+    const enemy = createEnemy([
+      createStat(EnemyStat.DEFENSE_REDUCTION, 0.5, [Tag.ALL]),
+    ]);
 
     const filterStats = getStatFilterer(AttackScalingProperty.FIXED, [Tag.ELECTRO]);
     const { filteredTeam, filteredEnemy } = filterStats(team, enemy);
 
-    expect(filteredTeam[0].stats[CharacterStat.FINAL_DAMAGE_BONUS]).toEqual([]);
-    expect(filteredEnemy.stats[EnemyStat.DEFENSE_REDUCTION]).toEqual([]);
+    expect(
+      getStatsFor(filteredTeam[0].stats, CharacterStat.FINAL_DAMAGE_BONUS),
+    ).toEqual([]);
+    expect(getStatsFor(filteredEnemy.stats, EnemyStat.DEFENSE_REDUCTION)).toEqual([]);
   });
 
   it('uses per-stat declarative negative-status rules for character stats', () => {
     const team = [
-      createCharacter({
-        [CharacterStat.DEFENSE_IGNORE]: [
-          { tags: [Attribute.AERO], value: 0.3 },
-          { tags: [Attribute.FUSION], value: 0.9 },
-        ],
-        [CharacterStat.DAMAGE_AMPLIFICATION]: [
-          { tags: [Attribute.AERO], value: 1 },
-          { tags: [NegativeStatus.AERO_EROSION], value: 2 },
-        ],
-      }),
+      createCharacter([
+        createStat(CharacterStat.DEFENSE_IGNORE, 0.3, [Attribute.AERO]),
+        createStat(CharacterStat.DEFENSE_IGNORE, 0.9, [Attribute.FUSION]),
+        createStat(CharacterStat.DAMAGE_AMPLIFICATION, 1, [Attribute.AERO]),
+        createStat(CharacterStat.DAMAGE_AMPLIFICATION, 2, [
+          NegativeStatus.AERO_EROSION,
+        ]),
+      ]),
     ];
     const enemy = createEnemy();
 
@@ -120,26 +103,24 @@ describe('getStatFilterer', () => {
     ]);
     const { filteredTeam } = filterStats(team, enemy);
 
-    expect(filteredTeam[0].stats[CharacterStat.DEFENSE_IGNORE]).toEqual([
-      { tags: [Attribute.AERO], value: 0.3 },
+    expect(getStatsFor(filteredTeam[0].stats, CharacterStat.DEFENSE_IGNORE)).toEqual([
+      createStat(CharacterStat.DEFENSE_IGNORE, 0.3, [Attribute.AERO]),
     ]);
-    expect(filteredTeam[0].stats[CharacterStat.DAMAGE_AMPLIFICATION]).toEqual([
-      { tags: [NegativeStatus.AERO_EROSION], value: 2 },
+    expect(
+      getStatsFor(filteredTeam[0].stats, CharacterStat.DAMAGE_AMPLIFICATION),
+    ).toEqual([
+      createStat(CharacterStat.DAMAGE_AMPLIFICATION, 2, [NegativeStatus.AERO_EROSION]),
     ]);
   });
 
   it('keeps negative-status enemy stats for both attribute and status tags', () => {
     const team = [createCharacter()];
-    const enemy = createEnemy({
-      [EnemyStat.BASE_RESISTANCE]: [
-        { tags: [Attribute.AERO], value: 0.1 },
-        { tags: [Attribute.FUSION], value: 0.2 },
-      ],
-      [EnemyStat.AERO_EROSION]: [
-        { tags: [NegativeStatus.AERO_EROSION], value: 9 },
-        { tags: [NegativeStatus.FUSION_BURST], value: 4 },
-      ],
-    });
+    const enemy = createEnemy([
+      createStat(EnemyStat.BASE_RESISTANCE, 0.1, [Attribute.AERO]),
+      createStat(EnemyStat.BASE_RESISTANCE, 0.2, [Attribute.FUSION]),
+      createStat(EnemyStat.AERO_EROSION, 9, [NegativeStatus.AERO_EROSION]),
+      createStat(EnemyStat.AERO_EROSION, 4, [NegativeStatus.FUSION_BURST]),
+    ]);
 
     const filterStats = getStatFilterer(AttackScalingProperty.AERO_EROSION, [
       Tag.ALL,
@@ -148,27 +129,23 @@ describe('getStatFilterer', () => {
     ]);
     const { filteredEnemy } = filterStats(team, enemy);
 
-    expect(filteredEnemy.stats[EnemyStat.BASE_RESISTANCE]).toEqual([
-      { tags: [Attribute.AERO], value: 0.1 },
+    expect(getStatsFor(filteredEnemy.stats, EnemyStat.BASE_RESISTANCE)).toEqual([
+      createStat(EnemyStat.BASE_RESISTANCE, 0.1, [Attribute.AERO]),
     ]);
-    expect(filteredEnemy.stats[EnemyStat.AERO_EROSION]).toEqual([
-      { tags: [NegativeStatus.AERO_EROSION], value: 9 },
+    expect(getStatsFor(filteredEnemy.stats, EnemyStat.AERO_EROSION)).toEqual([
+      createStat(EnemyStat.AERO_EROSION, 9, [NegativeStatus.AERO_EROSION]),
     ]);
   });
 
   it('matches tune rupture atk conditional offensive stats only on the tune rupture tag', () => {
     const team = [
-      createCharacter({
-        [CharacterStat.DAMAGE_BONUS]: [
-          { tags: [Tag.TUNE_RUPTURE], value: 0.3 },
-          { tags: [Tag.ELECTRO], value: 0.2 },
-          { tags: [Tag.ALL], value: 0.1 },
-        ],
-        [CharacterStat.CRITICAL_DAMAGE]: [
-          { tags: [Tag.TUNE_RUPTURE], value: 0.5 },
-          { tags: [Tag.BASIC_ATTACK], value: 0.25 },
-        ],
-      }),
+      createCharacter([
+        createStat(CharacterStat.DAMAGE_BONUS, 0.3, [Tag.TUNE_RUPTURE]),
+        createStat(CharacterStat.DAMAGE_BONUS, 0.2, [Tag.ELECTRO]),
+        createStat(CharacterStat.DAMAGE_BONUS, 0.1, [Tag.ALL]),
+        createStat(CharacterStat.CRITICAL_DAMAGE, 0.5, [Tag.TUNE_RUPTURE]),
+        createStat(CharacterStat.CRITICAL_DAMAGE, 0.25, [Tag.BASIC_ATTACK]),
+      ]),
     ];
     const enemy = createEnemy();
 
@@ -179,38 +156,32 @@ describe('getStatFilterer', () => {
     ]);
     const { filteredTeam } = filterStats(team, enemy);
 
-    expect(filteredTeam[0].stats[CharacterStat.DAMAGE_BONUS]).toEqual([
-      { tags: [Tag.TUNE_RUPTURE], value: 0.3 },
+    expect(getStatsFor(filteredTeam[0].stats, CharacterStat.DAMAGE_BONUS)).toEqual([
+      createStat(CharacterStat.DAMAGE_BONUS, 0.3, [Tag.TUNE_RUPTURE]),
     ]);
-    expect(filteredTeam[0].stats[CharacterStat.CRITICAL_DAMAGE]).toEqual([
-      { tags: [Tag.TUNE_RUPTURE], value: 0.5 },
+    expect(getStatsFor(filteredTeam[0].stats, CharacterStat.CRITICAL_DAMAGE)).toEqual([
+      createStat(CharacterStat.CRITICAL_DAMAGE, 0.5, [Tag.TUNE_RUPTURE]),
     ]);
   });
 
   it('still applies non-conditional stats generally for tune rupture atk', () => {
     const team = [
-      createCharacter({
-        [CharacterStat.FINAL_DAMAGE_BONUS]: [
-          { tags: [Tag.TUNE_RUPTURE], value: 0.15 },
-          { tags: [Tag.ELECTRO], value: 0.25 },
-          { tags: [Tag.ALL], value: 0.05 },
-          { tags: [Tag.GLACIO], value: 0.9 },
-        ],
-        [CharacterStat.TUNE_BREAK_BOOST]: [
-          { tags: [Tag.TUNE_RUPTURE], value: 0.4 },
-          { tags: [Tag.ALL], value: 0.2 },
-          { tags: [Tag.GLACIO], value: 0.8 },
-        ],
-      }),
+      createCharacter([
+        createStat(CharacterStat.FINAL_DAMAGE_BONUS, 0.15, [Tag.TUNE_RUPTURE]),
+        createStat(CharacterStat.FINAL_DAMAGE_BONUS, 0.25, [Tag.ELECTRO]),
+        createStat(CharacterStat.FINAL_DAMAGE_BONUS, 0.05, [Tag.ALL]),
+        createStat(CharacterStat.FINAL_DAMAGE_BONUS, 0.9, [Tag.GLACIO]),
+        createStat(CharacterStat.TUNE_BREAK_BOOST, 0.4, [Tag.TUNE_RUPTURE]),
+        createStat(CharacterStat.TUNE_BREAK_BOOST, 0.2, [Tag.ALL]),
+        createStat(CharacterStat.TUNE_BREAK_BOOST, 0.8, [Tag.GLACIO]),
+      ]),
     ];
-    const enemy = createEnemy({
-      [EnemyStat.BASE_RESISTANCE]: [
-        { tags: [Tag.ELECTRO], value: 0.1 },
-        { tags: [Tag.TUNE_RUPTURE], value: 0.05 },
-        { tags: [Tag.ALL], value: 0.02 },
-        { tags: [Tag.GLACIO], value: 0.2 },
-      ],
-    });
+    const enemy = createEnemy([
+      createStat(EnemyStat.BASE_RESISTANCE, 0.1, [Tag.ELECTRO]),
+      createStat(EnemyStat.BASE_RESISTANCE, 0.05, [Tag.TUNE_RUPTURE]),
+      createStat(EnemyStat.BASE_RESISTANCE, 0.02, [Tag.ALL]),
+      createStat(EnemyStat.BASE_RESISTANCE, 0.2, [Tag.GLACIO]),
+    ]);
 
     const filterStats = getStatFilterer(AttackScalingProperty.TUNE_RUPTURE_ATK, [
       Tag.ELECTRO,
@@ -219,19 +190,21 @@ describe('getStatFilterer', () => {
     ]);
     const { filteredTeam, filteredEnemy } = filterStats(team, enemy);
 
-    expect(filteredTeam[0].stats[CharacterStat.FINAL_DAMAGE_BONUS]).toEqual([
-      { tags: [Tag.TUNE_RUPTURE], value: 0.15 },
-      { tags: [Tag.ELECTRO], value: 0.25 },
-      { tags: [Tag.ALL], value: 0.05 },
+    expect(
+      getStatsFor(filteredTeam[0].stats, CharacterStat.FINAL_DAMAGE_BONUS),
+    ).toEqual([
+      createStat(CharacterStat.FINAL_DAMAGE_BONUS, 0.15, [Tag.TUNE_RUPTURE]),
+      createStat(CharacterStat.FINAL_DAMAGE_BONUS, 0.25, [Tag.ELECTRO]),
+      createStat(CharacterStat.FINAL_DAMAGE_BONUS, 0.05, [Tag.ALL]),
     ]);
-    expect(filteredTeam[0].stats[CharacterStat.TUNE_BREAK_BOOST]).toEqual([
-      { tags: [Tag.TUNE_RUPTURE], value: 0.4 },
-      { tags: [Tag.ALL], value: 0.2 },
+    expect(getStatsFor(filteredTeam[0].stats, CharacterStat.TUNE_BREAK_BOOST)).toEqual([
+      createStat(CharacterStat.TUNE_BREAK_BOOST, 0.4, [Tag.TUNE_RUPTURE]),
+      createStat(CharacterStat.TUNE_BREAK_BOOST, 0.2, [Tag.ALL]),
     ]);
-    expect(filteredEnemy.stats[EnemyStat.BASE_RESISTANCE]).toEqual([
-      { tags: [Tag.ELECTRO], value: 0.1 },
-      { tags: [Tag.TUNE_RUPTURE], value: 0.05 },
-      { tags: [Tag.ALL], value: 0.02 },
+    expect(getStatsFor(filteredEnemy.stats, EnemyStat.BASE_RESISTANCE)).toEqual([
+      createStat(EnemyStat.BASE_RESISTANCE, 0.1, [Tag.ELECTRO]),
+      createStat(EnemyStat.BASE_RESISTANCE, 0.05, [Tag.TUNE_RUPTURE]),
+      createStat(EnemyStat.BASE_RESISTANCE, 0.02, [Tag.ALL]),
     ]);
   });
 });

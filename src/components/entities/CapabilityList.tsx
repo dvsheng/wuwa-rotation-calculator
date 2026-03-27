@@ -1,11 +1,11 @@
 import { isPermanentStat } from '@/services/game-data';
-import type { Capability } from '@/services/game-data';
+import type { Capability, PermanentStat } from '@/services/game-data';
 
 import { Stack } from '../ui/layout';
 
 import { CapabilityItem, PermanentStatContent } from './CapabilityItem';
 
-export const typeOrder = ['attack', 'modifier', 'permanent_stat'] as const;
+type PermanentCapability = PermanentStat;
 
 export const CapabilityList = ({
   entries,
@@ -17,15 +17,21 @@ export const CapabilityList = ({
   showSkillIcon?: boolean;
 }) => {
   const standardEntries = entries.filter((capability) => !isPermanentStat(capability));
-  const permanentEntries = entries.filter((capability) => isPermanentStat(capability));
-  const entityId = entries[0].entityId;
+  const permanentEntries = entries.filter(
+    (capability): capability is PermanentCapability => isPermanentStat(capability),
+  );
+  const entityId = entries[0]?.entityId;
+
+  if (!entityId) {
+    return;
+  }
 
   return (
     <Stack gap="inset">
-      {standardEntries.map((stat) => (
+      {standardEntries.map((capability) => (
         <CapabilityItem
-          key={stat.id}
-          capability={stat}
+          key={capability.id}
+          capability={capability}
           entityId={entityId}
           showCapabilityTypeBadge={showCapabilityTypeBadge}
           showSkillIcon={showSkillIcon}

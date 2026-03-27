@@ -17,7 +17,7 @@ import {
 
 import {
   normalizeEchoSubstatValue,
-  toRotationAttack,
+  toRotationAttacks,
   toRotationModifier,
   toRotationPermanentStat,
 } from './adapt-client-input-to-rotation';
@@ -233,26 +233,28 @@ describe('toRotationModifier', () => {
         tags: [Tag.ELECTRO],
       },
     ]);
-    const attack = createMockAttack(15_678, 32_132);
 
     const [result] = toRotationModifier(
       modifier as any,
-      attack as any,
+      32_132,
       characterIdToSlotNumberMap,
     );
 
     expect(result.targets).toEqual([0]);
-    const damageBonus = result.modifiedStats[CharacterStat.DAMAGE_BONUS]![0];
-    expect(typeof damageBonus.value).toBe('object');
-    if (typeof damageBonus.value === 'number') {
+    expect(result.stat).toBe(CharacterStat.DAMAGE_BONUS);
+    expect(result.tags).toEqual([Tag.ELECTRO]);
+    expect(result.name).toBe(modifier.name);
+    expect(result.description).toBe(modifier.description);
+    expect(typeof result.value).toBe('object');
+    if (typeof result.value === 'number') {
       throw new TypeError('expected statParameterizedNumber');
     }
-    expect(damageBonus.value.type).toBe('statParameterizedNumber');
-    if (damageBonus.value.type !== 'statParameterizedNumber') {
+    expect(result.value.type).toBe('statParameterizedNumber');
+    if (result.value.type !== 'statParameterizedNumber') {
       throw new TypeError('expected statParameterizedNumber');
     }
-    expect(damageBonus.value.stat).toBe(CharacterStat.ENERGY_REGEN);
-    expect(damageBonus.value.characterIndex).toBe(0);
+    expect(result.value.stat).toBe(CharacterStat.ENERGY_REGEN);
+    expect(result.value.characterIndex).toBe(0);
   });
 
   it('maps self target modifiers to other source slots correctly', () => {
@@ -263,23 +265,21 @@ describe('toRotationModifier', () => {
         tags: [Tag.GLACIO],
       },
     ]);
-    const attack = createMockAttack(15_678, 1234);
 
     const [result] = toRotationModifier(
       modifier as any,
-      attack as any,
+      1234,
       characterIdToSlotNumberMap,
     );
 
     expect(result.targets).toEqual([1]);
-    const damageBonus = result.modifiedStats[CharacterStat.DAMAGE_BONUS]![0];
-    if (typeof damageBonus.value === 'number') {
+    if (typeof result.value === 'number') {
       throw new TypeError('expected statParameterizedNumber');
     }
-    if (damageBonus.value.type !== 'statParameterizedNumber') {
+    if (result.value.type !== 'statParameterizedNumber') {
       throw new TypeError('expected statParameterizedNumber');
     }
-    expect(damageBonus.value.characterIndex).toBe(1);
+    expect(result.value.characterIndex).toBe(1);
   });
 
   it('maps team target modifiers to all character slots', () => {
@@ -290,16 +290,15 @@ describe('toRotationModifier', () => {
         tags: [Tag.ALL],
       },
     ]);
-    const attack = createMockAttack(15_678, 32_132);
 
     const [result] = toRotationModifier(
       modifier as any,
-      attack as any,
+      32_132,
       characterIdToSlotNumberMap,
     );
 
     expect(result.targets).toEqual([0, 1, 2]);
-    expect(result.modifiedStats[CharacterStat.DAMAGE_AMPLIFICATION]).toBeDefined();
+    expect(result.stat).toBe(CharacterStat.DAMAGE_AMPLIFICATION);
   });
 
   it('maps activeCharacter target modifiers to the attacking character slot', () => {
@@ -310,11 +309,10 @@ describe('toRotationModifier', () => {
         tags: [Tag.RESONANCE_SKILL],
       },
     ]);
-    const attack = createMockAttack(15_678, 1234);
 
     const [result] = toRotationModifier(
       modifier as any,
-      attack as any,
+      1234,
       characterIdToSlotNumberMap,
     );
 
@@ -329,11 +327,10 @@ describe('toRotationModifier', () => {
         tags: [Tag.ALL],
       },
     ]);
-    const attack = createMockAttack(15_678, 32_132);
 
     const [result] = toRotationModifier(
       modifier as any,
-      attack as any,
+      32_132,
       characterIdToSlotNumberMap,
     );
 
@@ -353,18 +350,21 @@ describe('toRotationModifier', () => {
         tags: [Tag.ALL],
       },
     ]);
-    const attack = createMockAttack(15_678, 1234);
 
-    const [result] = toRotationModifier(
+    const result = toRotationModifier(
       modifier as any,
-      attack as any,
+      1234,
       characterIdToSlotNumberMap,
     );
 
-    expect(result.targets).toEqual([1]);
+    expect(result).toHaveLength(2);
+    expect(result.map((entry) => entry.targets)).toEqual([[1], [1]]);
 
-    const damageBonus = result.modifiedStats[CharacterStat.DAMAGE_BONUS]![0];
-    if (typeof damageBonus.value === 'number') {
+    const damageBonus = result.find(
+      (entry) => entry.stat === CharacterStat.DAMAGE_BONUS,
+    );
+    expect(damageBonus).toBeDefined();
+    if (!damageBonus || typeof damageBonus.value === 'number') {
       throw new TypeError('expected statParameterizedNumber');
     }
     if (damageBonus.value.type !== 'statParameterizedNumber') {
@@ -372,22 +372,25 @@ describe('toRotationModifier', () => {
     }
     expect(damageBonus.value.characterIndex).toBe(1);
 
-    const critRate = result.modifiedStats[CharacterStat.CRITICAL_RATE]![0];
-    expect(critRate.value).toBe(0.05);
+    const critRate = result.find((entry) => entry.stat === CharacterStat.CRITICAL_RATE);
+    expect(critRate?.value).toBe(0.05);
   });
 });
 
-describe('toRotationAttack', () => {
+describe('toRotationAttacks', () => {
   it('appends attack metadata tags used by stat filtering', () => {
     const attack = createMockAttack(15_678, 32_132);
 
-    const result = toRotationAttack(
+    const result = toRotationAttacks(
       { ...attack, modifiers: [] } as any,
       characterIdToSlotNumberMap,
+      4,
     );
 
-    expect(result.characterIndex).toBe(0);
-    expect(result.damageInstances[0].tags).toEqual(
+    expect(result).toHaveLength(1);
+    expect(result[0].characterIndex).toBe(0);
+    expect(result[0].attackIndex).toBe(4);
+    expect(result[0].tags).toEqual(
       expect.arrayContaining([
         Tag.BASIC_ATTACK,
         'Attack 15678',

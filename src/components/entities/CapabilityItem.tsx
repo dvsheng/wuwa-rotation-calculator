@@ -15,6 +15,7 @@ import type {
   Modifier,
   PermanentStat,
   Sequence,
+  Skill,
 } from '@/services/game-data';
 
 import { EntityIcon } from '../common/EntityIcon';
@@ -28,6 +29,7 @@ export const CapabilityItem = ({
   capability,
   entityId,
   isAlternativePlacement = false,
+  skill,
   defaultAlternativeDefinition = 'base',
   showCapabilityTypeBadge = false,
   showSkillIcon = false,
@@ -35,6 +37,7 @@ export const CapabilityItem = ({
   capability: Capability;
   entityId: number;
   isAlternativePlacement?: boolean;
+  skill?: Skill;
   defaultAlternativeDefinition?: 'base' | Sequence;
   showCapabilityTypeBadge?: boolean;
   showSkillIcon?: boolean;
@@ -54,9 +57,9 @@ export const CapabilityItem = ({
         defaultAlternativeDefinition={defaultAlternativeDefinition}
         entityId={entityId}
         titlePrefix={
-          showSkillIcon && capability.iconUrl ? (
+          showSkillIcon && (skill?.iconUrl ?? capability.iconUrl) ? (
             <EntityIcon
-              iconUrl={capability.iconUrl}
+              iconUrl={skill?.iconUrl ?? capability.iconUrl}
               size="small"
               className="bg-secondary/60 ring-border/60 ring-1"
             />
@@ -64,9 +67,7 @@ export const CapabilityItem = ({
         }
         titleSuffix={
           showCapabilityTypeBadge ? (
-            <Badge variant="outline">
-              {startCase(capability.capabilityJson.type.replaceAll('_', ' '))}
-            </Badge>
+            <Badge variant="outline">{startCase(capability.capabilityJson.type)}</Badge>
           ) : undefined
         }
       >
@@ -150,7 +151,7 @@ const ModifierContent = ({ content }: { content: Modifier }) => {
 export const PermanentStatContent = ({
   content,
 }: {
-  content: Array<PermanentStat>;
+  content: Array<PermanentStat & { isAlternativePlacement?: boolean }>;
 }) => {
   return (
     <Card>
@@ -175,7 +176,13 @@ export const PermanentStatContent = ({
           </TableHeader>
           <TableBody>
             {content.map((stat, index) => (
-              <TableRow key={index} data-capability-id={stat.id}>
+              <TableRow
+                key={index}
+                data-capability-id={stat.id}
+                data-capability-placement={
+                  stat.isAlternativePlacement ? 'alternative' : 'direct'
+                }
+              >
                 <TableCell>{stat.name}</TableCell>
                 <TableCell>{stat.description}</TableCell>
                 <TableCell>

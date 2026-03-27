@@ -16,29 +16,13 @@ export type TableOfContentsItem = {
   accordionValue?: string;
 };
 
-export type TableOfContentsSidebarVariant = 'default' | 'compact';
-
-const scrollToSection = (sectionId: string) => {
-  if (typeof document === 'undefined') {
-    return;
-  }
-
-  document.querySelector<HTMLElement>(`#${sectionId}`)?.scrollIntoView({
-    behavior: 'smooth',
-    block: 'start',
-  });
-};
-
 export const TableOfContentsSidebar = ({
   items,
   onItemSelect,
-  variant = 'default',
 }: {
   items: Array<TableOfContentsItem>;
   onItemSelect?: (item: TableOfContentsItem) => void;
-  variant?: TableOfContentsSidebarVariant;
 }) => {
-  const isCompact = variant === 'compact';
   const [isOpen, setIsOpen] = useState(true);
 
   return (
@@ -83,21 +67,13 @@ export const TableOfContentsSidebar = ({
                   key={item.id}
                   type="button"
                   variant="ghost"
-                  className={
-                    isCompact
-                      ? 'h-auto justify-start rounded-none px-3 py-1 text-left'
-                      : 'h-auto justify-start rounded-none px-3 py-1.5 text-left'
-                  }
+                  className="h-auto justify-start rounded-none px-3 py-1.5 text-left"
                   onClick={() => {
                     onItemSelect?.(item);
-                    requestAnimationFrame(() => scrollToSection(item.id));
                   }}
                 >
                   <Stack gap="none" align="start" className="min-w-0">
-                    <Text
-                      variant={isCompact ? 'caption' : 'bodySm'}
-                      className="w-full truncate"
-                    >
+                    <Text variant="bodySm" className="w-full truncate">
                       {item.label}
                     </Text>
                     {item.caption && (

@@ -1,6 +1,7 @@
-import { compact, startCase } from 'es-toolkit';
+import { compact } from 'es-toolkit';
 import { useState } from 'react';
 
+import { useIsMobile } from '@/hooks/use-mobile';
 import { CapabilityType } from '@/services/game-data';
 import type { Capability } from '@/services/game-data';
 
@@ -10,12 +11,16 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '../ui/accordion';
+import { Row } from '../ui/layout';
 import { Text } from '../ui/typography';
 
-import { CapabilityList, typeOrder } from './AdminEntityViewShared';
+import { capabilityTypeLabel, typeOrder } from './adminEntityView.utilities';
+import { CapabilityList } from './CapabilityList';
+import { CapabilityTypeHeader } from './CapabilityTypeHeader';
 import { TableOfContentsSidebar } from './TableOfContentsSidebar';
 
 export const ByTypeView = ({ capabilities }: { capabilities: Array<Capability> }) => {
+  const isMobile = useIsMobile();
   const groups = Object.groupBy(
     capabilities,
     (capability) => capability.capabilityJson.type,
@@ -24,30 +29,36 @@ export const ByTypeView = ({ capabilities }: { capabilities: Array<Capability> }
     Object.values(CapabilityType),
   );
   const tocItems = compact(
-    Object.entries(groups)
-      .filter(([_, entries]) => entries.length > 0)
-      .map(([type, _]) => {
-        return {
-          id: `type-${type}`,
-          label: startCase(type),
-          accordionValue: type,
-        };
-      }),
+    typeOrder.map((type) => {
+      if ((groups[type]?.length ?? 0) === 0) {
+        return;
+      }
+
+      return {
+        id: `type-${type}`,
+        label: capabilityTypeLabel[type],
+        accordionValue: type,
+      };
+    }),
   );
+  const entityId = capabilities[0]?.entityId;
 
   return (
-    <div className="gap-panel flex flex-col lg:flex-row lg:items-start">
-      <TableOfContentsSidebar items={tocItems} />
-      <div className="min-w-0 flex-1">
+    <Row gap="panel" align="start">
+      {!isMobile && <TableOfContentsSidebar items={tocItems} />}
+      {entityId ? (
         <CapabilityTypeAccordion
           groups={groups}
-          entityId={capabilities[0].entityId}
           showSkillIcon
           value={openTypeValues}
           onValueChange={setOpenTypeValues}
         />
-      </div>
-    </div>
+      ) : (
+        <Text variant="bodySm" tone="muted">
+          No capabilities found.
+        </Text>
+      )}
+    </Row>
   );
 };
 
@@ -59,7 +70,6 @@ const CapabilityTypeAccordion = ({
   onValueChange,
 }: {
   groups: Partial<Record<CapabilityType, Array<Capability>>>;
-  entityId: number;
   showCapabilityTypeBadge?: boolean;
   showSkillIcon?: boolean;
   value?: Array<string>;
@@ -78,9 +88,7 @@ const CapabilityTypeAccordion = ({
             disabled={capabilities.length === 0}
           >
             <AccordionTrigger>
-              <Text variant="title">
-                {startCase(type)} ({capabilities.length})
-              </Text>
+              <CapabilityTypeHeader capabilityType={type} count={capabilities.length} />
             </AccordionTrigger>
             <AccordionContent>
               <CapabilityList

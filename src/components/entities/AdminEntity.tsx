@@ -2,7 +2,11 @@ import { Link } from '@tanstack/react-router';
 import { ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 
-import { useEntities, useEntityCapabilities } from '@/hooks/useEntities';
+import {
+  useEntities,
+  useEntityCapabilities,
+  useEntitySkills,
+} from '@/hooks/useEntities';
 import type { EntityListRow } from '@/services/game-data';
 import { EntityType } from '@/services/game-data';
 
@@ -20,6 +24,7 @@ const SKILL_VIEW = 'skill';
 
 export const AdminEntity = ({ id }: { id: number }) => {
   const { data: capabilities } = useEntityCapabilities(id);
+  const { data: skills } = useEntitySkills(id);
   const { data: entities } = useEntities({});
 
   const [view, setView] = useState(TYPE_VIEW);
@@ -32,11 +37,11 @@ export const AdminEntity = ({ id }: { id: number }) => {
   const shouldShowSkillView = entity.type === EntityType.CHARACTER;
   return (
     <ScrollArea className="h-full min-w-0">
-      <Stack className="mx-auto w-6xl shrink-0" gap="panel">
+      <Stack className="p-panel relative mx-auto max-w-6xl" gap="page">
         <Row
           gap="trim"
           align="center"
-          className="bg-background/95 sticky top-0 z-10 py-2 backdrop-blur"
+          className="text-muted-foreground sticky top-0 z-10 backdrop-blur"
         >
           <Link
             to="/entities"
@@ -44,7 +49,7 @@ export const AdminEntity = ({ id }: { id: number }) => {
           >
             Entities
           </Link>
-          <ChevronRight className="text-muted-foreground size-4" />
+          <ChevronRight />
           <Text variant="bodySm">{entity.name}</Text>
         </Row>
         <Row justify="between">
@@ -62,7 +67,7 @@ export const AdminEntity = ({ id }: { id: number }) => {
           )}
         </Row>
         {view === SKILL_VIEW ? (
-          <BySkillView capabilities={capabilities} />
+          <BySkillView capabilities={capabilities} skills={skills} />
         ) : (
           <ByTypeView capabilities={capabilities} />
         )}

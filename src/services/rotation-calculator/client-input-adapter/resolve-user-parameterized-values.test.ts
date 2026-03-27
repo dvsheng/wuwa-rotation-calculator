@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ParameterInstance } from '@/schemas/rotation';
 import type {
   NumberNode as GameDataNumberNode,
   UserResolvableNumber,
@@ -23,34 +22,38 @@ const parameterNode = (
   maximum,
 });
 
-const parameterValues = (values: Record<string, number>): Array<ParameterInstance> =>
-  Object.entries(values).map(([id, value]) => ({
-    id,
-    value,
-  })) as Array<ParameterInstance>;
-
 describe('resolveUserParameterizedValues', () => {
   describe('basic resolution', () => {
     it('resolves a user-parameterized leaf to the matching numeric value', () => {
       const input = {
         value: parameterNode('0', 10),
-        parameterValues: parameterValues({ 0: 50 }),
       };
 
-      const result = resolveUserParameterizedValues(input);
+      const result = resolveUserParameterizedValues(input, { 0: 50 });
 
       expect(result).toEqual({
         value: 50,
       });
     });
 
+    it('allows zero-valued parameters', () => {
+      const input = {
+        value: parameterNode('0'),
+      };
+
+      const result = resolveUserParameterizedValues(input, { 0: 0 });
+
+      expect(result).toEqual({
+        value: 0,
+      });
+    });
+
     it('clamps a user-parameterized leaf up to its minimum bound', () => {
       const input = {
         value: parameterNode('0', 10, 20),
-        parameterValues: parameterValues({ 0: 5 }),
       };
 
-      const result = resolveUserParameterizedValues(input);
+      const result = resolveUserParameterizedValues(input, { 0: 5 });
 
       expect(result).toEqual({
         value: 10,
@@ -60,10 +63,9 @@ describe('resolveUserParameterizedValues', () => {
     it('clamps a user-parameterized leaf down to its maximum bound', () => {
       const input = {
         value: parameterNode('0', 10, 20),
-        parameterValues: parameterValues({ 0: 25 }),
       };
 
-      const result = resolveUserParameterizedValues(input);
+      const result = resolveUserParameterizedValues(input, { 0: 25 });
 
       expect(result).toEqual({
         value: 20,
@@ -73,10 +75,9 @@ describe('resolveUserParameterizedValues', () => {
     it('clamps the raw parameter value before applying scale', () => {
       const input = {
         value: parameterNode('0', 0, 2, 0.06),
-        parameterValues: parameterValues({ 0: 5 }),
       };
 
-      const result = resolveUserParameterizedValues(input);
+      const result = resolveUserParameterizedValues(input, { 0: 5 });
 
       expect(result).toEqual({
         value: 0.12,
@@ -86,10 +87,9 @@ describe('resolveUserParameterizedValues', () => {
     it('resolves arrays and preserves non-parameterized values', () => {
       const input = {
         values: [parameterNode('0'), 100, parameterNode('1')],
-        parameterValues: parameterValues({ 0: 10, 1: 20 }),
       };
 
-      const result = resolveUserParameterizedValues(input);
+      const result = resolveUserParameterizedValues(input, { 0: 10, 1: 20 });
 
       expect(result).toEqual({
         values: [10, 100, 20],
@@ -102,10 +102,9 @@ describe('resolveUserParameterizedValues', () => {
           type: 'sum',
           operands: [100, parameterNode('0')],
         } satisfies GameDataNumberNode,
-        parameterValues: parameterValues({ 0: 50 }),
       };
 
-      const result = resolveUserParameterizedValues(input);
+      const result = resolveUserParameterizedValues(input, { 0: 50 });
 
       expect(result).toEqual({
         value: {
@@ -114,134 +113,32 @@ describe('resolveUserParameterizedValues', () => {
         },
       });
     });
-
-    it('strips parameterValues from output', () => {
-      const input = {
-        value: 100,
-        parameterValues: parameterValues({ 0: 50 }),
-      };
-
-      const result = resolveUserParameterizedValues(input);
-
-      expect(result).toEqual({
-        value: 100,
-      });
-      expect(result).not.toHaveProperty('parameterValues');
-    });
-  });
-
-  describe('nested object resolution', () => {
-    it('uses the closest parent parameterValues', () => {
-      const input = {
-        parameterValues: parameterValues({ 0: 999 }),
-        child: {
-          parameterValues: parameterValues({ 0: 50 }),
-          value: parameterNode('0'),
-        },
-      };
-
-      const result = resolveUserParameterizedValues(input);
-
-      expect(result).toEqual({
-        child: {
-          value: 50,
-        },
-      });
-    });
-
-    it('inherits parameterValues from a parent object when needed', () => {
-      const input = {
-        parameterValues: parameterValues({ 0: 25 }),
-        child: {
-          nested: {
-            value: {
-              type: 'product',
-              operands: [parameterNode('0'), 2],
-            } satisfies GameDataNumberNode,
-          },
-        },
-      };
-
-      const result = resolveUserParameterizedValues(input);
-
-      expect(result).toEqual({
-        child: {
-          nested: {
-            value: {
-              type: 'product',
-              operands: [25, 2],
-            },
-          },
-        },
-      });
-    });
-
-    it('resolves deeply nested structures recursively', () => {
-      const input = {
-        level1: {
-          parameterValues: parameterValues({ 0: 10 }),
-          level2: {
-            level3: {
-              values: [
-                {
-                  type: 'sum',
-                  operands: [5, parameterNode('0')],
-                } satisfies GameDataNumberNode,
-                100,
-              ],
-            },
-          },
-        },
-      };
-
-      const result = resolveUserParameterizedValues(input);
-
-      expect(result).toEqual({
-        level1: {
-          level2: {
-            level3: {
-              values: [
-                {
-                  type: 'sum',
-                  operands: [5, 10],
-                },
-                100,
-              ],
-            },
-          },
-        },
-      });
-    });
   });
 
   describe('error handling', () => {
-    it('throws when a user-parameterized value has no parent parameterValues', () => {
+    it('throws when no parameter map is provided', () => {
       const input = {
         value: parameterNode('0'),
       };
 
       expect(() => resolveUserParameterizedValues(input)).toThrow(
-        'Encountered userParameterizedNumber without parameterValues in any parent object',
+        'Encountered userParameterizedNumber without matching parameterValues',
+      );
+    });
+
+    it('throws when the requested parameter ID is missing', () => {
+      const input = {
+        value: parameterNode('0'),
+      };
+
+      expect(() => resolveUserParameterizedValues(input, { 1: 10 })).toThrow(
+        'Encountered userParameterizedNumber without matching parameterValues',
       );
     });
 
     it('throws when called with a user-parameterized node at the root', () => {
       expect(() => resolveUserParameterizedValues(parameterNode('0'))).toThrow(
-        'Encountered userParameterizedNumber without parameterValues in any parent object',
-      );
-    });
-
-    it('throws for nested user-parameterized values without inherited context', () => {
-      const input = {
-        nested: {
-          deepNested: {
-            value: parameterNode('0'),
-          },
-        },
-      };
-
-      expect(() => resolveUserParameterizedValues(input)).toThrow(
-        'Encountered userParameterizedNumber without parameterValues in any parent object',
+        'Encountered userParameterizedNumber without matching parameterValues',
       );
     });
   });
@@ -256,10 +153,9 @@ describe('resolveUserParameterizedValues', () => {
 
       const input = {
         value: runtimeResolvable,
-        parameterValues: parameterValues({ 0: 100 }),
       };
 
-      const result = resolveUserParameterizedValues(input);
+      const result = resolveUserParameterizedValues(input, { 0: 100 });
 
       expect(result).toEqual({
         value: runtimeResolvable,
@@ -279,10 +175,9 @@ describe('resolveUserParameterizedValues', () => {
           operands: [20, parameterNode('0')],
         } satisfies GameDataNumberNode,
         runtimeValue: runtimeResolvable,
-        parameterValues: parameterValues({ 0: 15 }),
       };
 
-      const result = resolveUserParameterizedValues(input);
+      const result = resolveUserParameterizedValues(input, { 0: 15 });
 
       expect(result).toEqual({
         userValue: {
@@ -311,10 +206,9 @@ describe('resolveUserParameterizedValues', () => {
           { motionValue: 200, tags: ['BasicAttack'], scalingStat: 'atk' },
           { motionValue: 150, tags: ['BasicAttack'], scalingStat: 'atk' },
         ],
-        parameterValues: parameterValues({ 0: 50 }),
       };
 
-      const result = resolveUserParameterizedValues(attack);
+      const result = resolveUserParameterizedValues(attack, { 0: 50 });
 
       expect(result).toEqual({
         id: 1,
@@ -348,10 +242,9 @@ describe('resolveUserParameterizedValues', () => {
           },
           { stat: CharacterStat.CRITICAL_RATE, value: 0.2, tags: ['ALL'] },
         ],
-        parameterValues: parameterValues({ 0: 0.5 }),
       };
 
-      const result = resolveUserParameterizedValues(modifier);
+      const result = resolveUserParameterizedValues(modifier, { 0: 0.5 });
 
       expect(result).toEqual({
         id: 1,
@@ -365,38 +258,6 @@ describe('resolveUserParameterizedValues', () => {
             tags: ['ALL'],
           },
           { stat: CharacterStat.CRITICAL_RATE, value: 0.2, tags: ['ALL'] },
-        ],
-      });
-    });
-
-    it('handles mixed arrays with different parameter contexts', () => {
-      const input = {
-        items: [
-          {
-            value: parameterNode('0'),
-            parameterValues: parameterValues({ 0: 10 }),
-          },
-          {
-            value: {
-              type: 'sum',
-              operands: [100, parameterNode('0')],
-            } satisfies GameDataNumberNode,
-            parameterValues: parameterValues({ 0: 40 }),
-          },
-        ],
-      };
-
-      const result = resolveUserParameterizedValues(input);
-
-      expect(result).toEqual({
-        items: [
-          { value: 10 },
-          {
-            value: {
-              type: 'sum',
-              operands: [100, 40],
-            },
-          },
         ],
       });
     });

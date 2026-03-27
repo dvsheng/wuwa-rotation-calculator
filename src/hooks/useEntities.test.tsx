@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { Suspense } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useEntities, useEntityCapabilities } from './useEntities';
+import { useEntities, useEntityCapabilities, useEntitySkills } from './useEntities';
 
 vi.mock('@/services/game-data', async () => {
   const actual = await vi.importActual('@/services/game-data');
@@ -18,12 +18,18 @@ vi.mock('@/services/game-data/list-capabilities.function', () => ({
   listCapabilities: vi.fn(),
 }));
 
+vi.mock('@/services/game-data/list-skills.function', () => ({
+  listSkills: vi.fn(),
+}));
+
 const { EntityType, listEntities } = await import('@/services/game-data');
 const { listCapabilities } =
   await import('@/services/game-data/list-capabilities.function');
+const { listSkills } = await import('@/services/game-data/list-skills.function');
 
 const mockListEntities = vi.mocked(listEntities);
 const mockListCapabilities = vi.mocked(listCapabilities);
+const mockListSkills = vi.mocked(listSkills);
 
 describe('useEntities', () => {
   let queryClient: QueryClient;
@@ -201,6 +207,30 @@ describe('useEntities', () => {
 
     expect(result.current.data[0]?.id).toBe(501);
     expect(mockListCapabilities).toHaveBeenCalledWith({
+      data: { entityIds: [42] },
+    });
+  });
+
+  it('fetches skills for a single entity', async () => {
+    mockListSkills.mockResolvedValue([
+      {
+        id: 12,
+        entityId: 42,
+        name: 'Normal Attack',
+        description: 'Skill description',
+        iconUrl: '/skill.png',
+        originType: 'Normal Attack',
+      },
+    ] as any);
+
+    const { result } = renderHook(() => useEntitySkills(42), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.data).toHaveLength(1);
+    });
+
+    expect(result.current.data[0]?.id).toBe(12);
+    expect(mockListSkills).toHaveBeenCalledWith({
       data: { entityIds: [42] },
     });
   });

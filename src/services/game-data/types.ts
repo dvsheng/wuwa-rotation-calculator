@@ -139,6 +139,16 @@ export interface BaseCapability {
   entityId: number;
 }
 
+export interface Skill {
+  id: number;
+  gameId?: number;
+  entityId: number;
+  name: string;
+  description?: string;
+  iconUrl?: string;
+  originType: OriginType;
+}
+
 // ============================================================================
 // Tier 1 — Refine-scalable numbers
 // Resolved at game-data fetch time using the weapon's refinement level.

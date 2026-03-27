@@ -69,3 +69,12 @@ export const ListCapabilitiesRequestSchema = z.object({
 });
 
 export type ListCapabilitiesRequest = z.infer<typeof ListCapabilitiesRequestSchema>;
+
+export const ListSkillsRequestSchema = z.object({
+  entityIds: z
+    .array(z.int().positive())
+    .min(1)
+    .describe('The non-empty list of entity IDs to fetch skills for'),
+});
+
+export type ListSkillsRequest = z.infer<typeof ListSkillsRequestSchema>;

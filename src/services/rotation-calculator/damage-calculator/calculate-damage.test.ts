@@ -1,35 +1,60 @@
 import { describe, expect, it } from 'vitest';
 
+import { CharacterStat, EnemyStat } from '@/types';
+
 import { calculateDamage } from './calculate-damage';
-import type { CalculateDamageProperties } from './calculate-damage.types';
+import type { CalculateDamageProperties } from './types';
+
+const createCharacterStats = (
+  overrides: Partial<Record<CharacterStat | 'level', number>> = {},
+): Record<CharacterStat | 'level', number> => ({
+  level: 90,
+  [CharacterStat.ATTACK_FLAT]: 0,
+  [CharacterStat.ATTACK_SCALING_BONUS]: 0,
+  [CharacterStat.ATTACK_FLAT_BONUS]: 0,
+  [CharacterStat.DEFENSE_FLAT]: 0,
+  [CharacterStat.DEFENSE_SCALING_BONUS]: 0,
+  [CharacterStat.DEFENSE_FLAT_BONUS]: 0,
+  [CharacterStat.HP_FLAT]: 0,
+  [CharacterStat.HP_SCALING_BONUS]: 0,
+  [CharacterStat.HP_FLAT_BONUS]: 0,
+  [CharacterStat.DAMAGE_BONUS]: 0,
+  [CharacterStat.CRITICAL_RATE]: 0,
+  [CharacterStat.CRITICAL_DAMAGE]: 0.5,
+  [CharacterStat.DEFENSE_IGNORE]: 0,
+  [CharacterStat.RESISTANCE_PENETRATION]: 0,
+  [CharacterStat.DAMAGE_AMPLIFICATION]: 0,
+  [CharacterStat.DAMAGE_MULTIPLIER_BONUS]: 0,
+  [CharacterStat.FINAL_DAMAGE_BONUS]: 0,
+  [CharacterStat.OFF_TUNE_BUILDUP_RATE]: 0,
+  [CharacterStat.TUNE_BREAK_BOOST]: 0,
+  [CharacterStat.TUNE_STRAIN_DAMAGE_BONUS]: 0,
+  [CharacterStat.ENERGY_REGEN]: 0,
+  [CharacterStat.HEALING_BONUS]: 0,
+  ...overrides,
+});
+
+const createEnemyStats = (
+  overrides: Partial<Record<EnemyStat | 'level', number>> = {},
+): Record<EnemyStat | 'level', number> => ({
+  level: 90,
+  [EnemyStat.BASE_RESISTANCE]: 0.1,
+  [EnemyStat.RESISTANCE_REDUCTION]: 0,
+  [EnemyStat.DEFENSE_REDUCTION]: 0,
+  [EnemyStat.SPECTRO_FRAZZLE]: 0,
+  [EnemyStat.AERO_EROSION]: 0,
+  [EnemyStat.FUSION_BURST]: 0,
+  [EnemyStat.GLACIO_CHAFE]: 0,
+  [EnemyStat.HAVOC_BANE]: 0,
+  [EnemyStat.ELECTRO_FLARE]: 0,
+  [EnemyStat.TUNE_STRAIN_STACKS]: 0,
+  ...overrides,
+});
 
 describe('calculateDamage', () => {
   const baseProperties: CalculateDamageProperties = {
-    character: {
-      level: 90,
-      damageBonus: 0,
-      damageMultiplierBonus: 0,
-      damageAmplification: 0,
-      tuneStrainDamageBonus: 0,
-      finalDamageBonus: 0,
-      criticalRate: 0,
-      criticalDamage: 0.5,
-      defenseIgnore: 0,
-      resistancePenetration: 0,
-    },
-    enemy: {
-      level: 90,
-      baseResistance: 0.1,
-      resistanceReduction: 0,
-      defenseReduction: 0,
-      spectroFrazzle: 0,
-      aeroErosion: 0,
-      fusionBurst: 0,
-      glacioChafe: 0,
-      havocBane: 0,
-      electroFlare: 0,
-      tuneStrainStacks: 0,
-    },
+    character: createCharacterStats(),
+    enemy: createEnemyStats(),
     baseDamage: 1000,
   };
 

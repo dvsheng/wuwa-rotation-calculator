@@ -3,6 +3,7 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import type { EntityType } from '@/services/game-data';
 import { listEntities } from '@/services/game-data';
 import { listCapabilities } from '@/services/game-data/list-capabilities.function';
+import { listSkills } from '@/services/game-data/list-skills.function';
 
 export interface UseEntitiesOptions {
   entityType?: EntityType;
@@ -34,8 +35,16 @@ export const useEntities = ({ entityType, search }: UseEntitiesOptions) => {
 
 export const useEntityCapabilities = (entityId: number) => {
   return useSuspenseQuery({
-    queryKey: ['entity-details', entityId],
+    queryKey: ['entity-capabilities', entityId],
     queryFn: () => listCapabilities({ data: { entityIds: [entityId] } }),
+    staleTime: Infinity,
+  });
+};
+
+export const useEntitySkills = (entityId: number) => {
+  return useSuspenseQuery({
+    queryKey: ['entity-skills', entityId],
+    queryFn: () => listSkills({ data: { entityIds: [entityId] } }),
     staleTime: Infinity,
   });
 };

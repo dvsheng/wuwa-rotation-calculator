@@ -35,15 +35,15 @@ export type ResolveUserParameterizedType<T> = ReturnType<
 
 /**
  * Resolves userParameterizedNumber nodes in a GameDataNumberNode tree to plain numbers
- * using parameterValues from the enclosing rotation action or modifier.
+ * using parameter values provided directly by the caller.
  *
  * - Converts `{ type: 'userParameterizedNumber', parameterId }` → `number`
  * - Recursively processes arrays and objects
  * - Preserves all other node types (sum, product, clamp, conditional, statParameterizedNumber)
- * - Throws if a userParameterizedNumber is encountered without parameterValues in any parent
+ * - Throws if a userParameterizedNumber is encountered without a matching value
  *
  * @param value - The value to resolve (may contain userParameterizedNumber nodes)
- * @param currentParameterValues - Parameter values from the current or parent scope
+ * @param parameterValues - Parameter values keyed by parameter ID
  * @returns The resolved value with all userParameterizedNumber nodes converted to numbers
  */
 export const resolveUserParameterizedValues = <T>(
@@ -52,9 +52,9 @@ export const resolveUserParameterizedValues = <T>(
 ) => {
   return deepTransform(data, isResolvedUserParameterizedNumber, (value) => {
     const parameterValue = parameterValues?.[value.parameterId];
-    if (!parameterValue) {
+    if (parameterValue === undefined) {
       throw new Error(
-        'Encountered userParameterizedNumber without parameterValues in any parent object',
+        'Encountered userParameterizedNumber without matching parameterValues',
       );
     }
     const minimum = value.minimum ?? Number.NEGATIVE_INFINITY;

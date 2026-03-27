@@ -6,9 +6,11 @@ import {
   shift,
   useFloating,
 } from '@floating-ui/react';
+import { Link } from '@tanstack/react-router';
 import { ArrowUpRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
+import { getCapabilityAnchorId } from '@/components/entities/entityView.utilities';
 import { Badge } from '@/components/ui/badge';
 import {
   HoverCard,
@@ -144,7 +146,7 @@ const CapabilityCardContent = ({
   const hasDetails = isDetailedAttack(capability)
     ? capability.capabilityJson.damageInstances.length > 0
     : capability.capabilityJson.modifiedStats.length > 0;
-  const entityCapabilityHref = `/entities/${capability.entityId}?capabilityId=${capability.id}`;
+  const entityCapabilityHash = getCapabilityAnchorId(capability.id);
 
   return (
     <Stack gap="inset">
@@ -174,13 +176,15 @@ const CapabilityCardContent = ({
       ) : (
         <ModifierCapabilityContent capability={capability} />
       )}
-      <a
-        href={entityCapabilityHref}
+      <Link
+        to="/entities/$id"
+        params={{ id: String(capability.entityId) }}
+        hash={entityCapabilityHash}
         className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-xs font-medium underline-offset-4 transition-colors hover:underline"
       >
-        Open in admin
+        Open entity page
         <ArrowUpRight />
-      </a>
+      </Link>
     </Stack>
   );
 };

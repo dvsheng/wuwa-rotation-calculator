@@ -14,19 +14,19 @@ import {
 import { Row } from '../ui/layout';
 import { Text } from '../ui/typography';
 
-import { capabilityTypeLabel, typeOrder } from './adminEntityView.utilities';
 import { CapabilityList } from './CapabilityList';
-import { CapabilityTypeHeader } from './CapabilityTypeHeader';
+import { capabilityTypeLabel, typeOrder } from './entityView.utilities';
 import { TableOfContentsSidebar } from './TableOfContentsSidebar';
 
 export const ByTypeView = ({ capabilities }: { capabilities: Array<Capability> }) => {
   const isMobile = useIsMobile();
+  const [openTypeValues, setOpenTypeValues] = useState<Array<string>>(
+    Object.values(CapabilityType),
+  );
+
   const groups = Object.groupBy(
     capabilities,
     (capability) => capability.capabilityJson.type,
-  );
-  const [openTypeValues, setOpenTypeValues] = useState<Array<string>>(
-    Object.values(CapabilityType),
   );
   const tocItems = compact(
     typeOrder.map((type) => {
@@ -42,7 +42,6 @@ export const ByTypeView = ({ capabilities }: { capabilities: Array<Capability> }
     }),
   );
   const entityId = capabilities[0]?.entityId;
-
   return (
     <Row gap="panel" align="start">
       {!isMobile && <TableOfContentsSidebar items={tocItems} />}
@@ -88,7 +87,9 @@ const CapabilityTypeAccordion = ({
             disabled={capabilities.length === 0}
           >
             <AccordionTrigger>
-              <CapabilityTypeHeader capabilityType={type} count={capabilities.length} />
+              <Text variant="title">
+                {capabilityTypeLabel[type]} ({capabilities.length})
+              </Text>
             </AccordionTrigger>
             <AccordionContent>
               <CapabilityList

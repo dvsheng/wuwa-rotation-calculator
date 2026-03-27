@@ -1,11 +1,39 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import type { CharacterAttack } from '@/hooks/useTeamDetails';
 import { CapabilityType } from '@/services/game-data/types';
 
 import { CapabilityHoverCard } from './CapabilityHoverCard';
+
+vi.mock('@tanstack/react-router', () => ({
+  Link: ({
+    children,
+    hash,
+    params,
+    to,
+    ...properties
+  }: {
+    children: React.ReactNode;
+    hash?: string;
+    params?: { id?: string };
+    to?: string;
+  } & React.ComponentProps<'a'>) => {
+    const href =
+      to === '/entities/$id' && params?.id
+        ? `/entities/${params.id}${hash ? `#${hash}` : ''}`
+        : hash
+          ? `#${hash}`
+          : '#';
+
+    return (
+      <a href={href} {...properties}>
+        {children}
+      </a>
+    );
+  },
+}));
 
 beforeAll(() => {
   // floating-ui's autoUpdate uses ResizeObserver
@@ -75,9 +103,9 @@ describe('CapabilityHoverCard', () => {
       expect(await screen.findByText('Test Buff')).toBeInTheDocument();
       expect(await screen.findByText('Increases ATK by 10%')).toBeInTheDocument();
       expect(await screen.findByText('Weapon')).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: 'Open in admin' })).toHaveAttribute(
+      expect(screen.getByRole('link', { name: 'Open entity page' })).toHaveAttribute(
         'href',
-        '/entities/1?capabilityId=1',
+        '/entities/1#capability-1',
       );
     });
 

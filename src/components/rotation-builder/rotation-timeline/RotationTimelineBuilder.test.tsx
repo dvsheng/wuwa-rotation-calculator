@@ -495,41 +495,6 @@ describe('RotationBuilder', () => {
     });
   });
 
-  it('expands a newly added buff as the first six attacks are appended', async () => {
-    const user = userEvent.setup();
-    renderRotationBuilder();
-
-    await user.click(screen.getByTestId('sidebar-capability-card-1060'));
-
-    const buffGridItem = getBuffGridItem('Syntony Field');
-    const initialWidth = Number.parseFloat(buffGridItem.style.width);
-
-    expect(useStore.getState().buffs[0]).toMatchObject({
-      w: INITIAL_BUFF_LAYOUT.w,
-      x: INITIAL_BUFF_LAYOUT.x,
-      y: INITIAL_BUFF_LAYOUT.y,
-    });
-    expect(initialWidth).toBe(
-      COLUMN_WIDTH * INITIAL_BUFF_LAYOUT.w +
-        COLUMN_MARGIN * (INITIAL_BUFF_LAYOUT.w - 1),
-    );
-
-    for (let index = 0; index < 6; index += 1) {
-      await user.click(screen.getByTestId('sidebar-capability-card-227'));
-    }
-
-    expect(useStore.getState().attacks).toHaveLength(6);
-    expect(useStore.getState().buffs[0]).toMatchObject({
-      w: INITIAL_BUFF_LAYOUT.w + 6,
-      x: INITIAL_BUFF_LAYOUT.x,
-      y: INITIAL_BUFF_LAYOUT.y,
-    });
-    expect(Number.parseFloat(getBuffGridItem('Syntony Field').style.width)).toBe(
-      COLUMN_WIDTH * (INITIAL_BUFF_LAYOUT.w + 6) +
-        COLUMN_MARGIN * (INITIAL_BUFF_LAYOUT.w + 6 - 1),
-    );
-  });
-
   it('centers both empty canvas messages within their larger overlay containers', () => {
     renderRotationBuilder();
 

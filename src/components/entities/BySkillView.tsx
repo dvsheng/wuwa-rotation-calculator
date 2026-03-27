@@ -1,8 +1,11 @@
 import { startCase } from 'es-toolkit';
 import { useState } from 'react';
 
+import { SKILL_ORIGIN_ORDER } from '@/components/constants';
 import { useIsMobile } from '@/hooks/use-mobile';
-import type { Capability, Skill } from '@/services/game-data';
+import { useEntitySkills } from '@/hooks/useEntities';
+import { Sequence, isPermanentStat } from '@/services/game-data';
+import type { Capability, Sequence as SequenceType, Skill } from '@/services/game-data';
 
 import {
   Accordion,
@@ -10,35 +13,29 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '../ui/accordion';
-import { Badge } from '../ui/badge';
 import { Row } from '../ui/layout';
 import { Text } from '../ui/typography';
 
-import {
-  buildEntriesForSkill,
-  getCapabilityTypeCounts,
-  sortSkills,
-} from './adminEntityView.utilities';
-import { SkillCapabilityList } from './SkillCapabilityList';
+import { CapabilityList } from './CapabilityList';
 import { SkillHeader } from './SkillHeader';
 import { TableOfContentsSidebar } from './TableOfContentsSidebar';
 
-export const BySkillView = ({
-  capabilities,
-  skills,
-}: {
-  capabilities: Array<Capability>;
-  skills: Array<Skill>;
-}) => {
+export const BySkillView = ({ capabilities }: { capabilities: Array<Capability> }) => {
   const isMobile = useIsMobile();
-  const sortedSkills = sortSkills(skills);
+  const { data: skills } = useEntitySkills(capabilities[0].entityId);
+  const [openSkillValues, setOpenSkillValues] = useState(
+    skills.map((skill) => String(skill.id)),
+  );
+
+  const sortedSkills = skills.toSorted(
+    (a, b) =>
+      SKILL_ORIGIN_ORDER.indexOf(a.originType) -
+      SKILL_ORIGIN_ORDER.indexOf(b.originType),
+  );
   const skillEntries = sortedSkills.map((skill) => ({
     skill,
     entries: buildEntriesForSkill(skill, capabilities),
   }));
-  const defaultOpenValues = skillEntries.map(({ skill }) => String(skill.id));
-  const [openSkillValues, setOpenSkillValues] = useState(defaultOpenValues);
-
   const tocItems = skillEntries.map(({ skill }) => ({
     id: `skill-${skill.id}`,
     label: skill.name,
@@ -55,8 +52,6 @@ export const BySkillView = ({
         onValueChange={setOpenSkillValues}
       >
         {skillEntries.map(({ skill, entries }) => {
-          const capabilityTypes = getCapabilityTypeCounts(entries);
-
           return (
             <AccordionItem
               key={skill.id}
@@ -64,34 +59,12 @@ export const BySkillView = ({
               value={String(skill.id)}
             >
               <AccordionTrigger>
-                <SkillHeader
-                  skill={skill}
-                  badges={
-                    <Row gap="trim" wrap>
-                      {capabilityTypes
-                        .filter(({ count }) => count > 0)
-                        .map(({ type, count }) => (
-                          <Badge key={type} variant="outline">
-                            {count} {startCase(type)}
-                          </Badge>
-                        ))}
-                    </Row>
-                  }
-                />
+                <SkillHeader skill={skill} />
               </AccordionTrigger>
               <AccordionContent>
-                {skill.description && (
-                  <Text
-                    variant="bodySm"
-                    tone="muted"
-                    className="mb-3 whitespace-pre-wrap"
-                  >
-                    {skill.description}
-                  </Text>
-                )}
-                <SkillCapabilityList
-                  entries={entries}
-                  entityId={skill.entityId}
+                <Text variant="bodySm">{skill.description}</Text>
+                <CapabilityList
+                  entries={entries.map((entry) => entry.capability)}
                   showCapabilityTypeBadge
                 />
               </AccordionContent>
@@ -101,4 +74,80 @@ export const BySkillView = ({
       </Accordion>
     </Row>
   );
+};
+
+type SkillCapabilityEntry = {
+  capability: Capability;
+  skill: Skill;
+  defaultAlternativeDefinition: 'base' | SequenceType;
+};
+
+const sequenceOrigins = new Set<SequenceType>(Object.values(Sequence));
+
+const hasAlternativeDefinitionForSequence = (
+  capability: Capability,
+  sequence: SequenceType,
+) => {
+  if (isPermanentStat(capability)) {
+    return false;
+  }
+
+  return Boolean(capability.capabilityJson.alternativeDefinitions?.[sequence]);
+};
+
+const compareNames = (
+  left: string | null | undefined,
+  right: string | null | undefined,
+) => (left ?? '').localeCompare(right ?? '', undefined, { sensitivity: 'base' });
+
+const sortEntriesByName = (entries: Array<SkillCapabilityEntry>) =>
+  entries.toSorted((left, right) => {
+    const nameComparison = compareNames(left.capability.name, right.capability.name);
+    if (nameComparison !== 0) {
+      return nameComparison;
+    }
+    return left.capability.id - right.capability.id;
+  });
+
+const buildEntriesForSkill = (
+  skill: Skill,
+  capabilities: Array<Capability>,
+): Array<SkillCapabilityEntry> => {
+  const directEntries = capabilities
+    .filter((capability) => capability.skillId === skill.id)
+    .map((capability) => ({
+      capability,
+      skill,
+      defaultAlternativeDefinition: 'base' as const,
+      isAlternativePlacement: false,
+    }));
+
+  if (!sequenceOrigins.has(skill.originType as SequenceType)) {
+    return directEntries;
+  }
+
+  const sequence = skill.originType as SequenceType;
+  const seenCapabilityIds = new Set(
+    directEntries.map(({ capability }) => capability.id),
+  );
+  const sequenceEntries = capabilities.flatMap((capability) => {
+    if (
+      seenCapabilityIds.has(capability.id) ||
+      !hasAlternativeDefinitionForSequence(capability, sequence)
+    ) {
+      return [];
+    }
+
+    seenCapabilityIds.add(capability.id);
+    return [
+      {
+        capability,
+        skill,
+        defaultAlternativeDefinition: sequence,
+        isAlternativePlacement: true,
+      },
+    ];
+  });
+
+  return sortEntriesByName([...directEntries, ...sequenceEntries]);
 };

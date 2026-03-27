@@ -38,36 +38,29 @@ const getAlternativeDefinitions = (capability: Capability) => {
 
 export const CapabilityCard = ({
   capability,
-  defaultAlternativeDefinition = 'base',
+  defaultDefinition = 'base',
   entityId,
   titlePrefix,
   titleSuffix,
   children,
 }: {
   capability: Capability;
-  defaultAlternativeDefinition?: AlternativeDefinitionValue;
+  defaultDefinition?: AlternativeDefinitionValue;
   entityId?: number;
   titlePrefix?: ReactNode;
   titleSuffix?: ReactNode;
   children: (capability: Capability) => ReactNode;
 }) => {
   const [isJsonView, setIsJsonView] = useState(false);
-  const alternativeDefinitions = getAlternativeDefinitions(capability);
-  const normalizedDefaultAlternativeDefinition =
-    defaultAlternativeDefinition === 'base' ||
-    alternativeDefinitions.includes(defaultAlternativeDefinition)
-      ? defaultAlternativeDefinition
-      : 'base';
-  const [selectedAlternativeDefinition, setSelectedAlternativeDefinition] =
-    useState<AlternativeDefinitionValue>(normalizedDefaultAlternativeDefinition);
-  const resolvedCapability =
-    alternativeDefinitions.length > 0
-      ? resolveAlternativeDefinitions(
-          capability,
-          sequenceToNumber(selectedAlternativeDefinition),
-        )
-      : capability;
 
+  const [selectedAlternativeDefinition, setSelectedAlternativeDefinition] =
+    useState<string>(defaultDefinition);
+
+  const alternativeDefinitions = getAlternativeDefinitions(capability);
+  const resolvedCapability = resolveAlternativeDefinitions(
+    capability,
+    sequenceToNumber(selectedAlternativeDefinition),
+  );
   return (
     <Card>
       <CardHeader>
@@ -106,13 +99,7 @@ export const CapabilityCard = ({
                 type="single"
                 variant="outline"
                 value={selectedAlternativeDefinition}
-                onValueChange={(value) => {
-                  if (value) {
-                    setSelectedAlternativeDefinition(
-                      value as AlternativeDefinitionValue,
-                    );
-                  }
-                }}
+                onValueChange={setSelectedAlternativeDefinition}
               >
                 <ToggleGroupItem value="base">Base</ToggleGroupItem>
                 {alternativeDefinitions.map((definition) => (

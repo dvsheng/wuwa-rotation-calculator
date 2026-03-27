@@ -15,7 +15,6 @@ import type {
   Modifier,
   PermanentStat,
   Sequence,
-  Skill,
 } from '@/services/game-data';
 
 import { EntityIcon } from '../common/EntityIcon';
@@ -24,21 +23,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '../ui/hover-card';
 
 import { CapabilityCard } from './CapabilityCard';
+import { getCapabilityAnchorId } from './entityView.utilities';
 
 export const CapabilityItem = ({
   capability,
-  entityId,
-  isAlternativePlacement = false,
-  skill,
-  defaultAlternativeDefinition = 'base',
+  defaultDefinition = 'base',
   showCapabilityTypeBadge = false,
   showSkillIcon = false,
 }: {
   capability: Capability;
-  entityId: number;
-  isAlternativePlacement?: boolean;
-  skill?: Skill;
-  defaultAlternativeDefinition?: 'base' | Sequence;
+  defaultDefinition?: 'base' | Sequence;
   showCapabilityTypeBadge?: boolean;
   showSkillIcon?: boolean;
 }) => {
@@ -46,20 +40,22 @@ export const CapabilityItem = ({
     return;
   }
 
+  const isAlternativePlacement = defaultDefinition !== 'base';
   return (
     <div
+      id={getCapabilityAnchorId(capability.id)}
       data-capability-id={capability.id}
       data-capability-placement={isAlternativePlacement ? 'alternative' : 'direct'}
+      className="scroll-mt-24"
     >
       <CapabilityCard
-        key={`${capability.id}-${defaultAlternativeDefinition}`}
+        key={`${capability.id}-${defaultDefinition}`}
         capability={capability}
-        defaultAlternativeDefinition={defaultAlternativeDefinition}
-        entityId={entityId}
+        defaultDefinition={defaultDefinition}
         titlePrefix={
-          showSkillIcon && (skill?.iconUrl ?? capability.iconUrl) ? (
+          showSkillIcon && capability.iconUrl ? (
             <EntityIcon
-              iconUrl={skill?.iconUrl ?? capability.iconUrl}
+              iconUrl={capability.iconUrl}
               size="small"
               className="bg-secondary/60 ring-border/60 ring-1"
             />
@@ -178,10 +174,12 @@ export const PermanentStatContent = ({
             {content.map((stat, index) => (
               <TableRow
                 key={index}
+                id={getCapabilityAnchorId(stat.id)}
                 data-capability-id={stat.id}
                 data-capability-placement={
                   stat.isAlternativePlacement ? 'alternative' : 'direct'
                 }
+                className="scroll-mt-24"
               >
                 <TableCell>{stat.name}</TableCell>
                 <TableCell>{stat.description}</TableCell>

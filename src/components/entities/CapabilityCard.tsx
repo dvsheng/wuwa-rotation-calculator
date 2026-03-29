@@ -20,20 +20,10 @@ import { ReportCapabilityIssueDialog } from './ReportCapabilityIssueDialog';
 type AlternativeDefinitionValue = 'base' | Sequence;
 
 const getAlternativeDefinitions = (capability: Capability) => {
-  if (capability.capabilityJson.type === 'permanent_stat') {
-    return [];
-  }
-
+  if (capability.capabilityJson.type === 'permanent_stat') return [];
   const { alternativeDefinitions } = capability.capabilityJson;
-  if (!alternativeDefinitions) {
-    return [];
-  }
-
-  return (Object.keys(alternativeDefinitions) as Array<AlternativeDefinitionValue>)
-    .filter((definition): definition is Exclude<AlternativeDefinitionValue, 'base'> => {
-      return definition !== 'base';
-    })
-    .toSorted((a, b) => sequenceToNumber(a) - sequenceToNumber(b));
+  if (!alternativeDefinitions) return [];
+  return Object.keys(alternativeDefinitions) as Array<Sequence>;
 };
 
 export const CapabilityCard = ({
@@ -42,14 +32,14 @@ export const CapabilityCard = ({
   entityId,
   titlePrefix,
   titleSuffix,
-  children,
+  renderCapability,
 }: {
   capability: Capability;
   defaultDefinition?: AlternativeDefinitionValue;
   entityId?: number;
   titlePrefix?: ReactNode;
   titleSuffix?: ReactNode;
-  children: (capability: Capability) => ReactNode;
+  renderCapability: (capability: Capability) => ReactNode;
 }) => {
   const [isJsonView, setIsJsonView] = useState(false);
 
@@ -116,7 +106,7 @@ export const CapabilityCard = ({
               value={JSON.stringify(resolvedCapability.capabilityJson, undefined, 4)}
             />
           ) : (
-            children(resolvedCapability)
+            renderCapability(resolvedCapability)
           )}
         </Stack>
       </CardContent>

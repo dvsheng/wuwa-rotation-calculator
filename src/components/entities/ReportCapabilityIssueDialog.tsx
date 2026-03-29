@@ -18,6 +18,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Row, Stack } from '../ui/layout';
 import { Textarea } from '../ui/textarea';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { Text } from '../ui/typography';
 
 interface ReportCapabilityIssueDialogProperties {
@@ -28,12 +29,14 @@ interface ReportCapabilityIssueDialogProperties {
   };
   entityId?: number;
   alternativeDefinition?: string;
+  iconOnly?: boolean;
 }
 
 export const ReportCapabilityIssueDialog = ({
   capability,
   entityId,
   alternativeDefinition,
+  iconOnly = false,
 }: ReportCapabilityIssueDialogProperties) => {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -86,10 +89,27 @@ export const ReportCapabilityIssueDialog = ({
         }
       }}
     >
-      <Button type="button" variant="outline" size="sm" onClick={() => setOpen(true)}>
-        <AlertTriangle />
-        Report issue
-      </Button>
+      {iconOnly ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              aria-label="Report issue"
+              onClick={() => setOpen(true)}
+            >
+              <AlertTriangle />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Report issue</TooltipContent>
+        </Tooltip>
+      ) : (
+        <Button type="button" variant="outline" size="sm" onClick={() => setOpen(true)}>
+          <AlertTriangle />
+          Report issue
+        </Button>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Report capability issue</DialogTitle>

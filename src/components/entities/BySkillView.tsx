@@ -1,11 +1,10 @@
-import { startCase } from 'es-toolkit';
-import { useState } from 'react';
+import { sortBy, startCase } from 'es-toolkit';
 
 import { SKILL_ORIGIN_ORDER } from '@/components/constants';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useEntitySkills } from '@/hooks/useEntities';
 import { Sequence, isPermanentStat } from '@/services/game-data';
-import type { Capability, Sequence as SequenceType, Skill } from '@/services/game-data';
+import type { Capability, Skill } from '@/services/game-data';
 
 import {
   Accordion,
@@ -23,9 +22,6 @@ import { TableOfContentsSidebar } from './TableOfContentsSidebar';
 export const BySkillView = ({ capabilities }: { capabilities: Array<Capability> }) => {
   const isMobile = useIsMobile();
   const { data: skills } = useEntitySkills(capabilities[0].entityId);
-  const [openSkillValues, setOpenSkillValues] = useState(
-    skills.map((skill) => String(skill.id)),
-  );
 
   const sortedSkills = skills.toSorted(
     (a, b) =>
@@ -34,7 +30,7 @@ export const BySkillView = ({ capabilities }: { capabilities: Array<Capability> 
   );
   const skillEntries = sortedSkills.map((skill) => ({
     skill,
-    entries: buildEntriesForSkill(skill, capabilities),
+    entries: getSkillCapabilities(skill, capabilities),
   }));
   const tocItems = skillEntries.map(({ skill }) => ({
     id: `skill-${skill.id}`,
@@ -48,8 +44,7 @@ export const BySkillView = ({ capabilities }: { capabilities: Array<Capability> 
       {!isMobile && <TableOfContentsSidebar items={tocItems} />}
       <Accordion
         type="multiple"
-        value={openSkillValues}
-        onValueChange={setOpenSkillValues}
+        defaultValue={skillEntries.map((skill) => String(skill.skill.id))}
       >
         {skillEntries.map(({ skill, entries }) => {
           return (
@@ -63,10 +58,7 @@ export const BySkillView = ({ capabilities }: { capabilities: Array<Capability> 
               </AccordionTrigger>
               <AccordionContent>
                 <Text variant="bodySm">{skill.description}</Text>
-                <CapabilityList
-                  entries={entries.map((entry) => entry.capability)}
-                  showCapabilityTypeBadge
-                />
+                <CapabilityList entries={entries} showCapabilityTypeBadge />
               </AccordionContent>
             </AccordionItem>
           );
@@ -76,78 +68,32 @@ export const BySkillView = ({ capabilities }: { capabilities: Array<Capability> 
   );
 };
 
-type SkillCapabilityEntry = {
-  capability: Capability;
-  skill: Skill;
-  defaultAlternativeDefinition: 'base' | SequenceType;
-};
-
-const sequenceOrigins = new Set<SequenceType>(Object.values(Sequence));
-
 const hasAlternativeDefinitionForSequence = (
   capability: Capability,
-  sequence: SequenceType,
+  sequence: Sequence,
 ) => {
   if (isPermanentStat(capability)) {
     return false;
   }
-
   return Boolean(capability.capabilityJson.alternativeDefinitions?.[sequence]);
 };
 
-const compareNames = (
-  left: string | null | undefined,
-  right: string | null | undefined,
-) => (left ?? '').localeCompare(right ?? '', undefined, { sensitivity: 'base' });
-
-const sortEntriesByName = (entries: Array<SkillCapabilityEntry>) =>
-  entries.toSorted((left, right) => {
-    const nameComparison = compareNames(left.capability.name, right.capability.name);
-    if (nameComparison !== 0) {
-      return nameComparison;
-    }
-    return left.capability.id - right.capability.id;
-  });
-
-const buildEntriesForSkill = (
+const getSkillCapabilities = (
   skill: Skill,
   capabilities: Array<Capability>,
-): Array<SkillCapabilityEntry> => {
-  const directEntries = capabilities
-    .filter((capability) => capability.skillId === skill.id)
-    .map((capability) => ({
-      capability,
-      skill,
-      defaultAlternativeDefinition: 'base' as const,
-      isAlternativePlacement: false,
-    }));
+): Array<Capability & { useSequenceDefinition?: Sequence }> => {
+  const skillCapabilities = capabilities.filter(
+    (capability) => capability.skillId === skill.id,
+  );
 
-  if (!sequenceOrigins.has(skill.originType as SequenceType)) {
-    return directEntries;
+  if (!Object.values(Sequence).includes(skill.originType as Sequence)) {
+    return skillCapabilities;
   }
 
-  const sequence = skill.originType as SequenceType;
-  const seenCapabilityIds = new Set(
-    directEntries.map(({ capability }) => capability.id),
-  );
-  const sequenceEntries = capabilities.flatMap((capability) => {
-    if (
-      seenCapabilityIds.has(capability.id) ||
-      !hasAlternativeDefinitionForSequence(capability, sequence)
-    ) {
-      return [];
-    }
+  const sequence = skill.originType as Sequence;
+  const sequenceCapabilities = capabilities
+    .filter((capability) => !hasAlternativeDefinitionForSequence(capability, sequence))
+    .map((capability) => ({ ...capability, useSequenceDefinition: sequence }));
 
-    seenCapabilityIds.add(capability.id);
-    return [
-      {
-        capability,
-        skill,
-        defaultAlternativeDefinition: sequence,
-        isAlternativePlacement: true,
-      },
-    ];
-  });
-
-  return sortEntriesByName([...directEntries, ...sequenceEntries]);
+  return sortBy([...skillCapabilities, ...sequenceCapabilities], ['name']);
 };

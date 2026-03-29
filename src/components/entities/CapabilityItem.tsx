@@ -24,6 +24,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from '../ui/hover-card'
 
 import { CapabilityCard } from './CapabilityCard';
 import { getCapabilityAnchorId } from './entityView.utilities';
+import { ReportCapabilityIssueDialog } from './ReportCapabilityIssueDialog';
 
 export const CapabilityItem = ({
   capability,
@@ -39,26 +40,15 @@ export const CapabilityItem = ({
   if (capability.capabilityJson.type === 'permanent_stat') {
     return;
   }
-
-  const isAlternativePlacement = defaultDefinition !== 'base';
   return (
-    <div
-      id={getCapabilityAnchorId(capability.id)}
-      data-capability-id={capability.id}
-      data-capability-placement={isAlternativePlacement ? 'alternative' : 'direct'}
-      className="scroll-mt-24"
-    >
+    <div id={getCapabilityAnchorId(capability.id)}>
       <CapabilityCard
         key={`${capability.id}-${defaultDefinition}`}
         capability={capability}
         defaultDefinition={defaultDefinition}
         titlePrefix={
           showSkillIcon && capability.iconUrl ? (
-            <EntityIcon
-              iconUrl={capability.iconUrl}
-              size="small"
-              className="bg-secondary/60 ring-border/60 ring-1"
-            />
+            <EntityIcon iconUrl={capability.iconUrl} size="small" />
           ) : undefined
         }
         titleSuffix={
@@ -66,8 +56,7 @@ export const CapabilityItem = ({
             <Badge variant="outline">{startCase(capability.capabilityJson.type)}</Badge>
           ) : undefined
         }
-      >
-        {(resolvedCapability) => (
+        renderCapability={(resolvedCapability) => (
           <>
             {isAttack(resolvedCapability) && (
               <AttackContent content={resolvedCapability} />
@@ -77,7 +66,7 @@ export const CapabilityItem = ({
             )}
           </>
         )}
-      </CapabilityCard>
+      />
     </div>
   );
 };
@@ -158,10 +147,11 @@ export const PermanentStatContent = ({
         <Table className="table-fixed">
           <colgroup>
             <col style={{ width: '18%' }} />
-            <col style={{ width: '34%' }} />
+            <col style={{ width: '36%' }} />
+            <col style={{ width: '11%' }} />
             <col style={{ width: '14%' }} />
-            <col style={{ width: '17%' }} />
-            <col style={{ width: '17%' }} />
+            <col style={{ width: '15%' }} />
+            <col style={{ width: '6%' }} />
           </colgroup>
           <TableHeader>
             <TableHead> Name </TableHead>
@@ -169,6 +159,9 @@ export const PermanentStatContent = ({
             <TableHead> Buff Value</TableHead>
             <TableHead> Buffed Stat </TableHead>
             <TableHead> Applied To </TableHead>
+            <TableHead className="w-0 px-1 text-right">
+              <span className="sr-only">Report issue</span>
+            </TableHead>
           </TableHeader>
           <TableBody>
             {content.map((stat, index) => (
@@ -197,6 +190,13 @@ export const PermanentStatContent = ({
                 </TableCell>
                 <TableCell>{startCase(stat.capabilityJson.stat)}</TableCell>
                 <TableCell>{stat.capabilityJson.tags.join(', ')}</TableCell>
+                <TableCell className="px-1 text-right">
+                  <ReportCapabilityIssueDialog
+                    capability={stat}
+                    entityId={stat.entityId}
+                    iconOnly={true}
+                  />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

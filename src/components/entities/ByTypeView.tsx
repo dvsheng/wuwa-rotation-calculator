@@ -1,9 +1,5 @@
-import { compact } from 'es-toolkit';
-import { useState } from 'react';
-
 import { useIsMobile } from '@/hooks/use-mobile';
-import { CapabilityType } from '@/services/game-data';
-import type { Capability } from '@/services/game-data';
+import type { Capability, CapabilityType } from '@/services/game-data';
 
 import {
   Accordion,
@@ -15,92 +11,67 @@ import { Row } from '../ui/layout';
 import { Text } from '../ui/typography';
 
 import { CapabilityList } from './CapabilityList';
-import { capabilityTypeLabel, typeOrder } from './entityView.utilities';
 import { TableOfContentsSidebar } from './TableOfContentsSidebar';
+
+const capabilityTypeLabel: Record<Capability['capabilityJson']['type'], string> = {
+  attack: 'Attacks',
+  modifier: 'Modifiers',
+  permanent_stat: 'Permanent Stats',
+};
+
+const typeOrder = ['attack', 'modifier', 'permanent_stat'] as const;
 
 export const ByTypeView = ({ capabilities }: { capabilities: Array<Capability> }) => {
   const isMobile = useIsMobile();
-  const [openTypeValues, setOpenTypeValues] = useState<Array<string>>(
-    Object.values(CapabilityType),
-  );
 
   const groups = Object.groupBy(
     capabilities,
     (capability) => capability.capabilityJson.type,
   );
-  const tocItems = compact(
-    typeOrder.map((type) => {
-      if ((groups[type]?.length ?? 0) === 0) {
-        return;
-      }
+  const tocItems = typeOrder
+    .filter((type) => groups[type]?.length && groups[type].length > 0)
+    .map((type) => ({
+      id: `type-${type}`,
+      label: capabilityTypeLabel[type],
+      accordionValue: type,
+    }));
 
-      return {
-        id: `type-${type}`,
-        label: capabilityTypeLabel[type],
-        accordionValue: type,
-      };
-    }),
-  );
-  const entityId = capabilities[0]?.entityId;
   return (
     <Row gap="panel" align="start">
       {!isMobile && <TableOfContentsSidebar items={tocItems} />}
-      {entityId ? (
-        <CapabilityTypeAccordion
-          groups={groups}
-          showSkillIcon
-          value={openTypeValues}
-          onValueChange={setOpenTypeValues}
-        />
-      ) : (
-        <Text variant="bodySm" tone="muted">
-          No capabilities found.
-        </Text>
-      )}
+      <CapabilityTypeAccordion groups={groups} />
     </Row>
   );
 };
 
 const CapabilityTypeAccordion = ({
   groups,
-  showCapabilityTypeBadge = false,
-  showSkillIcon = false,
-  value,
-  onValueChange,
 }: {
   groups: Partial<Record<CapabilityType, Array<Capability>>>;
-  showCapabilityTypeBadge?: boolean;
-  showSkillIcon?: boolean;
-  value?: Array<string>;
-  onValueChange?: (value: Array<string>) => void;
-}) => {
-  return (
-    <Accordion type="multiple" value={value} onValueChange={onValueChange}>
-      {typeOrder.map((type) => {
-        const capabilities = groups[type];
-        if (!capabilities || capabilities.length === 0) return;
-        return (
-          <AccordionItem
-            key={type}
-            id={`type-${type}`}
-            value={type}
-            disabled={capabilities.length === 0}
-          >
-            <AccordionTrigger>
-              <Text variant="title">
-                {capabilityTypeLabel[type]} ({capabilities.length})
-              </Text>
-            </AccordionTrigger>
-            <AccordionContent>
-              <CapabilityList
-                entries={capabilities}
-                showCapabilityTypeBadge={showCapabilityTypeBadge}
-                showSkillIcon={showSkillIcon}
-              />
-            </AccordionContent>
-          </AccordionItem>
-        );
-      })}
-    </Accordion>
-  );
-};
+}) => (
+  <Accordion type="multiple" defaultValue={Object.keys(groups)}>
+    {Object.entries(groups)
+      .toSorted(
+        (group1, group2) =>
+          typeOrder.indexOf(group1[0] as CapabilityType) -
+          typeOrder.indexOf(group2[0] as CapabilityType),
+      )
+      .map(([type, capabilities]) => (
+        <AccordionItem
+          key={type}
+          id={`type-${type}`}
+          value={type}
+          disabled={capabilities.length === 0}
+        >
+          <AccordionTrigger>
+            <Text variant="title">
+              {capabilityTypeLabel[type as CapabilityType]} ({capabilities.length})
+            </Text>
+          </AccordionTrigger>
+          <AccordionContent>
+            <CapabilityList entries={capabilities} showSkillIcon={true} />
+          </AccordionContent>
+        </AccordionItem>
+      ))}
+  </Accordion>
+);

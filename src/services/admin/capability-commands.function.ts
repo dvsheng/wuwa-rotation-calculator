@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start';
 
-import { authRequiredMiddleware } from '@/middleware/auth';
+import { adminRequiredMiddleware } from '@/middleware/auth';
 import {
   CreateCapabilityRequestSchema,
   DeleteCapabilityRequestSchema,
@@ -16,7 +16,7 @@ import {
 export const updateCapability = createServerFn({
   method: 'POST',
 })
-  .middleware([authRequiredMiddleware])
+  .middleware([adminRequiredMiddleware])
   .inputValidator(UpdateCapabilityRequestSchema)
   .handler(async ({ data }) => {
     return updateCapabilityHandler(data);
@@ -25,7 +25,7 @@ export const updateCapability = createServerFn({
 export const createCapability = createServerFn({
   method: 'POST',
 })
-  .middleware([authRequiredMiddleware])
+  .middleware([adminRequiredMiddleware])
   .inputValidator(CreateCapabilityRequestSchema)
   .handler(async ({ data }) => {
     return createCapabilityHandler(data);
@@ -34,7 +34,7 @@ export const createCapability = createServerFn({
 export const deleteCapability = createServerFn({
   method: 'POST',
 })
-  .middleware([authRequiredMiddleware])
+  .middleware([adminRequiredMiddleware])
   .inputValidator(DeleteCapabilityRequestSchema)
   .handler(async ({ data }) => {
     return deleteCapabilityHandler(data);

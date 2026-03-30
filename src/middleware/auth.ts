@@ -3,20 +3,39 @@ import { getRequest } from '@tanstack/react-start/server';
 
 import { auth } from '@/lib/auth';
 
-export interface AuthContext {
-  user: {
-    email: string;
-    id: string;
-    username?: string;
-  };
-}
+type Session = NonNullable<Awaited<ReturnType<typeof auth.api.getSession>>>;
+
+const getSession = async (): Promise<Session | null> => {
+  const request = getRequest();
+  return auth.api.getSession({ headers: request.headers });
+};
+
+const getRequiredSession = async (): Promise<Session> => {
+  const session = await getSession();
+  if (!session) {
+    throw new Error('Unauthorized');
+  }
+
+  return session;
+};
 
 export const authRequiredMiddleware = createMiddleware({ type: 'function' }).server(
   async ({ next }) => {
-    const request = getRequest();
-    const session = await auth.api.getSession({ headers: request.headers });
-    if (!session) {
-      throw new Error('Unauthorized');
+    const session = await getRequiredSession();
+
+    return next({
+      context: {
+        session,
+      },
+    });
+  },
+);
+
+export const adminRequiredMiddleware = createMiddleware({ type: 'function' }).server(
+  async ({ next }) => {
+    const session = await getRequiredSession();
+    if (session.user.role !== 'admin') {
+      throw new Error('Forbidden');
     }
     return next({
       context: {
@@ -28,8 +47,7 @@ export const authRequiredMiddleware = createMiddleware({ type: 'function' }).ser
 
 export const authOptionalMiddleware = createMiddleware({ type: 'function' }).server(
   async ({ next }) => {
-    const request = getRequest();
-    const session = await auth.api.getSession({ headers: request.headers });
+    const session = await getSession();
     return next({
       context: {
         session,

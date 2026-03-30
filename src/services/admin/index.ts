@@ -1,2 +1,1 @@
-export * from './update-admin-capability.function';
-export * from './types';
+export * from './capability-commands.function';

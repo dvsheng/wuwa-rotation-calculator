@@ -4,7 +4,8 @@ import type { ReactNode } from 'react';
 import { Suspense } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useEntities, useEntityCapabilities, useEntitySkills } from './useEntities';
+import { useEntityCapabilities } from './useCapabilities';
+import { useEntities, useEntitySkills } from './useEntities';
 
 vi.mock('@/services/game-data', async () => {
   const actual = await vi.importActual('@/services/game-data');

@@ -11,7 +11,6 @@ const input: ReportCapabilityIssueRequest = {
   capabilityId: 42,
   capabilityName: 'Harmonic Slash',
   capabilityDescription: 'Deals Spectro DMG and grants a small buff.',
-  entityId: 7,
   alternativeDefinition: 'resonanceSkill',
   pageUrl: 'https://example.com/entities/7?capabilityId=42',
   reporter: 'david',
@@ -73,10 +72,6 @@ describe('reportCapabilityIssueHandler', () => {
             expect.objectContaining({
               name: 'Alternative Definition',
               value: 'resonanceSkill',
-            }),
-            expect.objectContaining({
-              name: 'Entity ID',
-              value: '7',
             }),
             expect.objectContaining({
               name: 'Page',

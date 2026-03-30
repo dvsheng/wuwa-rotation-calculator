@@ -30,10 +30,6 @@ const buildDiscordPayload = (input: ReportCapabilityIssueRequest) => {
     toField('Alternative Definition', input.alternativeDefinition || 'Base', true),
   ];
 
-  if (input.entityId) {
-    fields.push(toField('Entity ID', String(input.entityId), true));
-  }
-
   if (input.pageUrl) {
     fields.push(toField('Page', input.pageUrl));
   }

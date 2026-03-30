@@ -27,16 +27,12 @@ interface ReportCapabilityIssueDialogProperties {
     name?: string;
     description?: string;
   };
-  entityId?: number;
   alternativeDefinition?: string;
-  iconOnly?: boolean;
 }
 
 export const ReportCapabilityIssueDialog = ({
   capability,
-  entityId,
   alternativeDefinition,
-  iconOnly = false,
 }: ReportCapabilityIssueDialogProperties) => {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,12 +50,12 @@ export const ReportCapabilityIssueDialog = ({
       setIsSubmitting(true);
 
       try {
+        // TODO: POST should only take ID and get the remaining values from server
         await reportCapabilityIssue({
           data: {
             capabilityId: capability.id,
             capabilityName: capability.name,
             capabilityDescription: capability.description,
-            entityId,
             alternativeDefinition,
             pageUrl: globalThis.location.href,
             reporter: value.reporter || undefined,
@@ -89,27 +85,20 @@ export const ReportCapabilityIssueDialog = ({
         }
       }}
     >
-      {iconOnly ? (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              aria-label="Report issue"
-              onClick={() => setOpen(true)}
-            >
-              <AlertTriangle />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Report issue</TooltipContent>
-        </Tooltip>
-      ) : (
-        <Button type="button" variant="outline" size="sm" onClick={() => setOpen(true)}>
-          <AlertTriangle />
-          Report issue
-        </Button>
-      )}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-sm"
+            aria-label="Report issue"
+            onClick={() => setOpen(true)}
+          >
+            <AlertTriangle />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Report issue</TooltipContent>
+      </Tooltip>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Report capability issue</DialogTitle>

@@ -4,7 +4,6 @@ export const ReportCapabilityIssueRequestSchema = z.object({
   capabilityId: z.number().int().positive(),
   capabilityName: z.string().trim().min(1).max(200).optional(),
   capabilityDescription: z.string().trim().max(4000).optional(),
-  entityId: z.number().int().positive().optional(),
   alternativeDefinition: z.string().trim().min(1).max(32).optional(),
   pageUrl: z.string().trim().url().max(2000).optional(),
   reporter: z.string().trim().max(100).optional(),

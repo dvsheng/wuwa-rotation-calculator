@@ -13,13 +13,13 @@ import { Text } from '../ui/typography';
 
 import { BySkillView } from './BySkillView';
 import { ByTypeView } from './ByTypeView';
-import { CreateCapabilityDialog } from './CreateCapabilityDialog';
+import { CreateCapabilityButton } from './CreateCapabilityButton';
 
 const TYPE_VIEW = 'type';
 const SKILL_VIEW = 'skill';
 
 export const EntityContainer = ({ id }: { id: number }) => {
-  const { data: capabilities } = useEntityCapabilities(id);
+  const { data: capabilities } = useEntityCapabilities([id]);
   const { data: entities } = useEntities({});
   const { data: session } = useSession();
   const [view, setView] = useState(TYPE_VIEW);
@@ -47,7 +47,7 @@ export const EntityContainer = ({ id }: { id: number }) => {
               <ToggleGroupItem value={TYPE_VIEW}>By Type</ToggleGroupItem>
             </ToggleGroup>
           )}
-          {isAdmin && <CreateCapabilityDialog entityId={id} />}
+          {isAdmin && <CreateCapabilityButton entityId={id} />}
         </Stack>
       </Row>
       {view === SKILL_VIEW ? (

@@ -6,8 +6,7 @@ import { Stack } from '@/components/ui/layout';
 import { Separator } from '@/components/ui/separator';
 import type { ScrollButtonProperties } from '@/hooks/useScrollControls';
 import { useScrollControls } from '@/hooks/useScrollControls';
-import { useTeamAttackInstances } from '@/hooks/useTeamAttackInstances';
-import { useTeamModifierInstances } from '@/hooks/useTeamModifierInstances';
+import { useTeamDetails } from '@/hooks/useTeamDetails';
 
 import { AttackCanvas } from './attack/AttackCanvas';
 import { BuffCanvas } from './buff/BuffCanvas';
@@ -28,8 +27,8 @@ export const Canvas = ({
 }: CanvasProperties) => {
   const { width, mounted, containerRef } = useContainerWidth();
   const { ref, scrollBackProps, scrollForwardProps } = useScrollControls();
-  const { attacks } = useTeamAttackInstances();
-  const { buffs } = useTeamModifierInstances();
+  const { data } = useTeamDetails();
+  const { attacks, modifiers: buffs } = data;
 
   const attacksEmpty = attacks.length === 0 && attackPreviewInsertIndex === undefined;
   const buffsEmpty = buffs.length === 0 && !buffPreviewLayout;

@@ -3,8 +3,8 @@ import type { Capability } from '@/services/game-data';
 
 import { ButtonGroup } from '../ui/button-group';
 
-import { DeleteCapabilityDialog } from './DeleteCapabilityDialog';
-import { ReportCapabilityIssueDialog } from './ReportCapabilityIssueDialog';
+import { DeleteCapabilityButton } from './DeleteCapabilityButton';
+import { ReportCapabilityIssueButton } from './ReportCapabilityIssueButton';
 import { UpdateCapabilityDialog } from './UpdateCapabilityDialog';
 
 interface CapabilityActionButtonsProperties {
@@ -21,12 +21,12 @@ export const CapabilityActionButtons = ({
 
   return (
     <ButtonGroup>
-      <ReportCapabilityIssueDialog
+      <ReportCapabilityIssueButton
         capability={capability}
         alternativeDefinition={alternativeDefinition}
       />
       {isAdmin && <UpdateCapabilityDialog capability={capability} />}
-      {isAdmin && <DeleteCapabilityDialog capability={capability} />}
+      {isAdmin && <DeleteCapabilityButton capability={capability} />}
     </ButtonGroup>
   );
 };

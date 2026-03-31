@@ -16,9 +16,9 @@ import {
 } from '@/components/ui/sheet';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
-import type { Parameter } from '@/hooks/useTeamDetails';
 import type { DetailedModifierInstance } from '@/hooks/useTeamModifierInstances';
 import { CapabilityType } from '@/services/game-data';
+import type { Parameter } from '@/services/game-data/get-team-capabilities';
 import { useStore } from '@/store';
 
 import { Row, Stack } from '../ui/layout';

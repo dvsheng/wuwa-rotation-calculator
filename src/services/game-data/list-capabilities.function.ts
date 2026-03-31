@@ -13,9 +13,7 @@ import type {
   ResolveRefineScalableNumber,
 } from './database-type-adapters';
 import { listCapabilitiesHandler } from './list-capabilities.server';
-import type { Capability, RefineLevel, Sequence } from './types';
-
-export type CapabilityResolverOptions = ResolveConfig;
+import type { Capability, Sequence } from './types';
 
 export type ResolvedCapability = ResolveAlternativeDefinitions<
   ResolveRefineScalableNumber<Capability>
@@ -23,7 +21,7 @@ export type ResolvedCapability = ResolveAlternativeDefinitions<
 
 export const filterAndResolveCapabilities = (
   capabilities: Array<Capability>,
-  resolveConfig: CapabilityResolverOptions,
+  resolveConfig: ResolveConfig,
 ): Array<ResolvedCapability> => {
   return capabilities
     .filter((capability) =>
@@ -36,7 +34,7 @@ export const filterAndResolveCapabilities = (
     .map((capability) =>
       resolveStoreNumberType(
         resolveAlternativeDefinitions(capability, resolveConfig.sequence),
-        refineLevelToNumber(resolveConfig.refineLevel),
+        resolveConfig.refineLevel,
       ),
     );
 };
@@ -51,11 +49,6 @@ export const listCapabilities = createServerFn({
   .handler(async ({ data }) => {
     return await listCapabilitiesHandler(data);
   });
-
-const refineLevelToNumber = (refineLevel?: RefineLevel): number => {
-  if (!refineLevel) return 0;
-  return Number.parseInt(refineLevel);
-};
 
 /**
  * Check if a capability is active at the given sequence.

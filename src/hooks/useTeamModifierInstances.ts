@@ -2,7 +2,7 @@ import { compact } from 'es-toolkit/array';
 
 import { useStore } from '@/store';
 
-import { isDetailedModifier, useTeamDetails } from './useTeamDetails';
+import { useTeamDetails } from './useTeamDetails';
 
 export type DetailedModifierInstance = ReturnType<
   typeof useTeamModifierInstances
@@ -16,12 +16,10 @@ export type DetailedModifierInstance = ReturnType<
  */
 export const useTeamModifierInstances = () => {
   const storedBuffs = useStore((state) => state.buffs);
-  const { capabilities, isLoading, isError } = useTeamDetails();
+  const { data, isLoading, isError } = useTeamDetails();
 
   const buffMap = new Map(
-    capabilities
-      .filter((capability) => isDetailedModifier(capability))
-      .map((buff) => [`${buff.characterId}:${buff.id}`, buff]),
+    data.modifiers.map((buff) => [`${buff.characterId}:${buff.id}`, buff]),
   );
   const fullBuffs = compact(
     storedBuffs.map((stored) => {

@@ -54,21 +54,16 @@ export type Sequence = (typeof Sequence)[keyof typeof Sequence];
 /**
  * Valid weapon refinement levels (1 through 5).
  */
-export const RefineLevel = ['1', '2', '3', '4', '5'] as const;
+export const RefineLevel = [1, 2, 3, 4, 5] as const;
 
 export type RefineLevel = (typeof RefineLevel)[number];
 
 /**
  * Valid set piece counts for triggering echo set effects.
  */
-export const SetEffectRequirement = {
-  TWO: 2,
-  THREE: 3,
-  FIVE: 5,
-} as const;
+export const SetEffectRequirement = [2, 3, 5] as const;
 
-export type SetEffectRequirement =
-  (typeof SetEffectRequirement)[keyof typeof SetEffectRequirement];
+export type SetEffectRequirement = (typeof SetEffectRequirement)[number];
 
 /**
  * The source of a capability.
@@ -395,17 +390,21 @@ export interface CharacterEntity<T = {}> extends BaseEntity<T> {
   derivedAttributes: CharacterDerivedAttributes;
 }
 
-export const isAttack = (capability: Capability): capability is Attack => {
+export const isAttack = <T extends object>(
+  capability: Capability<T>,
+): capability is Attack<T> => {
   return capability.capabilityJson.type === CapabilityType.ATTACK;
 };
 
-export const isModifier = (capability: Capability): capability is Modifier => {
+export const isModifier = <T extends object>(
+  capability: Capability<T>,
+): capability is Modifier<T> => {
   return capability.capabilityJson.type === CapabilityType.MODIFIER;
 };
 
-export const isPermanentStat = (
-  capability: Capability,
-): capability is PermanentStat => {
+export const isPermanentStat = <T extends object>(
+  capability: Capability<T>,
+): capability is PermanentStat<T> => {
   return capability.capabilityJson.type === CapabilityType.PERMANENT_STAT;
 };
 

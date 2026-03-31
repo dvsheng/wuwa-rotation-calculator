@@ -1,8 +1,8 @@
 import type { AttackInstance, ModifierInstance } from '@/schemas/rotation';
 import type { Team as ClientTeam } from '@/schemas/team';
-import { isAttack, isModifier, isPermanentStat } from '@/services/game-data';
+import { listCapabilities, listEntities } from '@/services/game-data';
+import { getTeamCapabilities } from '@/services/game-data/get-team-capabilities';
 import type { ResolvedCapability } from '@/services/game-data/list-capabilities.function';
-import { listOwnedCapabilitiesForTeam } from '@/services/game-data/list-owned-team-capabilities';
 
 /**
  * Error thrown when game data is not found.
@@ -82,16 +82,15 @@ export const createGameDataEnricher = async (clientTeam: ClientTeam) => {
  */
 const fetchRotationGameData = async (clientTeam: ClientTeam) => {
   try {
-    const capabilities = await listOwnedCapabilitiesForTeam(
-      clientTeam,
-      (_, characterIndex) => ({ characterIndex }),
-    );
-    const modifiers = capabilities.filter((capability) => isModifier(capability));
-    const attacks = capabilities.filter((capability) => isAttack(capability));
-    const permanentStats = capabilities.filter((capability) =>
-      isPermanentStat(capability),
-    );
-    return { modifiers, attacks, permanentStats };
+    const entities = await listEntities({});
+    const entityIds = clientTeam.flatMap((character) => [
+      character.id,
+      character.weapon.id,
+      character.primarySlotEcho.id,
+      ...character.echoSets.map((set) => set.id),
+    ]);
+    const capabilities = await listCapabilities({ data: { entityIds } });
+    return getTeamCapabilities(clientTeam, capabilities, entities);
   } catch {
     throw new GameDataNotFoundError(
       'Failed to fetch game data for team. Please ensure all team members, weapons, and echoes are configured correctly.',

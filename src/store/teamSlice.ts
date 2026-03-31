@@ -10,7 +10,6 @@ import {
 import { initialEnemyData } from '@/schemas/enemy';
 import type { Enemy } from '@/schemas/enemy';
 import type { Team } from '@/schemas/team';
-import type { RefineLevel } from '@/services/game-data';
 
 import type { RotationBuilderUiSlice } from './rotationBuilderUiSlice';
 import type { RotationSlice } from './rotationSlice';
@@ -22,9 +21,9 @@ export interface TeamSlice {
   setCharacter: (index: number, id: number) => void;
   setSequence: (index: number, sequence: number) => void;
   setWeapon: (index: number, id: number) => void;
-  setRefine: (index: number, refine: string) => void;
+  setRefine: (index: number, refine: number) => void;
   setEchoSet: (index: number, setIndex: number, id: number) => void;
-  setEchoSetRequirement: (index: number, setIndex: number, requirement: string) => void;
+  setEchoSetRequirement: (index: number, setIndex: number, requirement: number) => void;
   setPrimaryEcho: (index: number, id: number) => void;
   updateEchoPiece: (
     characterIndex: number,
@@ -110,8 +109,8 @@ const createDefaultCharacter = (
 ): Character => ({
   id,
   sequence: 0,
-  weapon: { id: defaults.weaponId, refine: '1' },
-  echoSets: [{ id: defaults.echoSetId, requirement: '5' }],
+  weapon: { id: defaults.weaponId, refine: 1 },
+  echoSets: [{ id: defaults.echoSetId, requirement: 5 }],
   primarySlotEcho: { id: defaults.primaryEchoId },
   echoStats: [
     createDefaultEchoStats(4),
@@ -156,7 +155,7 @@ export const createTeamSlice: StateCreator<
     }),
   setRefine: (index, refine) =>
     set((state) => {
-      state.team[index].weapon.refine = refine as RefineLevel;
+      state.team[index].weapon.refine = refine;
     }),
   setEchoSet: (index, setIndex, id) =>
     set((state) => {
@@ -167,7 +166,7 @@ export const createTeamSlice: StateCreator<
     }),
   setEchoSetRequirement: (index, setIndex, requirement) =>
     set((state) => {
-      state.team[index].echoSets[setIndex].requirement = requirement as '2' | '3' | '5';
+      state.team[index].echoSets[setIndex].requirement = requirement as 2 | 3 | 5;
     }),
   setPrimaryEcho: (index, id) =>
     set((state) => {

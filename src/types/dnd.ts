@@ -1,5 +1,8 @@
 import type { DetailedAttackInstance } from '@/hooks/useTeamAttackInstances';
-import type { CharacterAttack, CharacterModifier } from '@/hooks/useTeamDetails';
+import type {
+  CharacterAttack,
+  CharacterModifier,
+} from '@/services/game-data/get-team-capabilities';
 
 interface DragPreviewData {
   characterIconUrl?: string;

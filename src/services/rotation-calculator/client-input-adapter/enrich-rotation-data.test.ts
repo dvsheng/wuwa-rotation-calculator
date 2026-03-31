@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Team as ClientTeam } from '@/schemas/team';
-import { CapabilityType, filterAndResolveCapabilities } from '@/services/game-data';
+import { CapabilityType } from '@/services/game-data';
 import {
   AttackScalingProperty,
   Attribute,
@@ -12,13 +12,19 @@ import {
 
 import { GameDataNotFoundError, createGameDataEnricher } from './enrich-rotation-data';
 
-const { mockListOwnedCapabilitiesForTeam } = vi.hoisted(() => ({
-  mockListOwnedCapabilitiesForTeam: vi.fn(),
+const { mockListCapabilities, mockListEntities } = vi.hoisted(() => ({
+  mockListCapabilities: vi.fn(),
+  mockListEntities: vi.fn(),
 }));
 
-vi.mock('@/services/game-data/list-owned-team-capabilities', () => ({
-  listOwnedCapabilitiesForTeam: mockListOwnedCapabilitiesForTeam,
-}));
+vi.mock('@/services/game-data', async () => {
+  const actual = await vi.importActual('@/services/game-data');
+  return {
+    ...actual,
+    listCapabilities: mockListCapabilities,
+    listEntities: mockListEntities,
+  };
+});
 
 const createAttackCapability = (id: number, entityId: number) => ({
   id,
@@ -90,28 +96,35 @@ const mockTeam: ClientTeam = [
   {
     id: 1306,
     sequence: 6,
-    weapon: { id: 21_040_016, refine: '5' as const },
-    echoSets: [{ id: 1, requirement: '5' as const }],
+    weapon: { id: 21_040_016, refine: 5 as const },
+    echoSets: [{ id: 1, requirement: 5 as const }],
     primarySlotEcho: { id: 6_000_038 },
     echoStats: [],
   },
   {
     id: 1405,
     sequence: 0,
-    weapon: { id: 21_050_016, refine: '1' as const },
-    echoSets: [{ id: 2, requirement: '5' as const }],
+    weapon: { id: 21_050_016, refine: 1 as const },
+    echoSets: [{ id: 2, requirement: 5 as const }],
     primarySlotEcho: { id: 6_000_041 },
     echoStats: [],
   },
   {
     id: 1102,
     sequence: 6,
-    weapon: { id: 21_010_026, refine: '1' as const },
-    echoSets: [{ id: 3, requirement: '5' as const }],
+    weapon: { id: 21_010_026, refine: 1 as const },
+    echoSets: [{ id: 3, requirement: 5 as const }],
     primarySlotEcho: { id: 6_000_037 },
     echoStats: [],
   },
 ];
+
+const createEntities = () =>
+  [
+    { id: 1306, name: 'Yinlin', iconUrl: '/yinlin.webp' },
+    { id: 1405, name: 'Shorekeeper', iconUrl: '/shorekeeper.webp' },
+    { id: 1102, name: 'Verina', iconUrl: '/verina.webp' },
+  ] as any;
 
 const setupCapabilities = () => {
   const capabilitiesByEntityId = new Map<number, Array<any>>([
@@ -160,54 +173,10 @@ const setupCapabilities = () => {
     [6_000_037, []],
     [3, []],
   ]);
+  const capabilities = [...capabilitiesByEntityId.values()].flat();
 
-  mockListOwnedCapabilitiesForTeam.mockImplementation(
-    (
-      team: ClientTeam,
-      getCharacterOwner: (character: ClientTeam[number], characterIndex: number) => any,
-    ) =>
-      Promise.resolve(
-        team.flatMap((character, characterIndex) => {
-          const characterOwner = getCharacterOwner(character, characterIndex);
-
-          return [
-            ...filterAndResolveCapabilities(
-              capabilitiesByEntityId.get(character.primarySlotEcho.id) ?? [],
-              {},
-            ).map((capability) => ({
-              ...capability,
-              ...characterOwner,
-              entityId: character.primarySlotEcho.id,
-            })),
-            ...filterAndResolveCapabilities(
-              capabilitiesByEntityId.get(character.id) ?? [],
-              { sequence: character.sequence },
-            ).map((capability) => ({
-              ...capability,
-              ...characterOwner,
-              entityId: character.id,
-            })),
-            ...filterAndResolveCapabilities(
-              capabilitiesByEntityId.get(character.weapon.id) ?? [],
-              { refineLevel: character.weapon.refine },
-            ).map((capability) => ({
-              ...capability,
-              ...characterOwner,
-              entityId: character.weapon.id,
-            })),
-            ...character.echoSets.flatMap((set) =>
-              filterAndResolveCapabilities(capabilitiesByEntityId.get(set.id) ?? [], {
-                activatedSetBonus: Number.parseInt(set.requirement) as 2 | 3 | 5,
-              }).map((capability) => ({
-                ...capability,
-                ...characterOwner,
-                entityId: set.id,
-              })),
-            ),
-          ];
-        }),
-      ),
-  );
+  mockListCapabilities.mockResolvedValue(capabilities);
+  mockListEntities.mockResolvedValue(createEntities());
 };
 
 describe('createGameDataEnricher', () => {
@@ -222,7 +191,8 @@ describe('createGameDataEnricher', () => {
     expect(enricher.enrichAttack).toBeTypeOf('function');
     expect(enricher.enrichModifier).toBeTypeOf('function');
     expect(enricher.getPermanentStatsForCharacter).toBeTypeOf('function');
-    expect(mockListOwnedCapabilitiesForTeam).toHaveBeenCalledTimes(1);
+    expect(mockListEntities).toHaveBeenCalledTimes(1);
+    expect(mockListCapabilities).toHaveBeenCalledTimes(1);
   });
 
   it('enriches attack instances with resolved capability details', async () => {
@@ -279,61 +249,34 @@ describe('createGameDataEnricher', () => {
 
     const stats = enricher.getPermanentStatsForCharacter(0);
 
-    expect(stats.map((stat) => stat.id)).toEqual([501, 301, 401, 601]);
+    expect(stats.map((stat) => stat.id)).toEqual([301, 401, 501, 601]);
   });
 
   it('filters echo set capabilities using parentName requirements', async () => {
-    mockListOwnedCapabilitiesForTeam.mockImplementation(
-      (
-        team: ClientTeam,
-        getCharacterOwner: (
-          character: ClientTeam[number],
-          characterIndex: number,
-        ) => any,
-      ) =>
-        Promise.resolve(
-          team.flatMap((character, characterIndex) => {
-            const characterOwner = getCharacterOwner(character, characterIndex);
-
-            return character.echoSets.flatMap((set) =>
-              filterAndResolveCapabilities(
-                (set.id === 1
-                  ? [
-                      createPermanentStatCapability(
-                        701,
-                        1,
-                        CharacterStat.CRITICAL_RATE,
-                        0.05,
-                        [Tag.ALL],
-                        'Lingering Tunes - 2',
-                      ),
-                      createPermanentStatCapability(
-                        702,
-                        1,
-                        CharacterStat.CRITICAL_DAMAGE,
-                        0.2,
-                        [Tag.ALL],
-                        'Lingering Tunes - 5',
-                      ),
-                    ]
-                  : []) as any,
-                {
-                  activatedSetBonus: Number.parseInt(set.requirement) as 2 | 3 | 5,
-                },
-              ).map((capability) => ({
-                ...capability,
-                ...characterOwner,
-                entityId: set.id,
-              })),
-            );
-          }),
-        ),
-    );
+    mockListCapabilities.mockResolvedValue([
+      createPermanentStatCapability(
+        701,
+        1,
+        CharacterStat.CRITICAL_RATE,
+        0.05,
+        [Tag.ALL],
+        'Lingering Tunes - 2',
+      ),
+      createPermanentStatCapability(
+        702,
+        1,
+        CharacterStat.CRITICAL_DAMAGE,
+        0.2,
+        [Tag.ALL],
+        'Lingering Tunes - 5',
+      ),
+    ]);
+    mockListEntities.mockResolvedValue(createEntities());
 
     const teamWithTwoPiece = [
       {
         ...mockTeam[0],
-        echoSets: [{ id: 1, requirement: '2' as const }],
+        echoSets: [{ id: 1, requirement: 2 as const }],
       },
       mockTeam[1],
       mockTeam[2],

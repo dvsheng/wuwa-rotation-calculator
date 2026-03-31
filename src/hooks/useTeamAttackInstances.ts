@@ -2,7 +2,7 @@ import { compact } from 'es-toolkit/array';
 
 import { useStore } from '@/store';
 
-import { isDetailedAttack, useTeamDetails } from './useTeamDetails';
+import { useTeamDetails } from './useTeamDetails';
 
 export type DetailedAttackInstance = ReturnType<
   typeof useTeamAttackInstances
@@ -16,12 +16,10 @@ export type DetailedAttackInstance = ReturnType<
  */
 export const useTeamAttackInstances = () => {
   const storedAttacks = useStore((state) => state.attacks);
-  const { capabilities, isLoading, isError } = useTeamDetails();
+  const { data, isLoading, isError } = useTeamDetails();
 
   const attackMap = new Map(
-    capabilities
-      .filter((capability) => isDetailedAttack(capability))
-      .map((attack) => [`${attack.characterId}:${attack.id}`, attack]),
+    data.attacks.map((attack) => [`${attack.characterId}:${attack.id}`, attack]),
   );
   const fullAttacks = compact(
     storedAttacks.map((stored) => {

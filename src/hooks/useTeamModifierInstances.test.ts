@@ -22,58 +22,64 @@ describe('useTeamModifierInstances', () => {
   it('resolves the correct character when two characters share the same capability id', () => {
     // Two different characters both have a buff with id=20 (e.g. a shared weapon passive)
     mockUseTeamDetails.mockReturnValue({
-      capabilities: [
-        {
-          id: 20,
-          characterId: 1001,
-          entityId: 601,
-          skillId: 1,
-          characterName: 'Rover',
-          name: 'Shared Passive',
-          parentName: 'Weapon',
-          description: '',
-          originType: OriginType.WEAPON,
-          capabilityJson: {
-            type: CapabilityType.MODIFIER,
-            modifiedStats: [
-              {
-                target: 'self',
-                stat: 'damageBonus',
-                value: 0.1,
-                tags: ['all'],
-              },
-            ],
+      data: {
+        attacks: [],
+        modifiers: [
+          {
+            id: 20,
+            characterId: 1001,
+            characterIndex: 0,
+            entityId: 601,
+            skillId: 1,
+            characterName: 'Rover',
+            name: 'Shared Passive',
+            parentName: 'Weapon',
+            description: '',
+            originType: OriginType.WEAPON,
+            capabilityJson: {
+              type: CapabilityType.MODIFIER,
+              modifiedStats: [
+                {
+                  target: 'self',
+                  stat: 'damageBonus',
+                  value: 0.1,
+                  tags: ['all'],
+                },
+              ],
+            },
+            parameters: [],
+            iconUrl: '',
+            characterIconUrl: '',
           },
-          parameters: [],
-          iconUrl: '',
-          characterIconUrl: '',
-        } as any,
-        {
-          id: 20,
-          characterId: 1002,
-          entityId: 601,
-          skillId: 1,
-          characterName: 'Calcharo',
-          name: 'Shared Passive',
-          parentName: 'Weapon',
-          description: '',
-          originType: OriginType.WEAPON,
-          capabilityJson: {
-            type: CapabilityType.MODIFIER,
-            modifiedStats: [
-              {
-                target: 'self',
-                stat: 'damageBonus',
-                value: 0.1,
-                tags: ['all'],
-              },
-            ],
+          {
+            id: 20,
+            characterId: 1002,
+            characterIndex: 1,
+            entityId: 601,
+            skillId: 1,
+            characterName: 'Calcharo',
+            name: 'Shared Passive',
+            parentName: 'Weapon',
+            description: '',
+            originType: OriginType.WEAPON,
+            capabilityJson: {
+              type: CapabilityType.MODIFIER,
+              modifiedStats: [
+                {
+                  target: 'self',
+                  stat: 'damageBonus',
+                  value: 0.1,
+                  tags: ['all'],
+                },
+              ],
+            },
+            parameters: [],
+            iconUrl: '',
+            characterIconUrl: '',
           },
-          parameters: [],
-          iconUrl: '',
-          characterIconUrl: '',
-        } as any,
-      ],
+        ],
+        permanentStats: [],
+      },
       isLoading: false,
       isError: false,
     });

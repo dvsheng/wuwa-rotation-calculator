@@ -16,13 +16,13 @@ import {
 } from '../ui/dialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
-interface DeleteCapabilityDialogProperties {
+interface DeleteCapabilityButtonProperties {
   capability: Capability;
 }
 
-export const DeleteCapabilityDialog = ({
+export const DeleteCapabilityButton = ({
   capability,
-}: DeleteCapabilityDialogProperties) => {
+}: DeleteCapabilityButtonProperties) => {
   const [open, setOpen] = useState(false);
   const { deleteCapability, isDeleting } = useCapabilityActions(capability.entityId);
 

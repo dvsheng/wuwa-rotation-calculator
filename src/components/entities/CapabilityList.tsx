@@ -1,4 +1,4 @@
-import { isPermanentStat } from '@/services/game-data';
+import { isAttack, isModifier, isPermanentStat } from '@/services/game-data';
 import type { Capability, Sequence } from '@/services/game-data';
 
 import { Stack } from '../ui/layout';
@@ -14,7 +14,9 @@ export const CapabilityList = ({
   showCapabilityTypeBadge?: boolean;
   showSkillIcon?: boolean;
 }) => {
-  const standardEntries = entries.filter((capability) => !isPermanentStat(capability));
+  const standardEntries = entries.filter(
+    (capability) => isAttack(capability) || isModifier(capability),
+  );
   const permanentEntries = entries.filter((capability) => isPermanentStat(capability));
   const entityId = entries[0]?.entityId;
 

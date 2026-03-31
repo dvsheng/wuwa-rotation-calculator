@@ -1,5 +1,5 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CapabilityType, OriginType, Target } from '@/services/game-data';
@@ -27,6 +27,18 @@ vi.mock('@dnd-kit/react', () => ({
   useDragOperation: mockUseDragOperation,
 }));
 
+vi.mock('@/components/common/CapabilityHoverCard', () => ({
+  CapabilityHoverCard: ({ children }: { children: ReactNode }) => children,
+}));
+
+vi.mock('@/hooks/useCharacter', async () => {
+  const actual = await vi.importActual('@/hooks/useCharacter');
+  return {
+    ...actual,
+    useTeamCharacters: vi.fn(),
+  };
+});
+
 vi.mock('@/hooks/useTeamDetails', async () => {
   const actual = await vi.importActual('@/hooks/useTeamDetails');
   return {
@@ -36,9 +48,27 @@ vi.mock('@/hooks/useTeamDetails', async () => {
 });
 
 const { useDraggable } = await import('@dnd-kit/react');
+const { useTeamCharacters } = await import('@/hooks/useCharacter');
 const { useTeamDetails } = await import('@/hooks/useTeamDetails');
 const mockUseDraggable = vi.mocked(useDraggable);
+const mockUseTeamCharacters = vi.mocked(useTeamCharacters);
 const mockUseTeamDetails = vi.mocked(useTeamDetails);
+
+const createTeamDetails = ({
+  attacks = [],
+  modifiers = [],
+}: {
+  attacks?: Array<any>;
+  modifiers?: Array<any>;
+} = {}) => ({
+  data: {
+    attacks,
+    modifiers,
+    permanentStats: [],
+  },
+  isLoading: false,
+  isError: false,
+});
 
 const makeAttack = (
   id: number,
@@ -107,18 +137,7 @@ const getSectionCapabilityNames = (sectionName: 'Attacks' | 'Buffs') => {
 };
 
 const renderCapabilitySidebar = () => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-      mutations: { retry: false },
-    },
-  });
-
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <CapabilitySidebar />
-    </QueryClientProvider>,
-  );
+  return render(<CapabilitySidebar />);
 };
 
 describe('CapabilitySidebar', () => {
@@ -135,24 +154,21 @@ describe('CapabilitySidebar', () => {
       source: undefined,
       target: undefined,
     });
-    mockUseTeamDetails.mockReturnValue({
-      capabilities: [],
-      isLoading: false,
-      isError: false,
-    });
+    mockUseTeamCharacters.mockReturnValue([{ id: 1, index: 0, name: 'Rover' }] as any);
+    mockUseTeamDetails.mockReturnValue(createTeamDetails());
   });
 
   it('sorts attacks by origin and then by name', () => {
-    mockUseTeamDetails.mockReturnValue({
-      capabilities: [
-        makeAttack(1, 'Zeta Skill', OriginType.RESONANCE_SKILL),
-        makeAttack(2, 'Beta Slash', OriginType.NORMAL_ATTACK),
-        makeAttack(3, 'Echo Burst', OriginType.ECHO),
-        makeAttack(4, 'Alpha Slash', OriginType.NORMAL_ATTACK),
-      ],
-      isLoading: false,
-      isError: false,
-    });
+    mockUseTeamDetails.mockReturnValue(
+      createTeamDetails({
+        attacks: [
+          makeAttack(1, 'Zeta Skill', OriginType.RESONANCE_SKILL),
+          makeAttack(2, 'Beta Slash', OriginType.NORMAL_ATTACK),
+          makeAttack(3, 'Echo Burst', OriginType.ECHO),
+          makeAttack(4, 'Alpha Slash', OriginType.NORMAL_ATTACK),
+        ],
+      }),
+    );
 
     renderCapabilitySidebar();
 
@@ -165,16 +181,16 @@ describe('CapabilitySidebar', () => {
   });
 
   it('sorts buffs by target order', () => {
-    mockUseTeamDetails.mockReturnValue({
-      capabilities: [
-        makeBuff(1, 'Enemy Debuff', Target.ENEMY),
-        makeBuff(2, 'Team Buff', Target.TEAM),
-        makeBuff(3, 'Self Buff', Target.SELF),
-        makeBuff(4, 'Active Buff', Target.ACTIVE_CHARACTER),
-      ],
-      isLoading: false,
-      isError: false,
-    });
+    mockUseTeamDetails.mockReturnValue(
+      createTeamDetails({
+        modifiers: [
+          makeBuff(1, 'Enemy Debuff', Target.ENEMY),
+          makeBuff(2, 'Team Buff', Target.TEAM),
+          makeBuff(3, 'Self Buff', Target.SELF),
+          makeBuff(4, 'Active Buff', Target.ACTIVE_CHARACTER),
+        ],
+      }),
+    );
 
     renderCapabilitySidebar();
 
@@ -187,14 +203,12 @@ describe('CapabilitySidebar', () => {
   });
 
   it('configures palette drags to use clone feedback', () => {
-    mockUseTeamDetails.mockReturnValue({
-      capabilities: [
-        makeAttack(1, 'Basic Attack', OriginType.NORMAL_ATTACK),
-        makeBuff(2, 'Team Buff', Target.TEAM),
-      ],
-      isLoading: false,
-      isError: false,
-    });
+    mockUseTeamDetails.mockReturnValue(
+      createTeamDetails({
+        attacks: [makeAttack(1, 'Basic Attack', OriginType.NORMAL_ATTACK)],
+        modifiers: [makeBuff(2, 'Team Buff', Target.TEAM)],
+      }),
+    );
 
     renderCapabilitySidebar();
 
@@ -206,11 +220,11 @@ describe('CapabilitySidebar', () => {
   });
 
   it('resets palette horizontal scroll while dragging a capability from the sidebar', () => {
-    mockUseTeamDetails.mockReturnValue({
-      capabilities: [makeAttack(1, 'Basic Attack', OriginType.NORMAL_ATTACK)],
-      isLoading: false,
-      isError: false,
-    });
+    mockUseTeamDetails.mockReturnValue(
+      createTeamDetails({
+        attacks: [makeAttack(1, 'Basic Attack', OriginType.NORMAL_ATTACK)],
+      }),
+    );
     const rendered = renderCapabilitySidebar();
     const { container, rerender } = rendered;
     const viewport = container.querySelector<HTMLElement>(
@@ -233,11 +247,7 @@ describe('CapabilitySidebar', () => {
       target: undefined,
     });
 
-    rerender(
-      <QueryClientProvider client={new QueryClient()}>
-        <CapabilitySidebar />
-      </QueryClientProvider>,
-    );
+    rerender(<CapabilitySidebar />);
 
     expect(viewport.scrollLeft).toBe(0);
   });

@@ -35,6 +35,21 @@ const dndHarness = vi.hoisted(() => ({
   >(),
 }));
 
+vi.mock('@/components/common/CapabilityHoverCard', () => ({
+  CapabilityHoverCard: ({ children }: { children: ReactNode }) => children,
+}));
+
+vi.mock('@/hooks/useCharacter', async () => {
+  const actual = await vi.importActual('@/hooks/useCharacter');
+  return {
+    ...actual,
+    useTeamCharacters: vi.fn(() => [
+      { id: 463, index: 0, name: 'Mornye' },
+      { id: 484, index: 1, name: 'Shorekeeper' },
+    ]),
+  };
+});
+
 vi.mock('@/hooks/useTeamDetails', async () => {
   const actual = await vi.importActual('@/hooks/useTeamDetails');
   return {
@@ -109,7 +124,7 @@ vi.mock('react-grid-layout', async () => {
       layout?: Array<{ h: number; i: string; w: number; x: number; y: number }>;
       width?: number;
     }) => (
-      <div data-testid="buff-grid-layout" data-width={width} className={className}>
+      <div data-width={width} className={className}>
         {React.Children.map(children, (child) => {
           if (!React.isValidElement(child)) return child;
 
@@ -120,7 +135,6 @@ vi.mock('react-grid-layout', async () => {
 
           return (
             <div
-              data-testid="buff-grid-item"
               data-grid-h={gridItem?.h}
               data-grid-id={gridItem?.i}
               data-grid-w={gridItem?.w}
@@ -264,14 +278,47 @@ const setElementRect = (
   });
 };
 
-const getAttackCanvasNames = () =>
-  within(screen.getByTestId('attack-canvas-row'))
-    .getAllByTestId('attack-canvas-item-name')
-    .map((item) => item.textContent.trim());
+const getTextInstanceCount = (text: string) => screen.queryAllByText(text).length;
+
+const getSidebarSection = (sectionName: 'Attacks' | 'Buffs') => {
+  const heading = screen.getByRole('heading', { name: sectionName });
+  const section = heading.parentElement?.parentElement;
+  if (!section) {
+    throw new Error(`Expected "${sectionName}" section to exist`);
+  }
+
+  return section;
+};
+
+const getSidebarCapabilityCard = (
+  sectionName: 'Attacks' | 'Buffs',
+  capabilityName: string,
+) => {
+  const label = within(getSidebarSection(sectionName)).getByText(capabilityName);
+  const card = label.closest<HTMLElement>('[data-slot="item"]');
+  if (!card) {
+    throw new Error(`Expected sidebar card for "${capabilityName}" to exist`);
+  }
+
+  return card;
+};
+
+const createDropTarget = (properties?: {
+  height?: number;
+  left?: number;
+  top?: number;
+  width?: number;
+}) => {
+  const element = document.createElement('div');
+  setElementRect(element, properties);
+  return element;
+};
 
 const getBuffGridItem = (name: string) => {
-  const label = within(screen.getByTestId('buff-canvas')).getByText(name);
-  const gridItem = label.closest('[data-testid="buff-grid-item"]');
+  const label = screen
+    .getAllByText(name)
+    .find((element) => element.closest('[data-grid-id]'));
+  const gridItem = label?.closest('[data-grid-id]');
   if (!(gridItem instanceof HTMLDivElement)) {
     throw new TypeError(`Expected a grid item wrapper for buff "${name}"`);
   }
@@ -340,32 +387,31 @@ describe('RotationBuilder', () => {
       const user = userEvent.setup();
       renderRotationBuilder({ attacks, buffs });
 
-      await user.click(screen.getByTestId('sidebar-capability-card-1060'));
+      await user.click(getSidebarCapabilityCard('Buffs', 'Syntony Field'));
 
-      expect(
-        within(screen.getByTestId('buff-canvas')).getByText('Syntony Field'),
-      ).toBeInTheDocument();
+      expect(useStore.getState().buffs.at(-1)).toMatchObject({
+        characterId: 463,
+        id: 1060,
+      });
+      expect(getTextInstanceCount('Syntony Field')).toBe(2);
     });
 
     it('adds a clicked attack from the sidebar to the end of the attack canvas', async () => {
       const user = userEvent.setup();
       renderRotationBuilder({ attacks, buffs });
 
-      await user.click(screen.getByTestId('sidebar-capability-card-238'));
+      await user.click(getSidebarCapabilityCard('Attacks', 'Optimal Solution'));
 
-      const attackNames = getAttackCanvasNames();
-
-      expect(attackNames.at(-1)).toBe('Optimal Solution');
       expect(useStore.getState().attacks.at(-1)).toMatchObject({
         characterId: 463,
         id: 238,
       });
+      expect(getTextInstanceCount('Optimal Solution')).toBe(2);
     });
 
     it('adds a buff when it is dragged from the sidebar to the buff canvas', () => {
       renderRotationBuilder({ attacks, buffs });
-      const buffCanvas = screen.getByTestId('buff-canvas');
-      setElementRect(buffCanvas, { width: 1440 });
+      const buffCanvas = createDropTarget({ width: 1440 });
 
       emitDragEnd({
         canceled: false,
@@ -382,13 +428,16 @@ describe('RotationBuilder', () => {
         },
       });
 
-      expect(within(buffCanvas).getByText('Syntony Field')).toBeInTheDocument();
+      expect(useStore.getState().buffs.at(-1)).toMatchObject({
+        characterId: 463,
+        id: 1060,
+      });
+      expect(getTextInstanceCount('Syntony Field')).toBe(2);
     });
 
     it('does not add an attack when it is dragged from the sidebar to the buff canvas', () => {
       renderRotationBuilder({ attacks, buffs });
-      const buffCanvas = screen.getByTestId('buff-canvas');
-      setElementRect(buffCanvas, { width: 1440 });
+      const buffCanvas = createDropTarget({ width: 1440 });
       const startingAttackCount = useStore.getState().attacks.length;
 
       emitDragEnd({
@@ -407,15 +456,12 @@ describe('RotationBuilder', () => {
       });
 
       expect(useStore.getState().attacks).toHaveLength(startingAttackCount);
-      expect(
-        within(buffCanvas).queryByText('Optimal Solution'),
-      ).not.toBeInTheDocument();
+      expect(getTextInstanceCount('Optimal Solution')).toBe(1);
     });
 
     it('adds an attack when it is dragged from the sidebar to the attack canvas', () => {
       renderRotationBuilder({ attacks, buffs });
-      const attackCanvas = screen.getByTestId('attack-canvas');
-      setElementRect(attackCanvas, { width: 1440 });
+      const attackCanvas = createDropTarget({ width: 1440 });
 
       emitDragEnd({
         canceled: false,
@@ -432,13 +478,16 @@ describe('RotationBuilder', () => {
         },
       });
 
-      expect(getAttackCanvasNames().at(-1)).toBe('Optimal Solution');
+      expect(useStore.getState().attacks.at(-1)).toMatchObject({
+        characterId: 463,
+        id: 238,
+      });
+      expect(getTextInstanceCount('Optimal Solution')).toBe(2);
     });
 
     it('does not add a buff when it is dragged from the sidebar to the attack canvas', () => {
       renderRotationBuilder({ attacks, buffs });
-      const attackCanvas = screen.getByTestId('attack-canvas');
-      setElementRect(attackCanvas, { width: 1440 });
+      const attackCanvas = createDropTarget({ width: 1440 });
       const startingBuffCount = useStore.getState().buffs.length;
 
       emitDragEnd({
@@ -457,9 +506,7 @@ describe('RotationBuilder', () => {
       });
 
       expect(useStore.getState().buffs).toHaveLength(startingBuffCount);
-      expect(
-        within(screen.getByTestId('attack-canvas')).queryByText('Syntony Field'),
-      ).not.toBeInTheDocument();
+      expect(getTextInstanceCount('Syntony Field')).toBe(1);
     });
   });
 
@@ -486,8 +533,8 @@ describe('RotationBuilder', () => {
       const user = userEvent.setup();
       renderRotationBuilder({ buffs });
 
-      await user.click(screen.getByTestId('sidebar-capability-card-1060'));
-      await user.click(screen.getByTestId('sidebar-capability-card-1061'));
+      await user.click(getSidebarCapabilityCard('Buffs', 'Syntony Field'));
+      await user.click(getSidebarCapabilityCard('Buffs', 'High Syntony Field'));
 
       expectBuffLayoutsNotToOverlap();
       expect(getBuffGridItem('Syntony Field').dataset.gridY).toBeDefined();
@@ -496,16 +543,25 @@ describe('RotationBuilder', () => {
   });
 
   it('centers both empty canvas messages within their larger overlay containers', () => {
+    dndHarness.mockUseTeamDetails.mockReturnValue({
+      data: {
+        attacks: [],
+        modifiers: [],
+        permanentStats: [],
+      },
+      isLoading: false,
+      isError: false,
+    });
     renderRotationBuilder();
 
-    expect(screen.getByTestId('attack-empty-state')).toHaveClass(
+    expect(screen.getByText(/No attacks to display\./)).toHaveClass(
       'absolute',
       'inset-0',
       'flex',
       'items-center',
       'justify-center',
     );
-    expect(screen.getByTestId('buff-empty-state')).toHaveClass(
+    expect(screen.getByText(/No buffs to display\./)).toHaveClass(
       'absolute',
       'inset-0',
       'flex',
@@ -529,7 +585,7 @@ describe('RotationBuilder', () => {
       ],
     });
 
-    await user.click(screen.getByTestId('sidebar-capability-card-1060'));
+    await user.click(getSidebarCapabilityCard('Buffs', 'Syntony Field'));
 
     expect(useStore.getState().buffs).toHaveLength(2);
     expect(useStore.getState().buffs[1]).toMatchObject({
@@ -554,8 +610,7 @@ describe('RotationBuilder', () => {
         }),
       ],
     });
-    const buffCanvas = screen.getByTestId('buff-canvas');
-    setElementRect(buffCanvas, { width: 1440 });
+    const buffCanvas = createDropTarget({ width: 1440 });
 
     emitDragEnd({
       canceled: false,

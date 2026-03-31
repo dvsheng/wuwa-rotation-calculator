@@ -14,13 +14,14 @@ import { listCapabilities } from '@/services/game-data/list-capabilities.functio
 
 const capabilityQueryKeys = {
   all: () => ['entity-capabilities'] as const,
-  entity: (entityId: number) => [...capabilityQueryKeys.all(), entityId] as const,
+  entity: (entityIds: Array<number>) =>
+    [...capabilityQueryKeys.all(), entityIds.toSorted()] as const,
 };
 
-export const useEntityCapabilities = (entityId: number) => {
+export const useEntityCapabilities = (entityIds: Array<number>) => {
   return useSuspenseQuery({
-    queryKey: capabilityQueryKeys.entity(entityId),
-    queryFn: () => listCapabilities({ data: { entityIds: [entityId] } }),
+    queryKey: capabilityQueryKeys.entity(entityIds),
+    queryFn: () => listCapabilities({ data: { entityIds } }),
     staleTime: Infinity,
   });
 };
@@ -30,7 +31,7 @@ export const useCapabilityActions = (entityId: number) => {
 
   const invalidateCapabilities = () =>
     queryClient.invalidateQueries({
-      queryKey: capabilityQueryKeys.entity(entityId),
+      queryKey: capabilityQueryKeys.entity([entityId]),
     });
 
   const createMutation = useMutation({

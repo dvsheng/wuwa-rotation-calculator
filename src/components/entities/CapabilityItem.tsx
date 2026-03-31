@@ -37,20 +37,19 @@ import { Text } from '../ui/typography';
 import { CapabilityActionButtons } from './CapabilityActionButtons';
 import { getCapabilityAnchorId } from './entityView.utilities';
 
+type AlternativeDefinitionValue = 'base' | Sequence;
+
 export const CapabilityItem = ({
   capability,
   defaultDefinition = 'base',
   showCapabilityTypeBadge = false,
   showSkillIcon = false,
 }: {
-  capability: Capability;
+  capability: Attack | Modifier;
   defaultDefinition?: 'base' | Sequence;
   showCapabilityTypeBadge?: boolean;
   showSkillIcon?: boolean;
 }) => {
-  if (capability.capabilityJson.type === 'permanent_stat') {
-    return;
-  }
   return (
     <div id={getCapabilityAnchorId(capability.id)}>
       <CapabilityCard
@@ -82,6 +81,71 @@ export const CapabilityItem = ({
   );
 };
 
+export const PermanentStatContent = ({
+  content,
+}: {
+  content: Array<PermanentStat>;
+}) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Permanent Stats</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Table className="table-fixed">
+          <colgroup>
+            <col style={{ width: '18%' }} />
+            <col style={{ width: '36%' }} />
+            <col style={{ width: '11%' }} />
+            <col style={{ width: '14%' }} />
+            <col style={{ width: '15%' }} />
+            <col style={{ width: '20%' }} />
+          </colgroup>
+          <TableHeader>
+            <TableHead> Name </TableHead>
+            <TableHead> Description </TableHead>
+            <TableHead> Buff Value</TableHead>
+            <TableHead> Buffed Stat </TableHead>
+            <TableHead> Applied To </TableHead>
+            <TableHead className="w-0 px-1 text-right">
+              <span className="sr-only">Report issue</span>
+            </TableHead>
+          </TableHeader>
+          <TableBody>
+            {content.map((stat, index) => (
+              <TableRow
+                key={index}
+                id={getCapabilityAnchorId(stat.id)}
+                className="scroll-mt-24"
+              >
+                <TableCell>{stat.name}</TableCell>
+                <TableCell>{stat.description}</TableCell>
+                <TableCell>
+                  <span className="font-mono">
+                    {typeof stat.capabilityJson.value === 'number' ? (
+                      stat.capabilityJson.value.toFixed(2)
+                    ) : (
+                      <FormulaTooltip
+                        label="Dynamic"
+                        formula={stat.capabilityJson.value}
+                      />
+                    )}
+                  </span>
+                </TableCell>
+                <TableCell>{startCase(stat.capabilityJson.stat)}</TableCell>
+                <TableCell>{stat.capabilityJson.tags.join(', ')}</TableCell>
+                <TableCell className="px-1 text-right">
+                  <CapabilityActionButtons capability={stat} />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+};
+
 const AttackContent = ({ content }: { content: Attack }) => {
   return (
     <Table className="w-full table-fixed">
@@ -97,7 +161,7 @@ const AttackContent = ({ content }: { content: Attack }) => {
             <TableCell>
               <span className="font-mono">
                 {typeof instance.motionValue === 'number' ? (
-                  toPercent(instance.motionValue)
+                  `${(instance.motionValue * 100).toFixed(2)}%`
                 ) : (
                   <FormulaTooltip label="Dynamic" formula={instance.motionValue} />
                 )}
@@ -144,79 +208,6 @@ const ModifierContent = ({ content }: { content: Modifier }) => {
   );
 };
 
-export const PermanentStatContent = ({
-  content,
-}: {
-  content: Array<PermanentStat & { isAlternativePlacement?: boolean }>;
-}) => {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Permanent Stats</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Table className="table-fixed">
-          <colgroup>
-            <col style={{ width: '18%' }} />
-            <col style={{ width: '36%' }} />
-            <col style={{ width: '11%' }} />
-            <col style={{ width: '14%' }} />
-            <col style={{ width: '15%' }} />
-            <col style={{ width: '20%' }} />
-          </colgroup>
-          <TableHeader>
-            <TableHead> Name </TableHead>
-            <TableHead> Description </TableHead>
-            <TableHead> Buff Value</TableHead>
-            <TableHead> Buffed Stat </TableHead>
-            <TableHead> Applied To </TableHead>
-            <TableHead className="w-0 px-1 text-right">
-              <span className="sr-only">Report issue</span>
-            </TableHead>
-          </TableHeader>
-          <TableBody>
-            {content.map((stat, index) => (
-              <TableRow
-                key={index}
-                id={getCapabilityAnchorId(stat.id)}
-                data-capability-id={stat.id}
-                data-capability-placement={
-                  stat.isAlternativePlacement ? 'alternative' : 'direct'
-                }
-                className="scroll-mt-24"
-              >
-                <TableCell>{stat.name}</TableCell>
-                <TableCell>{stat.description}</TableCell>
-                <TableCell>
-                  <span className="font-mono">
-                    {typeof stat.capabilityJson.value === 'number' ? (
-                      stat.capabilityJson.value.toFixed(2)
-                    ) : (
-                      <FormulaTooltip
-                        label="Dynamic"
-                        formula={stat.capabilityJson.value}
-                      />
-                    )}
-                  </span>
-                </TableCell>
-                <TableCell>{startCase(stat.capabilityJson.stat)}</TableCell>
-                <TableCell>{stat.capabilityJson.tags.join(', ')}</TableCell>
-                <TableCell className="px-1 text-right">
-                  <CapabilityActionButtons capability={stat} />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
-  );
-};
-
-const toPercent = (number: number) => {
-  return `${(number * 100).toFixed(2)}%`;
-};
-
 const FormulaTooltip = ({ label, formula }: { label: string; formula: object }) => {
   return (
     <HoverCard openDelay={150} closeDelay={100}>
@@ -230,15 +221,6 @@ const FormulaTooltip = ({ label, formula }: { label: string; formula: object }) 
       </HoverCardContent>
     </HoverCard>
   );
-};
-
-type AlternativeDefinitionValue = 'base' | Sequence;
-
-const getAlternativeDefinitions = (capability: Capability) => {
-  if (capability.capabilityJson.type === 'permanent_stat') return [];
-  const { alternativeDefinitions } = capability.capabilityJson;
-  if (!alternativeDefinitions) return [];
-  return Object.keys(alternativeDefinitions) as Array<Sequence>;
 };
 
 const CapabilityCard = ({
@@ -324,4 +306,11 @@ const CapabilityCard = ({
       </CardContent>
     </Card>
   );
+};
+
+const getAlternativeDefinitions = (capability: Capability) => {
+  if (capability.capabilityJson.type === 'permanent_stat') return [];
+  const { alternativeDefinitions } = capability.capabilityJson;
+  if (!alternativeDefinitions) return [];
+  return Object.keys(alternativeDefinitions) as Array<Sequence>;
 };

@@ -200,7 +200,7 @@ describe('useEntities', () => {
       },
     ] as any);
 
-    const { result } = renderHook(() => useEntityCapabilities(42), { wrapper });
+    const { result } = renderHook(() => useEntityCapabilities([42]), { wrapper });
 
     await waitFor(() => {
       expect(result.current.data).toHaveLength(1);

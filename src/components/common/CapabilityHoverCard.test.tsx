@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import type { CharacterAttack } from '@/hooks/useTeamDetails';
+import type { CharacterAttack } from '@/services/game-data/get-team-capabilities';
 import { CapabilityType } from '@/services/game-data/types';
 
 import { CapabilityHoverCard } from './CapabilityHoverCard';
@@ -56,7 +56,9 @@ const makeAttack = (overrides: Record<string, unknown> = {}): CharacterAttack =>
     iconUrl: '',
     parameters: [],
     characterId: 1,
+    characterIndex: 0,
     characterName: 'Rover',
+    characterIconUrl: '',
     capabilityJson: {
       type: CapabilityType.ATTACK,
       damageInstances: [],

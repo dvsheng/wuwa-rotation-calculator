@@ -17,7 +17,7 @@ import {
 import { CapabilityForm } from './CapabilityForm';
 import type { CapabilityFormValue } from './CapabilityForm';
 
-export const CreateCapabilityDialog = ({ entityId }: { entityId: number }) => {
+export const CreateCapabilityButton = ({ entityId }: { entityId: number }) => {
   const [open, setOpen] = useState(false);
   const { data: skills } = useEntitySkills(entityId);
   const { createCapability, isCreating } = useCapabilityActions(entityId);

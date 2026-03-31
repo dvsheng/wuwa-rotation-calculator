@@ -21,7 +21,7 @@ import { Textarea } from '../ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { Text } from '../ui/typography';
 
-interface ReportCapabilityIssueDialogProperties {
+interface ReportCapabilityIssueButtonProperties {
   capability: {
     id: number;
     name?: string;
@@ -30,10 +30,10 @@ interface ReportCapabilityIssueDialogProperties {
   alternativeDefinition?: string;
 }
 
-export const ReportCapabilityIssueDialog = ({
+export const ReportCapabilityIssueButton = ({
   capability,
   alternativeDefinition,
-}: ReportCapabilityIssueDialogProperties) => {
+}: ReportCapabilityIssueButtonProperties) => {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm({

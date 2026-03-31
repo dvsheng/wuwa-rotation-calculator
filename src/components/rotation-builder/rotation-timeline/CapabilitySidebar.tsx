@@ -1,5 +1,4 @@
 import { useDragOperation, useDraggable } from '@dnd-kit/react';
-import { uniq } from 'es-toolkit';
 import { SwatchBook } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
 
@@ -20,20 +19,17 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Text } from '@/components/ui/typography';
-import type {
-  CharacterAttack,
-  CharacterCapability,
-  CharacterModifier,
-} from '@/hooks/useTeamDetails';
-import {
-  isDetailedAttack,
-  isDetailedModifier,
-  useTeamDetails,
-} from '@/hooks/useTeamDetails';
+import { useTeamCharacters } from '@/hooks/useCharacter';
+import { useTeamDetails } from '@/hooks/useTeamDetails';
 import { cn, getChartColorByIndex } from '@/lib/utils';
 import type { Capability } from '@/schemas/rotation';
 import { Target } from '@/services/game-data';
 import type { OriginType as CapabilityOriginType } from '@/services/game-data';
+import type {
+  CharacterAttack,
+  CharacterCapability,
+  CharacterModifier,
+} from '@/services/game-data/get-team-capabilities';
 import type { SidebarCapabilityDragData } from '@/types/dnd';
 
 const BUFF_COLOR_LEGEND: Array<LegendItem> = [
@@ -232,7 +228,7 @@ export const CapabilitySidebar = ({
   const [searchText, setSearchText] = useState('');
   const paletteViewportReference = useRef<HTMLDivElement>(null);
   const dragOperation = useDragOperation();
-  const { capabilities } = useTeamDetails();
+  const { data } = useTeamDetails();
   useEffect(() => {
     if (dragOperation.source?.data.kind !== 'sidebar-capability') return;
     if (paletteViewportReference.current) {
@@ -240,7 +236,8 @@ export const CapabilitySidebar = ({
     }
   }, [dragOperation]);
 
-  const characterNames = uniq(capabilities.map((c) => c.characterName));
+  const characters = useTeamCharacters();
+  const characterNames = characters.map((c) => c.name);
 
   const matchesCharacterFilter = (characterName: string) =>
     !selectedCharacter || characterName === selectedCharacter;
@@ -248,9 +245,8 @@ export const CapabilitySidebar = ({
     matchesCharacterFilter(capability.characterName) &&
     matchesSearchText(capability, searchText);
 
-  const filteredCapabilities = capabilities.filter((c) => matchesCapabilityFilters(c));
-  const filteredAttacks = filteredCapabilities.filter((c) => isDetailedAttack(c));
-  const filteredBuffs = filteredCapabilities.filter((c) => isDetailedModifier(c));
+  const filteredAttacks = data.attacks.filter((c) => matchesCapabilityFilters(c));
+  const filteredBuffs = data.modifiers.filter((c) => matchesCapabilityFilters(c));
   const attacksByCharacter = Object.groupBy(
     filteredAttacks,
     (attack) => attack.characterName,

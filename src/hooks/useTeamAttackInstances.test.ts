@@ -22,40 +22,46 @@ describe('useTeamAttackInstances', () => {
   it('resolves the correct character when two characters share the same capability id', () => {
     // Two different characters both have a capability with id=10 (e.g. a shared echo skill)
     mockUseTeamDetails.mockReturnValue({
-      capabilities: [
-        {
-          id: 10,
-          characterId: 1001,
-          entityId: 501,
-          skillId: 1,
-          characterName: 'Rover',
-          name: 'Echo Skill',
-          parentName: 'Echo',
-          description: '',
-          originType: OriginType.ECHO,
-          capabilityJson: {
-            type: CapabilityType.ATTACK,
-            damageInstances: [],
+      data: {
+        attacks: [
+          {
+            id: 10,
+            characterId: 1001,
+            characterIndex: 0,
+            entityId: 501,
+            skillId: 1,
+            characterName: 'Rover',
+            name: 'Echo Skill',
+            parentName: 'Echo',
+            description: '',
+            originType: OriginType.ECHO,
+            capabilityJson: {
+              type: CapabilityType.ATTACK,
+              damageInstances: [],
+            },
+            parameters: [],
           },
-          parameters: [],
-        } as any,
-        {
-          id: 10,
-          characterId: 1002,
-          entityId: 501,
-          skillId: 1,
-          characterName: 'Calcharo',
-          name: 'Echo Skill',
-          parentName: 'Echo',
-          description: '',
-          originType: OriginType.ECHO,
-          capabilityJson: {
-            type: CapabilityType.ATTACK,
-            damageInstances: [],
+          {
+            id: 10,
+            characterId: 1002,
+            characterIndex: 1,
+            entityId: 501,
+            skillId: 1,
+            characterName: 'Calcharo',
+            name: 'Echo Skill',
+            parentName: 'Echo',
+            description: '',
+            originType: OriginType.ECHO,
+            capabilityJson: {
+              type: CapabilityType.ATTACK,
+              damageInstances: [],
+            },
+            parameters: [],
           },
-          parameters: [],
-        } as any,
-      ],
+        ],
+        modifiers: [],
+        permanentStats: [],
+      },
       isLoading: false,
       isError: false,
     });

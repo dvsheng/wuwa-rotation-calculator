@@ -6,17 +6,17 @@ import { useEntitySkills } from '@/hooks/useEntities';
 import { Sequence, isPermanentStat } from '@/services/game-data';
 import type { Capability, Skill } from '@/services/game-data';
 
+import { EntityIcon } from '../common/EntityIcon';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '../ui/accordion';
-import { Row } from '../ui/layout';
+import { Row, Stack } from '../ui/layout';
 import { Text } from '../ui/typography';
 
 import { CapabilityList } from './CapabilityList';
-import { SkillHeader } from './SkillHeader';
 import { TableOfContentsSidebar } from './TableOfContentsSidebar';
 
 export const BySkillView = ({ capabilities }: { capabilities: Array<Capability> }) => {
@@ -64,6 +64,20 @@ export const BySkillView = ({ capabilities }: { capabilities: Array<Capability> 
           );
         })}
       </Accordion>
+    </Row>
+  );
+};
+
+const SkillHeader = ({ skill }: { skill: Skill }) => {
+  return (
+    <Row gap="inset" align="center" wrap>
+      {skill.iconUrl && <EntityIcon iconUrl={skill.iconUrl} size="small" />}
+      <Stack gap="none">
+        <Text variant="title">{skill.name}</Text>
+        <Text variant="caption" tone="muted">
+          {startCase(skill.originType)}
+        </Text>
+      </Stack>
     </Row>
   );
 };

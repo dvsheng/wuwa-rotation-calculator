@@ -13,6 +13,7 @@ const TEST_ENTITY_DETAILS = [
         entityId: 463,
         skillId: 1,
         characterId: 463,
+        characterIndex: 0,
         characterName: 'Mornye',
         characterIconUrl:
           'https://api.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconRoleHeadCircle256/T_IconRoleHeadCircle256_61_UI.webp',
@@ -54,6 +55,7 @@ const TEST_ENTITY_DETAILS = [
         entityId: 463,
         skillId: 2,
         characterId: 463,
+        characterIndex: 0,
         characterName: 'Mornye',
         characterIconUrl:
           'https://api.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconRoleHeadCircle256/T_IconRoleHeadCircle256_61_UI.webp',
@@ -81,6 +83,7 @@ const TEST_ENTITY_DETAILS = [
         entityId: 463,
         skillId: 3,
         characterId: 463,
+        characterIndex: 0,
         characterName: 'Mornye',
         characterIconUrl:
           'https://api.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconRoleHeadCircle256/T_IconRoleHeadCircle256_61_UI.webp',
@@ -107,6 +110,7 @@ const TEST_ENTITY_DETAILS = [
         entityId: 463,
         skillId: 4,
         characterId: 463,
+        characterIndex: 0,
         characterName: 'Mornye',
         characterIconUrl:
           'https://api.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconRoleHeadCircle256/T_IconRoleHeadCircle256_61_UI.webp',
@@ -147,6 +151,7 @@ const TEST_ENTITY_DETAILS = [
         entityId: 484,
         skillId: 5,
         characterId: 484,
+        characterIndex: 1,
         characterName: 'Shorekeeper',
         characterIconUrl:
           'https://api.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconRoleHeadCircle256/T_IconRoleHeadCircle256_28_UI.webp',
@@ -174,6 +179,7 @@ const TEST_ENTITY_DETAILS = [
         entityId: 484,
         skillId: 6,
         characterId: 484,
+        characterIndex: 1,
         characterName: 'Shorekeeper',
         characterIconUrl:
           'https://api.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconRoleHeadCircle256/T_IconRoleHeadCircle256_28_UI.webp',
@@ -200,9 +206,19 @@ const TEST_ENTITY_DETAILS = [
 ];
 
 export const buildRotationTimelineTeamDetails = (): UseTeamDetailsResult => ({
-  capabilities: TEST_ENTITY_DETAILS.flatMap(
-    (entity) => entity.capabilities,
-  ) as UseTeamDetailsResult['capabilities'],
+  data: {
+    attacks: TEST_ENTITY_DETAILS.flatMap((entity) =>
+      entity.capabilities.filter(
+        (capability) => capability.capabilityJson.type === CapabilityType.ATTACK,
+      ),
+    ) as unknown as UseTeamDetailsResult['data']['attacks'],
+    modifiers: TEST_ENTITY_DETAILS.flatMap((entity) =>
+      entity.capabilities.filter(
+        (capability) => capability.capabilityJson.type === CapabilityType.MODIFIER,
+      ),
+    ) as unknown as UseTeamDetailsResult['data']['modifiers'],
+    permanentStats: [],
+  },
   isLoading: false,
   isError: false,
 });

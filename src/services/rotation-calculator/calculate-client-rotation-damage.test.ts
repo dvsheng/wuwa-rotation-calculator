@@ -20,7 +20,7 @@ const createTestTeam = (): Team => [
   {
     id: 1306,
     sequence: 0,
-    weapon: { id: 21_040_016, refine: '1' },
+    weapon: { id: 21_040_016, refine: 1 },
     echoSets: [],
     primarySlotEcho: { id: 6_000_038 },
     echoStats: [],
@@ -28,7 +28,7 @@ const createTestTeam = (): Team => [
   {
     id: 1405,
     sequence: 0,
-    weapon: { id: 21_050_016, refine: '1' },
+    weapon: { id: 21_050_016, refine: 1 },
     echoSets: [],
     primarySlotEcho: { id: 6_000_041 },
     echoStats: [],
@@ -36,7 +36,7 @@ const createTestTeam = (): Team => [
   {
     id: 1102,
     sequence: 0,
-    weapon: { id: 21_010_026, refine: '1' },
+    weapon: { id: 21_010_026, refine: 1 },
     echoSets: [],
     primarySlotEcho: { id: 6_000_037 },
     echoStats: [],

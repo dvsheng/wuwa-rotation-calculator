@@ -15,7 +15,8 @@ export const updateCapabilityHandler = async ({
   const result = await database
     .update(capabilities)
     .set(updateData)
-    .where(eq(capabilities.id, capabilityId));
+    .where(eq(capabilities.id, capabilityId))
+    .returning();
   if (result.length === 0) {
     throw new Error(`Capability not found for ID ${capabilityId}`);
   }
@@ -26,7 +27,8 @@ export const deleteCapabilityHandler = async ({
 }: DeleteCapabilityRequest): Promise<void> => {
   const result = await database
     .delete(capabilities)
-    .where(eq(capabilities.id, capabilityId));
+    .where(eq(capabilities.id, capabilityId))
+    .returning();
   if (result.length === 0) {
     throw new Error(`Capability not found for ID ${capabilityId}`);
   }

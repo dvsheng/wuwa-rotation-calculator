@@ -31,7 +31,7 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
   const handleAddSet = () => {
     if (selectedEchoSets.length < 2) {
       updateCharacter(index, (draft) => {
-        draft.echoSets = [draft.echoSets[0], { id: -9999, requirement: '2' }];
+        draft.echoSets = [draft.echoSets[0], { id: -9999, requirement: 2 }];
       });
     }
   };
@@ -54,7 +54,7 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
     const selectedSetConfig = echoSetList.find((set) => set.id === id);
     const availableTiers = selectedSetConfig?.setBonusThresholds || [2, 5];
     setEchoSet(index, setIndex, id);
-    setEchoSetRequirement(index, setIndex, String(availableTiers[0]));
+    setEchoSetRequirement(index, setIndex, availableTiers[0]);
   };
 
   return (
@@ -75,7 +75,9 @@ export const EchoSetSelector = ({ index }: EchoSetSelectorProperties) => {
               />
               <SecondarySelector
                 value={String(set.requirement)}
-                onValueChange={(value) => setEchoSetRequirement(index, setIndex, value)}
+                onValueChange={(value) =>
+                  setEchoSetRequirement(index, setIndex, Number.parseInt(value))
+                }
                 options={availableTiers.map((tier) => ({
                   value: String(tier),
                   label: `${tier}Pc`,

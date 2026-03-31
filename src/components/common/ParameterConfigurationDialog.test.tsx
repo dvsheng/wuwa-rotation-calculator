@@ -13,6 +13,7 @@ const capability: DetailedAttackInstance = {
   id: 1,
   entityId: 1,
   characterId: 1,
+  characterIndex: 0,
   skillId: 1,
   name: 'Configure Me',
   description: 'Contextual configuration should stay inside the rotation section.',

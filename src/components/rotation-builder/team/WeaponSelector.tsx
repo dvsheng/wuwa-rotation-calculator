@@ -52,7 +52,7 @@ export const WeaponSelector = ({ index }: WeaponSelectorProperties) => {
       />
       <SecondarySelector
         value={String(weapon.refine)}
-        onValueChange={(value) => setRefine(index, value)}
+        onValueChange={(value) => setRefine(index, Number.parseInt(value))}
         options={[1, 2, 3, 4, 5].map((r) => ({
           value: String(r),
           label: `R${r}`,

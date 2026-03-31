@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -7,6 +7,34 @@ import { useStore } from '@/store';
 import { AttackScalingProperty, Attribute, CharacterStat, DamageType } from '@/types';
 
 import { BaseBuffCanvasItem, BuffCanvasItem } from './BuffCanvasItem';
+
+vi.mock('@tanstack/react-router', () => ({
+  Link: ({
+    children,
+    hash,
+    params,
+    to,
+    ...properties
+  }: {
+    children: React.ReactNode;
+    hash?: string;
+    params?: { id?: string };
+    to?: string;
+  } & React.ComponentProps<'a'>) => {
+    const href =
+      to === '/entities/$id' && params?.id
+        ? `/entities/${params.id}${hash ? `#${hash}` : ''}`
+        : hash
+          ? `#${hash}`
+          : '#';
+
+    return (
+      <a href={href} {...properties}>
+        {children}
+      </a>
+    );
+  },
+}));
 
 vi.mock('@/hooks/useTeamAttackInstances');
 
@@ -124,6 +152,21 @@ beforeEach(() => {
   });
 });
 
+const getBuffItem = () => {
+  const item = screen.getByText('ATK Buff').parentElement
+    ?.parentElement as HTMLElement | null;
+  if (!item) {
+    throw new Error('Expected the buff item to exist');
+  }
+
+  return item;
+};
+
+const getConfigureButton = () => {
+  const [button] = within(getBuffItem()).getAllByRole('button');
+  return button;
+};
+
 describe('BuffCanvasItem', () => {
   describe('context menu', () => {
     it('shows the same actions in the context menu and removes the buff', async () => {
@@ -132,7 +175,7 @@ describe('BuffCanvasItem', () => {
 
       render(<BuffCanvasItem buff={buff} onRemove={onRemove} />);
 
-      fireEvent.contextMenu(screen.getByTestId('buff-canvas-item'));
+      fireEvent.contextMenu(getBuffItem());
 
       expect(await screen.findByText('Configure Parameters')).toBeInTheDocument();
       expect(screen.getByText('Expand to full rotation')).toBeInTheDocument();
@@ -151,7 +194,7 @@ describe('BuffCanvasItem', () => {
 
       render(<BuffCanvasItem buff={buff} onRemove={() => {}} />);
 
-      fireEvent.contextMenu(screen.getByTestId('buff-canvas-item'));
+      fireEvent.contextMenu(getBuffItem());
       await userEvent.click(await screen.findByText('Expand to full rotation'));
 
       expect(updateBuffLayout).toHaveBeenCalledWith(buff.instanceId, {
@@ -185,7 +228,7 @@ describe('BuffCanvasItem', () => {
 
       render(<BuffCanvasItem buff={buff} onRemove={() => {}} />);
 
-      expect(screen.getByTestId('buff-canvas-item')).toHaveClass('border-warning');
+      expect(getBuffItem()).toHaveClass('border-warning');
     });
 
     it('does not add a warning border when a configurable buff is configured', () => {
@@ -193,25 +236,25 @@ describe('BuffCanvasItem', () => {
 
       render(<BuffCanvasItem buff={buff} onRemove={() => {}} />);
 
-      expect(screen.getByTestId('buff-canvas-item')).not.toHaveClass('border-warning');
+      expect(getBuffItem()).not.toHaveClass('border-warning');
     });
   });
 
   describe('parameter dialog', () => {
     it('opens the parameter dialog on the first click after hover activates', async () => {
       const buff = makeBuff(1, 2, true);
-      const { container } = render(<BuffCanvasItem buff={buff} onRemove={() => {}} />);
+      render(<BuffCanvasItem buff={buff} onRemove={() => {}} />);
 
-      const hoverWrapper = container.firstElementChild as HTMLElement | null;
+      const hoverWrapper = getBuffItem().parentElement;
       expect(hoverWrapper).not.toBeNull();
 
-      fireEvent.mouseEnter(hoverWrapper!);
+      fireEvent.mouseEnter(hoverWrapper!, {
+        clientX: 160,
+        clientY: 80,
+      });
       await act(async () => {});
 
-      const trigger = container.querySelector('[data-slot="sheet-trigger"]');
-      expect(trigger).not.toBeNull();
-
-      await userEvent.click(trigger as HTMLElement);
+      await userEvent.click(getConfigureButton());
 
       expect(
         await screen.findByRole('button', { name: 'Save changes' }),
@@ -220,12 +263,9 @@ describe('BuffCanvasItem', () => {
 
     it('uses the names of attacks at buff positions as dialog labels when stack config is enabled', async () => {
       const buff = makeBuff(1, 2, true);
-      const { container } = render(<BuffCanvasItem buff={buff} onRemove={() => {}} />);
+      render(<BuffCanvasItem buff={buff} onRemove={() => {}} />);
 
-      const trigger = container.querySelector('[data-slot="sheet-trigger"]');
-      expect(trigger).not.toBeNull();
-
-      await userEvent.click(trigger as HTMLElement);
+      await userEvent.click(getConfigureButton());
 
       expect(screen.getByText('Heavy Attack')).toBeInTheDocument();
       expect(screen.getByText('Basic Attack')).toBeInTheDocument();
@@ -233,12 +273,9 @@ describe('BuffCanvasItem', () => {
 
     it('uses names of attacks starting from x=0 when buff begins at the first attack', async () => {
       const buff = makeBuff(0, 2, true);
-      const { container } = render(<BuffCanvasItem buff={buff} onRemove={() => {}} />);
+      render(<BuffCanvasItem buff={buff} onRemove={() => {}} />);
 
-      const trigger = container.querySelector('[data-slot="sheet-trigger"]');
-      expect(trigger).not.toBeNull();
-
-      await userEvent.click(trigger as HTMLElement);
+      await userEvent.click(getConfigureButton());
 
       expect(screen.getByText('Resonance Liberation')).toBeInTheDocument();
       expect(screen.getByText('Heavy Attack')).toBeInTheDocument();
@@ -247,12 +284,9 @@ describe('BuffCanvasItem', () => {
 
     it('does not show the per-attack toggle for a buff with w=1', async () => {
       const buff = makeBuff(0, 1);
-      const { container } = render(<BuffCanvasItem buff={buff} onRemove={() => {}} />);
+      render(<BuffCanvasItem buff={buff} onRemove={() => {}} />);
 
-      const trigger = container.querySelector('[data-slot="sheet-trigger"]');
-      expect(trigger).not.toBeNull();
-
-      await userEvent.click(trigger as HTMLElement);
+      await userEvent.click(getConfigureButton());
 
       expect(screen.queryByText('Per-attack stacks')).not.toBeInTheDocument();
     });

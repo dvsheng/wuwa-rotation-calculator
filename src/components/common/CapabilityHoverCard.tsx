@@ -20,10 +20,13 @@ import {
 import { Row, Stack } from '@/components/ui/layout';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/typography';
-import { isDetailedAttack } from '@/hooks/useTeamDetails';
-import type { CharacterAttack, CharacterModifier } from '@/hooks/useTeamDetails';
 import { cn } from '@/lib/utils';
-import { Target } from '@/services/game-data/types';
+import type {
+  CharacterAttack,
+  CharacterCapability,
+  CharacterModifier,
+} from '@/services/game-data/get-team-capabilities';
+import { Target, isAttack, isModifier } from '@/services/game-data/types';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -137,15 +140,13 @@ const ModifierCapabilityContent = ({
   );
 };
 
-const CapabilityCardContent = ({
-  capability,
-}: {
-  capability: CharacterAttack | CharacterModifier;
-}) => {
+const CapabilityCardContent = ({ capability }: { capability: CharacterCapability }) => {
   const isParameterized = capability.parameters.length > 0;
-  const hasDetails = isDetailedAttack(capability)
+  const hasDetails = isAttack(capability)
     ? capability.capabilityJson.damageInstances.length > 0
-    : capability.capabilityJson.modifiedStats.length > 0;
+    : isModifier(capability)
+      ? capability.capabilityJson.modifiedStats.length > 0
+      : false;
   const entityCapabilityHash = getCapabilityAnchorId(capability.id);
 
   return (
@@ -171,11 +172,11 @@ const CapabilityCardContent = ({
         </Text>
       )}
       {(capability.description || capability.parentName) && hasDetails && <Separator />}
-      {isDetailedAttack(capability) ? (
+      {isAttack(capability) ? (
         <AttackCapabilityContent capability={capability} />
-      ) : (
+      ) : isModifier(capability) ? (
         <ModifierCapabilityContent capability={capability} />
-      )}
+      ) : undefined}
       <Link
         to="/entities/$id"
         params={{ id: String(capability.entityId) }}
@@ -347,9 +348,10 @@ export const CapabilityHoverCard = ({
 }: CapabilityHoverCardProperties) => {
   const hasDescription = !!capability.description;
   const hasParent = !!capability.parentName;
-  const hasDetails = isDetailedAttack(capability)
-    ? capability.capabilityJson.damageInstances.length > 0
-    : capability.capabilityJson.modifiedStats.length > 0;
+  const hasDetails =
+    'damageInstances' in capability.capabilityJson
+      ? capability.capabilityJson.damageInstances.length > 0
+      : capability.capabilityJson.modifiedStats.length > 0;
 
   if (!hasDescription && !hasParent && !hasDetails) {
     return children;

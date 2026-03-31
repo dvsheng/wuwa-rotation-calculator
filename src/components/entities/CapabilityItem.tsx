@@ -192,7 +192,7 @@ const ModifierContent = ({ content }: { content: Modifier }) => {
             <TableCell>
               <span className="font-mono">
                 {typeof stat.value === 'number' ? (
-                  String(stat.value)
+                  stat.value.toFixed(3)
                 ) : (
                   <FormulaTooltip label="Dynamic" formula={stat.value} />
                 )}

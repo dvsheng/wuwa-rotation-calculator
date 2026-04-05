@@ -109,7 +109,9 @@ const calculateTuneRuptureDamage = (
     damageCalculationStats,
     damageInstance,
   );
-  const tuneBreakBoostDamageBonus = inputs.character.tuneBreakBoost / 100;
+  // Tune Break Boost now uses the same decimal representation as the rest of the
+  // calculator percentages, so Tune Rupture damage can consume it directly.
+  const tuneBreakBoostDamageBonus = inputs.character.tuneBreakBoost;
   const damage = result * (1 + tuneBreakBoostDamageBonus);
   return {
     result: damage,

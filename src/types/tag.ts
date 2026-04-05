@@ -11,6 +11,7 @@ export const Tag = {
   ...DamageType,
   ...NegativeStatus,
   ALL: 'all',
+  UNKNOWN: 'unknown',
   /** Attacks triggered by other characters. */
   COORDINATED_ATTACK: 'coordinatedAttack',
   /** Tag for mid-air/aerial attacks. */

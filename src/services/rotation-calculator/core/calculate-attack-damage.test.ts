@@ -54,7 +54,7 @@ describe('calculateAttackDamage', () => {
   it('uses atk scaling and applies tune break boost for tune rupture atk', () => {
     const characterStats = createCharacterStats({
       [CharacterStat.ATTACK_FLAT]: 1000,
-      [CharacterStat.TUNE_BREAK_BOOST]: 25,
+      [CharacterStat.TUNE_BREAK_BOOST]: 0.25,
     });
     const enemyStats = createEnemyStats({
       [EnemyStat.BASE_RESISTANCE]: 0,

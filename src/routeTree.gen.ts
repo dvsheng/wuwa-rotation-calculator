@@ -9,16 +9,23 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as GameDataRouteImport } from './routes/game-data'
 import { Route as EntitiesRouteImport } from './routes/entities'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as BuildsRouteImport } from './routes/builds'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as GameDataIdRouteImport } from './routes/game-data_.$id'
 import { Route as EntitiesIdRouteImport } from './routes/entities_.$id'
 import { Route as AuthAuthViewRouteImport } from './routes/auth/$authView'
 import { Route as AccountAccountViewRouteImport } from './routes/account/$accountView'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
+const GameDataRoute = GameDataRouteImport.update({
+  id: '/game-data',
+  path: '/game-data',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EntitiesRoute = EntitiesRouteImport.update({
   id: '/entities',
   path: '/entities',
@@ -42,6 +49,11 @@ const AboutRoute = AboutRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GameDataIdRoute = GameDataIdRouteImport.update({
+  id: '/game-data_/$id',
+  path: '/game-data/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EntitiesIdRoute = EntitiesIdRouteImport.update({
@@ -71,9 +83,11 @@ export interface FileRoutesByFullPath {
   '/builds': typeof BuildsRoute
   '/create': typeof CreateRoute
   '/entities': typeof EntitiesRoute
+  '/game-data': typeof GameDataRoute
   '/account/$accountView': typeof AccountAccountViewRoute
   '/auth/$authView': typeof AuthAuthViewRoute
   '/entities/$id': typeof EntitiesIdRoute
+  '/game-data/$id': typeof GameDataIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
@@ -82,9 +96,11 @@ export interface FileRoutesByTo {
   '/builds': typeof BuildsRoute
   '/create': typeof CreateRoute
   '/entities': typeof EntitiesRoute
+  '/game-data': typeof GameDataRoute
   '/account/$accountView': typeof AccountAccountViewRoute
   '/auth/$authView': typeof AuthAuthViewRoute
   '/entities/$id': typeof EntitiesIdRoute
+  '/game-data/$id': typeof GameDataIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
@@ -94,9 +110,11 @@ export interface FileRoutesById {
   '/builds': typeof BuildsRoute
   '/create': typeof CreateRoute
   '/entities': typeof EntitiesRoute
+  '/game-data': typeof GameDataRoute
   '/account/$accountView': typeof AccountAccountViewRoute
   '/auth/$authView': typeof AuthAuthViewRoute
   '/entities_/$id': typeof EntitiesIdRoute
+  '/game-data_/$id': typeof GameDataIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
@@ -107,9 +125,11 @@ export interface FileRouteTypes {
     | '/builds'
     | '/create'
     | '/entities'
+    | '/game-data'
     | '/account/$accountView'
     | '/auth/$authView'
     | '/entities/$id'
+    | '/game-data/$id'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -118,9 +138,11 @@ export interface FileRouteTypes {
     | '/builds'
     | '/create'
     | '/entities'
+    | '/game-data'
     | '/account/$accountView'
     | '/auth/$authView'
     | '/entities/$id'
+    | '/game-data/$id'
     | '/api/auth/$'
   id:
     | '__root__'
@@ -129,9 +151,11 @@ export interface FileRouteTypes {
     | '/builds'
     | '/create'
     | '/entities'
+    | '/game-data'
     | '/account/$accountView'
     | '/auth/$authView'
     | '/entities_/$id'
+    | '/game-data_/$id'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
@@ -141,14 +165,23 @@ export interface RootRouteChildren {
   BuildsRoute: typeof BuildsRoute
   CreateRoute: typeof CreateRoute
   EntitiesRoute: typeof EntitiesRoute
+  GameDataRoute: typeof GameDataRoute
   AccountAccountViewRoute: typeof AccountAccountViewRoute
   AuthAuthViewRoute: typeof AuthAuthViewRoute
   EntitiesIdRoute: typeof EntitiesIdRoute
+  GameDataIdRoute: typeof GameDataIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/game-data': {
+      id: '/game-data'
+      path: '/game-data'
+      fullPath: '/game-data'
+      preLoaderRoute: typeof GameDataRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/entities': {
       id: '/entities'
       path: '/entities'
@@ -182,6 +215,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/game-data_/$id': {
+      id: '/game-data_/$id'
+      path: '/game-data/$id'
+      fullPath: '/game-data/$id'
+      preLoaderRoute: typeof GameDataIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/entities_/$id': {
@@ -221,9 +261,11 @@ const rootRouteChildren: RootRouteChildren = {
   BuildsRoute: BuildsRoute,
   CreateRoute: CreateRoute,
   EntitiesRoute: EntitiesRoute,
+  GameDataRoute: GameDataRoute,
   AccountAccountViewRoute: AccountAccountViewRoute,
   AuthAuthViewRoute: AuthAuthViewRoute,
   EntitiesIdRoute: EntitiesIdRoute,
+  GameDataIdRoute: GameDataIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

@@ -221,8 +221,8 @@ export type NumberNode =
   | {
       type: 'clamp';
       operand: NumberNode;
-      minimum: NumberNode;
-      maximum: NumberNode;
+      minimum?: NumberNode;
+      maximum?: NumberNode;
     }
   | {
       type: 'conditional';
@@ -300,11 +300,13 @@ export const AttackDataSchema = BaseAttackDataSchema.extend({
 
 export type AttackData = z.infer<typeof AttackDataSchema>;
 
-const StatSchema = z.object({
+export const StatSchema = z.object({
   stat: z.enum({ ...CharacterStat, ...EnemyStat }),
   tags: z.array(z.string()),
   value: NumberNodeSchema,
 });
+
+export type Stat = z.infer<typeof StatSchema>;
 
 export const PermanentStatDataSchema = StatSchema.extend({
   type: z.literal(CapabilityType.PERMANENT_STAT),

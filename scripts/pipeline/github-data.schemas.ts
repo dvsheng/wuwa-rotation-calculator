@@ -1,0 +1,940 @@
+import { z } from 'zod';
+
+const makeScalarShape = <
+  TKey extends string,
+  TSchema extends z.ZodNumber | z.ZodString | z.ZodBoolean,
+>(
+  keys: ReadonlyArray<TKey>,
+  schema: TSchema,
+): { [K in TKey]: TSchema } =>
+  Object.fromEntries(keys.map((key) => [key, schema])) as { [K in TKey]: TSchema };
+
+const NumberArraySchema = z.array(z.number());
+const StringArraySchema = z.array(z.string());
+const NumberMapEntrySchema = z.object({ Key: z.number(), Value: z.number() }).strict();
+const NumberMapArraySchema = z.array(NumberMapEntrySchema);
+const ScalarMapEntrySchema = z
+  .object({
+    Key: z.union([z.number(), z.string()]),
+    Value: z.union([z.number(), z.string()]),
+  })
+  .strict();
+const ScalarMapArraySchema = z.array(ScalarMapEntrySchema);
+const StringArrayWrapperSchema = z.object({ ArrayString: StringArraySchema }).strict();
+const PropertyValueSchema = z
+  .object({
+    Id: z.number(),
+    Value: z.number(),
+    IsRatio: z.boolean(),
+  })
+  .strict();
+
+const BasePropertyNumberKeys = [
+  'Id',
+  'Lv',
+  'LifeMax',
+  'Life',
+  'Sheild',
+  'SheildDamageChange',
+  'SheildDamageReduce',
+  'Atk',
+  'Crit',
+  'CritDamage',
+  'Def',
+  'EnergyEfficiency',
+  'CdReduse',
+  'DamageChangeNormalSkill',
+  'DamageChange',
+  'DamageReduce',
+  'DamageChangeAuto',
+  'DamageChangeCast',
+  'DamageChangeUltra',
+  'DamageChangeQte',
+  'DamageChangePhantom',
+  'DamageChangePhys',
+  'DamageChangeElement1',
+  'DamageChangeElement2',
+  'DamageChangeElement3',
+  'DamageChangeElement4',
+  'DamageChangeElement5',
+  'DamageChangeElement6',
+  'DamageResistancePhys',
+  'DamageResistanceElement1',
+  'DamageResistanceElement2',
+  'DamageResistanceElement3',
+  'DamageResistanceElement4',
+  'DamageResistanceElement5',
+  'DamageResistanceElement6',
+  'DamageReducePhys',
+  'DamageReduceElement1',
+  'DamageReduceElement2',
+  'DamageReduceElement3',
+  'DamageReduceElement4',
+  'DamageReduceElement5',
+  'DamageReduceElement6',
+  'IgnoreDamageResistancePhys',
+  'IgnoreDamageResistanceElement1',
+  'IgnoreDamageResistanceElement2',
+  'IgnoreDamageResistanceElement3',
+  'IgnoreDamageResistanceElement4',
+  'IgnoreDamageResistanceElement5',
+  'IgnoreDamageResistanceElement6',
+  'IgnoreDefRate',
+  'AutoAttackSpeed',
+  'CastAttackSpeed',
+  'SpecialDamageChange',
+  'HealedChange',
+  'HealChange',
+  'ElementPropertyType',
+  'ElementPower1',
+  'ElementPower2',
+  'ElementPower3',
+  'ElementPower4',
+  'ElementPower5',
+  'ElementPower6',
+  'ElementEnergyMax',
+  'ElementEnergy',
+  'ElementEfficiency',
+  'StrengthMax',
+  'Strength',
+  'StrengthRecover',
+  'StrengthPunishTime',
+  'StrengthFastSwim',
+  'StrengthRun',
+  'StrengthClimbJump',
+  'StrengthFastClimbCost',
+  'StrengthSwim',
+  'StrengthGliding',
+  'ToughMax',
+  'Tough',
+  'ToughRecover',
+  'ToughRecoverDelayTime',
+  'ToughChange',
+  'ToughReduce',
+  'SkillToughRatio',
+  'HardnessMax',
+  'Hardness',
+  'HardnessRecover',
+  'HardnessPunishTime',
+  'HardnessChange',
+  'HardnessReduce',
+  'RageMax',
+  'Rage',
+  'RageRecover',
+  'RagePunishTime',
+  'RageChange',
+  'RageReduce',
+  'SpecialEnergy1Max',
+  'SpecialEnergy1',
+  'SpecialEnergy2Max',
+  'SpecialEnergy2',
+  'SpecialEnergy3Max',
+  'SpecialEnergy3',
+  'SpecialEnergy4Max',
+  'SpecialEnergy4',
+  'SpecialEnergy5Max',
+  'SpecialEnergy5',
+  'WeaknessBuildUpMax',
+  'WeaknessBuildUp',
+  'WeaknessMastery',
+  'WeaknessTotalBonus',
+  'BreakWeaknessRatio',
+  'WeakTime',
+  'StatusBuildUp1Max',
+  'StatusBuildUp1',
+  'StatusBuildUp2Max',
+  'StatusBuildUp2',
+  'StatusBuildUp3Max',
+  'StatusBuildUp3',
+  'StatusBuildUp4Max',
+  'StatusBuildUp4',
+  'StatusBuildUp5Max',
+  'StatusBuildUp5',
+  'EnergyMax',
+  'Energy',
+  'Mass',
+  'GravityScale',
+  'ParalysisTimeMax',
+  'ParalysisTime',
+  'ParalysisTimeRecover',
+  'BrakingFrictionFactor',
+  'SpeedRatio',
+] as const;
+
+/**
+ * Raw combat skill rows for characters.
+ *
+ * Model:
+ * One row per authored skill definition inside a character skill group.
+ *
+ * Important fields:
+ * - `SkillGroupId`: the character/entity id we group skills under.
+ * - `SkillType`: maps to Basic / Skill / Liberation / Forte / Intro / Outro / etc.
+ * - `SkillName`, `SkillDescribe`: text keys resolved through the text maps.
+ * - `SkillLevelGroupId`: join key into `skilldescription.json` for parameter labels/values.
+ * - `DamageList`: engine damage ids later matched into user-facing params.
+ * - `MaxSkillLevel`: used when choosing the last relevant scaling entry.
+ * - `SortIndex`: preserves in-game display order for the output skill list.
+ */
+const SkillSchema = z
+  .object({
+    Id: z.number(),
+    SkillGroupId: z.number(),
+    SkillType: z.number(),
+    UpgradeCondition: z.number(),
+    UpgradeSkillId: z.number(),
+    SkillName: z.string(),
+    SkillLevelGroupId: z.number(),
+    LeftSkillEffect: z.number(),
+    MaxSkillLevel: z.number(),
+    SkillInfoList: NumberArraySchema,
+    BuffList: NumberArraySchema,
+    DamageList: NumberArraySchema.nullable(),
+    Icon: z.string(),
+    EffectSkillPath: z.string(),
+    SortIndex: z.number(),
+    SkillDescribe: z.string(),
+    SkillDetailNum: StringArraySchema.optional(),
+    MultiSkillDescribe: z.string(),
+    MultiSkillDetailNum: StringArraySchema,
+    SkillResume: z.string(),
+    SkillResumeNum: StringArraySchema,
+    SkillTagList: NumberArraySchema,
+  })
+  .strict();
+
+/**
+ * Raw engine damage formulas referenced by skills and echoes.
+ *
+ * Model:
+ * One row per settle/damage definition used by attacks, echoes, and some effects.
+ *
+ * Important fields:
+ * - `Id`: referenced from `Skill.DamageList` and `PhantomSkill.SettleIds`.
+ * - `Element`: element id later mapped to Physical / Glacio / Fusion / etc.
+ * - `Type`: low-level engine subtype preserved in output for debugging.
+ * - `RelatedProperty`: which stat the damage scales from (HP / ATK / DEF).
+ * - `RateLv`: level-based multiplier array; we use max skill/echo level entries.
+ * - `HardnessLv`, `ToughLv`, `Energy`: break / stagger / resource metadata surfaced with instances.
+ */
+const DamageSchema = z
+  .object({
+    Id: z.number(),
+    Condition: z.string(),
+    ConstVariables: ScalarMapArraySchema,
+    CalculateType: z.number(),
+    Element: z.number(),
+    DamageTextType: z.number(),
+    DamageTextAreaId: z.number(),
+    PayloadId: z.number(),
+    Type: z.number(),
+    SubType: NumberArraySchema,
+    SmashType: z.number(),
+    CureBaseValue: NumberArraySchema,
+    RelatedProperty: z.number(),
+    RateLv: NumberArraySchema,
+    HardnessLv: NumberArraySchema,
+    ToughLv: NumberArraySchema,
+    Energy: NumberArraySchema,
+    SpecialEnergy1: NumberArraySchema,
+    SpecialEnergy2: NumberArraySchema,
+    SpecialEnergy3: NumberArraySchema,
+    SpecialEnergy4: NumberArraySchema,
+    SpecialEnergy5: NumberArraySchema,
+    FormulaType: z.number(),
+    FormulaParam1: NumberArraySchema,
+    FormulaParam2: NumberArraySchema,
+    FormulaParam3: NumberArraySchema,
+    FormulaParam4: NumberArraySchema,
+    FormulaParam5: NumberArraySchema,
+    FormulaParam6: NumberArraySchema,
+    FormulaParam7: NumberArraySchema,
+    FormulaParam8: NumberArraySchema,
+    FormulaParam9: NumberArraySchema,
+    FormulaParam10: NumberArraySchema,
+    FluctuationLower: NumberArraySchema,
+    FluctuationUpper: NumberArraySchema,
+    ElementPowerType: z.number(),
+    ElementPower: NumberArraySchema,
+    WeaknessLvl: NumberArraySchema,
+    WeaknessRatio: NumberArraySchema,
+    SpecialWeaknessDamageRatio: z.number(),
+    ImmuneType: z.number(),
+    Percent0: NumberArraySchema,
+    Percent1: NumberArraySchema,
+  })
+  .strict();
+
+/**
+ * Parameter rows for a skill's descriptive breakdown.
+ *
+ * Model:
+ * One row per labeled parameter inside a skill description panel.
+ *
+ * Important fields:
+ * - `SkillLevelGroupId`: join key back to `skill.json`.
+ * - `AttributeName`: localized label key such as "Stage 1 DMG".
+ * - `SkillDetailNum`: array-of-arrays containing the level-scaled display strings.
+ * - `Order`: preserves author-defined parameter ordering.
+ *
+ * These rows are what let us turn raw `DamageList` entries into labeled user-facing hits.
+ */
+const SkillDescriptionSchema = z
+  .object({
+    Id: z.number(),
+    SkillLevelGroupId: z.number(),
+    AttributeName: z.string(),
+    SkillDetailNum: z.array(StringArrayWrapperSchema).nullable(),
+    Description: z.string(),
+    Order: z.number(),
+  })
+  .strict();
+
+/**
+ * Raw buff / modifier definitions used across characters, weapons, echoes, and sets.
+ *
+ * Model:
+ * One row per low-level gameplay effect. Many rows are opaque, but a useful subset can be
+ * decoded into stat modifiers for capabilities or passive effects.
+ *
+ * Important fields:
+ * - `GameAttributeID` + `ModifierMagnitude`: direct stat modifiers.
+ * - `ExtraEffectID` + `ExtraEffectParameters*`: indirection/dispatch into child effects.
+ * - `ApplicationSourceTagRequirements`: used to detect resonant chain gating.
+ * - `FormationPolicy`: whether the buff is self-only or team-wide.
+ * - `DurationMagnitude`, `StackLimitCount`: duration and stacking behavior.
+ * - `DurationPolicy`: 0 | 1 | 2; 1 represents always active (if conditions are met), 2 represents timed buff
+ * - `Id`: used to join from chain nodes, weapon resonance effects, and echo/echo-set buffs.
+ */
+const BuffSchema = z
+  .object({
+    ...makeScalarShape(['GeDesc'] as const, z.string()),
+    ...makeScalarShape(
+      [
+        'Id',
+        'DurationPolicy',
+        'FormationPolicy',
+        'Probability',
+        'Period',
+        'PeriodicInhibitionPolicy',
+        'GameAttributeID',
+        'StackingType',
+        'DefaultStackCount',
+        'StackAppendCount',
+        'StackLimitCount',
+        'StackDurationRefreshPolicy',
+        'StackPeriodResetPolicy',
+        'StackExpirationRemoveNumber',
+        'ExtraEffectID',
+        'ExtraEffectRemoveStackNum',
+        'ExtraEffectReqSetting',
+      ] as const,
+      z.number(),
+    ),
+    ...makeScalarShape(
+      [
+        'bDurationAffectedByBulletTime',
+        'bExecutePeriodicEffectOnApplication',
+        'bDenyOverflowApplication',
+        'bClearStackOnOverflow',
+        'bOnlyLocalAdd',
+        'DeadRemove',
+        'bRequireModifierSuccessToTriggerCues',
+        'bSuppressStackingCues',
+      ] as const,
+      z.boolean(),
+    ),
+    DurationCalculationPolicy: NumberArraySchema,
+    DurationMagnitude: NumberArraySchema,
+    DurationMagnitude2: NumberArraySchema,
+    CalculationPolicy: NumberArraySchema,
+    ModifierMagnitude: NumberArraySchema,
+    ModifierMagnitude2: NumberArraySchema,
+    BuffAction: StringArraySchema,
+    OngoingTagRequirements: StringArraySchema,
+    OngoingTagIgnores: StringArraySchema,
+    ApplicationTagRequirements: StringArraySchema,
+    ApplicationTagIgnores: StringArraySchema,
+    ApplicationSourceTagRequirements: StringArraySchema,
+    ApplicationSourceTagIgnores: StringArraySchema,
+    RemovalTagRequirements: StringArraySchema,
+    RemovalTagIgnores: StringArraySchema,
+    GrantedTags: StringArraySchema,
+    GrantedApplicationImmunityTags: StringArraySchema,
+    GrantedApplicationImmunityTagIgnores: z.array(z.unknown()),
+    ExtraEffectRequirements: NumberArraySchema,
+    ExtraEffectReqPara: StringArraySchema,
+    ExtraEffectProbability: NumberArraySchema,
+    ExtraEffectCD: NumberArraySchema,
+    ExtraEffectParameters: StringArraySchema,
+    ExtraEffectParametersGrow1: NumberArraySchema,
+    ExtraEffectParametersGrow2: NumberArraySchema,
+    GameplayCueIds: NumberArraySchema,
+    OverflowEffects: NumberArraySchema,
+    PrematureExpirationEffects: NumberArraySchema,
+    RoutineExpirationEffects: NumberArraySchema,
+    RelatedExtraEffectBuffId: NumberArraySchema,
+    RemoveBuffWithTags: StringArraySchema,
+    TagLogic: z.array(z.unknown()),
+  })
+  .strict();
+
+/**
+ * Resonant chain node definitions for characters.
+ *
+ * Model:
+ * One row per S1-S6 node in a character's resonant chain.
+ *
+ * Important fields:
+ * - `GroupId`: character/entity id the node belongs to.
+ * - `GroupIndex`: the S1-S6 position, also used for synthetic output skill types.
+ * - `NodeName`, `AttributesDescription`, `AttributesDescriptionParams`: localized chain text.
+ * - `BuffIds`: links chain nodes to buffs that should be marked as chain-gated.
+ */
+const ChainSchema = z
+  .object({
+    Id: z.number(),
+    GroupId: z.number(),
+    GroupIndex: z.number(),
+    NodeType: z.number(),
+    NodeIndex: z.string(),
+    NodeName: z.string(),
+    AttributesDescription: z.string(),
+    BgDescription: z.string(),
+    BuffIds: NumberArraySchema.optional(),
+    AddProp: z.array(PropertyValueSchema),
+    ActivateConsume: NumberMapArraySchema,
+    AttributesDescriptionParams: StringArraySchema.optional(),
+    NodeIcon: z.string(),
+  })
+  .strict();
+
+const RogueCharacterBuffSchema = z
+  .object({
+    Id: z.number(),
+    BuffId: z.number(),
+    BuffIds: NumberArraySchema,
+    AffixDesc: z.string(),
+    AffixDescParam: StringArraySchema,
+    AffixDescSimple: z.string(),
+    AffixTitle: z.string(),
+    AffixIcon: z.string(),
+  })
+  .strict();
+
+const RoguePermanentBuffPoolSchema = z
+  .object({
+    Id: z.number(),
+    BuffId: z.number(),
+    PerIds: NumberArraySchema,
+    EffectId: z.number(),
+    Quality: z.number(),
+    BuffElement: NumberMapArraySchema,
+    BuffIcon: z.string(),
+    BuffDesc: z.string(),
+    BuffDescParam: StringArraySchema,
+    BuffDescSimple: z.string(),
+    BuffName: z.string(),
+  })
+  .strict();
+
+const RogueWeeklyBuffPoolSchema = z
+  .object({
+    Id: z.number(),
+    RelatedArtifactId: z.number(),
+    BuffId: z.number(),
+    PerIds: NumberArraySchema,
+    BuffType: z.number(),
+    BuffTriggerTagId: z.number(),
+    BuffTriggerActionName: z.string(),
+    BuffTagId: NumberArraySchema,
+    Quality: z.number(),
+    BuffIcon: z.string(),
+    ButtonIcon: z.string(),
+    BuffDesc: z.string(),
+    BuffDescParam: StringArraySchema,
+    BuffDescSimple: z.string(),
+    BuffName: z.string(),
+  })
+  .strict();
+
+/**
+ * Base stats for characters and other entities at a given level.
+ *
+ * Model:
+ * One row per property id per level snapshot.
+ *
+ * Important fields:
+ * - `Id`: property id, which matches `RoleInfo.PropertyId` for characters.
+ * - `Lv`: used to pick the level 1 base row before applying growth ratios.
+ * - `LifeMax`, `Atk`, `Def`: base stat inputs for level 90 stat generation.
+ * - `Crit`, `CritDamage`, `EnergyEfficiency`, `WeaknessMastery`: secondary stats surfaced in output.
+ */
+const BasePropertySchema = z
+  .object(makeScalarShape(BasePropertyNumberKeys, z.number()))
+  .strict();
+
+/**
+ * Universal level-growth ratios for character HP / ATK / DEF.
+ *
+ * Model:
+ * One row per level / breach breakpoint in the role growth table.
+ *
+ * Important fields:
+ * - `Level`: we currently select the level 90 row.
+ * - `LifeMaxRatio`, `AtkRatio`, `DefRatio`: multipliers applied to base property stats.
+ */
+const RolePropertyGrowthSchema = z
+  .object({
+    Id: z.number(),
+    Level: z.number(),
+    BreachLevel: z.number(),
+    LifeMaxRatio: z.number(),
+    AtkRatio: z.number(),
+    DefRatio: z.number(),
+  })
+  .strict();
+
+const SkillTreeNodeSchema = z
+  .object({
+    Id: z.number(),
+    NodeIndex: z.number(),
+    NodeGroup: z.number(),
+    ParentNodes: z.array(z.number()),
+    NodeType: z.number(),
+    Coordinate: z.number(),
+    Condition: z.array(z.number()),
+    SkillId: z.number(),
+    SkillBranchIds: z.array(z.number()),
+    PropertyNodeTitle: z.string(),
+    PropertyNodeDescribe: z.string(),
+    PropertyNodeParam: z.array(z.string()),
+    PropertyNodeIcon: z.string(),
+    Property: z.array(
+      z
+        .object({
+          Id: z.number(),
+          Value: z.number(),
+          IsRatio: z.boolean(),
+        })
+        .strict(),
+    ),
+    Consume: z.array(
+      z
+        .object({
+          Key: z.number(),
+          Value: z.number(),
+        })
+        .strict(),
+    ),
+    UnLockCondition: z.number(),
+  })
+  .strict();
+
+/**
+ * Character metadata rows.
+ *
+ * Model:
+ * One row per playable or displayable role definition.
+ *
+ * Important fields:
+ * - `Id`: character/entity id and primary join key for the character pipeline.
+ * - `Name`, `NickName`, `Introduction`: localized text keys for display content.
+ * - `ElementId`, `WeaponType`, `QualityId`: core entity classification for the database.
+ * - `PropertyId`: links to `baseproperty.json`.
+ * - `ResonantChainGroupId`: points at the resonant chain group for the character.
+ */
+const RoleInfoSchema = z
+  .object({
+    ...makeScalarShape(
+      [
+        'Name',
+        'NickName',
+        'Introduction',
+        'RoleHeadIconCircle',
+        'RoleHeadIconLarge',
+        'RoleHeadIconBig',
+        'RoleHeadIcon',
+        'RoleStand',
+        'RolePortrait',
+        'Icon',
+        'FormationRoleCard',
+        'FormationSpineAtlas',
+        'FormationSpineSkeletonData',
+        'Card',
+        'CharacterVoice',
+        'AttributesDescription',
+        'UiScenePerformanceABP',
+        'SkillDAPath',
+        'SkillLockDAPath',
+        'SkillEffectDA',
+        'CameraConfig',
+        'RoleBody',
+        'FootStepState',
+        'ObtainedShowDescription',
+      ] as const,
+      z.string(),
+    ),
+    ...makeScalarShape(
+      [
+        'Id',
+        'QualityId',
+        'RoleType',
+        'ParentId',
+        'Priority',
+        'PropertyId',
+        'ElementId',
+        'SkinId',
+        'WeaponType',
+        'InitWeaponItemId',
+        'MaxLevel',
+        'LevelConsumeId',
+        'BreachId',
+        'BreachModel',
+        'ResonanceId',
+        'SkillId',
+        'ResonantChainGroupId',
+        'LockOnDefaultId',
+        'LockOnLookOnId',
+        'EntityProperty',
+        'NumLimit',
+        'SkillTreeGroupId',
+        'DefaultSkillBranchId',
+        'SpecialEnergyBarId',
+        'PartyId',
+        'MeshId',
+        'ItemQualityId',
+        'CameraFloatHeight',
+        'UiMeshId',
+        'RoleGuide',
+        'RedDotDisableRule',
+        'TrialRole',
+      ] as const,
+      z.number(),
+    ),
+    ...makeScalarShape(
+      [
+        'IsTrial',
+        'Intervene',
+        'ShowInBag',
+        'IsShow',
+        'HideHuLu',
+        'IsAim',
+        'EnableOperateSelfBgm',
+      ] as const,
+      z.boolean(),
+    ),
+    Tag: NumberArraySchema,
+    ShowProperty: NumberArraySchema,
+    SkillBranchIds: NumberArraySchema,
+    ExchangeConsume: NumberMapArraySchema,
+    SpilloverItem: NumberMapArraySchema,
+    SkinDamage: StringArraySchema,
+    WeaponScale: NumberArraySchema,
+  })
+  .strict();
+
+/**
+ * Level growth curves for weapon stats.
+ *
+ * Model:
+ * One row per curve id / level / breach value.
+ *
+ * Important fields:
+ * - `CurveId`: referenced by weapon main/sub stat definitions.
+ * - `Level`: we currently select the level 90 row.
+ * - `CurveValue`: multiplier applied to weapon stat base values.
+ */
+const WeaponGrowthSchema = z
+  .object({
+    Id: z.number(),
+    CurveId: z.number(),
+    Level: z.number(),
+    BreachLevel: z.number(),
+    CurveValue: z.number(),
+  })
+  .strict();
+
+/**
+ * Weapon resonance/passive refinement rows.
+ *
+ * Model:
+ * One row per weapon resonance level (R1-R5).
+ *
+ * Important fields:
+ * - `ResonId`: groups all refine rows for one weapon passive.
+ * - `Level`: refinement rank.
+ * - `Effect`: buff ids or effect ids used to resolve passive buffs.
+ */
+const WeaponResonSchema = z
+  .object({
+    Id: z.number(),
+    ResonId: z.number(),
+    Level: z.number(),
+    Name: z.string(),
+    Effect: NumberArraySchema,
+    Consume: z.number(),
+    GoldConsume: z.number(),
+    MaterialPlaceType: z.number(),
+    AlternativeConsume: z.array(z.unknown()),
+  })
+  .strict();
+
+/**
+ * Weapon definitions.
+ *
+ * Model:
+ * One row per weapon item shown in the handbook/inventory.
+ *
+ * Important fields:
+ * - `ItemId`: weapon entity id.
+ * - `WeaponName`, `AttributesDescription`, `BgDescription`: localized display content.
+ * - `QualityId`, `WeaponType`: classification fields for the entity table.
+ * - `FirstPropId` / `SecondPropId` + `FirstCurve` / `SecondCurve`: main and sub stat formulas.
+ * - `ResonId`: links the weapon to its passive/refinement rows.
+ * - `Desc` + `DescParams`: passive description template and refine-scaled placeholders.
+ */
+const WeaponConfigSchema = z
+  .object({
+    ItemId: z.number(),
+    IsShow: z.boolean(),
+    WeaponName: z.string(),
+    QualityId: z.number(),
+    WeaponType: z.number(),
+    ModelId: z.number(),
+    TransformId: z.number(),
+    Models: NumberArraySchema,
+    ModelsIndex: NumberArraySchema,
+    ResonLevelLimit: z.number(),
+    FirstPropId: PropertyValueSchema,
+    FirstCurve: z.number(),
+    SecondPropId: PropertyValueSchema,
+    SecondCurve: z.number(),
+    ResonId: z.number(),
+    LevelId: z.number(),
+    BreachId: z.number(),
+    StandAnim: StringArraySchema,
+    Desc: z.string(),
+    DescParams: z.array(StringArrayWrapperSchema),
+    BgDescription: z.string(),
+    AttributesDescription: z.string(),
+    Icon: z.string(),
+    ResonanceIcon: z.string(),
+    IconMiddle: z.string(),
+    IconSmall: z.string(),
+    Mesh: z.string(),
+    NumLimit: z.number(),
+    MaxCapcity: z.number(),
+    HiddenTime: z.number(),
+    Destructible: z.boolean(),
+    ShowInBag: z.boolean(),
+    SortIndex: z.number(),
+    TypeDescription: z.string(),
+    ItemAccess: NumberArraySchema,
+    ObtainedShow: z.number(),
+    ObtainedShowDescription: z.string(),
+    HandBookTrialId: z.number(),
+    RedDotDisableRule: z.number(),
+  })
+  .strict();
+
+/**
+ * Echo set group definitions.
+ *
+ * Model:
+ * One row per echo set group (the 2pc/5pc set umbrella).
+ *
+ * Important fields:
+ * - `Id`: echo set entity id.
+ * - `FetterGroupName`, `FetterGroupDesc`: localized set name/description.
+ * - `FetterMap`: maps piece thresholds like 2 and 5 to concrete `phantomfetter` bonus rows.
+ */
+const PhantomFetterGroupSchema = z
+  .object({
+    Id: z.number(),
+    FetterMap: NumberMapArraySchema,
+    FetterType: z.number(),
+    FetterGroupName: z.string(),
+    AccessId: z.number(),
+    FetterGroupDesc: z.string(),
+    SortId: z.number(),
+    FetterElementColor: z.string(),
+    FetterElementPath: z.string(),
+    AimModelElementPath: z.string(),
+  })
+  .strict();
+
+/**
+ * Echo set bonus rows.
+ *
+ * Model:
+ * One row per set-bonus effect, typically referenced from a 2pc or 5pc threshold.
+ *
+ * Important fields:
+ * - `AddProp`: direct stat bonuses, most useful for 2pc effects.
+ * - `BuffIds`: indirect buff chains, often used by 5pc conditional bonuses.
+ * - `EffectDescription` + `EffectDescriptionParam`: localized bonus text.
+ */
+const PhantomFetterSchema = z
+  .object({
+    Id: z.number(),
+    Name: z.string(),
+    BuffIds: NumberArraySchema,
+    AddProp: z.array(PropertyValueSchema),
+    EffectDescription: z.string(),
+    FetterIcon: z.string(),
+    SimplyEffectDesc: z.string(),
+    EffectDescriptionParam: StringArraySchema,
+    EffectDefineDescription: z.string(),
+    Priority: z.number(),
+  })
+  .strict();
+
+/**
+ * Echo item definitions.
+ *
+ * Model:
+ * One row per obtainable echo item/variant.
+ *
+ * Important fields:
+ * - `ItemId`: echo entity id.
+ * - `MonsterName`: localized display key for the echo name.
+ * - `SkillId`: links to the active echo skill definition.
+ * - `Rarity`: echo cost bucket surfaced as the output `cost`.
+ * - `ElementType`: element tags shown on the echo output.
+ * - `FetterGroup`: links the echo to one or more echo set ids.
+ */
+const PhantomItemSchema = z
+  .object({
+    ItemId: z.number(),
+    MonsterId: z.number(),
+    ParentMonsterId: z.number(),
+    MonsterName: z.string(),
+    ElementType: NumberArraySchema,
+    MainProp: z.object({ RandGroupId: z.number(), RandNum: z.number() }).strict(),
+    LevelUpGroupId: z.number(),
+    SkillId: z.number(),
+    CalabashBuffs: NumberArraySchema,
+    Rarity: z.number(),
+    MeshId: z.number(),
+    Zoom: NumberArraySchema,
+    Location: NumberArraySchema,
+    Rotator: NumberArraySchema,
+    StandAnim: z.string(),
+    TypeDescription: z.string(),
+    AttributesDescription: z.string(),
+    Icon: z.string(),
+    IconMiddle: z.string(),
+    IconSmall: z.string(),
+    SkillIcon: z.string(),
+    QualityId: z.number(),
+    MaxCapcity: z.number(),
+    Destructible: z.boolean(),
+    ShowInBag: z.boolean(),
+    SortIndex: z.number(),
+    NumLimit: z.number(),
+    ItemAccess: NumberArraySchema,
+    ObtainedShow: z.number(),
+    ObtainedShowDescription: z.string(),
+    PhantomType: z.number(),
+    FetterGroup: NumberArraySchema,
+    Mesh: z.string(),
+    RedDotDisableRule: z.number(),
+  })
+  .strict();
+
+/**
+ * Echo skill definitions.
+ *
+ * Model:
+ * One row per active echo skill configuration.
+ *
+ * Important fields:
+ * - `PhantomSkillId`: join key from `phantomitem.SkillId`.
+ * - `DescriptionEx`, `CurLevelDescriptionEx`, `LevelDescStrArray`: localized description template and values.
+ * - `SettleIds`: damage ids later resolved through `damage.json`.
+ * - `BuffIds`, `BuffEffects`: buff/effect links used to resolve echo capabilities and modifiers.
+ * - `SkillCD`: user-facing echo cooldown.
+ */
+const PhantomSkillSchema = z
+  .object({
+    Id: z.number(),
+    PhantomSkillId: z.number(),
+    BuffIds: NumberArraySchema,
+    SettleIds: NumberArraySchema,
+    BuffEffects: NumberArraySchema,
+    ChargeEfficiency: z.number(),
+    SkillGroupId: z.number(),
+    SkillCD: z.number(),
+    DescriptionEx: z.string(),
+    SimplyDescription: z.string(),
+    IfCounterSkill: z.boolean(),
+    CurLevelDescriptionEx: StringArraySchema,
+    LevelDescStrArray: z.array(StringArrayWrapperSchema),
+    BattleViewIcon: z.string(),
+    SpecialBattleViewIcon: z.string(),
+  })
+  .strict();
+
+/**
+ * English localization rows loaded from the three textmap shards.
+ *
+ * Model:
+ * One row per localized string entry.
+ *
+ * Important fields:
+ * - `Id` / `Key`: lookup token used by game data rows.
+ * - `Content`: resolved English string inserted into output descriptions, names, and labels.
+ */
+const TextEntrySchema = z
+  .object({
+    Id: z.string().optional(),
+    Key: z.string().optional(),
+    Content: z.string(),
+    RedirectDbIndex: z.number().optional(),
+  })
+  .strict();
+
+export const SkillArraySchema = z.array(SkillSchema);
+export const DamageArraySchema = z.array(DamageSchema);
+export const SkillDescriptionArraySchema = z.array(SkillDescriptionSchema);
+export const BuffArraySchema = z.array(BuffSchema);
+export const ChainArraySchema = z.array(ChainSchema);
+export const RogueCharacterBuffArraySchema = z.array(RogueCharacterBuffSchema);
+export const RoguePermanentCharacterBuffArraySchema = z.array(
+  RogueCharacterBuffSchema,
+);
+export const RoguePermanentBuffPoolArraySchema = z.array(
+  RoguePermanentBuffPoolSchema,
+);
+export const RogueWeeklyBuffPoolArraySchema = z.array(RogueWeeklyBuffPoolSchema);
+export const BasePropertyArraySchema = z.array(BasePropertySchema);
+export const RolePropertyGrowthArraySchema = z.array(RolePropertyGrowthSchema);
+export const SkillTreeNodeArraySchema = z.array(SkillTreeNodeSchema);
+export const RoleInfoArraySchema = z.array(RoleInfoSchema);
+export const WeaponGrowthArraySchema = z.array(WeaponGrowthSchema);
+export const WeaponResonArraySchema = z.array(WeaponResonSchema);
+export const WeaponConfigArraySchema = z.array(WeaponConfigSchema);
+export const PhantomFetterGroupArraySchema = z.array(PhantomFetterGroupSchema);
+export const PhantomFetterArraySchema = z.array(PhantomFetterSchema);
+export const PhantomItemArraySchema = z.array(PhantomItemSchema);
+export const PhantomSkillArraySchema = z.array(PhantomSkillSchema);
+export const TextEntryArraySchema = z.array(TextEntrySchema);
+
+export type SkillEntry = z.infer<typeof SkillSchema>;
+export type DamageEntry = z.infer<typeof DamageSchema>;
+export type SkillDescriptionEntry = z.infer<typeof SkillDescriptionSchema>;
+export type BuffEntry = z.infer<typeof BuffSchema>;
+export type ChainEntry = z.infer<typeof ChainSchema>;
+export type BasePropertyEntry = z.infer<typeof BasePropertySchema>;
+export type RolePropertyGrowthEntry = z.infer<typeof RolePropertyGrowthSchema>;
+export type SkillTreeNodeEntry = z.infer<typeof SkillTreeNodeSchema>;
+export type RoleInfoEntry = z.infer<typeof RoleInfoSchema>;
+export type WeaponGrowthEntry = z.infer<typeof WeaponGrowthSchema>;
+export type WeaponResonEntry = z.infer<typeof WeaponResonSchema>;
+export type WeaponConfigEntry = z.infer<typeof WeaponConfigSchema>;
+export type PhantomFetterGroupEntry = z.infer<typeof PhantomFetterGroupSchema>;
+export type PhantomFetterEntry = z.infer<typeof PhantomFetterSchema>;
+export type PhantomItemEntry = z.infer<typeof PhantomItemSchema>;
+export type PhantomSkillEntry = z.infer<typeof PhantomSkillSchema>;
+export type TextEntry = z.infer<typeof TextEntrySchema>;

@@ -5,12 +5,14 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 
 import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -28,6 +30,7 @@ interface DataTableProperties<TData, TValue> {
   showHeader?: boolean;
   onRowClick?: (row: TData, index: number) => void;
   renderRow?: (row: Row<TData>, defaultRow: ReactNode) => ReactNode;
+  renderFooter?: (rows: Array<Row<TData>>) => ReactNode;
   classNames?: {
     wrapper?: string;
     scrollArea?: string;
@@ -47,6 +50,7 @@ export function DataTable<TData, TValue>({
   showHeader = true,
   onRowClick,
   renderRow,
+  renderFooter,
   classNames,
   emptyMessage = 'No results.',
 }: DataTableProperties<TData, TValue>) {
@@ -80,14 +84,27 @@ export function DataTable<TData, TValue>({
                     return (
                       <TableHead
                         key={header.id}
-                        className={cn(classNames?.headerCell, meta?.headerClassName)}
+                        className={cn(
+                          classNames?.headerCell,
+                          meta?.headerClassName,
+                          header.column.getCanSort() && 'cursor-pointer select-none',
+                        )}
+                        onClick={header.column.getToggleSortingHandler()}
                       >
-                        {header.isPlaceholder
-                          ? undefined
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
+                        {header.isPlaceholder ? undefined : (
+                          <div className="flex items-center gap-1">
+                            {flexRender(header.column.columnDef.header, header.getContext())}
+                            {header.column.getCanSort() && (
+                              header.column.getIsSorted() === 'asc' ? (
+                                <ArrowUp className="h-3 w-3" />
+                              ) : header.column.getIsSorted() === 'desc' ? (
+                                <ArrowDown className="h-3 w-3" />
+                              ) : (
+                                <ArrowUpDown className="text-muted-foreground h-3 w-3" />
+                              )
                             )}
+                          </div>
+                        )}
                       </TableHead>
                     );
                   })}
@@ -132,6 +149,7 @@ export function DataTable<TData, TValue>({
               </TableRow>
             )}
           </TableBody>
+          {renderFooter && <TableFooter>{renderFooter(table.getRowModel().rows)}</TableFooter>}
         </Table>
       </div>
     </div>

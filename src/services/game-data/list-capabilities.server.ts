@@ -42,7 +42,7 @@ const baseListCapabilitiesHandler = async ({
       skill.capabilities.map(({ createdAt, updatedAt, ...capability }) => {
         const base = {
           id: capability.id,
-          name: capability.name ?? '',
+          name: capability.name ?? skill.name,
           description: capability.description,
           parentName: skill.name,
           iconUrl: skill.iconUrl ?? entity.iconUrl,

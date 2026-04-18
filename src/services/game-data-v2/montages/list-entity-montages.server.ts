@@ -1,21 +1,19 @@
 import { EntityType } from '@/services/game-data/types';
 
-import { montageAssets, reBulletDataMainRows, skillInfoAssets } from '../repostiory';
+import { montageAssets, skillInfoAssets } from '../repostiory';
 import { listEntitySkillsHandler } from '../skills/list-entity-skills.server';
 
-import { buildMontageSkillMap, buildReBulletDataMainMap, toMontage } from './transform';
+import { buildMontageSkillMap, toMontage } from './transform';
 import type { CharacterMontage } from './types';
 
 async function listCharacterMontages(
   entityId: number,
 ): Promise<Array<CharacterMontage>> {
-  const [allSkillInfoAssets, allMontages, allReBulletDataMainRows, entitySkills] =
-    await Promise.all([
-      skillInfoAssets.list(),
-      montageAssets.list(),
-      reBulletDataMainRows.list(),
-      listEntitySkillsHandler(entityId, EntityType.CHARACTER),
-    ]);
+  const [allSkillInfoAssets, allMontages, entitySkills] = await Promise.all([
+    skillInfoAssets.list(),
+    montageAssets.list(),
+    listEntitySkillsHandler(entityId, EntityType.CHARACTER),
+  ]);
 
   const matchingSkillInfoAssets = allSkillInfoAssets.filter((asset) => {
     const rows =
@@ -44,10 +42,6 @@ async function listCharacterMontages(
   return allMontages
     .filter((montage) => montage.entityId === entityId)
     .map((montage) => {
-      const reBulletDataMainById = buildReBulletDataMainMap(
-        entityId,
-        allReBulletDataMainRows,
-      );
       const mappedSkillIds = montageSkillMap.get(montage.Name);
       const skillIds = mappedSkillIds
         ? [...new Set(mappedSkillIds)].toSorted((left, right) => left - right)
@@ -69,7 +63,7 @@ async function listCharacterMontages(
             },
           ];
         }),
-        montage: toMontage(montage, reBulletDataMainById),
+        montage: toMontage(montage),
       };
     })
     .toSorted((left, right) => left.montageName.localeCompare(right.montageName));

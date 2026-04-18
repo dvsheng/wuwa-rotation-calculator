@@ -7,7 +7,7 @@ import { Tag } from '@/types';
 import {
   DAMAGE_INSTANCE_TYPE_TO_DAMAGE_TYPE_MAP,
   ELEMENT_ID_TO_ATTRIBUTE_MAP,
-} from '../attacks/constants';
+} from '../constants';
 import { getIdsFromString } from '../get-capabilities';
 import type { Buff as RepositoryBuff } from '../repostiory';
 

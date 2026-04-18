@@ -1,13 +1,13 @@
-import { compact, minBy } from 'es-toolkit';
+import { compact } from 'es-toolkit';
 
+import { DAMAGE_SUBTYPE_TO_TAG_MAP } from '../buffs/constants';
 import {
   CalculateType,
   DAMAGE_INSTANCE_TYPE_TO_DAMAGE_TYPE_MAP,
   DEFAULT_SKILL_LEVEL,
   ELEMENT_ID_TO_ATTRIBUTE_MAP,
   RELATED_PROPERTY_TO_SCALING_PROPERTY,
-} from '../attacks/constants';
-import { DAMAGE_SUBTYPE_TO_TAG_MAP } from '../buffs/constants';
+} from '../constants';
 import type { Damage } from '../repostiory';
 
 import type { DamageInstance } from './types';
@@ -16,7 +16,6 @@ import type { DamageInstance } from './types';
 // return undefined if unable to
 export const tryTransformToDamageInstance = (
   damage: Damage,
-  dedupedIds: Array<number> = [],
 ): DamageInstance | undefined => {
   const {
     id,
@@ -46,7 +45,6 @@ export const tryTransformToDamageInstance = (
   );
   return {
     id,
-    dedupedIds,
     motionValue,
     attribute,
     scalingAttribute,
@@ -59,30 +57,10 @@ export const tryTransformToDamageInstance = (
   };
 };
 
-export const dedupeDamageInstances = (
-  damageArray: Array<Damage>,
-): Array<Damage & { dedupedIds: Array<number> }> => {
-  const damageGroups = Object.groupBy(damageArray, ({ id, ...rest }) =>
-    JSON.stringify(rest),
-  );
-  const dedupedDamageArray = compact(Object.values(damageGroups))
-    .filter((group) => group.length > 0)
-    .map((group) => ({
-      // Cast is safe due to earlier filter to remove empty arrays
-      ...(minBy(group, (damage) => damage.id) as Damage),
-      dedupedIds: group.map((damage) => damage.id),
-    }));
-  return dedupedDamageArray;
-};
-
 export const transformDamageToDamageInstances = (
   damageRows: Array<Damage>,
 ): Array<DamageInstance> => {
-  return compact(
-    dedupeDamageInstances(damageRows).map((rawDamage) => {
-      return tryTransformToDamageInstance(rawDamage, rawDamage.dedupedIds);
-    }),
-  );
+  return compact(damageRows.map((rawDamage) => tryTransformToDamageInstance(rawDamage)));
 };
 
 const getMotionValuePerStack = ({ formulaParam5 }: Damage): number | undefined => {

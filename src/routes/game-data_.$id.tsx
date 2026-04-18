@@ -1,7 +1,7 @@
 /* eslint-disable unicorn/filename-case */
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import type { ColumnDef } from '@tanstack/react-table';
-import { groupBy, startCase } from 'es-toolkit';
+import { partition, startCase } from 'es-toolkit';
 import { Cat, User, Users } from 'lucide-react';
 import React, { Suspense } from 'react';
 import { z } from 'zod';
@@ -26,9 +26,7 @@ import {
 } from '@/components/ui/hover-card';
 import { Container, Row, Stack } from '@/components/ui/layout';
 import { Switch } from '@/components/ui/switch';
-import { TableCell, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useEntityAttacks } from '@/hooks/useEntityAttacks';
 import { useEntityBuffs } from '@/hooks/useEntityBuffs';
 import { useEntityBullets } from '@/hooks/useEntityBullets';
 import { useEntityDamageInstances } from '@/hooks/useEntityDamageInstances';
@@ -36,7 +34,6 @@ import { useEntityModifiers } from '@/hooks/useEntityModifiers';
 import { useEntityMontages } from '@/hooks/useEntityMontages';
 import { useGameDataEntities } from '@/hooks/useGameDataEntities';
 import { EntityType, Target } from '@/services/game-data/types';
-import type { EntityAttack } from '@/services/game-data-v2/attacks';
 import type { Buff } from '@/services/game-data-v2/buffs';
 import { transformBulletsToTimedHits } from '@/services/game-data-v2/bullets/transform-bullet-to-timed-hits';
 import type { DamageInstance } from '@/services/game-data-v2/damage-instances/types';
@@ -47,7 +44,6 @@ import { Attribute } from '@/types/attribute';
 const ENTITY_GAME_DATA_TABS = [
   'buffs',
   'modifiers',
-  'attacks',
   'damage-instances',
   'bullets',
   'montages',
@@ -55,11 +51,6 @@ const ENTITY_GAME_DATA_TABS = [
 
 type EntityGameDataTab = (typeof ENTITY_GAME_DATA_TABS)[number];
 type NumberNode = Buff['value'];
-type DescriptionBlock = {
-  style: 'title' | 'body';
-  text: string;
-};
-
 type StackInfo = { valueAt1: number; valueAtMax: number; maxStacks: number };
 type ClampInfo = { min: number; max: number; stat: string | undefined };
 type MontageHitRow = CharacterMontage['montage']['hits'][number];
@@ -72,8 +63,12 @@ type MontageDamageRow = {
   damageInstance?: DamageInstance;
 };
 
+const isObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
 function findStatParameter(node: NumberNode): string | undefined {
   if (typeof node === 'number') return undefined;
+  if (!isObject(node) || !('type' in node)) return undefined;
   if (node.type === 'statParameterizedNumber') return node.stat;
   if (node.type === 'clamp') return findStatParameter(node.operand);
   if (node.type === 'product' || node.type === 'sum') {
@@ -94,7 +89,8 @@ function findStatParameter(node: NumberNode): string | undefined {
 
 function extractClampInfo(value: NumberNode): ClampInfo | undefined {
   if (
-    typeof value !== 'object' ||
+    !isObject(value) ||
+    !('type' in value) ||
     value.type !== 'clamp' ||
     typeof value.minimum !== 'number' ||
     typeof value.maximum !== 'number'
@@ -108,7 +104,7 @@ function extractClampInfo(value: NumberNode): ClampInfo | undefined {
 }
 
 function extractStackInfo(value: NumberNode): StackInfo | undefined {
-  if (typeof value !== 'object') return undefined;
+  if (!isObject(value) || !('type' in value)) return undefined;
 
   if (
     value.type === 'userParameterizedNumber' &&
@@ -125,10 +121,7 @@ function extractStackInfo(value: NumberNode): StackInfo | undefined {
   if (value.type === 'product' && Array.isArray(value.operands)) {
     const stacker = value.operands.find(
       (op): op is Extract<NumberNode, { type: 'userParameterizedNumber' }> =>
-        typeof op === 'object' &&
-        op !== null &&
-        'type' in op &&
-        op.type === 'userParameterizedNumber',
+        isObject(op) && 'type' in op && op.type === 'userParameterizedNumber',
     );
     const scalar = value.operands.find((op): op is number => typeof op === 'number');
     if (stacker && scalar !== undefined && typeof stacker.maximum === 'number') {
@@ -145,74 +138,6 @@ function extractStackInfo(value: NumberNode): StackInfo | undefined {
 
 function fmt(n: number) {
   return `${(n * 100).toFixed(2)}%`;
-}
-
-function normalizeInputPrompt(text: string) {
-  return text
-    .replaceAll(/\{Cus:Ipt,[^}]*PC=([^ }\n]+)[^}]*\}/g, '$1')
-    .replaceAll(
-      /\{Cus:Sap,[^}]*S=([^ }\n]+)[^}]*P=([^ }\n]+)[^}]*\}/g,
-      (_match, singular: string, plural: string) => plural || singular,
-    );
-}
-
-function splitDescriptionSentences(text: string) {
-  return text
-    .split(/(?<=[.!?])\s+(?=[A-Z])/)
-    .map((sentence) => sentence.trim())
-    .filter((sentence) => sentence.length > 0);
-}
-
-function parseDescription(description: string): Array<DescriptionBlock> {
-  const normalized = normalizeInputPrompt(description)
-    .replaceAll('<size=10></size>', '\n\n')
-    .replaceAll(
-      /<size=40><color=Title>(.*?)<\/color><\/size>/g,
-      '\n\n__TITLE__$1__ENDTITLE__\n\n',
-    )
-    .replaceAll(/<te href=\d+>(.*?)<\/te>/g, '$1')
-    .replaceAll(/<color=[^>]+>(.*?)<\/color>/g, '$1')
-    .replaceAll(/<\/?size[^>]*>/g, '')
-    .replaceAll(/<\/?color[^>]*>/g, '')
-    .replaceAll(/<[^>]+>/g, '')
-    .replaceAll(/[ \t]+\n/g, '\n')
-    .replaceAll(/\n{3,}/g, '\n\n')
-    .trim();
-
-  return normalized.split(/\n{2,}/).flatMap((block) => {
-    const trimmed = block.trim();
-    if (trimmed.length === 0) return [];
-
-    const titleMatch = trimmed.match(/^__TITLE__(.*?)__ENDTITLE__$/);
-    if (titleMatch) {
-      return [{ style: 'title' as const, text: titleMatch[1].trim() }];
-    }
-
-    return splitDescriptionSentences(trimmed).map((sentence) => ({
-      style: 'body' as const,
-      text: sentence,
-    }));
-  });
-}
-
-function Description({ text }: { text: string }) {
-  const blocks = parseDescription(text);
-
-  return (
-    <div className="space-y-2">
-      {blocks.map((block, index) =>
-        block.style === 'title' ? (
-          <p key={`${block.style}-${index}`} className="font-semibold">
-            {block.text}
-          </p>
-        ) : (
-          <p key={`${block.style}-${index}`} className="text-muted-foreground text-sm">
-            {block.text}
-          </p>
-        ),
-      )}
-    </div>
-  );
 }
 
 const HoverJson = ({
@@ -560,7 +485,7 @@ function fmtMv(motionValue: number) {
 
 function renderMotionValue(
   motionValue: number,
-  scalingAttribute: AttackTableRow['scalingAttribute'],
+  scalingAttribute: DamageInstance['scalingAttribute'],
   motionValuePerStack?: number,
 ) {
   const scalingLabel = startCase(scalingAttribute);
@@ -572,27 +497,6 @@ function renderMotionValue(
   return `${fmtMv(motionValue)}+${fmtMv(motionValuePerStack)} per Stack ${scalingLabel}`;
 }
 
-function sumByHits(values: Array<{ value: number; hits: number }>) {
-  return values.reduce((total, { value, hits }) => total + value * hits, 0);
-}
-
-function getAlternativeMotionValue(instance: EntityAttack['instances'][number]) {
-  const firstAlternativeDefinition = Object.values(
-    instance.alternativeDefinitions ?? {},
-  ).at(0);
-  return firstAlternativeDefinition?.motionValue;
-}
-
-function getAlternativeMotionValuePerStack(
-  instance: EntityAttack['instances'][number],
-) {
-  const firstAlternativeDefinition = Object.values(
-    instance.alternativeDefinitions ?? {},
-  ).at(0);
-  return firstAlternativeDefinition?.motionValuePerStack;
-}
-
-type AttackTableRow = EntityAttack['instances'][number];
 type DamageInstanceTableRow = DamageInstance;
 
 function EntityDamageInstancesList({
@@ -614,7 +518,7 @@ function EntityDamageInstancesList({
       header: '',
       cell: ({ row }) => (
         <InfoTooltip contentClassName="font-mono text-xs">
-          {[row.original.id, ...row.original.dedupedIds].join(', ')}
+          {row.original.id}
         </InfoTooltip>
       ),
       meta: {
@@ -733,250 +637,6 @@ function EntityBulletsList({ id, entityType }: { id: number; entityType: EntityT
   );
 }
 
-function EntityAttacksList({ id, entityType }: { id: number; entityType: EntityType }) {
-  const { data } = useEntityAttacks(id, entityType);
-
-  if (data.length === 0) {
-    return <p className="text-muted-foreground text-sm">No attacks found.</p>;
-  }
-
-  const bySkill = groupBy(data, (attack) => attack.skillId);
-  const columns: Array<ColumnDef<AttackTableRow>> = [
-    {
-      id: 'info',
-      header: '',
-      cell: ({ row }) => (
-        <InfoTooltip contentClassName="font-mono text-xs">
-          {[row.original.id, ...row.original.dedupedIds].join(', ')}
-        </InfoTooltip>
-      ),
-      meta: {
-        headerClassName: 'w-8',
-        cellClassName: 'w-8',
-      },
-    },
-    {
-      id: 'motionValue',
-      header: 'Motion Value',
-      cell: ({ row }) => {
-        const alternativeMotionValue = getAlternativeMotionValue(row.original);
-        const alternativeMotionValuePerStack = getAlternativeMotionValuePerStack(
-          row.original,
-        );
-
-        return (
-          <div className="font-mono text-sm">
-            {renderMotionValue(
-              row.original.motionValue,
-              row.original.scalingAttribute,
-              row.original.motionValuePerStack,
-            )}
-            {alternativeMotionValue !== undefined && (
-              <span className="text-muted-foreground ml-1">
-                (
-                {renderMotionValue(
-                  alternativeMotionValue,
-                  row.original.scalingAttribute,
-                  alternativeMotionValuePerStack,
-                )}
-                )
-              </span>
-            )}
-          </div>
-        );
-      },
-      meta: {
-        headerClassName: 'min-w-56',
-        cellClassName: 'min-w-56',
-      },
-    },
-    {
-      id: 'hits',
-      header: 'Hits',
-      cell: ({ row }) => row.original.hitCount,
-      meta: {
-        headerClassName: 'w-14',
-        cellClassName: 'w-14',
-      },
-    },
-    {
-      id: 'type',
-      header: 'Type',
-      cell: ({ row }) => startCase(row.original.type),
-      meta: {
-        headerClassName: 'min-w-28',
-        cellClassName: 'min-w-28',
-      },
-    },
-    {
-      id: 'subtypes',
-      header: 'Subtypes',
-      cell: ({ row }) => <BuffTags tags={row.original.subtypes} />,
-      meta: {
-        headerClassName: 'min-w-40',
-        cellClassName: 'min-w-40',
-      },
-    },
-    {
-      id: 'attribute',
-      header: 'Attribute',
-      cell: ({ row }) => startCase(row.original.attribute),
-      meta: {
-        headerClassName: 'min-w-24',
-        cellClassName: 'min-w-24',
-      },
-    },
-    {
-      accessorKey: 'concertoRegen',
-      header: 'Concerto Regen',
-      meta: {
-        headerClassName: 'min-w-24',
-        cellClassName: 'min-w-24',
-      },
-    },
-    {
-      accessorKey: 'offTuneBuildup',
-      header: 'Off-Tune Buildup',
-      meta: {
-        headerClassName: 'min-w-24',
-        cellClassName: 'min-w-24',
-      },
-    },
-    {
-      accessorKey: 'energy',
-      header: 'Energy',
-      meta: {
-        headerClassName: 'min-w-16',
-        cellClassName: 'min-w-16',
-      },
-    },
-  ];
-
-  return (
-    <div className="flex flex-col gap-4">
-      {Object.values(bySkill).map((skillAttacks) => {
-        const first = skillAttacks[0];
-        return (
-          <Card key={first.skillId} className="gap-0 py-0">
-            <CardHeader className="py-4">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <span>{first.skillName}</span>
-                <Badge variant="outline">{first.skillOriginType}</Badge>
-              </CardTitle>
-              {first.skillDescription && <Description text={first.skillDescription} />}
-            </CardHeader>
-            <CardContent className="flex flex-col divide-y p-0">
-              {skillAttacks.map((attack) => (
-                <div
-                  key={`${attack.skillId}-${attack.skillAttribute?.order ?? 'none'}`}
-                >
-                  {attack.skillAttribute && (
-                    <p className="text-muted-foreground px-4 pt-3 pb-1 text-xs font-medium tracking-wide uppercase">
-                      {attack.skillAttribute.name}
-                    </p>
-                  )}
-                  <div className="px-4 pb-4">
-                    <DataTable
-                      columns={columns}
-                      data={attack.instances}
-                      classNames={{
-                        wrapper: 'bg-muted/30 rounded-md border',
-                      }}
-                      renderFooter={() => {
-                        const summaryScalingAttribute =
-                          attack.instances[0].scalingAttribute;
-                        const hasAlternativeMotionValue = attack.instances.some(
-                          (instance) =>
-                            getAlternativeMotionValue(instance) !== undefined,
-                        );
-                        const totalMotionValue = sumByHits(
-                          attack.instances.map((instance) => ({
-                            value: instance.motionValue,
-                            hits: instance.hitCount,
-                          })),
-                        );
-                        const totalMotionValuePerStack = sumByHits(
-                          attack.instances.map((instance) => ({
-                            value: instance.motionValuePerStack ?? 0,
-                            hits: instance.hitCount,
-                          })),
-                        );
-                        const totalAlternativeMotionValue = sumByHits(
-                          attack.instances.map((instance) => ({
-                            value:
-                              getAlternativeMotionValue(instance) ??
-                              instance.motionValue,
-                            hits: instance.hitCount,
-                          })),
-                        );
-                        const totalAlternativeMotionValuePerStack = sumByHits(
-                          attack.instances.map((instance) => ({
-                            value: getAlternativeMotionValuePerStack(instance) ?? 0,
-                            hits: instance.hitCount,
-                          })),
-                        );
-                        const totalConcertoRegen = sumByHits(
-                          attack.instances.map((instance) => ({
-                            value: instance.concertoRegen,
-                            hits: instance.hitCount,
-                          })),
-                        );
-                        const totalOffTuneBuildup = sumByHits(
-                          attack.instances.map((instance) => ({
-                            value: instance.offTuneBuildup,
-                            hits: instance.hitCount,
-                          })),
-                        );
-                        const totalEnergy = sumByHits(
-                          attack.instances.map((instance) => ({
-                            value: instance.energy,
-                            hits: instance.hitCount,
-                          })),
-                        );
-
-                        return (
-                          <TableRow className="font-semibold">
-                            <TableCell />
-                            <TableCell className="font-mono text-sm">
-                              {renderMotionValue(
-                                totalMotionValue,
-                                summaryScalingAttribute,
-                                totalMotionValuePerStack || undefined,
-                              )}
-                              {hasAlternativeMotionValue && (
-                                <span className="text-muted-foreground ml-1">
-                                  (
-                                  {renderMotionValue(
-                                    totalAlternativeMotionValue,
-                                    summaryScalingAttribute,
-                                    totalAlternativeMotionValuePerStack || undefined,
-                                  )}
-                                  )
-                                </span>
-                              )}
-                            </TableCell>
-                            <TableCell />
-                            <TableCell />
-                            <TableCell />
-                            <TableCell />
-                            <TableCell>{totalConcertoRegen}</TableCell>
-                            <TableCell>{totalOffTuneBuildup}</TableCell>
-                            <TableCell>{totalEnergy}</TableCell>
-                          </TableRow>
-                        );
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        );
-      })}
-    </div>
-  );
-}
-
 function MontageFieldList({
   items,
   emptyLabel,
@@ -1014,23 +674,12 @@ function EntityMontagesList({
     return <p className="text-muted-foreground text-sm">No montages found.</p>;
   }
 
-  const [primaryMontages, otherMontages] = data.reduce<
-    [Array<CharacterMontage>, Array<CharacterMontage>]
-  >(
-    (groups, item) => {
-      const isOtherMontage =
-        item.montage.hits.length === 0 ||
-        item.montage.name.toLowerCase().includes('rogue');
-
-      if (isOtherMontage) {
-        groups[1].push(item);
-      } else {
-        groups[0].push(item);
-      }
-
-      return groups;
-    },
-    [[], []],
+  const [otherMontages, primaryMontages] = partition(
+    data,
+    (item) =>
+      item.montage.bullets.length === 0 ||
+      item.montage.name.toLowerCase().includes('rogue') ||
+      item.montage.name.toLowerCase().includes('photo'),
   );
 
   return (
@@ -1085,7 +734,7 @@ function MontageCard({
   const { data: bullets } = useEntityBullets(id, entityType);
   const { data: damageInstances } = useEntityDamageInstances(id, entityType);
   const [viewMode, setViewMode] = React.useState<MontageViewMode>('damage');
-  const hitRows: Array<MontageHitRow> = item.montage.hits;
+  const hitRows: Array<MontageHitRow> = item.montage.bullets;
   const tagRows: Array<MontageTagRow> = item.montage.tags;
   const eventLines = item.montage.events.map(
     (event) => `${event.time.toFixed(3)}s -> ${event.name}`,
@@ -1193,7 +842,9 @@ function MontageCard({
               <span className="text-sm">Bullet</span>
               <Switch
                 checked={viewMode === 'damage'}
-                onCheckedChange={(checked) => setViewMode(checked ? 'damage' : 'bullet')}
+                onCheckedChange={(checked) =>
+                  setViewMode(checked ? 'damage' : 'bullet')
+                }
                 aria-label={`Montage view for ${item.montage.name}`}
               />
               <span className="text-sm">Damage</span>
@@ -1521,10 +1172,10 @@ function EntityBuffsPage() {
             navigate({
               to: '/game-data/$id',
               params: { id },
-              search: (previous) => ({
-                ...previous,
+              search: {
+                entityType,
                 tab: nextTab as EntityGameDataTab,
-              }),
+              },
             })
           }
           className="min-h-0 flex-1 gap-4"
@@ -1532,7 +1183,6 @@ function EntityBuffsPage() {
           <TabsList className="w-fit">
             <TabsTrigger value="buffs">Buffs</TabsTrigger>
             <TabsTrigger value="modifiers">Modifiers</TabsTrigger>
-            <TabsTrigger value="attacks">Attacks</TabsTrigger>
             <TabsTrigger value="damage-instances">Damage Instances</TabsTrigger>
             <TabsTrigger value="bullets">Bullets</TabsTrigger>
             {isCharacter && <TabsTrigger value="montages">Montages</TabsTrigger>}
@@ -1566,20 +1216,6 @@ function EntityBuffsPage() {
                 id={numericId}
                 entityType={entityType as EntityType}
               />
-            </Suspense>
-          </TabsContent>
-          <TabsContent value="attacks" className="min-h-0 flex-1 overflow-y-auto">
-            <Suspense
-              fallback={
-                <Card className="h-32">
-                  <LoadingSpinnerContainer
-                    message="Loading attacks..."
-                    spinnerSize={40}
-                  />
-                </Card>
-              }
-            >
-              <EntityAttacksList id={numericId} entityType={entityType as EntityType} />
             </Suspense>
           </TabsContent>
           <TabsContent

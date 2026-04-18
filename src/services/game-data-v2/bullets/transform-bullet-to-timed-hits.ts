@@ -31,7 +31,7 @@ export const transformBulletsToTimedHits = (
     }
   }
 
-  return result;
+  return result.filter((damage) => damage.damageId !== 0);
 };
 
 const computeHitTimes = (

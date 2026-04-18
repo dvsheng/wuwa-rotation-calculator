@@ -7,8 +7,6 @@ import type { AttackScalingProperty, Attribute, DamageType, Tag } from '@/types'
  */
 export interface DamageInstance {
   id: number;
-  /** ids of other rows with the same properties as this row */
-  dedupedIds: Array<number>;
   motionValue: number;
   motionValuePerStack?: number;
   attribute: Attribute;

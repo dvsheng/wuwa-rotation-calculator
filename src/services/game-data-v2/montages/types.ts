@@ -1,11 +1,8 @@
 import type { OriginType } from '@/services/game-data/types';
 
-export interface MontageHit {
+export interface MontageBullet {
   time: number;
   bulletId: string;
-  hitCount?: number;
-  totalHitCap?: number;
-  hitInterval?: number;
 }
 
 export interface MontageTag {
@@ -21,7 +18,7 @@ export interface MontageEvent {
 
 export interface Montage {
   name: string;
-  hits: Array<MontageHit>;
+  bullets: Array<MontageBullet>;
   cancelTime?: number;
   endTime?: number;
   tags: Array<MontageTag>;

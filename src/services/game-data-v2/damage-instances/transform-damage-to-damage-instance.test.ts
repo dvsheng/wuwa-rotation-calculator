@@ -16,7 +16,7 @@ const baseDamage = {
   damageTextAreaId: 0,
   payloadId: 0,
   type: 4,
-  subType: [0, 1005, 9999, 1202],
+  subType: [0, 1005, 9999, 1201],
   smashType: 0,
   cureBaseValue: [],
   relatedProperty: 7,
@@ -54,12 +54,11 @@ const baseDamage = {
 
 describe('tryTransformToDamageInstance', () => {
   it('extracts recognized subtype tags and drops unknown subtype ids', () => {
-    const damageInstance = tryTransformToDamageInstance(baseDamage, [baseDamage.id]);
+    const damageInstance = tryTransformToDamageInstance(baseDamage);
 
     expect(damageInstance).toBeDefined();
     expect(damageInstance).toMatchObject({
       id: baseDamage.id,
-      dedupedIds: [baseDamage.id],
       motionValue: 100,
       attribute: Attribute.FUSION,
       type: DamageType.RESONANCE_SKILL,

@@ -111,14 +111,11 @@ function buildReBulletDataMainMap(
   return byBulletId;
 }
 
-function toMontage(
-  rawMontage: MontageAsset,
-  reBulletDataMainById: Map<string, ReBulletDataMainRow> = new Map(),
-): Montage {
+function toMontage(rawMontage: MontageAsset): Montage {
   const rawData = getArray(rawMontage.data) ?? [];
   const notifies = getArray(rawMontage.Notifies) ?? [];
 
-  const hits = zipNotifiesWithExports(
+  const bullets = zipNotifiesWithExports(
     notifies,
     rawData,
     'TsAnimNotifyReSkillEvent_C',
@@ -130,14 +127,7 @@ function toMontage(
     }
 
     return getBulletIds(properties).map((bulletId) => {
-      const reBulletRow = reBulletDataMainById.get(bulletId);
-      return {
-        time,
-        bulletId,
-        hitCount: reBulletRow?.hitsPerTarget ?? undefined,
-        totalHitCap: reBulletRow?.totalHitCap ?? undefined,
-        hitInterval: reBulletRow?.hitInterval ?? undefined,
-      };
+      return { time, bulletId };
     });
   });
 
@@ -190,7 +180,7 @@ function toMontage(
 
   return {
     name: rawMontage.Name,
-    hits,
+    bullets,
     cancelTime,
     endTime,
     tags,

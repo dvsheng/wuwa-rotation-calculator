@@ -34,6 +34,23 @@ type ChildBulletEntry = {
   召唤子弹数量: number;
 };
 
+function extractTags(values: Array<unknown> | undefined): Array<string> {
+  if (!values) return [];
+  return values.flatMap((v) => {
+    if (typeof v === 'string') return [v];
+    if (
+      typeof v === 'object' &&
+      v !== null &&
+      !Array.isArray(v) &&
+      'TagName' in v &&
+      typeof (v as Record<string, unknown>).TagName === 'string'
+    ) {
+      return [(v as Record<string, string>).TagName];
+    }
+    return [];
+  });
+}
+
 function transformRow(row: ReBulletDataMainRow): Bullet {
   const base = row.rowData.基础设置;
   const exec = row.rowData.执行逻辑;
@@ -52,6 +69,8 @@ function transformRow(row: ReBulletDataMainRow): Bullet {
     hits,
     hitInterval: row.hitInterval ?? base?.作用间隔 ?? 0,
     duration: base?.持续时间 ?? 0,
+    requiredTags: extractTags(base?.子弹允许生成Tag),
+    forbiddenTags: extractTags(base?.子弹禁止生成Tag),
     shouldDestroyOnSkillEnd: base?.技能结束是否销毁子弹 ?? false,
     children: (children ?? []).map((c) => ({
       bulletId: c.召唤子弹ID,

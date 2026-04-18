@@ -4,6 +4,14 @@ export interface Bullet {
   hits: Array<number>;
   hitInterval: number;
   duration: number;
+  /**
+   * Tags that must be active to fire th bullet
+   */
+  requiredTags: Array<string>;
+  /**
+   * Tags that suppress the bullet from firing if present
+   */
+  forbiddenTags: Array<string>;
   shouldDestroyOnSkillEnd: boolean;
   children: Array<{
     bulletId: number;

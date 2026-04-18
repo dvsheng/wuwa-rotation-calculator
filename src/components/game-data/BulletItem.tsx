@@ -90,6 +90,26 @@ export const BulletItem = ({ bullet }: { bullet: Bullet }) => {
             <Badge variant="secondary">{bullet.children.length} child bullets</Badge>
             <Badge variant="secondary">duration: {formatTime(bullet.duration)}</Badge>
           </div>
+          {bullet.requiredTags.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1 text-sm">
+              <span className="text-muted-foreground font-medium">Required:</span>
+              {bullet.requiredTags.map((tag) => (
+                <Badge key={tag} variant="outline" className="font-mono text-xs">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
+          {bullet.forbiddenTags.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1 text-sm">
+              <span className="text-muted-foreground font-medium">Forbidden:</span>
+              {bullet.forbiddenTags.map((tag) => (
+                <Badge key={tag} variant="outline" className="font-mono text-xs">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent className="pt-0 pb-4">

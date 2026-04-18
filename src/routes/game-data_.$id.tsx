@@ -35,6 +35,7 @@ import { useEntityMontages } from '@/hooks/useEntityMontages';
 import { useGameDataEntities } from '@/hooks/useGameDataEntities';
 import { EntityType, Target } from '@/services/game-data/types';
 import type { Buff } from '@/services/game-data-v2/buffs';
+import type { Bullet } from '@/services/game-data-v2/bullets';
 import { transformBulletsToTimedHits } from '@/services/game-data-v2/bullets/transform-bullet-to-timed-hits';
 import type { DamageInstance } from '@/services/game-data-v2/damage-instances/types';
 import type { Modifier } from '@/services/game-data-v2/modifiers';
@@ -53,7 +54,7 @@ type EntityGameDataTab = (typeof ENTITY_GAME_DATA_TABS)[number];
 type NumberNode = Buff['value'];
 type StackInfo = { valueAt1: number; valueAtMax: number; maxStacks: number };
 type ClampInfo = { min: number; max: number; stat: string | undefined };
-type MontageHitRow = CharacterMontage['montage']['hits'][number];
+type MontageHitRow = CharacterMontage['montage']['bullets'][number];
 type MontageTagRow = CharacterMontage['montage']['tags'][number];
 type MontageViewMode = 'bullet' | 'damage';
 type MontageDamageRow = {
@@ -208,6 +209,18 @@ function TargetBadge({ target }: { target: string }) {
       {TARGET_ICON[target]}
       {startCase(target)}
     </span>
+  );
+}
+
+function RawTagList({ tags }: { tags: Array<string> }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      {tags.map((tag) => (
+        <span key={tag} className="font-mono text-xs">
+          {tag}
+        </span>
+      ))}
+    </div>
   );
 }
 
@@ -851,9 +864,9 @@ function MontageCard({
             </Row>
           </Row>
           {viewMode === 'damage' ? (
-            <DamageView id={id} entityType={entityType} rows={damageRows} />
+            <DamageView id={id} entityType={entityType} rows={damageRows} bulletById={bulletById} />
           ) : (
-            <BulletView id={id} entityType={entityType} rows={hitRows} />
+            <BulletView id={id} entityType={entityType} rows={hitRows} bulletById={bulletById} />
           )}
         </div>
         <div className="space-y-1 md:col-span-2">
@@ -884,10 +897,12 @@ function BulletView({
   id,
   entityType,
   rows,
+  bulletById,
 }: {
   id: number;
   entityType: EntityType;
   rows: Array<MontageHitRow>;
+  bulletById: Map<string, Bullet>;
 }) {
   const navigate = useNavigate();
 
@@ -931,35 +946,35 @@ function BulletView({
       },
     },
     {
-      accessorKey: 'hitCount',
-      header: 'Hit Count',
-      cell: ({ row }) => row.original.hitCount ?? <NullTableValue />,
-      meta: {
-        headerClassName: 'min-w-20',
-        cellClassName: 'min-w-20 font-mono text-sm',
-      },
-    },
-    {
-      accessorKey: 'hitInterval',
-      header: 'Hit Interval',
-      cell: ({ row }) =>
-        row.original.hitInterval === undefined ? (
+      id: 'requiredTags',
+      header: 'Required Tags',
+      cell: ({ row }) => {
+        const tags = bulletById.get(row.original.bulletId)?.requiredTags ?? [];
+        return tags.length === 0 ? (
           <NullTableValue />
         ) : (
-          `${row.original.hitInterval.toFixed(2)}s`
-        ),
+          <RawTagList tags={tags} />
+        );
+      },
       meta: {
-        headerClassName: 'min-w-24',
-        cellClassName: 'min-w-24 font-mono text-sm',
+        headerClassName: 'min-w-48',
+        cellClassName: 'min-w-48',
       },
     },
     {
-      accessorKey: 'totalHitCap',
-      header: 'Hit Cap',
-      cell: ({ row }) => row.original.totalHitCap ?? <NullTableValue />,
+      id: 'forbiddenTags',
+      header: 'Forbidden Tags',
+      cell: ({ row }) => {
+        const tags = bulletById.get(row.original.bulletId)?.forbiddenTags ?? [];
+        return tags.length === 0 ? (
+          <NullTableValue />
+        ) : (
+          <RawTagList tags={tags} />
+        );
+      },
       meta: {
-        headerClassName: 'min-w-20',
-        cellClassName: 'min-w-20 font-mono text-sm',
+        headerClassName: 'min-w-48',
+        cellClassName: 'min-w-48',
       },
     },
   ];
@@ -980,10 +995,12 @@ function DamageView({
   id,
   entityType,
   rows,
+  bulletById,
 }: {
   id: number;
   entityType: EntityType;
   rows: Array<MontageDamageRow>;
+  bulletById: Map<string, Bullet>;
 }) {
   const navigate = useNavigate();
 
@@ -1102,17 +1119,27 @@ function DamageView({
       },
     },
     {
-      id: 'scalingAttribute',
-      header: 'Scaling',
-      cell: ({ row }) =>
-        row.original.damageInstance ? (
-          startCase(row.original.damageInstance.scalingAttribute)
-        ) : (
-          <NullTableValue />
-        ),
+      id: 'requiredTags',
+      header: 'Required Tags',
+      cell: ({ row }) => {
+        const tags = bulletById.get(row.original.bulletId)?.requiredTags ?? [];
+        return tags.length === 0 ? <NullTableValue /> : <RawTagList tags={tags} />;
+      },
       meta: {
-        headerClassName: 'min-w-24',
-        cellClassName: 'min-w-24',
+        headerClassName: 'min-w-48',
+        cellClassName: 'min-w-48',
+      },
+    },
+    {
+      id: 'forbiddenTags',
+      header: 'Forbidden Tags',
+      cell: ({ row }) => {
+        const tags = bulletById.get(row.original.bulletId)?.forbiddenTags ?? [];
+        return tags.length === 0 ? <NullTableValue /> : <RawTagList tags={tags} />;
+      },
+      meta: {
+        headerClassName: 'min-w-48',
+        cellClassName: 'min-w-48',
       },
     },
   ];

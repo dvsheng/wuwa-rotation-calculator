@@ -27,6 +27,7 @@
     "transform:echoes-ai": "tsx scripts/transform-echo-jsons-for-ai.ts",
     "transform:echo-sets-ai": "tsx scripts/transform-echo-set-jsons-for-ai.ts",
     "pipeline:index": "tsx --env-file=.env scripts/pipeline/index.ts",
+    "pipeline:cache-wuwa-character-data": "tsx --env-file=.env scripts/pipeline/cache-wuwa-character-data.ts",
     "pipeline:ingest-raw": "tsx --env-file=.env scripts/pipeline/ingest-raw-data.ts",
     "pipeline:run": "npm run index:encore && npm run transform:characters && npm run transform:weapons && npm run transform:echoes && npm run transform:characters-ai && npm run transform:weapons-ai && npm run transform:echoes-ai && npm run transform:echo-sets-ai && npm run db:seed",
     "cdk": "npm --prefix infra run cdk --"

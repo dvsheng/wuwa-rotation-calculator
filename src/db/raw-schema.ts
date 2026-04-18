@@ -10,6 +10,207 @@ import {
 
 const integer = (name: string) => bigint(name, { mode: 'number' });
 
+type ReBulletJsonPrimitive = string | number | boolean | null;
+type ReBulletJsonValue =
+  | ReBulletJsonPrimitive
+  | ReBulletJsonObject
+  | Array<ReBulletJsonValue>;
+type ReBulletJsonObject = { [key: string]: ReBulletJsonValue };
+
+type ReBulletGameplayTag = {
+  TagName: string;
+};
+
+type ReBulletAssetReference = {
+  AssetPathName: string;
+  SubPathString: string;
+};
+
+type ReBulletObjectReference = {
+  ObjectName: string;
+  ObjectPath: string;
+};
+
+type ReBulletVector = {
+  X: number;
+  Y: number;
+  Z: number;
+};
+
+type ReBulletRotator = {
+  Yaw: number;
+  Roll: number;
+  Pitch: number;
+};
+
+type ReBulletTimeDilation = {
+  优先级?: number;
+  时间膨胀值?: number;
+  时间膨胀时长?: number;
+  时间膨胀变化曲线?: ReBulletObjectReference | null;
+};
+
+export type RawReBulletDataBaseSettings = ReBulletJsonObject & {
+  伤害ID?: number;
+  初始大小?: ReBulletVector;
+  子弹形状?: string;
+  作用间隔?: number;
+  初始旋转?: ReBulletRotator;
+  命中个数?: number;
+  多伤害ID?: Array<number>;
+  持续时间?: number;
+  被击效果?: string;
+  子弹标签?: ReBulletGameplayTag;
+  特殊参数?: Array<ReBulletJsonValue>;
+  IsRandomVictim?: boolean;
+  不适配坡度?: boolean;
+  命中判定Tag?: ReBulletGameplayTag;
+  多被击效果?: Array<string>;
+  是否贴水面?: boolean;
+  禁止命中Tag?: ReBulletGameplayTag;
+  出生位置基准?: string;
+  中心位置偏移?: ReBulletVector;
+  出生位置偏移?: ReBulletVector;
+  命中判定类型?: string;
+  子弹受击方向?: string;
+  子弹攻击方向?: ReBulletRotator;
+  弱点被击效果?: string;
+  是否持续碰撞?: boolean;
+  是否贴地子弹?: boolean;
+  碰撞判定延迟?: number;
+  碰撞判定时长?: number;
+  限制生成距离?: ReBulletVector;
+  出生位置随机?: ReBulletVector;
+  命中实体类型?: string;
+  网络同步类型?: string;
+  贴地探测距离?: number;
+  子弹允许生成Tag?: Array<ReBulletJsonValue>;
+  子弹禁止生成Tag?: Array<ReBulletJsonValue>;
+  总作用次数限制?: number;
+  攻击者黑板Key值?: string;
+  不跟随移动平台?: boolean;
+  共享父子弹次数?: boolean;
+  多弱点被击效果?: Array<string>;
+  Debug显示子弹进度?: boolean;
+  作用间隔基于个体?: boolean;
+  命中判定类型预设?: ReBulletAssetReference;
+  每个单位总作用次数?: number;
+  大范围子弹检测方式?: number;
+  技能结束是否销毁子弹?: boolean;
+  是否响应材质受击音效?: boolean;
+  大范围子弹对场景物件生效?: boolean;
+};
+
+export type RawReBulletDataRow = ReBulletJsonObject & {
+  基础设置?: RawReBulletDataBaseSettings;
+  子弹名称?: string;
+  召唤实体?: ReBulletJsonObject & {
+    实体ID?: number;
+    是否随子弹销毁而销毁?: boolean;
+  };
+  执行逻辑?: ReBulletJsonObject & {
+    GB组?: ReBulletAssetReference;
+    受击对象进入添加Tag?: Array<ReBulletJsonValue>;
+    能量恢复类GE数组的Id?: Array<number>;
+    命中后对受击者应用GE的Id?: Array<number>;
+    命中后对攻击者应用GE的Id?: Array<number>;
+    受击对象进入应用的GE的Id?: Array<number>;
+    命中后对在场上角色应用的GE的Id?: Array<number>;
+    命中后对受击者发射GameplayEvent标签?: ReBulletGameplayTag;
+    命中后对攻击者发射GameplayEvent标签?: ReBulletGameplayTag;
+    生成时对攻击者发射GameplayEvent标签?: ReBulletGameplayTag;
+    结束时对攻击者发射GameplayEvent标签?: ReBulletGameplayTag;
+  };
+  时间膨胀?: ReBulletJsonObject & {
+    攻击顿帧?: ReBulletTimeDilation;
+    受击顿帧?: ReBulletTimeDilation;
+    时间膨胀失效?: number;
+    区域受击者时间膨胀?: boolean;
+    命中弱点受击者顿帧?: ReBulletTimeDilation;
+    命中弱点攻击者顿帧?: ReBulletTimeDilation;
+    强制影响区域内子弹?: boolean;
+    攻击顿帧忽略攻击者?: boolean;
+    是否跟随攻击者顿帧?: boolean;
+    自定义连携顿帧单位key?: string;
+    子弹销毁时移除受击顿帧?: boolean;
+  };
+  环境交互?: ReBulletJsonObject & {
+    水面交互?: ReBulletAssetReference;
+    场景物件交互?: ReBulletAssetReference;
+  };
+  瞄准设置?: ReBulletJsonObject & {
+    瞄准发射?: boolean;
+    跟随骨骼发射?: boolean;
+    瞄准子弹最大射程?: number;
+    瞄准子弹最大偏转角度?: number;
+    初始旋转是否面向目标?: boolean;
+  };
+  移动设置?: ReBulletJsonObject & {
+    骨骼名字?: string;
+    移动速度?: number;
+    终点偏移?: ReBulletVector;
+    子弹跟随类型?: string;
+    是否锁定缩放?: boolean;
+    移动速度曲线?: ReBulletObjectReference | null;
+    运动轨迹类型?: string;
+    初速度偏移方向?: ReBulletRotator;
+    初速度方向随机?: ReBulletVector;
+    初速度角度限制?: Array<ReBulletJsonValue>;
+    骨骼网格体名字?: string;
+    初速度仅Z轴朝向?: boolean;
+    发射上下角度限制?: number;
+    终点偏移基准朝向?: string;
+    跟随骨骼限制旋转?: ReBulletVector;
+    运动轨迹参数数据?: Array<ReBulletJsonValue>;
+    运动轨迹参数曲线?: Array<ReBulletJsonValue>;
+    运动轨迹参数目标?: string;
+    运动轨迹目标骨骼?: string;
+    出生初速度方向基准?: string;
+    技能结束解除跟随骨骼?: boolean;
+    运动轨迹目标黑板Key值?: string;
+    出生初速度方向基准参数?: string;
+  };
+  缩放设置?: ReBulletJsonObject & {
+    缩放倍率?: ReBulletVector;
+    缩放倍率曲线?: ReBulletObjectReference | null;
+    特定形状开关?: boolean;
+  };
+  逻辑设置?: ReBulletJsonObject & {
+    预设?: ReBulletAssetReference;
+  };
+  障碍检测?: ReBulletJsonObject & {
+    检测距离?: number;
+    检测位置?: ReBulletVector;
+  };
+  子子弹设置?: Array<
+    ReBulletJsonObject & {
+      召唤触发?: string;
+      召唤子弹ID?: number;
+      召唤子弹延迟?: number;
+      召唤子弹数量?: number;
+      召唤子弹间隔?: number;
+      失败是否停止?: boolean;
+    }
+  >;
+  表现效果设置?: ReBulletJsonObject & {
+    受击闪白?: ReBulletAssetReference;
+    命中音效?: string;
+    命中特效DA?: Array<{ Key: string; Value: ReBulletAssetReference }>;
+    子弹特效DA?: ReBulletAssetReference;
+    特殊特效DA?: Array<ReBulletJsonValue>;
+    最大震动次数?: number;
+    命中特效配置?: Array<ReBulletJsonObject>;
+    子弹特效DA参数?: Array<ReBulletJsonValue>;
+    命中时受击者震屏?: ReBulletAssetReference;
+    命中时攻击者震屏?: ReBulletAssetReference;
+    接手父子弹的特效?: boolean;
+    生成时攻击者震屏?: ReBulletAssetReference;
+    命中弱点时攻击者震屏?: ReBulletAssetReference;
+    震屏关联到召唤兽主人?: boolean;
+    子弹销毁调用子弹停止特效?: boolean;
+  };
+};
+
 // ============================================================================
 // Raw GitHub Data Tables
 // Direct ingest of WutheringWaves_Data JSON files with no transformation.
@@ -726,6 +927,47 @@ export const rawPhantomSkills = pgTable('raw_phantom_skills', {
   specialBattleViewIcon: text('special_battle_view_icon').notNull(),
 });
 
+/**
+ * Raw montage asset rows from dvsheng/wuwa-character-data {Character}/CommonAnim/AM*.json
+ */
+export const rawMontages = pgTable('raw_montages', {
+  entityId: integer('entity_id').notNull(),
+  characterName: text('character_name').notNull(),
+  Name: text('Name').notNull(),
+  SequenceLength: real('SequenceLength'),
+  Notifies: jsonb('Notifies'),
+  data: jsonb('data').notNull(),
+}, (table) => [primaryKey({ columns: [table.characterName, table.Name] })]);
+
+/**
+ * Raw DT_SkillInfo asset rows from dvsheng/wuwa-character-data {Character}/Data/DT_SkillInfo.json
+ */
+export const rawSkillInfoAssets = pgTable('raw_skill_info_assets', {
+  characterName: text('character_name').primaryKey(),
+  fileName: text('file_name').notNull(),
+  Rows: jsonb('Rows'),
+  data: jsonb('data').notNull(),
+});
+
+/**
+ * Raw DT_ReBulletDataMain rows from dvsheng/wuwa-character-data {Character}/Data/DT_ReBulletDataMain*.json
+ */
+export const rawReBulletDataMainRows = pgTable(
+  'raw_re_bullet_data_main_rows',
+  {
+    entityId: integer('entity_id').notNull(),
+    bulletId: integer('bullet_id').notNull(),
+    fileName: text('file_name').notNull(),
+    bulletName: text('bullet_name'),
+    hitsPerTarget: integer('hits_per_target'),
+    totalHitCap: integer('total_hit_cap'),
+    hitInterval: real('hit_interval'),
+    baseSettings: jsonb('base_settings').$type<RawReBulletDataBaseSettings>(),
+    rowData: jsonb('row_data').$type<RawReBulletDataRow>().notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.entityId, table.bulletId, table.fileName] })],
+);
+
 export type SkillV2Source =
   | 'character_skill'
   | 'resonant_chain'
@@ -803,3 +1045,12 @@ export type NewRawPhantomItem = typeof rawPhantomItems.$inferInsert;
 
 export type RawPhantomSkill = typeof rawPhantomSkills.$inferSelect;
 export type NewRawPhantomSkill = typeof rawPhantomSkills.$inferInsert;
+
+export type RawMontage = typeof rawMontages.$inferSelect;
+export type NewRawMontage = typeof rawMontages.$inferInsert;
+
+export type RawSkillInfoAsset = typeof rawSkillInfoAssets.$inferSelect;
+export type NewRawSkillInfoAsset = typeof rawSkillInfoAssets.$inferInsert;
+
+export type RawReBulletDataMainRow = typeof rawReBulletDataMainRows.$inferSelect;
+export type NewRawReBulletDataMainRow = typeof rawReBulletDataMainRows.$inferInsert;

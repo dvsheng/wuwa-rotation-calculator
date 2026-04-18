@@ -16,10 +16,12 @@ import {
   rawBuffs,
   rawChains,
   rawDamage,
+  rawMontages,
   rawPhantomFetterGroups,
   rawPhantomFetters,
   rawPhantomItems,
   rawPhantomSkills,
+  rawReBulletDataMainRows,
   rawRogueCharacterBuffs,
   rawRoguePermanentBuffPools,
   rawRoguePermanentCharacterBuffs,
@@ -28,6 +30,7 @@ import {
   rawRolePropertyGrowth,
   rawSkillAttributes,
   rawSkillDescriptions,
+  rawSkillInfoAssets,
   rawSkillTreeNodes,
   rawSkills,
   rawWeaponConfig,
@@ -35,7 +38,14 @@ import {
   rawWeaponReson,
 } from '../../src/db/raw-schema';
 
-import { fetchAndValidateJson } from './github-data';
+import {
+  fetchAndValidateJson,
+  fetchAndValidateWuwaCharacterDataJson,
+  listWuwaCharacterMontageFiles,
+  listWuwaReBulletDataMainFiles,
+  listWuwaSkillInfoAssetFiles,
+  refreshWuwaCharacterDataSnapshot,
+} from './github-data';
 import {
   BasePropertyArraySchema,
   BuffArraySchema,
@@ -45,6 +55,9 @@ import {
   PhantomFetterGroupArraySchema,
   PhantomItemArraySchema,
   PhantomSkillArraySchema,
+  RawMontageAssetArraySchema,
+  RawReBulletDataMainFileArraySchema,
+  RawSkillInfoAssetFileArraySchema,
   RogueCharacterBuffArraySchema,
   RoguePermanentBuffPoolArraySchema,
   RoguePermanentCharacterBuffArraySchema,
@@ -58,6 +71,11 @@ import {
   WeaponGrowthArraySchema,
   WeaponResonArraySchema,
 } from './github-data.schemas';
+import {
+  toRawMontageRow,
+  toRawReBulletDataMainRows,
+  toRawSkillInfoAssetRow,
+} from './montage-assets';
 import { getTextResolver } from './text';
 
 // ============================================================================
@@ -937,12 +955,76 @@ async function ingestPhantomSkills(t: TextResolver) {
   );
 }
 
+async function ingestRawMontages() {
+  const sourcePaths = await listWuwaCharacterMontageFiles();
+  const rowResults = await Promise.all(
+    sourcePaths.map(async (sourcePath) => {
+      const data = await fetchAndValidateWuwaCharacterDataJson(
+        sourcePath,
+        RawMontageAssetArraySchema,
+      );
+      return toRawMontageRow(sourcePath, data);
+    }),
+  );
+  const rows = rowResults.filter((row) => row !== undefined);
+
+  await batchInsert(
+    rawMontages,
+    rows,
+    (qb) => qb.onConflictDoNothing(),
+    'raw_montages',
+  );
+}
+
+async function ingestRawSkillInfoAssets() {
+  const sourcePaths = await listWuwaSkillInfoAssetFiles();
+  const rows = await Promise.all(
+    sourcePaths.map(async (sourcePath) => {
+      const data = await fetchAndValidateWuwaCharacterDataJson(
+        sourcePath,
+        RawSkillInfoAssetFileArraySchema,
+      );
+      return toRawSkillInfoAssetRow(sourcePath, data);
+    }),
+  );
+
+  await batchInsert(
+    rawSkillInfoAssets,
+    rows,
+    (qb) => qb.onConflictDoNothing(),
+    'raw_skill_info_assets',
+  );
+}
+
+async function ingestRawReBulletDataMainRows() {
+  const sourcePaths = await listWuwaReBulletDataMainFiles();
+  const rowGroups = await Promise.all(
+    sourcePaths.map(async (sourcePath) => {
+      const data = await fetchAndValidateWuwaCharacterDataJson(
+        sourcePath,
+        RawReBulletDataMainFileArraySchema,
+      );
+      return toRawReBulletDataMainRows(sourcePath, data);
+    }),
+  );
+
+  await batchInsert(
+    rawReBulletDataMainRows,
+    rowGroups.flat(),
+    (qb) => qb.onConflictDoNothing(),
+    'raw_re_bullet_data_main_rows',
+  );
+}
+
 // ============================================================================
 // Main
 // ============================================================================
 
 async function ingestRawData() {
   console.log('Ingesting raw GitHub data into database...\n');
+
+  console.log('Refreshing wuwa-character-data snapshot...');
+  await refreshWuwaCharacterDataSnapshot();
 
   console.log('Truncating raw tables...');
   await database.execute(sql`
@@ -953,7 +1035,7 @@ async function ingestRawData() {
       raw_skill_tree_nodes, raw_role_info, raw_weapon_growth, raw_weapon_reson,
       raw_weapon_config, raw_phantom_fetter_groups, raw_phantom_fetters,
       raw_phantom_items, raw_phantom_skills, raw_role_property_growth,
-      raw_base_properties
+      raw_base_properties, raw_montages, raw_skill_info_assets, raw_re_bullet_data_main_rows
   `);
 
   console.log('Loading English text resolver...');
@@ -981,6 +1063,9 @@ async function ingestRawData() {
     ingestPhantomItems(t),
     ingestPhantomSkills(t),
     ingestBaseProperties(),
+    ingestRawMontages(),
+    ingestRawSkillInfoAssets(),
+    ingestRawReBulletDataMainRows(),
   ]);
 
   console.log('\nDone.');

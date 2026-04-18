@@ -29,6 +29,269 @@ const PropertyValueSchema = z
   })
   .strict();
 
+const JsonObjectSchema: z.ZodType<Record<string, unknown>> = z.lazy(() =>
+  z.record(z.string(), JsonValueSchema),
+);
+const JsonArraySchema: z.ZodType<Array<unknown>> = z.lazy(() => z.array(JsonValueSchema));
+const JsonValueSchema: z.ZodType<unknown> = z.lazy(() =>
+  z.union([z.string(), z.number(), z.boolean(), z.null(), JsonObjectSchema, JsonArraySchema]),
+);
+
+const ObjectReferenceSchema = z
+  .object({
+    ObjectName: z.string(),
+    ObjectPath: z.string(),
+  })
+  .strict();
+const AssetReferenceSchema = z
+  .object({
+    AssetPathName: z.string(),
+    SubPathString: z.string(),
+  })
+  .strict();
+const GameplayTagSchema = z
+  .object({
+    TagName: z.string(),
+  })
+  .strict();
+const GameplayTagOrStringSchema = z.union([GameplayTagSchema, z.string()]);
+const EngineObjectSchema: z.ZodType<Record<string, unknown>> = z.lazy(() =>
+  z.record(z.string(), EngineValueSchema),
+);
+const EngineArraySchema: z.ZodType<Array<unknown>> = z.lazy(() => z.array(EngineValueSchema));
+const EngineValueSchema: z.ZodType<unknown> = z.lazy(() =>
+  z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.null(),
+    GameplayTagSchema,
+    ObjectReferenceSchema,
+    AssetReferenceSchema,
+    EngineObjectSchema,
+    EngineArraySchema,
+  ]),
+);
+
+const SkillTriggerSchema = z
+  .object({
+    TriggerType_2_A4B916C949F97F67C63AEFA1E4A3F1CC: z.string(),
+    TriggerPreset_5_7766F7AA48C4AA380971A9B4FA085B6F: z.array(GameplayTagOrStringSchema),
+    TriggerParams_10_0B8BCCB6424F70FCD32451BF5E363B27: z.string(),
+    TriggerFormula_11_05C6F52D48C9B57ACB5C85A076462A38: z.string(),
+    TriggerTarget_14_4FBFA2194402F3F89FE451AFA771EC33: z.string(),
+    TriggerTargetSocket_17_D17D9CE14BEEC1E628D4109AF3AB4F78: z.string(),
+  })
+  .strict();
+
+const SkillBehaviorConditionSchema = z.object({
+  ConditionType_31_FDE61D77427DCD4BC0F2A7AA3D27695C: z.string(),
+  IgnoreZ_37_F6CCC57746F2CC2ECC2C2C8B8697BAE3: z.boolean(),
+  Sign_72_F5B15D704A9FA4243D4D888D6E838352: z.boolean(),
+  ComparisonLogic_41_BFD626EA4ADC6ECB646CA6B4C474889C: z.string(),
+  Value_45_2649759445759C286E73938D5318AA99: z.number(),
+  RangeL_47_7B13704A41AF164405A70085BB8683AB: z.number(),
+  RangeR_49_6D00959F40FAE4F69CAF15A1F177BDD9: z.number(),
+  AttributeId1_57_B049A05E4E70C63D62BE2BA6A045D0AB: z.number(),
+  AttributeId2_55_F810A3BA4E7646BDF7859F8D04BC9E20: z.number(),
+  AttributeRate_61_C001B3DF4577447AB9519DA1B72FF66F: z.number(),
+  TagToCheck_64_464EE5B34705853741899A9D4F266404: z.array(GameplayTagOrStringSchema),
+  AnyTag_67_51D28A91427519B4E10E76B922EE7E9B: z.boolean(),
+  Reverse_35_73079DDF426EC7983ADE55B35FEC138A: z.boolean(),
+});
+
+const SkillBehaviorGroupSchema = z
+  .object({
+    SkillBehaviorConditionGroup_23_D256B3E54F0444CCB6BA3B977B371542: z.array(
+      SkillBehaviorConditionSchema,
+    ),
+    SkillBehaviorConditionFormula_27_32ED9061461B3AC3C2028BB34993284A: z.string(),
+    SkillBehaviorActionGroup_20_E7E8941646BF84E137B075AD36D96317: z.array(
+      EngineObjectSchema,
+    ),
+    SkillBehaviorContinue_34_DCA2FD6843FDD1BA359888B5BC8283A0: z.boolean(),
+  })
+  .strict();
+
+const MontageNotifyLinkSchema = z
+  .object({
+    LinkedMontage: ObjectReferenceSchema.nullish(),
+    SlotIndex: z.number(),
+    SegmentIndex: z.number(),
+    LinkMethod: z.string(),
+    CachedLinkMethod: z.string(),
+    SegmentBeginTime: z.number(),
+    SegmentLength: z.number(),
+    LinkValue: z.number(),
+    LinkedSequence: ObjectReferenceSchema.nullish(),
+  })
+  .strict();
+
+const MontageNotifySchema = z
+  .object({
+    TriggerTimeOffset: z.number(),
+    EndTriggerTimeOffset: z.number(),
+    TriggerWeightThreshold: z.number(),
+    NotifyName: z.string(),
+    Notify: ObjectReferenceSchema.nullish(),
+    NotifyStateClass: ObjectReferenceSchema.nullish(),
+    Duration: z.number(),
+    EndLink: MontageNotifyLinkSchema,
+    bConvertedFromBranchingPoint: z.boolean(),
+    MontageTickType: z.string(),
+    bEnabled: z.boolean(),
+    NotifyTriggerChance: z.number(),
+    NotifyFilterType: z.string(),
+    NotifyFilterLOD: z.number(),
+    bTriggerOnDedicatedServer: z.boolean(),
+    bTriggerOnFollower: z.boolean(),
+    bForceTriggerOnState: z.boolean(),
+    TrackIndex: z.number(),
+    LinkedMontage: ObjectReferenceSchema.nullish(),
+    SlotIndex: z.number(),
+    SegmentIndex: z.number(),
+    LinkMethod: z.string(),
+    CachedLinkMethod: z.string(),
+    SegmentBeginTime: z.number(),
+    SegmentLength: z.number(),
+    LinkValue: z.number(),
+    LinkedSequence: ObjectReferenceSchema.nullish(),
+    DurationLinkValue: z.number().optional(),
+  })
+  .strict();
+
+const MontagePropertiesSchema = z
+  .object({
+    Notifies: z.array(MontageNotifySchema).optional(),
+    SequenceLength: z.number(),
+  })
+  .catchall(EngineValueSchema);
+
+const MontageRootExportSchema = z
+  .object({
+    Type: z.literal('AnimMontage'),
+    Name: z.string(),
+    Flags: z.string(),
+    Class: z.string(),
+    Package: z.string(),
+    Properties: MontagePropertiesSchema,
+    SkeletonGuid: z.string().optional(),
+  })
+  .catchall(EngineValueSchema);
+
+const GenericAssetExportSchema = z
+  .object({
+    Type: z.string(),
+    Name: z.string(),
+    Flags: z.string(),
+    Class: z.string(),
+    Package: z.string().optional(),
+    Properties: EngineObjectSchema.optional(),
+    Rows: EngineObjectSchema.optional(),
+    SkeletonGuid: z.string().optional(),
+  })
+  .catchall(EngineValueSchema);
+
+const SkillTargetSchema = z
+  .object({
+    LockOnConfigId_13_9240CDCD4A7C75F715B64899EE8F2DC1: z.number(),
+    SkillTargetPriority_32_6503AE024BF0D5CB5D542B84F997BBB4: z.string(),
+    ShowTarget_28_4A5D9B40438221B0FC28ACA3361C6C06: z.boolean(),
+    HateOrLockOnChanged_21_D264B269445DCEAE86F9BEAE40EE18CA: z.boolean(),
+    TargetDied_23_07DBB3684ACF90FA21FB5EB88B580C67: z.boolean(),
+    GlobalTarget_35_C8F0C6EE4E19DE7DD23820B99040632C: z.boolean(),
+    BlackboardKey_39_4B3BDD654E196A674D080AB04ADE7C0A: z.string(),
+    SkillTargetRemainTime_42_8895E5CB41289FAAAAF2DF9791A19C1F: z.number(),
+  })
+  .strict();
+
+const CooldownConfigSchema = z
+  .object({
+    CdTime_17_53AFB6144F31B1FC690BC4B495391CEC: z.number(),
+    CdDelay_18_88077BCA45D7C83C6F9595BE90E19E91: z.number(),
+    IsShareAllCdSkill_16_0490446C45E16F9607CA3DA11969A16E: z.boolean(),
+    MaxCount_21_BE52BC1A408FD925BE8848A76E57F08D: z.number(),
+    ShareGroupId_23_F1F57AFA439C48D1F17446B85631B005: z.number(),
+    SectionCount_31_F71122154E43E38C3F673ABA2F018785: z.number(),
+    SectionRemaining_32_B8FF4E36428915E3484F2FBF5FC484ED: z.number(),
+    NextSkillId_49_F3D3171641CEFF1E81E768AE04F83E49: z.number(),
+    StartTime_26_C726665545379542EF1611A3601D3796: z.number(),
+    StopTime_35_11B3875946A9CBDFB1443F8B5AC1E367: z.number(),
+    IsReset_38_CA73D145447E07AA5E4619828AF561CD: z.boolean(),
+    IsResetOnChangeRole_43_4E270B634727E782FF05A2897DEBE424: z.boolean(),
+    CdTags_48_8502F43749E48F6FFD3FA0AD331D0DC2: z.array(GameplayTagOrStringSchema),
+  })
+  .strict();
+
+const SkillInfoPatternValidators = [
+  [/^SkillName_/, z.string()],
+  [/^SkillIcon_/, AssetReferenceSchema],
+  [/^SkillMode_/, z.string()],
+  [/^SkillTriggers_/, z.array(SkillTriggerSchema)],
+  [/^SkillBehaviorGroup_/, z.array(SkillBehaviorGroupSchema)],
+  [/^SkillGA_/, AssetReferenceSchema],
+  [/^Animations_/, z.array(AssetReferenceSchema)],
+  [/^MontagePaths_/, z.array(z.string())],
+  [/^SkillTag_/, z.array(GameplayTagSchema)],
+  [/^GroupId_/, z.number()],
+  [/^InterruptLevel_/, z.number()],
+  [/^SkillGenre_/, z.string()],
+  [/^IsLockOn_/, z.boolean()],
+  [/^SkillTarget_/, SkillTargetSchema],
+  [/^SkillDirection_/, z.string()],
+  [/^CooldownConfig_/, CooldownConfigSchema],
+  [/^WalkOffLedge_/, z.boolean()],
+  [/^SkillStartBuff_/, z.array(z.number())],
+  [/^SkillBuff_/, z.array(z.number())],
+  [/^SkillEndBuff_/, z.array(z.number())],
+  [/^ToughRatio_/, z.number()],
+  [/^StrengthCost_/, z.number()],
+  [/^IsFullBodySkill_/, z.boolean()],
+  [/^AutonomouslyBySimulate_/, z.boolean()],
+  [/^MoveControllerTime_/, z.number()],
+  [/^ImmuneFallDamageTime_/, z.number()],
+  [/^OverrideHit_/, z.boolean()],
+  [/^OverrideType_/, z.string()],
+  [/^ExportSpecialAnim_/, z.array(EngineObjectSchema)],
+  [/^SkillStepUp_/, z.boolean()],
+  [/^SkillCanBeginWithoutControl_/, z.boolean()],
+  [/^MaxCounterCount_/, z.number()],
+  [/^SpecialBuffInCode_/, z.array(z.number())],
+] as const;
+
+const SkillInfoRowSchema = z.record(z.string(), EngineValueSchema).superRefine((row, context) => {
+  for (const [key, value] of Object.entries(row)) {
+    const validator = SkillInfoPatternValidators.find(([pattern]) => pattern.test(key));
+    if (!validator) continue;
+
+    const [, schema] = validator;
+    const result = schema.safeParse(value);
+    if (result.success) continue;
+
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [key],
+      message: z.prettifyError(result.error),
+    });
+  }
+});
+
+const SkillInfoRootExportSchema = z
+  .object({
+    Type: z.literal('DataTable'),
+    Name: z.literal('DT_SkillInfo'),
+    Flags: z.string(),
+    Class: z.string(),
+    Package: z.string(),
+    Properties: z
+      .object({
+        RowStruct: ObjectReferenceSchema,
+      })
+      .catchall(EngineValueSchema),
+    Rows: z.record(z.string(), SkillInfoRowSchema),
+  })
+  .catchall(EngineValueSchema);
+
 const BasePropertyNumberKeys = [
   'Id',
   'Lv',
@@ -876,6 +1139,66 @@ const PhantomSkillSchema = z
   })
   .strict();
 
+const RawMontageArraySchema = z.tuple([MontageRootExportSchema]).rest(GenericAssetExportSchema);
+const RawSkillInfoAssetArraySchema = z.tuple([SkillInfoRootExportSchema]).rest(
+  GenericAssetExportSchema,
+);
+const ReBulletBaseSettingsSchema = z.record(z.string(), EngineValueSchema).superRefine(
+  (row, context) => {
+    for (const prefix of ['每个单位总作用次数', '总作用次数限制', '作用间隔']) {
+      const entry = Object.entries(row).find(([key]) => key.startsWith(prefix));
+      if (entry) continue;
+
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Missing ${prefix} field`,
+      });
+    }
+  },
+);
+
+const ReBulletRowSchema = z.record(z.string(), EngineValueSchema).superRefine((row, context) => {
+  const baseSettingsEntry = Object.entries(row).find(([key]) => key.startsWith('基础设置'));
+  if (!baseSettingsEntry) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Missing 基础设置 field',
+    });
+    return;
+  }
+
+  const [, baseSettingsValue] = baseSettingsEntry;
+  const result = ReBulletBaseSettingsSchema.safeParse(baseSettingsValue);
+  if (result.success) {
+    return;
+  }
+
+  context.addIssue({
+    code: z.ZodIssueCode.custom,
+    path: [baseSettingsEntry[0]],
+    message: z.prettifyError(result.error),
+  });
+});
+
+const ReBulletDataMainRootExportSchema = z
+  .object({
+    Type: z.literal('DataTable'),
+    Name: z.string().regex(/^DT_ReBulletDataMain/),
+    Flags: z.string(),
+    Class: z.string(),
+    Package: z.string(),
+    Properties: z
+      .object({
+        RowStruct: ObjectReferenceSchema,
+      })
+      .catchall(EngineValueSchema),
+    Rows: z.record(z.string(), ReBulletRowSchema),
+  })
+  .catchall(EngineValueSchema);
+const RawReBulletDataMainArraySchema = z.tuple([ReBulletDataMainRootExportSchema]).rest(
+  GenericAssetExportSchema,
+);
+
 /**
  * English localization rows loaded from the three textmap shards.
  *
@@ -919,6 +1242,9 @@ export const PhantomFetterGroupArraySchema = z.array(PhantomFetterGroupSchema);
 export const PhantomFetterArraySchema = z.array(PhantomFetterSchema);
 export const PhantomItemArraySchema = z.array(PhantomItemSchema);
 export const PhantomSkillArraySchema = z.array(PhantomSkillSchema);
+export const RawMontageAssetArraySchema = RawMontageArraySchema;
+export const RawSkillInfoAssetFileArraySchema = RawSkillInfoAssetArraySchema;
+export const RawReBulletDataMainFileArraySchema = RawReBulletDataMainArraySchema;
 export const TextEntryArraySchema = z.array(TextEntrySchema);
 
 export type SkillEntry = z.infer<typeof SkillSchema>;

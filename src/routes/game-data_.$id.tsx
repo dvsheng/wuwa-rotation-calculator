@@ -12,6 +12,11 @@ import { LoadingSpinnerContainer } from '@/components/common/LoadingSpinnerConta
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { DataTable } from '@/components/ui/data-table';
 import {
   HoverCard,
@@ -25,15 +30,25 @@ import { useEntityAttacks } from '@/hooks/useEntityAttacks';
 import { useEntityBuffs } from '@/hooks/useEntityBuffs';
 import { useEntityDamageInstances } from '@/hooks/useEntityDamageInstances';
 import { useEntityModifiers } from '@/hooks/useEntityModifiers';
+import { useEntityMontages } from '@/hooks/useEntityMontages';
 import { useGameDataEntities } from '@/hooks/useGameDataEntities';
-import type { EntityType } from '@/services/game-data/types';
-import { Target } from '@/services/game-data/types';
+import { EntityType, Target } from '@/services/game-data/types';
 import type { EntityAttack } from '@/services/game-data-v2/attacks';
 import type { Buff } from '@/services/game-data-v2/buffs';
 import type { DamageInstance } from '@/services/game-data-v2/damage-instances/types';
 import type { Modifier } from '@/services/game-data-v2/modifiers';
+import type { CharacterMontage } from '@/services/game-data-v2/montages';
 import { Attribute } from '@/types/attribute';
 
+const ENTITY_GAME_DATA_TABS = [
+  'buffs',
+  'modifiers',
+  'attacks',
+  'damage-instances',
+  'montages',
+] as const;
+
+type EntityGameDataTab = (typeof ENTITY_GAME_DATA_TABS)[number];
 type NumberNode = Buff['value'];
 type DescriptionBlock = {
   style: 'title' | 'body';
@@ -42,6 +57,10 @@ type DescriptionBlock = {
 
 type StackInfo = { valueAt1: number; valueAtMax: number; maxStacks: number };
 type ClampInfo = { min: number; max: number; stat: string | undefined };
+type MontageHitRow = CharacterMontage['montage']['hits'][number] & {
+  damageInstance?: DamageInstance;
+};
+type MontageTagRow = CharacterMontage['montage']['tags'][number];
 
 function findStatParameter(node: NumberNode): string | undefined {
   if (typeof node === 'number') return undefined;
@@ -66,7 +85,6 @@ function findStatParameter(node: NumberNode): string | undefined {
 function extractClampInfo(value: NumberNode): ClampInfo | undefined {
   if (
     typeof value !== 'object' ||
-    value === null ||
     value.type !== 'clamp' ||
     typeof value.minimum !== 'number' ||
     typeof value.maximum !== 'number'
@@ -80,7 +98,7 @@ function extractClampInfo(value: NumberNode): ClampInfo | undefined {
 }
 
 function extractStackInfo(value: NumberNode): StackInfo | undefined {
-  if (typeof value !== 'object' || value === null) return undefined;
+  if (typeof value !== 'object') return undefined;
 
   if (
     value.type === 'userParameterizedNumber' &&
@@ -201,7 +219,7 @@ const HoverJson = ({
     <HoverCardContent className="w-fit max-w-3xl overflow-hidden p-0">
       <div className="max-h-96 max-w-3xl overflow-auto">
         <pre className="w-fit min-w-full p-4 text-xs">
-          {JSON.stringify(value, null, 4)}
+          {JSON.stringify(value, undefined, 4)}
         </pre>
       </div>
     </HoverCardContent>
@@ -942,6 +960,417 @@ function EntityAttacksList({ id, entityType }: { id: number; entityType: EntityT
   );
 }
 
+function MontageFieldList({ items, emptyLabel }: { items: Array<string>; emptyLabel: string }) {
+  if (items.length === 0) {
+    return <span className="text-muted-foreground text-sm">{emptyLabel}</span>;
+  }
+
+  return (
+    <div className="flex flex-col gap-1 font-mono text-sm">
+      {items.map((item) => (
+        <span key={item}>{item}</span>
+      ))}
+    </div>
+  );
+}
+
+function NullTableValue() {
+  return <span className="text-muted-foreground font-mono text-sm">null</span>;
+}
+
+function EntityMontagesList({
+  id,
+  entityType,
+}: {
+  id: number;
+  entityType: EntityType;
+}) {
+  const { data } = useEntityMontages(id, entityType);
+  const { data: damageInstances } = useEntityDamageInstances(id, entityType);
+
+  if (data.length === 0) {
+    return <p className="text-muted-foreground text-sm">No montages found.</p>;
+  }
+
+  const damageInstancesById = new Map<number, DamageInstance>();
+  for (const damageInstance of damageInstances) {
+    damageInstancesById.set(damageInstance.id, damageInstance);
+
+    for (const dedupedId of damageInstance.dedupedIds) {
+      damageInstancesById.set(dedupedId, damageInstance);
+    }
+  }
+
+  const [primaryMontages, otherMontages] = data.reduce<
+    [Array<CharacterMontage>, Array<CharacterMontage>]
+  >(
+    (groups, item) => {
+      const isOtherMontage =
+        item.montage.hits.length === 0 ||
+        item.montage.name.toLowerCase().includes('rogue');
+
+      if (isOtherMontage) {
+        groups[1].push(item);
+      } else {
+        groups[0].push(item);
+      }
+
+      return groups;
+    },
+    [[], []],
+  );
+
+  return (
+    <div className="flex flex-col gap-4">
+      {primaryMontages.map((item) => (
+        <MontageCard
+          key={`${item.characterName}:${item.montageName}`}
+          id={id}
+          entityType={entityType}
+          item={item}
+          damageInstancesById={damageInstancesById}
+        />
+      ))}
+      {otherMontages.length > 0 && (
+        <Collapsible className="rounded-md border">
+          <CollapsibleTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-auto w-full justify-between rounded-md px-4 py-3"
+            >
+              <span className="font-medium">Other Montages</span>
+              <Badge variant="secondary">{otherMontages.length}</Badge>
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="border-t p-4">
+            <div className="flex flex-col gap-4">
+              {otherMontages.map((item) => (
+                <MontageCard
+                  key={`${item.characterName}:${item.montageName}`}
+                  id={id}
+                  entityType={entityType}
+                  item={item}
+                  damageInstancesById={damageInstancesById}
+                />
+              ))}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
+    </div>
+  );
+}
+
+function MontageCard({
+  id,
+  entityType,
+  item,
+  damageInstancesById,
+}: {
+  id: number;
+  entityType: EntityType;
+  item: CharacterMontage;
+  damageInstancesById: Map<number, DamageInstance>;
+}) {
+  const navigate = useNavigate();
+  const hitRows: Array<MontageHitRow> = item.montage.hits.map((hit) => {
+    const numericDamageId = Number.parseInt(hit.damageId, 10);
+    return {
+      ...hit,
+      damageInstance: Number.isNaN(numericDamageId)
+        ? undefined
+        : damageInstancesById.get(numericDamageId),
+    };
+  });
+  const tagRows: Array<MontageTagRow> = item.montage.tags;
+  const eventLines = item.montage.events.map(
+    (event) => `${event.time.toFixed(3)}s -> ${event.name}`,
+  );
+
+  const hitColumns: Array<ColumnDef<MontageHitRow>> = [
+    {
+      accessorKey: 'time',
+      header: 'Time',
+      cell: ({ row }) => `${row.original.time.toFixed(3)}s`,
+      meta: {
+        headerClassName: 'min-w-20',
+        cellClassName: 'min-w-20 font-mono text-sm',
+      },
+    },
+    {
+      accessorKey: 'damageId',
+      header: 'Damage ID',
+      cell: ({ row }) => (
+        <Button
+          type="button"
+          variant="link"
+          size="xs"
+          className="h-auto px-0 font-mono"
+          onClick={() =>
+            navigate({
+              to: '/game-data/$id',
+              params: { id: String(id) },
+              search: (previous) => ({
+                ...previous,
+                entityType,
+                tab: 'damage-instances',
+              }),
+            })
+          }
+        >
+          {row.original.damageId}
+        </Button>
+      ),
+      meta: {
+        headerClassName: 'min-w-24',
+        cellClassName: 'min-w-24',
+      },
+    },
+    {
+      accessorKey: 'hitCount',
+      header: 'Hit Count',
+      cell: ({ row }) => row.original.hitCount ?? <NullTableValue />,
+      meta: {
+        headerClassName: 'min-w-20',
+        cellClassName: 'min-w-20 font-mono text-sm',
+      },
+    },
+    {
+      accessorKey: 'hitInterval',
+      header: 'Hit Interval',
+      cell: ({ row }) =>
+        row.original.hitInterval === undefined
+          ? <NullTableValue />
+          : `${row.original.hitInterval.toFixed(2)}s`,
+      meta: {
+        headerClassName: 'min-w-24',
+        cellClassName: 'min-w-24 font-mono text-sm',
+      },
+    },
+    {
+      accessorKey: 'totalHitCap',
+      header: 'Hit Cap',
+      cell: ({ row }) => row.original.totalHitCap ?? <NullTableValue />,
+      meta: {
+        headerClassName: 'min-w-20',
+        cellClassName: 'min-w-20 font-mono text-sm',
+      },
+    },
+    {
+      id: 'motionValue',
+      header: 'Motion Value',
+      cell: ({ row }) => {
+        const damageInstance = row.original.damageInstance;
+        return damageInstance ? (
+          renderMotionValue(
+            damageInstance.motionValue,
+            damageInstance.scalingAttribute,
+            damageInstance.motionValuePerStack,
+          )
+        ) : (
+          <NullTableValue />
+        );
+      },
+      meta: {
+        headerClassName: 'min-w-40',
+        cellClassName: 'min-w-40 font-mono text-sm',
+      },
+    },
+    {
+      id: 'type',
+      header: 'Type',
+      cell: ({ row }) => {
+        const damageInstance = row.original.damageInstance;
+        return damageInstance ? (
+          startCase(damageInstance.type)
+        ) : (
+          <NullTableValue />
+        );
+      },
+      meta: {
+        headerClassName: 'min-w-24',
+        cellClassName: 'min-w-24',
+      },
+    },
+    {
+      id: 'attribute',
+      header: 'Attribute',
+      cell: ({ row }) => {
+        const damageInstance = row.original.damageInstance;
+        return damageInstance ? (
+          startCase(damageInstance.attribute)
+        ) : (
+          <NullTableValue />
+        );
+      },
+      meta: {
+        headerClassName: 'min-w-24',
+        cellClassName: 'min-w-24',
+      },
+    },
+    {
+      id: 'scalingAttribute',
+      header: 'Scaling',
+      cell: ({ row }) => {
+        const damageInstance = row.original.damageInstance;
+        return damageInstance ? (
+          startCase(damageInstance.scalingAttribute)
+        ) : (
+          <NullTableValue />
+        );
+      },
+      meta: {
+        headerClassName: 'min-w-24',
+        cellClassName: 'min-w-24',
+      },
+    },
+    {
+      id: 'subtypes',
+      header: 'Subtypes',
+      cell: ({ row }) => {
+        const damageInstance = row.original.damageInstance;
+        return damageInstance ? (
+          <BuffTags tags={damageInstance.subtypes} />
+        ) : (
+          <NullTableValue />
+        );
+      },
+      meta: {
+        headerClassName: 'min-w-40',
+        cellClassName: 'min-w-40',
+      },
+    },
+    {
+      id: 'concertoRegen',
+      header: 'Concerto',
+      cell: ({ row }) => row.original.damageInstance?.concertoRegen ?? <NullTableValue />,
+      meta: {
+        headerClassName: 'min-w-20',
+        cellClassName: 'min-w-20 font-mono text-sm',
+      },
+    },
+    {
+      id: 'offTuneBuildup',
+      header: 'Off-Tune',
+      cell: ({ row }) => row.original.damageInstance?.offTuneBuildup ?? <NullTableValue />,
+      meta: {
+        headerClassName: 'min-w-20',
+        cellClassName: 'min-w-20 font-mono text-sm',
+      },
+    },
+    {
+      id: 'energy',
+      header: 'Energy',
+      cell: ({ row }) => row.original.damageInstance?.energy ?? <NullTableValue />,
+      meta: {
+        headerClassName: 'min-w-16',
+        cellClassName: 'min-w-16 font-mono text-sm',
+      },
+    },
+  ];
+
+  const tagColumns: Array<ColumnDef<MontageTagRow>> = [
+    {
+      accessorKey: 'time',
+      header: 'Time',
+      cell: ({ row }) => `${row.original.time.toFixed(3)}s`,
+      meta: {
+        headerClassName: 'min-w-20',
+        cellClassName: 'min-w-20 font-mono text-sm',
+      },
+    },
+    {
+      accessorKey: 'name',
+      header: 'Tag',
+      meta: {
+        headerClassName: 'min-w-80',
+        cellClassName: 'min-w-80 font-mono text-sm break-all',
+      },
+    },
+    {
+      accessorKey: 'duration',
+      header: 'Duration',
+      cell: ({ row }) =>
+        row.original.duration === undefined ? 'n/a' : `${row.original.duration.toFixed(3)}s`,
+      meta: {
+        headerClassName: 'min-w-24',
+        cellClassName: 'min-w-24 font-mono text-sm',
+      },
+    },
+  ];
+
+  return (
+    <Card className="gap-0 py-0">
+      <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 py-4">
+        <div className="space-y-2">
+          <CardTitle className="text-base">{item.montage.name}</CardTitle>
+          <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
+            {item.skills.length > 0 ? (
+              item.skills.map((skill) => (
+                <Badge key={skill.gameId} variant="outline">
+                  {skill.name}
+                </Badge>
+              ))
+            ) : (
+              <Badge variant="outline">Unmapped</Badge>
+            )}
+            <Badge variant="secondary">
+              cancel:{' '}
+              {item.montage.cancelTime === undefined
+                ? 'n/a'
+                : `${item.montage.cancelTime.toFixed(3)}s`}
+            </Badge>
+            <Badge variant="secondary">
+              end:{' '}
+              {item.montage.endTime === undefined
+                ? 'n/a'
+                : `${item.montage.endTime.toFixed(3)}s`}
+            </Badge>
+          </div>
+        </div>
+        <HoverJson value={item}>
+          <span className="text-muted-foreground text-xs">raw</span>
+        </HoverJson>
+      </CardHeader>
+      <CardContent className="grid gap-4 pt-0 pb-4 md:grid-cols-2">
+        <div className="space-y-1 md:col-span-2">
+          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+            Hits
+          </p>
+          <DataTable
+            columns={hitColumns}
+            data={hitRows}
+            emptyMessage="No hits."
+            classNames={{
+              wrapper: 'bg-muted/30 rounded-md border',
+            }}
+          />
+        </div>
+        <div className="space-y-1 md:col-span-2">
+          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+            Tags
+          </p>
+          <DataTable
+            columns={tagColumns}
+            data={tagRows}
+            emptyMessage="No tags."
+            classNames={{
+              wrapper: 'bg-muted/30 rounded-md border',
+            }}
+          />
+        </div>
+        <div className="space-y-1 md:col-span-2">
+          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+            Events
+          </p>
+          <MontageFieldList items={eventLines} emptyLabel="None" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function EntityHeader({ id, entityType }: { id: number; entityType: string }) {
   const { data } = useGameDataEntities({});
   const entity = data.find((gameDataEntity) => gameDataEntity.id === id);
@@ -959,9 +1388,11 @@ function EntityHeader({ id, entityType }: { id: number; entityType: string }) {
 
 function EntityBuffsPage() {
   const { id } = Route.useParams();
-  const { entityType } = Route.useSearch();
+  const { entityType, tab } = Route.useSearch();
   const numericId = Number.parseInt(id);
   const navigate = useNavigate();
+  const isCharacter = entityType === EntityType.CHARACTER;
+  const activeTab = isCharacter || tab !== 'montages' ? (tab ?? 'buffs') : 'buffs';
 
   return (
     <Container padding="page" className="h-full min-h-0 max-w-6xl">
@@ -977,12 +1408,26 @@ function EntityBuffsPage() {
         <Suspense fallback={<div className="h-10" />}>
           <EntityHeader id={numericId} entityType={entityType} />
         </Suspense>
-        <Tabs defaultValue="buffs" className="min-h-0 flex-1 gap-4">
+        <Tabs
+          value={activeTab}
+          onValueChange={(nextTab) =>
+            navigate({
+              to: '/game-data/$id',
+              params: { id },
+              search: (previous) => ({
+                ...previous,
+                tab: nextTab as EntityGameDataTab,
+              }),
+            })
+          }
+          className="min-h-0 flex-1 gap-4"
+        >
           <TabsList className="w-fit">
             <TabsTrigger value="buffs">Buffs</TabsTrigger>
             <TabsTrigger value="modifiers">Modifiers</TabsTrigger>
             <TabsTrigger value="attacks">Attacks</TabsTrigger>
             <TabsTrigger value="damage-instances">Damage Instances</TabsTrigger>
+            {isCharacter && <TabsTrigger value="montages">Montages</TabsTrigger>}
           </TabsList>
           <TabsContent value="buffs" className="min-h-0 flex-1 overflow-y-auto">
             <Suspense
@@ -1049,6 +1494,25 @@ function EntityBuffsPage() {
               />
             </Suspense>
           </TabsContent>
+          {isCharacter && (
+            <TabsContent value="montages" className="min-h-0 flex-1 overflow-y-auto">
+              <Suspense
+                fallback={
+                  <Card className="h-32">
+                    <LoadingSpinnerContainer
+                      message="Loading montages..."
+                      spinnerSize={40}
+                    />
+                  </Card>
+                }
+              >
+                <EntityMontagesList
+                  id={numericId}
+                  entityType={entityType as EntityType}
+                />
+              </Suspense>
+            </TabsContent>
+          )}
         </Tabs>
       </Stack>
     </Container>
@@ -1058,6 +1522,7 @@ function EntityBuffsPage() {
 export const Route = createFileRoute('/game-data_/$id')({
   validateSearch: z.object({
     entityType: z.string(),
+    tab: z.enum(ENTITY_GAME_DATA_TABS).optional(),
   }),
   component: EntityBuffsPage,
 });

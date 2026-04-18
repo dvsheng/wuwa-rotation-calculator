@@ -5,6 +5,12 @@ providing a team builder interface and a rotation builder interface based on the
 services to get descriptive game information to serve to the client, as well as combat information to serve to the server. The rotation-calculator
 service calculates the damage of a user's configured rotation using the aforementioned game-data service.
 
+# Rules / Preferences
+
+Backwards compatability is not needed, this is a greenfield project
+
+Use arrow functions over except in useEffect to create named effects
+
 # Repository Layout and Configuration
 
 ## Framework

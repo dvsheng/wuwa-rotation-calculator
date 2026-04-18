@@ -4,10 +4,12 @@ import {
   rawBuffs,
   rawChains,
   rawDamage,
+  rawMontages,
   rawPhantomFetterGroups,
   rawPhantomFetters,
   rawPhantomItems,
   rawPhantomSkills,
+  rawReBulletDataMainRows,
   rawRogueCharacterBuffs,
   rawRoguePermanentBuffPools,
   rawRoguePermanentCharacterBuffs,
@@ -16,6 +18,7 @@ import {
   rawRolePropertyGrowth,
   rawSkillAttributes,
   rawSkillDescriptions,
+  rawSkillInfoAssets,
   rawSkillTreeNodes,
   rawSkills,
   rawWeaponConfig,
@@ -27,10 +30,12 @@ import type {
   RawBuff,
   RawChain,
   RawDamage,
+  RawMontage,
   RawPhantomFetter,
   RawPhantomFetterGroup,
   RawPhantomItem,
   RawPhantomSkill,
+  RawReBulletDataMainRow,
   RawRogueCharacterBuff,
   RawRoguePermanentBuffPool,
   RawRoguePermanentCharacterBuff,
@@ -40,6 +45,7 @@ import type {
   RawSkill,
   RawSkillAttribute,
   RawSkillDescription,
+  RawSkillInfoAsset,
   RawSkillTreeNode,
   RawWeaponConfig,
   RawWeaponGrowth,
@@ -69,8 +75,11 @@ export type WeaponGrowth = RawWeaponGrowth;
 export type WeaponEffect = RawWeaponReson;
 export type RawBasePropertyEntry = RawBaseProperty;
 export type Echo = RawPhantomItem;
+export type MontageAsset = RawMontage;
+export type SkillInfoAsset = RawSkillInfoAsset;
+export type ReBulletDataMainRow = RawReBulletDataMainRow;
 
-type ReadOnlyRepository<TRow, TKey> = {
+export type ReadOnlyRepository<TRow, TKey> = {
   list: () => Promise<Array<TRow>>;
   get: (key: TKey) => Promise<TRow | undefined>;
   getByIds: (keys: Array<TKey>) => Promise<Array<TRow>>;
@@ -144,10 +153,11 @@ export const resonatorChains = createReadOnlyRepository<ResonatorChain, number>(
   String,
 );
 
-export const rogueCharacterBuffs = createReadOnlyRepository<
-  RogueCharacterBuff,
-  number
->(() => database.select().from(rawRogueCharacterBuffs), byId, String);
+export const rogueCharacterBuffs = createReadOnlyRepository<RogueCharacterBuff, number>(
+  () => database.select().from(rawRogueCharacterBuffs),
+  byId,
+  String,
+);
 
 export const roguePermanentCharacterBuffs = createReadOnlyRepository<
   RoguePermanentCharacterBuff,
@@ -157,11 +167,7 @@ export const roguePermanentCharacterBuffs = createReadOnlyRepository<
 export const roguePermanentBuffPools = createReadOnlyRepository<
   RoguePermanentBuffPool,
   number
->(
-  () => database.select().from(rawRoguePermanentBuffPools),
-  byId,
-  String,
-);
+>(() => database.select().from(rawRoguePermanentBuffPools), byId, String);
 
 export const rogueWeeklyBuffPools = createReadOnlyRepository<
   RogueWeeklyBuffPool,
@@ -232,5 +238,26 @@ export const echoes = createReadOnlyRepository<Echo, number>(
 export const echoSkills = createReadOnlyRepository<EchoSkill, number>(
   () => database.select().from(rawPhantomSkills),
   byId,
+  String,
+);
+
+export const montageAssets = createReadOnlyRepository<MontageAsset, string>(
+  () => database.select().from(rawMontages),
+  (row) => `${row.entityId}:${row.characterName}:${row.Name}`,
+  String,
+);
+
+export const skillInfoAssets = createReadOnlyRepository<SkillInfoAsset, string>(
+  () => database.select().from(rawSkillInfoAssets),
+  (row) => row.characterName,
+  String,
+);
+
+export const reBulletDataMainRows = createReadOnlyRepository<
+  ReBulletDataMainRow,
+  string
+>(
+  () => database.select().from(rawReBulletDataMainRows),
+  (row) => `${row.entityId}:${row.fileName}:${row.bulletId}`,
   String,
 );

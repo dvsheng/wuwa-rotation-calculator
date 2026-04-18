@@ -66,7 +66,7 @@ function transformRow(row: ReBulletDataMainRow): Bullet {
   ];
 
   return {
-    id: String(row.bulletId),
+    id: `${row.bulletId}-${row.characterName}`,
     name: row.rowData.子弹名称 ?? '',
     hits,
     hitInterval: base?.作用间隔 ?? 0,

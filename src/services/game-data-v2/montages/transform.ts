@@ -1,4 +1,9 @@
-import { isNil } from 'es-toolkit';
+import type {
+  ReSkillEventDetails,
+  SendGamePlayEventDetails,
+  SkillBehaviorDetails,
+  StateAddTagDetails,
+} from '@/db/raw-schema';
 
 import type { MontageAsset } from '../repostiory';
 
@@ -17,23 +22,44 @@ export function toMontage(rawMontage: MontageAsset): Montage {
     notifyDetails.map((notify) => [normalizeNotificationName(notify.Name), notify]),
   );
 
-  const bullets =
-    notificationsByType['TsAnimNotifyReSkillEvent']?.flatMap((notify) => {
+  const bullets = [
+    ...(notificationsByType['TsAnimNotifyReSkillEvent']?.flatMap((notify) => {
       const time = notify.LinkValue;
       const detailReference = getDetailReference(notify.Notify?.ObjectName ?? '');
       const details = notificationDetailsByName.get(detailReference);
-      return getBulletIds(details?.Properties).map((id) => ({ bulletId: id, time }));
-    }) ?? [];
+      if (!isReSkillEventDetails(details)) return [];
+      return getBulletIds(details.Properties, rawMontage.characterName).map((id) => ({
+        bulletId: id,
+        time,
+      }));
+    }) ?? []),
+    ...(notificationsByType['TsAnimNotifySkillBehavior']?.flatMap((notify) => {
+      const time = notify.LinkValue;
+      const detailReference = getDetailReference(notify.Notify?.ObjectName ?? '');
+      const details = notificationDetailsByName.get(detailReference);
+      if (!isSkillBehaviorDetails(details)) return [];
+      return (details.Properties?.技能行为 ?? []).flatMap((behavior) =>
+        behavior.SkillBehaviorActionGroup_20_E7E8941646BF84E137B075AD36D96317.flatMap(
+          (action) =>
+            (action.Bullets_77_D4BBB46C47AE6F88D881F9ADA9156FFA ?? []).map((bullet) => ({
+              bulletId: `${bullet.bulletRowName_15_E1264B954C05799310C2CA8F2AA41295}-${rawMontage.characterName}`,
+              time,
+            })),
+        ),
+      );
+    }) ?? []),
+  ];
 
   const tags =
     notificationsByType['TsAnimNotifyStateAddTag']?.flatMap((notify) => {
       const time = notify.LinkValue;
       const detailReference = getDetailReference(notify.Notify?.ObjectName ?? '');
       const details = notificationDetailsByName.get(detailReference);
-      const tag = details?.Properties?.Tag;
-      const duration = details?.Properties?.CurrentTimeLength;
+      if (!isStateAddTagDetails(details)) return [];
+      const tag = details.Properties?.Tag?.TagName;
+      const duration = details.Properties?.CurrentTimeLength;
       if (!tag || !duration) return [];
-      return [{ time, name: tag as string, duration: duration as number }];
+      return [{ time, name: tag, duration }];
     }) ?? [];
 
   const events =
@@ -41,11 +67,8 @@ export function toMontage(rawMontage: MontageAsset): Montage {
       const time = notify.LinkValue;
       const detailReference = getDetailReference(notify.Notify?.ObjectName ?? '');
       const details = notificationDetailsByName.get(detailReference);
-      const eventTag = details?.Properties?.事件Tag;
-      const name =
-        typeof eventTag === 'object' && !isNil(eventTag) && 'TagName' in eventTag
-          ? (eventTag.TagName as string)
-          : undefined;
+      if (!isSendGamePlayEventDetails(details)) return [];
+      const name = details.Properties?.事件Tag?.TagName;
       if (!name) return [];
       return [{ time, name }];
     }) ?? [];
@@ -55,6 +78,7 @@ export function toMontage(rawMontage: MontageAsset): Montage {
 
   return {
     name: rawMontage.name.replace('AM_', ''),
+    id: `${rawMontage.name}-${rawMontage.characterName}`,
     bullets,
     cancelTime,
     endTime,
@@ -63,28 +87,51 @@ export function toMontage(rawMontage: MontageAsset): Montage {
   };
 }
 
+function isReSkillEventDetails(
+  detail: { Type: string } | undefined,
+): detail is ReSkillEventDetails {
+  return detail?.Type === 'TsAnimNotifyReSkillEvent_C';
+}
+
+function isStateAddTagDetails(
+  detail: { Type: string } | undefined,
+): detail is StateAddTagDetails {
+  return detail?.Type === 'TsAnimNotifyStateAddTag_C';
+}
+
+function isSendGamePlayEventDetails(
+  detail: { Type: string } | undefined,
+): detail is SendGamePlayEventDetails {
+  return detail?.Type === 'TsAnimNotifySendGamePlayEvent_C';
+}
+
+function isSkillBehaviorDetails(
+  detail: { Type: string } | undefined,
+): detail is SkillBehaviorDetails {
+  return detail?.Type === 'TsAnimNotifySkillBehavior_C';
+}
+
 function getString(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
 }
 
-function toBulletId(value: unknown): string | undefined {
-  if (typeof value === 'number') return String(value);
-  return getString(value);
+function toBulletId(value: unknown, characterName: string): string | undefined {
+  const baseId = typeof value === 'number' ? String(value) : getString(value);
+  return `${baseId}-${characterName}`;
 }
 
-function getBulletIds(properties: Record<string, unknown> | undefined): Array<string> {
+function getBulletIds(
+  properties: ReSkillEventDetails['Properties'],
+  characterName: string,
+): Array<string> {
   const useDamageIdArray = properties?.使用子弹id数组 === true;
-  const bulletIdArray = Array.isArray(properties?.子弹id数组)
-    ? properties.子弹id数组
-        .map((value) => toBulletId(value))
-        .filter((value) => value !== undefined)
-    : [];
+  const bulletIdArray = properties?.子弹id数组?.map((id) => `${id}-${characterName}`) ?? [];
 
   if (useDamageIdArray && bulletIdArray.length > 0) {
     return bulletIdArray;
   }
 
-  const bulletId = toBulletId(properties?.子弹数据名);
+  const bulletId = toBulletId(properties?.子弹数据名, characterName);
   if (!bulletId || bulletId === 'None') {
     return [];
   }

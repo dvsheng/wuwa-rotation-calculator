@@ -113,14 +113,32 @@ const SkillBehaviorConditionSchema = z.object({
   Reverse_35_73079DDF426EC7983ADE55B35FEC138A: z.boolean(),
 });
 
+const SkillBehaviorBulletSchema = z
+  .object({
+    bulletRowName_15_E1264B954C05799310C2CA8F2AA41295: z.string(),
+    bulletCount_17_C760AE4F44AC5EA2E83EE287AC1E2986: z.number(),
+    BlackboardKey_20_7646422D4796E9134AE08E984D1F68A9: z.string(),
+  })
+  .catchall(EngineValueSchema);
+
+const SkillBehaviorActionSchema = z
+  .object({
+    ActionType_19_928EDB4F42F86E100915608112580A79: z.string().optional(),
+    Bullets_77_D4BBB46C47AE6F88D881F9ADA9156FFA: z
+      .array(SkillBehaviorBulletSchema)
+      .optional(),
+  })
+  .catchall(EngineValueSchema);
+
 const SkillBehaviorGroupSchema = z
   .object({
     SkillBehaviorConditionGroup_23_D256B3E54F0444CCB6BA3B977B371542: z.array(
       SkillBehaviorConditionSchema,
     ),
     SkillBehaviorConditionFormula_27_32ED9061461B3AC3C2028BB34993284A: z.string(),
-    SkillBehaviorActionGroup_20_E7E8941646BF84E137B075AD36D96317:
-      z.array(EngineObjectSchema),
+    SkillBehaviorActionGroup_20_E7E8941646BF84E137B075AD36D96317: z.array(
+      SkillBehaviorActionSchema,
+    ),
     SkillBehaviorContinue_34_DCA2FD6843FDD1BA359888B5BC8283A0: z.boolean(),
   })
   .strict();
@@ -191,18 +209,96 @@ const MontageRootSchema = z
   })
   .catchall(EngineValueSchema);
 
-const MontageNotifyDetailsSchema = z
+const BaseNotifyDetailFields = {
+  Name: z.string(),
+  Flags: z.string(),
+  Class: z.string(),
+  Package: z.string().optional(),
+  SkeletonGuid: z.string().optional(),
+};
+
+const ReSkillEventPropertiesSchema = z
   .object({
-    Type: z.string(),
-    Name: z.string(),
-    Flags: z.string(),
-    Class: z.string(),
-    Package: z.string().optional(),
-    Properties: EngineObjectSchema.optional(),
-    Rows: EngineObjectSchema.optional(),
-    SkeletonGuid: z.string().optional(),
+    子弹数据名: z.string().optional(),
+    使用子弹id数组: z.boolean().optional(),
+    子弹id数组: z.array(z.string()).optional(),
+    骨骼名字: z.string().optional(),
+    子弹出生位置偏移: EngineObjectSchema.optional(),
+    传入当前实体位置: z.boolean().optional(),
+    exportIndex: z.number().optional(),
   })
   .catchall(EngineValueSchema);
+
+const StateAddTagPropertiesSchema = z
+  .object({
+    Tag: GameplayTagSchema.optional(),
+    CurrentTimeLength: z.number().optional(),
+    exportIndex: z.number().optional(),
+  })
+  .catchall(EngineValueSchema);
+
+const SendGamePlayEventPropertiesSchema = z
+  .object({
+    事件Tag: GameplayTagSchema.optional(),
+    exportIndex: z.number().optional(),
+  })
+  .catchall(EngineValueSchema);
+
+const ReSkillEventDetailsSchema = z
+  .object({
+    ...BaseNotifyDetailFields,
+    Type: z.literal('TsAnimNotifyReSkillEvent_C'),
+    Properties: ReSkillEventPropertiesSchema.optional(),
+  })
+  .catchall(EngineValueSchema);
+
+const StateAddTagDetailsSchema = z
+  .object({
+    ...BaseNotifyDetailFields,
+    Type: z.literal('TsAnimNotifyStateAddTag_C'),
+    Properties: StateAddTagPropertiesSchema.optional(),
+  })
+  .catchall(EngineValueSchema);
+
+const SendGamePlayEventDetailsSchema = z
+  .object({
+    ...BaseNotifyDetailFields,
+    Type: z.literal('TsAnimNotifySendGamePlayEvent_C'),
+    Properties: SendGamePlayEventPropertiesSchema.optional(),
+  })
+  .catchall(EngineValueSchema);
+
+const SkillBehaviorPropertiesSchema = z
+  .object({
+    技能行为: z.array(SkillBehaviorGroupSchema).optional(),
+    exportIndex: z.number().optional(),
+  })
+  .catchall(EngineValueSchema);
+
+const SkillBehaviorDetailsSchema = z
+  .object({
+    ...BaseNotifyDetailFields,
+    Type: z.literal('TsAnimNotifySkillBehavior_C'),
+    Properties: SkillBehaviorPropertiesSchema.optional(),
+  })
+  .catchall(EngineValueSchema);
+
+const GenericNotifyDetailsSchema = z
+  .object({
+    ...BaseNotifyDetailFields,
+    Type: z.string(),
+    Properties: EngineObjectSchema.optional(),
+    Rows: EngineObjectSchema.optional(),
+  })
+  .catchall(EngineValueSchema);
+
+const MontageNotifyDetailsSchema = z.union([
+  ReSkillEventDetailsSchema,
+  StateAddTagDetailsSchema,
+  SendGamePlayEventDetailsSchema,
+  SkillBehaviorDetailsSchema,
+  GenericNotifyDetailsSchema,
+]);
 
 const SkillTargetSchema = z
   .object({
@@ -1284,6 +1380,11 @@ export type PhantomSkillEntry = z.infer<typeof PhantomSkillSchema>;
 export type TextEntry = z.infer<typeof TextEntrySchema>;
 export type RawMontageAssetArray = z.infer<typeof RawMontageArraySchema>;
 export type MontageNotifyDetails = z.infer<typeof MontageNotifyDetailsSchema>;
+export type ReSkillEventDetails = z.infer<typeof ReSkillEventDetailsSchema>;
+export type ReSkillEventProperties = z.infer<typeof ReSkillEventPropertiesSchema>;
+export type StateAddTagDetails = z.infer<typeof StateAddTagDetailsSchema>;
+export type SendGamePlayEventDetails = z.infer<typeof SendGamePlayEventDetailsSchema>;
+export type SkillBehaviorDetails = z.infer<typeof SkillBehaviorDetailsSchema>;
 export type MontageRoot = z.infer<typeof MontageRootSchema>;
 export type RawSkillInfoAssetArray = z.infer<typeof RawSkillInfoAssetArraySchema>;
 export type SkillInfoRoot = z.infer<typeof SkillInfoRootExportSchema>;

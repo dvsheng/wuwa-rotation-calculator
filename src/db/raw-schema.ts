@@ -14,6 +14,14 @@ import type {
   SkillInfoRoot,
 } from '../../scripts/pipeline/github-data.schemas';
 
+export type {
+  MontageNotifyDetails,
+  ReSkillEventDetails,
+  SendGamePlayEventDetails,
+  SkillBehaviorDetails,
+  StateAddTagDetails,
+} from '../../scripts/pipeline/github-data.schemas';
+
 const integer = (name: string) => bigint(name, { mode: 'number' });
 
 type ReBulletJsonPrimitive = string | number | boolean | null;
@@ -1056,3 +1064,4 @@ export type NewRawSkillInfoAsset = typeof rawSkillInfoAssets.$inferInsert;
 
 export type RawReBulletDataMainRow = typeof rawReBulletDataMainRows.$inferSelect;
 export type NewRawReBulletDataMainRow = typeof rawReBulletDataMainRows.$inferInsert;
+

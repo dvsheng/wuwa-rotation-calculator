@@ -33,6 +33,7 @@ export interface MontageEvent {
  */
 export interface Montage {
   name: string;
+  id: string;
   bullets: Array<MontageBullet>;
   cancelTime?: number;
   endTime?: number;

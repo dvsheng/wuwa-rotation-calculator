@@ -1,5 +1,6 @@
 export const WUWA_CHARACTER_ENTITY_IDS: Record<string, number> = {
   Aimisi: 1210,
+  AimisiGD: 1210,
   Anke: 1203,
   Aogusita: 1306,
   Baer: 1204,

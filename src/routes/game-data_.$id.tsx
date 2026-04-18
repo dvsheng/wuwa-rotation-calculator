@@ -677,7 +677,7 @@ function EntityMontagesList({
   return (
     <div className="flex flex-col gap-4">
       {primaryMontages.map((item) => (
-        <MontageCard key={item.name} id={id} entityType={entityType} item={item} />
+        <MontageCard key={item.id} id={id} entityType={entityType} item={item} />
       ))}
       {otherMontages.length > 0 && (
         <Collapsible className="rounded-md border">
@@ -695,7 +695,7 @@ function EntityMontagesList({
             <div className="flex flex-col gap-4">
               {otherMontages.map((item) => (
                 <MontageCard
-                  key={item.name}
+                  key={item.id}
                   id={id}
                   entityType={entityType}
                   item={item}

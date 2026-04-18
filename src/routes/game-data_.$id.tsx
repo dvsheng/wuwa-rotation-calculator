@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { AttributeIcon } from '@/components/common/AssetIcon';
 import { InfoTooltip } from '@/components/common/InfoTooltip';
 import { LoadingSpinnerContainer } from '@/components/common/LoadingSpinnerContainer';
+import { BulletItem } from '@/components/game-data/BulletItem';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,11 +24,13 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
-import { Container, Stack } from '@/components/ui/layout';
+import { Container, Row, Stack } from '@/components/ui/layout';
+import { Switch } from '@/components/ui/switch';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEntityAttacks } from '@/hooks/useEntityAttacks';
 import { useEntityBuffs } from '@/hooks/useEntityBuffs';
+import { useEntityBullets } from '@/hooks/useEntityBullets';
 import { useEntityDamageInstances } from '@/hooks/useEntityDamageInstances';
 import { useEntityModifiers } from '@/hooks/useEntityModifiers';
 import { useEntityMontages } from '@/hooks/useEntityMontages';
@@ -35,6 +38,7 @@ import { useGameDataEntities } from '@/hooks/useGameDataEntities';
 import { EntityType, Target } from '@/services/game-data/types';
 import type { EntityAttack } from '@/services/game-data-v2/attacks';
 import type { Buff } from '@/services/game-data-v2/buffs';
+import { transformBulletsToTimedHits } from '@/services/game-data-v2/bullets/transform-bullet-to-timed-hits';
 import type { DamageInstance } from '@/services/game-data-v2/damage-instances/types';
 import type { Modifier } from '@/services/game-data-v2/modifiers';
 import type { CharacterMontage } from '@/services/game-data-v2/montages';
@@ -45,6 +49,7 @@ const ENTITY_GAME_DATA_TABS = [
   'modifiers',
   'attacks',
   'damage-instances',
+  'bullets',
   'montages',
 ] as const;
 
@@ -57,10 +62,15 @@ type DescriptionBlock = {
 
 type StackInfo = { valueAt1: number; valueAtMax: number; maxStacks: number };
 type ClampInfo = { min: number; max: number; stat: string | undefined };
-type MontageHitRow = CharacterMontage['montage']['hits'][number] & {
+type MontageHitRow = CharacterMontage['montage']['hits'][number];
+type MontageTagRow = CharacterMontage['montage']['tags'][number];
+type MontageViewMode = 'bullet' | 'damage';
+type MontageDamageRow = {
+  bulletId: string;
+  time: number;
+  damageId: number;
   damageInstance?: DamageInstance;
 };
-type MontageTagRow = CharacterMontage['montage']['tags'][number];
 
 function findStatParameter(node: NumberNode): string | undefined {
   if (typeof node === 'number') return undefined;
@@ -291,10 +301,7 @@ function BuffTags({ tags }: { tags: Array<string> }) {
             {isNonPhysicalAttribute && (
               <AttributeIcon
                 attribute={
-                  tag as Exclude<
-                    (typeof Attribute)[keyof typeof Attribute],
-                    'physical'
-                  >
+                  tag as Exclude<(typeof Attribute)[keyof typeof Attribute], 'physical'>
                 }
                 size={12}
               />
@@ -455,7 +462,9 @@ function EntityModifiersList({
     <div className="flex flex-col gap-4">
       {data.map((modifier, index) => (
         <ModifierCard
-          key={modifier.buffs.map((buff) => buff.buffId).join('-') || `modifier-${index}`}
+          key={
+            modifier.buffs.map((buff) => buff.buffId).join('-') || `modifier-${index}`
+          }
           modifier={modifier}
           index={index}
         />
@@ -464,17 +473,9 @@ function EntityModifiersList({
   );
 }
 
-function ModifierCard({
-  modifier,
-  index,
-}: {
-  modifier: Modifier;
-  index: number;
-}) {
+function ModifierCard({ modifier, index }: { modifier: Modifier; index: number }) {
   const modifierTargets = [
-    ...new Set(
-      modifier.buffs.flatMap((buff) => (buff.target ? [buff.target] : [])),
-    ),
+    ...new Set(modifier.buffs.flatMap((buff) => (buff.target ? [buff.target] : []))),
   ];
   const modifierDurations = [...new Set(modifier.buffs.map((buff) => buff.duration))];
 
@@ -713,6 +714,22 @@ function EntityDamageInstancesList({
         wrapper: 'bg-muted/30 rounded-md border',
       }}
     />
+  );
+}
+
+function EntityBulletsList({ id, entityType }: { id: number; entityType: EntityType }) {
+  const { data } = useEntityBullets(id, entityType);
+
+  if (data.length === 0) {
+    return <p className="text-muted-foreground text-sm">No bullets found.</p>;
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      {data.map((bullet) => (
+        <BulletItem key={bullet.id} bullet={bullet} />
+      ))}
+    </div>
   );
 }
 
@@ -960,7 +977,13 @@ function EntityAttacksList({ id, entityType }: { id: number; entityType: EntityT
   );
 }
 
-function MontageFieldList({ items, emptyLabel }: { items: Array<string>; emptyLabel: string }) {
+function MontageFieldList({
+  items,
+  emptyLabel,
+}: {
+  items: Array<string>;
+  emptyLabel: string;
+}) {
   if (items.length === 0) {
     return <span className="text-muted-foreground text-sm">{emptyLabel}</span>;
   }
@@ -986,19 +1009,9 @@ function EntityMontagesList({
   entityType: EntityType;
 }) {
   const { data } = useEntityMontages(id, entityType);
-  const { data: damageInstances } = useEntityDamageInstances(id, entityType);
 
   if (data.length === 0) {
     return <p className="text-muted-foreground text-sm">No montages found.</p>;
-  }
-
-  const damageInstancesById = new Map<number, DamageInstance>();
-  for (const damageInstance of damageInstances) {
-    damageInstancesById.set(damageInstance.id, damageInstance);
-
-    for (const dedupedId of damageInstance.dedupedIds) {
-      damageInstancesById.set(dedupedId, damageInstance);
-    }
   }
 
   const [primaryMontages, otherMontages] = data.reduce<
@@ -1028,7 +1041,6 @@ function EntityMontagesList({
           id={id}
           entityType={entityType}
           item={item}
-          damageInstancesById={damageInstancesById}
         />
       ))}
       {otherMontages.length > 0 && (
@@ -1051,7 +1063,6 @@ function EntityMontagesList({
                   id={id}
                   entityType={entityType}
                   item={item}
-                  damageInstancesById={damageInstancesById}
                 />
               ))}
             </div>
@@ -1066,209 +1077,46 @@ function MontageCard({
   id,
   entityType,
   item,
-  damageInstancesById,
 }: {
   id: number;
   entityType: EntityType;
   item: CharacterMontage;
-  damageInstancesById: Map<number, DamageInstance>;
 }) {
-  const navigate = useNavigate();
-  const hitRows: Array<MontageHitRow> = item.montage.hits.map((hit) => {
-    const numericDamageId = Number.parseInt(hit.damageId, 10);
-    return {
-      ...hit,
-      damageInstance: Number.isNaN(numericDamageId)
-        ? undefined
-        : damageInstancesById.get(numericDamageId),
-    };
-  });
+  const { data: bullets } = useEntityBullets(id, entityType);
+  const { data: damageInstances } = useEntityDamageInstances(id, entityType);
+  const [viewMode, setViewMode] = React.useState<MontageViewMode>('damage');
+  const hitRows: Array<MontageHitRow> = item.montage.hits;
   const tagRows: Array<MontageTagRow> = item.montage.tags;
   const eventLines = item.montage.events.map(
     (event) => `${event.time.toFixed(3)}s -> ${event.name}`,
   );
+  const bulletById = new Map(bullets.map((bullet) => [bullet.id, bullet]));
+  const damageInstancesById = new Map(
+    damageInstances.map((damageInstance) => [damageInstance.id, damageInstance]),
+  );
+  const damageRows: Array<MontageDamageRow> = hitRows
+    .flatMap((hitRow) => {
+      const bullet = bulletById.get(hitRow.bulletId);
+      if (!bullet) {
+        return [];
+      }
 
-  const hitColumns: Array<ColumnDef<MontageHitRow>> = [
-    {
-      accessorKey: 'time',
-      header: 'Time',
-      cell: ({ row }) => `${row.original.time.toFixed(3)}s`,
-      meta: {
-        headerClassName: 'min-w-20',
-        cellClassName: 'min-w-20 font-mono text-sm',
-      },
-    },
-    {
-      accessorKey: 'damageId',
-      header: 'Damage ID',
-      cell: ({ row }) => (
-        <Button
-          type="button"
-          variant="link"
-          size="xs"
-          className="h-auto px-0 font-mono"
-          onClick={() =>
-            navigate({
-              to: '/game-data/$id',
-              params: { id: String(id) },
-              search: (previous) => ({
-                ...previous,
-                entityType,
-                tab: 'damage-instances',
-              }),
-            })
-          }
-        >
-          {row.original.damageId}
-        </Button>
-      ),
-      meta: {
-        headerClassName: 'min-w-24',
-        cellClassName: 'min-w-24',
-      },
-    },
-    {
-      accessorKey: 'hitCount',
-      header: 'Hit Count',
-      cell: ({ row }) => row.original.hitCount ?? <NullTableValue />,
-      meta: {
-        headerClassName: 'min-w-20',
-        cellClassName: 'min-w-20 font-mono text-sm',
-      },
-    },
-    {
-      accessorKey: 'hitInterval',
-      header: 'Hit Interval',
-      cell: ({ row }) =>
-        row.original.hitInterval === undefined
-          ? <NullTableValue />
-          : `${row.original.hitInterval.toFixed(2)}s`,
-      meta: {
-        headerClassName: 'min-w-24',
-        cellClassName: 'min-w-24 font-mono text-sm',
-      },
-    },
-    {
-      accessorKey: 'totalHitCap',
-      header: 'Hit Cap',
-      cell: ({ row }) => row.original.totalHitCap ?? <NullTableValue />,
-      meta: {
-        headerClassName: 'min-w-20',
-        cellClassName: 'min-w-20 font-mono text-sm',
-      },
-    },
-    {
-      id: 'motionValue',
-      header: 'Motion Value',
-      cell: ({ row }) => {
-        const damageInstance = row.original.damageInstance;
-        return damageInstance ? (
-          renderMotionValue(
-            damageInstance.motionValue,
-            damageInstance.scalingAttribute,
-            damageInstance.motionValuePerStack,
-          )
-        ) : (
-          <NullTableValue />
-        );
-      },
-      meta: {
-        headerClassName: 'min-w-40',
-        cellClassName: 'min-w-40 font-mono text-sm',
-      },
-    },
-    {
-      id: 'type',
-      header: 'Type',
-      cell: ({ row }) => {
-        const damageInstance = row.original.damageInstance;
-        return damageInstance ? (
-          startCase(damageInstance.type)
-        ) : (
-          <NullTableValue />
-        );
-      },
-      meta: {
-        headerClassName: 'min-w-24',
-        cellClassName: 'min-w-24',
-      },
-    },
-    {
-      id: 'attribute',
-      header: 'Attribute',
-      cell: ({ row }) => {
-        const damageInstance = row.original.damageInstance;
-        return damageInstance ? (
-          startCase(damageInstance.attribute)
-        ) : (
-          <NullTableValue />
-        );
-      },
-      meta: {
-        headerClassName: 'min-w-24',
-        cellClassName: 'min-w-24',
-      },
-    },
-    {
-      id: 'scalingAttribute',
-      header: 'Scaling',
-      cell: ({ row }) => {
-        const damageInstance = row.original.damageInstance;
-        return damageInstance ? (
-          startCase(damageInstance.scalingAttribute)
-        ) : (
-          <NullTableValue />
-        );
-      },
-      meta: {
-        headerClassName: 'min-w-24',
-        cellClassName: 'min-w-24',
-      },
-    },
-    {
-      id: 'subtypes',
-      header: 'Subtypes',
-      cell: ({ row }) => {
-        const damageInstance = row.original.damageInstance;
-        return damageInstance ? (
-          <BuffTags tags={damageInstance.subtypes} />
-        ) : (
-          <NullTableValue />
-        );
-      },
-      meta: {
-        headerClassName: 'min-w-40',
-        cellClassName: 'min-w-40',
-      },
-    },
-    {
-      id: 'concertoRegen',
-      header: 'Concerto',
-      cell: ({ row }) => row.original.damageInstance?.concertoRegen ?? <NullTableValue />,
-      meta: {
-        headerClassName: 'min-w-20',
-        cellClassName: 'min-w-20 font-mono text-sm',
-      },
-    },
-    {
-      id: 'offTuneBuildup',
-      header: 'Off-Tune',
-      cell: ({ row }) => row.original.damageInstance?.offTuneBuildup ?? <NullTableValue />,
-      meta: {
-        headerClassName: 'min-w-20',
-        cellClassName: 'min-w-20 font-mono text-sm',
-      },
-    },
-    {
-      id: 'energy',
-      header: 'Energy',
-      cell: ({ row }) => row.original.damageInstance?.energy ?? <NullTableValue />,
-      meta: {
-        headerClassName: 'min-w-16',
-        cellClassName: 'min-w-16 font-mono text-sm',
-      },
-    },
-  ];
+      return transformBulletsToTimedHits(
+        bullet,
+        (bulletId) => {
+          return bulletById.get(bulletId);
+        },
+        hitRow.time,
+      ).map(({ damageId, time }) => ({
+        bulletId: hitRow.bulletId,
+        time,
+        damageId,
+        damageInstance: damageInstancesById.get(damageId),
+      }));
+    })
+    .toSorted(
+      (left, right) => left.time - right.time || left.damageId - right.damageId,
+    );
 
   const tagColumns: Array<ColumnDef<MontageTagRow>> = [
     {
@@ -1292,7 +1140,9 @@ function MontageCard({
       accessorKey: 'duration',
       header: 'Duration',
       cell: ({ row }) =>
-        row.original.duration === undefined ? 'n/a' : `${row.original.duration.toFixed(3)}s`,
+        row.original.duration === undefined
+          ? 'n/a'
+          : `${row.original.duration.toFixed(3)}s`,
       meta: {
         headerClassName: 'min-w-24',
         cellClassName: 'min-w-24 font-mono text-sm',
@@ -1335,17 +1185,25 @@ function MontageCard({
       </CardHeader>
       <CardContent className="grid gap-4 pt-0 pb-4 md:grid-cols-2">
         <div className="space-y-1 md:col-span-2">
-          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            Hits
-          </p>
-          <DataTable
-            columns={hitColumns}
-            data={hitRows}
-            emptyMessage="No hits."
-            classNames={{
-              wrapper: 'bg-muted/30 rounded-md border',
-            }}
-          />
+          <Row justify="between" align="center" className="gap-3">
+            <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+              {viewMode === 'damage' ? 'Damage View' : 'Bullet View'}
+            </p>
+            <Row align="center" className="gap-2">
+              <span className="text-sm">Bullet</span>
+              <Switch
+                checked={viewMode === 'damage'}
+                onCheckedChange={(checked) => setViewMode(checked ? 'damage' : 'bullet')}
+                aria-label={`Montage view for ${item.montage.name}`}
+              />
+              <span className="text-sm">Damage</span>
+            </Row>
+          </Row>
+          {viewMode === 'damage' ? (
+            <DamageView id={id} entityType={entityType} rows={damageRows} />
+          ) : (
+            <BulletView id={id} entityType={entityType} rows={hitRows} />
+          )}
         </div>
         <div className="space-y-1 md:col-span-2">
           <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
@@ -1368,6 +1226,255 @@ function MontageCard({
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function BulletView({
+  id,
+  entityType,
+  rows,
+}: {
+  id: number;
+  entityType: EntityType;
+  rows: Array<MontageHitRow>;
+}) {
+  const navigate = useNavigate();
+
+  const columns: Array<ColumnDef<MontageHitRow>> = [
+    {
+      accessorKey: 'time',
+      header: 'Time',
+      cell: ({ row }) => `${row.original.time.toFixed(3)}s`,
+      meta: {
+        headerClassName: 'min-w-20',
+        cellClassName: 'min-w-20 font-mono text-sm',
+      },
+    },
+    {
+      accessorKey: 'bulletId',
+      header: 'Bullet ID',
+      cell: ({ row }) => (
+        <Button
+          type="button"
+          variant="link"
+          size="xs"
+          className="h-auto px-0 font-mono"
+          onClick={() =>
+            navigate({
+              to: '/game-data/$id',
+              params: { id: String(id) },
+              search: (previous) => ({
+                ...previous,
+                entityType,
+                tab: 'bullets',
+              }),
+            })
+          }
+        >
+          {row.original.bulletId}
+        </Button>
+      ),
+      meta: {
+        headerClassName: 'min-w-24',
+        cellClassName: 'min-w-24',
+      },
+    },
+    {
+      accessorKey: 'hitCount',
+      header: 'Hit Count',
+      cell: ({ row }) => row.original.hitCount ?? <NullTableValue />,
+      meta: {
+        headerClassName: 'min-w-20',
+        cellClassName: 'min-w-20 font-mono text-sm',
+      },
+    },
+    {
+      accessorKey: 'hitInterval',
+      header: 'Hit Interval',
+      cell: ({ row }) =>
+        row.original.hitInterval === undefined ? (
+          <NullTableValue />
+        ) : (
+          `${row.original.hitInterval.toFixed(2)}s`
+        ),
+      meta: {
+        headerClassName: 'min-w-24',
+        cellClassName: 'min-w-24 font-mono text-sm',
+      },
+    },
+    {
+      accessorKey: 'totalHitCap',
+      header: 'Hit Cap',
+      cell: ({ row }) => row.original.totalHitCap ?? <NullTableValue />,
+      meta: {
+        headerClassName: 'min-w-20',
+        cellClassName: 'min-w-20 font-mono text-sm',
+      },
+    },
+  ];
+
+  return (
+    <DataTable
+      columns={columns}
+      data={rows}
+      emptyMessage="No hits."
+      classNames={{
+        wrapper: 'bg-muted/30 rounded-md border',
+      }}
+    />
+  );
+}
+
+function DamageView({
+  id,
+  entityType,
+  rows,
+}: {
+  id: number;
+  entityType: EntityType;
+  rows: Array<MontageDamageRow>;
+}) {
+  const navigate = useNavigate();
+
+  const columns: Array<ColumnDef<MontageDamageRow>> = [
+    {
+      accessorKey: 'time',
+      header: 'Time',
+      cell: ({ row }) => `${row.original.time.toFixed(3)}s`,
+      meta: {
+        headerClassName: 'min-w-20',
+        cellClassName: 'min-w-20 font-mono text-sm',
+      },
+    },
+    {
+      accessorKey: 'damageId',
+      header: 'Damage ID',
+      cell: ({ row }) => (
+        <Button
+          type="button"
+          variant="link"
+          size="xs"
+          className="h-auto px-0 font-mono"
+          onClick={() =>
+            navigate({
+              to: '/game-data/$id',
+              params: { id: String(id) },
+              search: (previous) => ({
+                ...previous,
+                entityType,
+                tab: 'damage-instances',
+              }),
+            })
+          }
+        >
+          {row.original.damageId}
+        </Button>
+      ),
+      meta: {
+        headerClassName: 'min-w-24',
+        cellClassName: 'min-w-24',
+      },
+    },
+    {
+      accessorKey: 'bulletId',
+      header: 'Source Bullet',
+      cell: ({ row }) => (
+        <Button
+          type="button"
+          variant="link"
+          size="xs"
+          className="h-auto px-0 font-mono"
+          onClick={() =>
+            navigate({
+              to: '/game-data/$id',
+              params: { id: String(id) },
+              search: (previous) => ({
+                ...previous,
+                entityType,
+                tab: 'bullets',
+              }),
+            })
+          }
+        >
+          {row.original.bulletId}
+        </Button>
+      ),
+      meta: {
+        headerClassName: 'min-w-24',
+        cellClassName: 'min-w-24',
+      },
+    },
+    {
+      id: 'motionValue',
+      header: 'Motion Value',
+      cell: ({ row }) =>
+        row.original.damageInstance ? (
+          renderMotionValue(
+            row.original.damageInstance.motionValue,
+            row.original.damageInstance.scalingAttribute,
+            row.original.damageInstance.motionValuePerStack,
+          )
+        ) : (
+          <NullTableValue />
+        ),
+      meta: {
+        headerClassName: 'min-w-56',
+        cellClassName: 'min-w-56 font-mono text-sm',
+      },
+    },
+    {
+      id: 'type',
+      header: 'Type',
+      cell: ({ row }) =>
+        row.original.damageInstance ? (
+          startCase(row.original.damageInstance.type)
+        ) : (
+          <NullTableValue />
+        ),
+      meta: {
+        headerClassName: 'min-w-28',
+        cellClassName: 'min-w-28',
+      },
+    },
+    {
+      id: 'attribute',
+      header: 'Attribute',
+      cell: ({ row }) =>
+        row.original.damageInstance ? (
+          startCase(row.original.damageInstance.attribute)
+        ) : (
+          <NullTableValue />
+        ),
+      meta: {
+        headerClassName: 'min-w-24',
+        cellClassName: 'min-w-24',
+      },
+    },
+    {
+      id: 'scalingAttribute',
+      header: 'Scaling',
+      cell: ({ row }) =>
+        row.original.damageInstance ? (
+          startCase(row.original.damageInstance.scalingAttribute)
+        ) : (
+          <NullTableValue />
+        ),
+      meta: {
+        headerClassName: 'min-w-24',
+        cellClassName: 'min-w-24',
+      },
+    },
+  ];
+
+  return (
+    <DataTable
+      columns={columns}
+      data={rows}
+      emptyMessage="No timed damage hits."
+      classNames={{
+        wrapper: 'bg-muted/30 rounded-md border',
+      }}
+    />
   );
 }
 
@@ -1427,6 +1534,7 @@ function EntityBuffsPage() {
             <TabsTrigger value="modifiers">Modifiers</TabsTrigger>
             <TabsTrigger value="attacks">Attacks</TabsTrigger>
             <TabsTrigger value="damage-instances">Damage Instances</TabsTrigger>
+            <TabsTrigger value="bullets">Bullets</TabsTrigger>
             {isCharacter && <TabsTrigger value="montages">Montages</TabsTrigger>}
           </TabsList>
           <TabsContent value="buffs" className="min-h-0 flex-1 overflow-y-auto">
@@ -1492,6 +1600,20 @@ function EntityBuffsPage() {
                 id={numericId}
                 entityType={entityType as EntityType}
               />
+            </Suspense>
+          </TabsContent>
+          <TabsContent value="bullets" className="min-h-0 flex-1 overflow-y-auto">
+            <Suspense
+              fallback={
+                <Card className="h-32">
+                  <LoadingSpinnerContainer
+                    message="Loading bullets..."
+                    spinnerSize={40}
+                  />
+                </Card>
+              }
+            >
+              <EntityBulletsList id={numericId} entityType={entityType as EntityType} />
             </Suspense>
           </TabsContent>
           {isCharacter && (

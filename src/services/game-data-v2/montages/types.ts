@@ -2,7 +2,7 @@ import type { OriginType } from '@/services/game-data/types';
 
 export interface MontageHit {
   time: number;
-  damageId: string;
+  bulletId: string;
   hitCount?: number;
   totalHitCap?: number;
   hitInterval?: number;

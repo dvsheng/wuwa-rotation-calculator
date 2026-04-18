@@ -55,7 +55,6 @@ export const getEntityBuffsHandler = async (
   return compact(
     resolvedBuffs.map((buff) => {
       const classification = classifyBuffCapability(buff);
-      if (!classification) return;
       const stat = getBuffStat(buff);
       if (!stat) return;
 

@@ -65,7 +65,7 @@ const sanitizeLogValue = (
     return {
       type: 'Error',
       name: value.name,
-      message: truncateString(value.message),
+      message: value.message,
       stack: value.stack
         ? truncateString(value.stack, MAX_LOG_STACK_LENGTH)
         : undefined,

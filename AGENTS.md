@@ -11,6 +11,8 @@ Backwards compatability is not needed, this is a greenfield project
 
 Use arrow functions over except in useEffect to create named effects
 
+private/internal constants, interfaces, types, classes etc should be below public (exported) ones
+
 # Repository Layout and Configuration
 
 ## Framework

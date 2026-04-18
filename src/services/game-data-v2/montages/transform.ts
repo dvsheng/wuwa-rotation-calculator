@@ -35,7 +35,7 @@ function getExportProperties(
   return getObject(exportObject?.Properties);
 }
 
-function toDamageId(value: unknown): string | undefined {
+function toBulletId(value: unknown): string | undefined {
   if (typeof value === 'number') return String(value);
   return getString(value);
 }
@@ -73,24 +73,24 @@ function zipNotifiesWithExports(
   }));
 }
 
-function getDamageIds(properties: AssetObject | undefined): Array<string> {
+function getBulletIds(properties: AssetObject | undefined): Array<string> {
   const useDamageIdArray = properties?.使用子弹id数组 === true;
-  const damageIdArray = Array.isArray(properties?.子弹id数组)
+  const bulletIdArray = Array.isArray(properties?.子弹id数组)
     ? properties.子弹id数组
-        .map((value) => toDamageId(value))
+        .map((value) => toBulletId(value))
         .filter((value) => value !== undefined)
     : [];
 
-  if (useDamageIdArray && damageIdArray.length > 0) {
-    return damageIdArray;
+  if (useDamageIdArray && bulletIdArray.length > 0) {
+    return bulletIdArray;
   }
 
-  const damageId = toDamageId(properties?.子弹数据名);
-  if (!damageId || damageId === 'None') {
+  const bulletId = toBulletId(properties?.子弹数据名);
+  if (!bulletId || bulletId === 'None') {
     return [];
   }
 
-  return [damageId];
+  return [bulletId];
 }
 
 function buildReBulletDataMainMap(
@@ -129,11 +129,11 @@ function toMontage(
       return [];
     }
 
-    return getDamageIds(properties).map((damageId) => {
-      const reBulletRow = reBulletDataMainById.get(damageId);
+    return getBulletIds(properties).map((bulletId) => {
+      const reBulletRow = reBulletDataMainById.get(bulletId);
       return {
         time,
-        damageId,
+        bulletId,
         hitCount: reBulletRow?.hitsPerTarget ?? undefined,
         totalHitCap: reBulletRow?.totalHitCap ?? undefined,
         hitInterval: reBulletRow?.hitInterval ?? undefined,

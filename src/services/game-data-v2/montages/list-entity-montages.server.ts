@@ -41,15 +41,16 @@ async function listCharacterMontages(
 
   return allMontages
     .filter((montage) => montage.entityId === entityId)
-    .map((montage) => {
-      const mappedSkillIds = montageSkillMap.get(montage.Name);
+    .map((rawMontage) => {
+      const mappedSkillIds = montageSkillMap.get(rawMontage.name);
       const skillIds = mappedSkillIds
         ? [...new Set(mappedSkillIds)].toSorted((left, right) => left - right)
         : [];
+      const montage = toMontage(rawMontage);
 
       return {
-        characterName: montage.characterName,
-        montageName: montage.Name,
+        characterName: rawMontage.characterName,
+        montageName: montage.name,
         skillIds,
         skills: skillIds.flatMap((skillId) => {
           const skill = skillById.get(skillId);
@@ -63,7 +64,7 @@ async function listCharacterMontages(
             },
           ];
         }),
-        montage: toMontage(montage),
+        montage,
       };
     })
     .toSorted((left, right) => left.montageName.localeCompare(right.montageName));

@@ -864,9 +864,19 @@ function MontageCard({
             </Row>
           </Row>
           {viewMode === 'damage' ? (
-            <DamageView id={id} entityType={entityType} rows={damageRows} bulletById={bulletById} />
+            <DamageView
+              id={id}
+              entityType={entityType}
+              rows={damageRows}
+              bulletById={bulletById}
+            />
           ) : (
-            <BulletView id={id} entityType={entityType} rows={hitRows} bulletById={bulletById} />
+            <BulletView
+              id={id}
+              entityType={entityType}
+              rows={hitRows}
+              bulletById={bulletById}
+            />
           )}
         </div>
         <div className="space-y-1 md:col-span-2">
@@ -950,11 +960,7 @@ function BulletView({
       header: 'Required Tags',
       cell: ({ row }) => {
         const tags = bulletById.get(row.original.bulletId)?.requiredTags ?? [];
-        return tags.length === 0 ? (
-          <NullTableValue />
-        ) : (
-          <RawTagList tags={tags} />
-        );
+        return tags.length === 0 ? <NullTableValue /> : <RawTagList tags={tags} />;
       },
       meta: {
         headerClassName: 'min-w-48',
@@ -966,11 +972,7 @@ function BulletView({
       header: 'Forbidden Tags',
       cell: ({ row }) => {
         const tags = bulletById.get(row.original.bulletId)?.forbiddenTags ?? [];
-        return tags.length === 0 ? (
-          <NullTableValue />
-        ) : (
-          <RawTagList tags={tags} />
-        );
+        return tags.length === 0 ? <NullTableValue /> : <RawTagList tags={tags} />;
       },
       meta: {
         headerClassName: 'min-w-48',

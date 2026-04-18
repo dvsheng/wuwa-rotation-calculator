@@ -8,6 +8,11 @@ import {
   text,
 } from 'drizzle-orm/pg-core';
 
+import type {
+  MontageNotifyDetails,
+  MontageRoot,
+} from '../../scripts/pipeline/github-data.schemas';
+
 const integer = (name: string) => bigint(name, { mode: 'number' });
 
 type ReBulletJsonPrimitive = string | number | boolean | null;
@@ -459,7 +464,9 @@ export const rawRoguePermanentBuffPools = pgTable('raw_rogue_permanent_buff_pool
   perIds: integer('per_ids').array().notNull(),
   effectId: integer('effect_id').notNull(),
   quality: integer('quality').notNull(),
-  buffElement: jsonb('buff_element').$type<Array<{ Key: number; Value: number }>>().notNull(),
+  buffElement: jsonb('buff_element')
+    .$type<Array<{ Key: number; Value: number }>>()
+    .notNull(),
   buffIcon: text('buff_icon').notNull(),
   buffDesc: text('buff_desc').notNull(),
   buffDescParam: text('buff_desc_param').array().notNull(),
@@ -930,14 +937,19 @@ export const rawPhantomSkills = pgTable('raw_phantom_skills', {
 /**
  * Raw montage asset rows from dvsheng/wuwa-character-data {Character}/CommonAnim/AM*.json
  */
-export const rawMontages = pgTable('raw_montages', {
-  entityId: integer('entity_id').notNull(),
-  characterName: text('character_name').notNull(),
-  Name: text('Name').notNull(),
-  SequenceLength: real('SequenceLength'),
-  Notifies: jsonb('Notifies'),
-  data: jsonb('data').notNull(),
-}, (table) => [primaryKey({ columns: [table.characterName, table.Name] })]);
+export const rawMontages = pgTable(
+  'raw_montages',
+  {
+    name: text('name').notNull(),
+    entityId: integer('entity_id').notNull(),
+    characterName: text('character_name').notNull(),
+    data: jsonb('data').$type<MontageRoot>().notNull(),
+    notifyDetails: jsonb('notify_details')
+      .$type<Array<MontageNotifyDetails>>()
+      .notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.characterName, table.name] })],
+);
 
 /**
  * Raw DT_SkillInfo asset rows from dvsheng/wuwa-character-data {Character}/Data/DT_SkillInfo.json
@@ -965,7 +977,9 @@ export const rawReBulletDataMainRows = pgTable(
     baseSettings: jsonb('base_settings').$type<RawReBulletDataBaseSettings>(),
     rowData: jsonb('row_data').$type<RawReBulletDataRow>().notNull(),
   },
-  (table) => [primaryKey({ columns: [table.entityId, table.bulletId, table.fileName] })],
+  (table) => [
+    primaryKey({ columns: [table.entityId, table.bulletId, table.fileName] }),
+  ],
 );
 
 export type SkillV2Source =
@@ -1004,14 +1018,12 @@ export type RawRoguePermanentCharacterBuff =
 export type NewRawRoguePermanentCharacterBuff =
   typeof rawRoguePermanentCharacterBuffs.$inferInsert;
 
-export type RawRoguePermanentBuffPool =
-  typeof rawRoguePermanentBuffPools.$inferSelect;
+export type RawRoguePermanentBuffPool = typeof rawRoguePermanentBuffPools.$inferSelect;
 export type NewRawRoguePermanentBuffPool =
   typeof rawRoguePermanentBuffPools.$inferInsert;
 
 export type RawRogueWeeklyBuffPool = typeof rawRogueWeeklyBuffPools.$inferSelect;
-export type NewRawRogueWeeklyBuffPool =
-  typeof rawRogueWeeklyBuffPools.$inferInsert;
+export type NewRawRogueWeeklyBuffPool = typeof rawRogueWeeklyBuffPools.$inferInsert;
 
 export type RawBaseProperty = typeof rawBaseProperties.$inferSelect;
 export type NewRawBaseProperty = typeof rawBaseProperties.$inferInsert;

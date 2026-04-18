@@ -8,6 +8,7 @@ import type {
   RawReBulletDataRow,
 } from '../../src/db/raw-schema';
 
+import type { RawMontageAssetArray } from './github-data.schemas';
 import { findWuwaCharacterEntityId } from './wuwa-character-entity-ids';
 
 type RawAssetObject = Record<string, unknown>;
@@ -18,26 +19,12 @@ function getAssetRoot(data: RawAssetArray): RawAssetObject | undefined {
   return first;
 }
 
-function getProperties(data: RawAssetArray): RawAssetObject | undefined {
-  const root = getAssetRoot(data);
-  const properties = root?.Properties;
-  if (!properties || typeof properties !== 'object' || Array.isArray(properties)) {
-    return undefined;
-  }
-
-  return properties as RawAssetObject;
-}
-
 function getStringValue(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
 }
 
 function getNumberValue(value: unknown): number | undefined {
   return typeof value === 'number' ? value : undefined;
-}
-
-function getArrayValue(value: unknown): Array<unknown> | undefined {
-  return Array.isArray(value) ? value : undefined;
 }
 
 function getCharacterPath(sourcePath: string) {
@@ -50,10 +37,6 @@ function getCharacterName(sourcePath: string) {
 
 function getFileName(sourcePath: string) {
   return path.posix.basename(sourcePath);
-}
-
-function getMontageName(sourcePath: string, data: RawAssetArray) {
-  return getStringValue(getAssetRoot(data)?.Name) ?? path.posix.basename(sourcePath, '.json');
 }
 
 function findValueByPrefix(record: RawAssetObject | undefined, prefix: string) {
@@ -88,23 +71,18 @@ function normalizeReBulletJson(value: unknown): unknown {
 
 function toRawMontageRow(
   sourcePath: string,
-  data: RawAssetArray,
+  data: RawMontageAssetArray,
 ): NewRawMontage | undefined {
-  const properties = getProperties(data);
   const characterName = getCharacterName(sourcePath);
   const entityId = findWuwaCharacterEntityId(characterName);
-  if (entityId === undefined) {
-    return undefined;
-  }
-  const name = getMontageName(sourcePath, data);
-
+  if (entityId === undefined) return undefined;
+  const montage = data[0];
   return {
+    name: montage.Name,
     entityId,
     characterName,
-    Name: name,
-    SequenceLength: getNumberValue(properties?.SequenceLength),
-    Notifies: getArrayValue(properties?.Notifies),
-    data,
+    data: montage,
+    notifyDetails: data.slice(1),
   };
 }
 
@@ -165,7 +143,9 @@ function toRawReBulletDataMainRows(
         bulletId: parsedBulletId,
         fileName: getFileName(sourcePath),
         bulletName: getStringValue(normalizedRow.子弹名称),
-        hitsPerTarget: getNumberValue(findValueByPrefix(baseSettings, '每个单位总作用次数')),
+        hitsPerTarget: getNumberValue(
+          findValueByPrefix(baseSettings, '每个单位总作用次数'),
+        ),
         totalHitCap: getNumberValue(findValueByPrefix(baseSettings, '总作用次数限制')),
         hitInterval: getNumberValue(findValueByPrefix(baseSettings, '作用间隔')),
         baseSettings,

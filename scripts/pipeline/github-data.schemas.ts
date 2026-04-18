@@ -32,9 +32,18 @@ const PropertyValueSchema = z
 const JsonObjectSchema: z.ZodType<Record<string, unknown>> = z.lazy(() =>
   z.record(z.string(), JsonValueSchema),
 );
-const JsonArraySchema: z.ZodType<Array<unknown>> = z.lazy(() => z.array(JsonValueSchema));
+const JsonArraySchema: z.ZodType<Array<unknown>> = z.lazy(() =>
+  z.array(JsonValueSchema),
+);
 const JsonValueSchema: z.ZodType<unknown> = z.lazy(() =>
-  z.union([z.string(), z.number(), z.boolean(), z.null(), JsonObjectSchema, JsonArraySchema]),
+  z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.null(),
+    JsonObjectSchema,
+    JsonArraySchema,
+  ]),
 );
 
 const ObjectReferenceSchema = z
@@ -58,7 +67,9 @@ const GameplayTagOrStringSchema = z.union([GameplayTagSchema, z.string()]);
 const EngineObjectSchema: z.ZodType<Record<string, unknown>> = z.lazy(() =>
   z.record(z.string(), EngineValueSchema),
 );
-const EngineArraySchema: z.ZodType<Array<unknown>> = z.lazy(() => z.array(EngineValueSchema));
+const EngineArraySchema: z.ZodType<Array<unknown>> = z.lazy(() =>
+  z.array(EngineValueSchema),
+);
 const EngineValueSchema: z.ZodType<unknown> = z.lazy(() =>
   z.union([
     z.string(),
@@ -76,7 +87,9 @@ const EngineValueSchema: z.ZodType<unknown> = z.lazy(() =>
 const SkillTriggerSchema = z
   .object({
     TriggerType_2_A4B916C949F97F67C63AEFA1E4A3F1CC: z.string(),
-    TriggerPreset_5_7766F7AA48C4AA380971A9B4FA085B6F: z.array(GameplayTagOrStringSchema),
+    TriggerPreset_5_7766F7AA48C4AA380971A9B4FA085B6F: z.array(
+      GameplayTagOrStringSchema,
+    ),
     TriggerParams_10_0B8BCCB6424F70FCD32451BF5E363B27: z.string(),
     TriggerFormula_11_05C6F52D48C9B57ACB5C85A076462A38: z.string(),
     TriggerTarget_14_4FBFA2194402F3F89FE451AFA771EC33: z.string(),
@@ -106,9 +119,8 @@ const SkillBehaviorGroupSchema = z
       SkillBehaviorConditionSchema,
     ),
     SkillBehaviorConditionFormula_27_32ED9061461B3AC3C2028BB34993284A: z.string(),
-    SkillBehaviorActionGroup_20_E7E8941646BF84E137B075AD36D96317: z.array(
-      EngineObjectSchema,
-    ),
+    SkillBehaviorActionGroup_20_E7E8941646BF84E137B075AD36D96317:
+      z.array(EngineObjectSchema),
     SkillBehaviorContinue_34_DCA2FD6843FDD1BA359888B5BC8283A0: z.boolean(),
   })
   .strict();
@@ -167,7 +179,7 @@ const MontagePropertiesSchema = z
   })
   .catchall(EngineValueSchema);
 
-const MontageRootExportSchema = z
+const MontageRootSchema = z
   .object({
     Type: z.literal('AnimMontage'),
     Name: z.string(),
@@ -179,7 +191,7 @@ const MontageRootExportSchema = z
   })
   .catchall(EngineValueSchema);
 
-const GenericAssetExportSchema = z
+const MontageNotifyDetailsSchema = z
   .object({
     Type: z.string(),
     Name: z.string(),
@@ -259,22 +271,26 @@ const SkillInfoPatternValidators = [
   [/^SpecialBuffInCode_/, z.array(z.number())],
 ] as const;
 
-const SkillInfoRowSchema = z.record(z.string(), EngineValueSchema).superRefine((row, context) => {
-  for (const [key, value] of Object.entries(row)) {
-    const validator = SkillInfoPatternValidators.find(([pattern]) => pattern.test(key));
-    if (!validator) continue;
+const SkillInfoRowSchema = z
+  .record(z.string(), EngineValueSchema)
+  .superRefine((row, context) => {
+    for (const [key, value] of Object.entries(row)) {
+      const validator = SkillInfoPatternValidators.find(([pattern]) =>
+        pattern.test(key),
+      );
+      if (!validator) continue;
 
-    const [, schema] = validator;
-    const result = schema.safeParse(value);
-    if (result.success) continue;
+      const [, schema] = validator;
+      const result = schema.safeParse(value);
+      if (result.success) continue;
 
-    context.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: [key],
-      message: z.prettifyError(result.error),
-    });
-  }
-});
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [key],
+        message: z.prettifyError(result.error),
+      });
+    }
+  });
 
 const SkillInfoRootExportSchema = z
   .object({
@@ -1139,12 +1155,15 @@ const PhantomSkillSchema = z
   })
   .strict();
 
-const RawMontageArraySchema = z.tuple([MontageRootExportSchema]).rest(GenericAssetExportSchema);
-const RawSkillInfoAssetArraySchema = z.tuple([SkillInfoRootExportSchema]).rest(
-  GenericAssetExportSchema,
-);
-const ReBulletBaseSettingsSchema = z.record(z.string(), EngineValueSchema).superRefine(
-  (row, context) => {
+const RawMontageArraySchema = z
+  .tuple([MontageRootSchema])
+  .rest(MontageNotifyDetailsSchema);
+const RawSkillInfoAssetArraySchema = z
+  .tuple([SkillInfoRootExportSchema])
+  .rest(MontageNotifyDetailsSchema);
+const ReBulletBaseSettingsSchema = z
+  .record(z.string(), EngineValueSchema)
+  .superRefine((row, context) => {
     for (const prefix of ['每个单位总作用次数', '总作用次数限制', '作用间隔']) {
       const entry = Object.entries(row).find(([key]) => key.startsWith(prefix));
       if (entry) continue;
@@ -1154,31 +1173,34 @@ const ReBulletBaseSettingsSchema = z.record(z.string(), EngineValueSchema).super
         message: `Missing ${prefix} field`,
       });
     }
-  },
-);
+  });
 
-const ReBulletRowSchema = z.record(z.string(), EngineValueSchema).superRefine((row, context) => {
-  const baseSettingsEntry = Object.entries(row).find(([key]) => key.startsWith('基础设置'));
-  if (!baseSettingsEntry) {
+const ReBulletRowSchema = z
+  .record(z.string(), EngineValueSchema)
+  .superRefine((row, context) => {
+    const baseSettingsEntry = Object.entries(row).find(([key]) =>
+      key.startsWith('基础设置'),
+    );
+    if (!baseSettingsEntry) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Missing 基础设置 field',
+      });
+      return;
+    }
+
+    const [, baseSettingsValue] = baseSettingsEntry;
+    const result = ReBulletBaseSettingsSchema.safeParse(baseSettingsValue);
+    if (result.success) {
+      return;
+    }
+
     context.addIssue({
       code: z.ZodIssueCode.custom,
-      message: 'Missing 基础设置 field',
+      path: [baseSettingsEntry[0]],
+      message: z.prettifyError(result.error),
     });
-    return;
-  }
-
-  const [, baseSettingsValue] = baseSettingsEntry;
-  const result = ReBulletBaseSettingsSchema.safeParse(baseSettingsValue);
-  if (result.success) {
-    return;
-  }
-
-  context.addIssue({
-    code: z.ZodIssueCode.custom,
-    path: [baseSettingsEntry[0]],
-    message: z.prettifyError(result.error),
   });
-});
 
 const ReBulletDataMainRootExportSchema = z
   .object({
@@ -1195,9 +1217,9 @@ const ReBulletDataMainRootExportSchema = z
     Rows: z.record(z.string(), ReBulletRowSchema),
   })
   .catchall(EngineValueSchema);
-const RawReBulletDataMainArraySchema = z.tuple([ReBulletDataMainRootExportSchema]).rest(
-  GenericAssetExportSchema,
-);
+const RawReBulletDataMainArraySchema = z
+  .tuple([ReBulletDataMainRootExportSchema])
+  .rest(MontageNotifyDetailsSchema);
 
 /**
  * English localization rows loaded from the three textmap shards.
@@ -1224,12 +1246,8 @@ export const SkillDescriptionArraySchema = z.array(SkillDescriptionSchema);
 export const BuffArraySchema = z.array(BuffSchema);
 export const ChainArraySchema = z.array(ChainSchema);
 export const RogueCharacterBuffArraySchema = z.array(RogueCharacterBuffSchema);
-export const RoguePermanentCharacterBuffArraySchema = z.array(
-  RogueCharacterBuffSchema,
-);
-export const RoguePermanentBuffPoolArraySchema = z.array(
-  RoguePermanentBuffPoolSchema,
-);
+export const RoguePermanentCharacterBuffArraySchema = z.array(RogueCharacterBuffSchema);
+export const RoguePermanentBuffPoolArraySchema = z.array(RoguePermanentBuffPoolSchema);
 export const RogueWeeklyBuffPoolArraySchema = z.array(RogueWeeklyBuffPoolSchema);
 export const BasePropertyArraySchema = z.array(BasePropertySchema);
 export const RolePropertyGrowthArraySchema = z.array(RolePropertyGrowthSchema);
@@ -1264,3 +1282,6 @@ export type PhantomFetterEntry = z.infer<typeof PhantomFetterSchema>;
 export type PhantomItemEntry = z.infer<typeof PhantomItemSchema>;
 export type PhantomSkillEntry = z.infer<typeof PhantomSkillSchema>;
 export type TextEntry = z.infer<typeof TextEntrySchema>;
+export type RawMontageAssetArray = z.infer<typeof RawMontageArraySchema>;
+export type MontageNotifyDetails = z.infer<typeof MontageNotifyDetailsSchema>;
+export type MontageRoot = z.infer<typeof MontageRootSchema>;

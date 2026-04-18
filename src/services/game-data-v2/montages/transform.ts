@@ -1,4 +1,6 @@
-import type { MontageAsset, ReBulletDataMainRow, SkillInfoAsset } from '../repostiory';
+import { isNil } from 'es-toolkit';
+
+import type { MontageAsset, SkillInfoAsset } from '../repostiory';
 
 import type { Montage } from './types';
 
@@ -17,10 +19,6 @@ function getString(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
 }
 
-function getNumber(value: unknown): number | undefined {
-  return typeof value === 'number' ? value : undefined;
-}
-
 function getObject(value: unknown): AssetObject | undefined {
   return isAssetObject(value) ? value : undefined;
 }
@@ -29,48 +27,9 @@ function getArray(value: unknown): AssetObjectArray | undefined {
   return isAssetObjectArray(value) ? value : undefined;
 }
 
-function getExportProperties(
-  exportObject: AssetObject | undefined,
-): AssetObject | undefined {
-  return getObject(exportObject?.Properties);
-}
-
 function toBulletId(value: unknown): string | undefined {
   if (typeof value === 'number') return String(value);
   return getString(value);
-}
-
-function normalizeNotifyType(type: string | undefined): string | undefined {
-  if (!type) return undefined;
-  return type.endsWith('_C') ? type.slice(0, -2) : type;
-}
-
-function getMatchingNotifies(
-  notifies: AssetObjectArray,
-  type: string,
-): AssetObjectArray {
-  const normalizedType = normalizeNotifyType(type);
-  return notifies.filter(
-    (notify) => normalizeNotifyType(getString(notify.NotifyName)) === normalizedType,
-  );
-}
-
-function getMatchingExports(rawData: AssetObjectArray, type: string): AssetObjectArray {
-  return rawData.filter((entry) => getString(entry.Type) === type);
-}
-
-function zipNotifiesWithExports(
-  notifies: AssetObjectArray,
-  rawData: AssetObjectArray,
-  type: string,
-): Array<{ notify: AssetObject; exportObject: AssetObject | undefined }> {
-  const matchingNotifies = getMatchingNotifies(notifies, type);
-  const matchingExports = getMatchingExports(rawData.slice(1), type);
-
-  return matchingNotifies.map((notify, index) => ({
-    notify,
-    exportObject: matchingExports[index],
-  }));
 }
 
 function getBulletIds(properties: AssetObject | undefined): Array<string> {
@@ -93,93 +52,57 @@ function getBulletIds(properties: AssetObject | undefined): Array<string> {
   return [bulletId];
 }
 
-function buildReBulletDataMainMap(
-  entityId: number,
-  rows: Array<ReBulletDataMainRow>,
-): Map<string, ReBulletDataMainRow> {
-  const matchingRows = rows.filter((row) => row.entityId === entityId);
-  const byBulletId = new Map<string, ReBulletDataMainRow>();
-
-  for (const row of matchingRows) {
-    const key = String(row.bulletId);
-    const existing = byBulletId.get(key);
-    if (!existing || existing.fileName !== 'DT_ReBulletDataMain.json') {
-      byBulletId.set(key, row);
-    }
-  }
-
-  return byBulletId;
-}
-
 function toMontage(rawMontage: MontageAsset): Montage {
-  const rawData = getArray(rawMontage.data) ?? [];
-  const notifies = getArray(rawMontage.Notifies) ?? [];
-
-  const bullets = zipNotifiesWithExports(
-    notifies,
-    rawData,
-    'TsAnimNotifyReSkillEvent_C',
-  ).flatMap(({ notify, exportObject }) => {
-    const properties = getExportProperties(exportObject);
-    const time = getNumber(notify.LinkValue);
-    if (time === undefined) {
-      return [];
-    }
-
-    return getBulletIds(properties).map((bulletId) => {
-      return { time, bulletId };
+  const data = rawMontage.data;
+  const notifications = data.Properties.Notifies ?? [];
+  const notifyDetails = rawMontage.notifyDetails;
+  const notificationDetailsByName = new Map(
+    notifyDetails.map((notify) => [notify.Name, notify]),
+  );
+  const bullets = notifications
+    .filter((notify) => notify.NotifyName === 'TsAnimNotifyReSkillEvent_C')
+    .flatMap((notify) => {
+      const time = notify.LinkValue;
+      const detailReference = getDetailReference(notify.Notify?.ObjectName ?? '');
+      const details = notificationDetailsByName.get(detailReference);
+      return getBulletIds(details?.Properties).map((id) => ({ bulletId: id, time }));
     });
-  });
 
-  const tags = zipNotifiesWithExports(
-    notifies,
-    rawData,
-    'TsAnimNotifyStateAddTag_C',
-  ).flatMap(({ notify, exportObject }) => {
-    const properties = getExportProperties(exportObject);
-    const time = getNumber(notify.LinkValue);
-    const tag = getObject(properties?.Tag);
-    const name = getString(tag?.TagName);
+  const tags = notifications
+    .filter((notify) => notify.NotifyName === 'TsAnimNotifyStateAddTag_C')
+    .flatMap((notify) => {
+      const time = notify.LinkValue;
+      const detailReference = getDetailReference(notify.Notify?.ObjectName ?? '');
+      const details = notificationDetailsByName.get(detailReference);
+      const tag = details?.Properties?.Tag;
+      const duration = details?.Properties?.CurrentTimeLength;
+      if (!tag || !duration) return [];
+      return [{ time, name: tag as string, duration: duration as number }];
+    });
+  const events = notifications
+    .filter((notify) => notify.NotifyName === 'TsAnimNotifySendGamePlayEvent_C')
+    .flatMap((notify) => {
+      const time = notify.LinkValue;
+      const detailReference = getDetailReference(notify.Notify?.ObjectName ?? '');
+      const details = notificationDetailsByName.get(detailReference);
+      const eventTag = details?.Properties?.事件Tag;
+      const name =
+        typeof eventTag === 'object' && !isNil(eventTag) && 'TagName' in eventTag
+          ? (eventTag.TagName as string)
+          : undefined;
+      if (!name) return [];
+      return [{ time, name }];
+    });
 
-    if (time === undefined || name === undefined) {
-      return [];
-    }
-
-    return [
-      {
-        name,
-        time,
-        duration: getNumber(properties?.CurrentTimeLength),
-      },
-    ];
-  });
-
-  const events = zipNotifiesWithExports(
-    notifies,
-    rawData,
-    'TsAnimNotifySendGamePlayEvent_C',
-  ).flatMap(({ notify, exportObject }) => {
-    const properties = getExportProperties(exportObject);
-    const time = getNumber(notify.LinkValue);
-    const eventTag = getObject(properties?.事件Tag);
-    const name = getString(eventTag?.TagName);
-
-    if (time === undefined || name === undefined) {
-      return [];
-    }
-
-    return [{ name, time }];
-  });
-
-  const cancelTime = getNumber(
-    getMatchingNotifies(notifies, 'TsAnimNotifyStateNextAtt_C')[0]?.LinkValue,
-  );
-  const endTime = getNumber(
-    getMatchingNotifies(notifies, 'TsAnimNotifyEndSkill_C')[0]?.LinkValue,
-  );
+  const cancelTime = notifications.find(
+    (notify) => notify.NotifyName === 'TsAnimNotifyStateNextAtt_C',
+  )?.LinkValue;
+  const endTime = notifications.find(
+    (notify) => notify.NotifyName === 'TsAnimNotifyEndSkill_C',
+  )?.LinkValue;
 
   return {
-    name: rawMontage.Name,
+    name: rawMontage.name,
     bullets,
     cancelTime,
     endTime,
@@ -187,6 +110,10 @@ function toMontage(rawMontage: MontageAsset): Montage {
     events,
   };
 }
+
+const getDetailReference = (name: string): string => {
+  return name.split(':').at(-1)?.replace("'", '') ?? '';
+};
 
 function toMontageName(assetPathName: string): string | undefined {
   const assetName = assetPathName.split('/').at(-1)?.split('.').at(0);
@@ -248,4 +175,4 @@ function buildMontageSkillMap(
   return byMontageName;
 }
 
-export { buildMontageSkillMap, buildReBulletDataMainMap, toMontage };
+export { buildMontageSkillMap, toMontage };

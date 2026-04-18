@@ -34,7 +34,6 @@ export const WUWA_CHARACTER_DATA_ROLE_SNAPSHOT_DIR = path.join(
 );
 const FETCH_RETRY_COUNT = 5;
 const FETCH_RETRY_DELAY_MS = 1000;
-const MAX_CONCURRENT_FETCHES = 5;
 
 function formatZodIssues(
   filePath: string,
@@ -64,44 +63,6 @@ function sleep(milliseconds: number) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
-function createSemaphore(limit: number) {
-  let activeCount = 0;
-  const queue: Array<() => void> = [];
-
-  const acquire = async () => {
-    if (activeCount < limit) {
-      activeCount += 1;
-      return;
-    }
-
-    await new Promise<void>((resolve) => {
-      queue.push(() => {
-        activeCount += 1;
-        resolve();
-      });
-    });
-  };
-
-  const release = () => {
-    activeCount -= 1;
-    const next = queue.shift();
-    next?.();
-  };
-
-  return {
-    async withLock<T>(task: () => Promise<T>) {
-      await acquire();
-      try {
-        return await task();
-      } finally {
-        release();
-      }
-    },
-  };
-}
-
-const fetchSemaphore = createSemaphore(MAX_CONCURRENT_FETCHES);
-
 async function fetchWithRetry(
   url: string,
   init: RequestInit | undefined,
@@ -111,7 +72,7 @@ async function fetchWithRetry(
 
   for (let attempt = 1; attempt <= FETCH_RETRY_COUNT; attempt += 1) {
     try {
-      const response = await fetchSemaphore.withLock(async () => fetch(url, init));
+      const response = await fetch(url, init);
       if (response.ok) {
         return response;
       }
@@ -158,11 +119,7 @@ async function fetchCachedJsonFromBase(
   }
 
   console.log(`  [fetching] ${filePath}`);
-  const response = await fetchWithRetry(
-    `${baseUrl}/${filePath}`,
-    undefined,
-    filePath,
-  );
+  const response = await fetchWithRetry(`${baseUrl}/${filePath}`, undefined, filePath);
 
   const text = await response.text();
   mkdirSync(path.dirname(cachePath), { recursive: true });
@@ -224,7 +181,10 @@ function listWuwaCharacterDataDirectory(
   directoryPath: string,
 ): Array<GithubContentItem> {
   const absoluteDirectoryPath = getWuwaCharacterDataSnapshotPath(directoryPath);
-  if (!existsSync(absoluteDirectoryPath) || !statSync(absoluteDirectoryPath).isDirectory()) {
+  if (
+    !existsSync(absoluteDirectoryPath) ||
+    !statSync(absoluteDirectoryPath).isDirectory()
+  ) {
     return [];
   }
 
@@ -268,9 +228,7 @@ function listWuwaCharacterPaths(): Array<string> {
   const characterGroups = rootItems.filter((item) => item.type === 'dir');
   const nested = characterGroups.map((group) => {
     const children = listWuwaCharacterDataDirectory(group.path);
-    return children
-      .filter((item) => item.type === 'dir')
-      .map((item) => item.path);
+    return children.filter((item) => item.type === 'dir').map((item) => item.path);
   });
 
   return nested.flat().toSorted((left, right) => left.localeCompare(right));

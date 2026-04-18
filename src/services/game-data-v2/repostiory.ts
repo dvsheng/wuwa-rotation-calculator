@@ -243,7 +243,7 @@ export const echoSkills = createReadOnlyRepository<EchoSkill, number>(
 
 export const montageAssets = createReadOnlyRepository<MontageAsset, string>(
   () => database.select().from(rawMontages),
-  (row) => `${row.entityId}:${row.characterName}:${row.Name}`,
+  (row) => `${row.characterName}:${row.name}`,
   String,
 );
 

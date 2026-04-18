@@ -58,3 +58,9 @@ export function findWuwaCharacterEntityId(characterName: string): number | undef
     return WUWA_CHARACTER_ENTITY_IDS[characterName];
   }
 }
+
+export function findCharacterNamesByEntityId(entityId: number): Array<string> {
+  return Object.entries(WUWA_CHARACTER_ENTITY_IDS)
+    .filter(([, id]) => id === entityId)
+    .map(([name]) => name);
+}

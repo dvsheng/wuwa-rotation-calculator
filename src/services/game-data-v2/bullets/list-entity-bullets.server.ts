@@ -1,14 +1,16 @@
 import { EntityType } from '@/services/game-data/types';
 
+import { findCharacterNamesByEntityId } from '../character-entity-ids';
 import { reBulletDataMainRows } from '../repostiory';
 import type { ReBulletDataMainRow } from '../repostiory';
 
 import type { Bullet } from './types';
 
 async function listCharacterBullets(entityId: number): Promise<Array<Bullet>> {
+  const characterNames = new Set(findCharacterNamesByEntityId(entityId));
   const allRows = await reBulletDataMainRows.list();
   return allRows
-    .filter((row) => row.entityId === entityId)
+    .filter((row) => characterNames.has(row.characterName))
     .map((row) => transformRow(row));
 }
 
@@ -65,9 +67,9 @@ function transformRow(row: ReBulletDataMainRow): Bullet {
 
   return {
     id: String(row.bulletId),
-    name: row.bulletName ?? row.rowData.子弹名称 ?? '',
+    name: row.rowData.子弹名称 ?? '',
     hits,
-    hitInterval: row.hitInterval ?? base?.作用间隔 ?? 0,
+    hitInterval: base?.作用间隔 ?? 0,
     duration: base?.持续时间 ?? 0,
     requiredTags: extractTags(base?.子弹允许生成Tag),
     forbiddenTags: extractTags(base?.子弹禁止生成Tag),

@@ -39,7 +39,7 @@ import type { Bullet } from '@/services/game-data-v2/bullets';
 import { transformBulletsToTimedHits } from '@/services/game-data-v2/bullets/transform-bullet-to-timed-hits';
 import type { DamageInstance } from '@/services/game-data-v2/damage-instances/types';
 import type { Modifier } from '@/services/game-data-v2/modifiers';
-import type { CharacterMontage } from '@/services/game-data-v2/montages';
+import type { Montage } from '@/services/game-data-v2/montages';
 import { Attribute } from '@/types/attribute';
 
 const ENTITY_GAME_DATA_TABS = [
@@ -54,8 +54,7 @@ type EntityGameDataTab = (typeof ENTITY_GAME_DATA_TABS)[number];
 type NumberNode = Buff['value'];
 type StackInfo = { valueAt1: number; valueAtMax: number; maxStacks: number };
 type ClampInfo = { min: number; max: number; stat: string | undefined };
-type MontageHitRow = CharacterMontage['montage']['bullets'][number];
-type MontageTagRow = CharacterMontage['montage']['tags'][number];
+type MontageHitRow = Montage['bullets'][number];
 type MontageViewMode = 'bullet' | 'damage';
 type MontageDamageRow = {
   bulletId: string;
@@ -650,26 +649,6 @@ function EntityBulletsList({ id, entityType }: { id: number; entityType: EntityT
   );
 }
 
-function MontageFieldList({
-  items,
-  emptyLabel,
-}: {
-  items: Array<string>;
-  emptyLabel: string;
-}) {
-  if (items.length === 0) {
-    return <span className="text-muted-foreground text-sm">{emptyLabel}</span>;
-  }
-
-  return (
-    <div className="flex flex-col gap-1 font-mono text-sm">
-      {items.map((item) => (
-        <span key={item}>{item}</span>
-      ))}
-    </div>
-  );
-}
-
 function NullTableValue() {
   return <span className="text-muted-foreground font-mono text-sm">null</span>;
 }
@@ -690,20 +669,15 @@ function EntityMontagesList({
   const [otherMontages, primaryMontages] = partition(
     data,
     (item) =>
-      item.montage.bullets.length === 0 ||
-      item.montage.name.toLowerCase().includes('rogue') ||
-      item.montage.name.toLowerCase().includes('photo'),
+      item.bullets.length === 0 ||
+      item.name.toLowerCase().includes('rogue') ||
+      item.name.toLowerCase().includes('photo'),
   );
 
   return (
     <div className="flex flex-col gap-4">
       {primaryMontages.map((item) => (
-        <MontageCard
-          key={`${item.characterName}:${item.montageName}`}
-          id={id}
-          entityType={entityType}
-          item={item}
-        />
+        <MontageCard key={item.name} id={id} entityType={entityType} item={item} />
       ))}
       {otherMontages.length > 0 && (
         <Collapsible className="rounded-md border">
@@ -721,7 +695,7 @@ function EntityMontagesList({
             <div className="flex flex-col gap-4">
               {otherMontages.map((item) => (
                 <MontageCard
-                  key={`${item.characterName}:${item.montageName}`}
+                  key={item.name}
                   id={id}
                   entityType={entityType}
                   item={item}
@@ -742,16 +716,12 @@ function MontageCard({
 }: {
   id: number;
   entityType: EntityType;
-  item: CharacterMontage;
+  item: Montage;
 }) {
   const { data: bullets } = useEntityBullets(id, entityType);
   const { data: damageInstances } = useEntityDamageInstances(id, entityType);
   const [viewMode, setViewMode] = React.useState<MontageViewMode>('damage');
-  const hitRows: Array<MontageHitRow> = item.montage.bullets;
-  const tagRows: Array<MontageTagRow> = item.montage.tags;
-  const eventLines = item.montage.events.map(
-    (event) => `${event.time.toFixed(3)}s -> ${event.name}`,
-  );
+  const hitRows: Array<MontageHitRow> = item.bullets;
   const bulletById = new Map(bullets.map((bullet) => [bullet.id, bullet]));
   const damageInstancesById = new Map(
     damageInstances.map((damageInstance) => [damageInstance.id, damageInstance]),
@@ -779,65 +749,18 @@ function MontageCard({
     .toSorted(
       (left, right) => left.time - right.time || left.damageId - right.damageId,
     );
-
-  const tagColumns: Array<ColumnDef<MontageTagRow>> = [
-    {
-      accessorKey: 'time',
-      header: 'Time',
-      cell: ({ row }) => `${row.original.time.toFixed(3)}s`,
-      meta: {
-        headerClassName: 'min-w-20',
-        cellClassName: 'min-w-20 font-mono text-sm',
-      },
-    },
-    {
-      accessorKey: 'name',
-      header: 'Tag',
-      meta: {
-        headerClassName: 'min-w-80',
-        cellClassName: 'min-w-80 font-mono text-sm break-all',
-      },
-    },
-    {
-      accessorKey: 'duration',
-      header: 'Duration',
-      cell: ({ row }) =>
-        row.original.duration === undefined
-          ? 'n/a'
-          : `${row.original.duration.toFixed(3)}s`,
-      meta: {
-        headerClassName: 'min-w-24',
-        cellClassName: 'min-w-24 font-mono text-sm',
-      },
-    },
-  ];
-
   return (
     <Card className="gap-0 py-0">
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 py-4">
         <div className="space-y-2">
-          <CardTitle className="text-base">{item.montage.name}</CardTitle>
+          <CardTitle className="text-base">{item.name}</CardTitle>
           <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
-            {item.skills.length > 0 ? (
-              item.skills.map((skill) => (
-                <Badge key={skill.gameId} variant="outline">
-                  {skill.name}
-                </Badge>
-              ))
-            ) : (
-              <Badge variant="outline">Unmapped</Badge>
-            )}
             <Badge variant="secondary">
               cancel:{' '}
-              {item.montage.cancelTime === undefined
-                ? 'n/a'
-                : `${item.montage.cancelTime.toFixed(3)}s`}
+              {item.cancelTime === undefined ? 'n/a' : `${item.cancelTime.toFixed(3)}s`}
             </Badge>
             <Badge variant="secondary">
-              end:{' '}
-              {item.montage.endTime === undefined
-                ? 'n/a'
-                : `${item.montage.endTime.toFixed(3)}s`}
+              end: {item.endTime === undefined ? 'n/a' : `${item.endTime.toFixed(3)}s`}
             </Badge>
           </div>
         </div>
@@ -858,7 +781,7 @@ function MontageCard({
                 onCheckedChange={(checked) =>
                   setViewMode(checked ? 'damage' : 'bullet')
                 }
-                aria-label={`Montage view for ${item.montage.name}`}
+                aria-label={`Montage view for ${item.name}`}
               />
               <span className="text-sm">Damage</span>
             </Row>
@@ -878,25 +801,6 @@ function MontageCard({
               bulletById={bulletById}
             />
           )}
-        </div>
-        <div className="space-y-1 md:col-span-2">
-          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            Tags
-          </p>
-          <DataTable
-            columns={tagColumns}
-            data={tagRows}
-            emptyMessage="No tags."
-            classNames={{
-              wrapper: 'bg-muted/30 rounded-md border',
-            }}
-          />
-        </div>
-        <div className="space-y-1 md:col-span-2">
-          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            Events
-          </p>
-          <MontageFieldList items={eventLines} emptyLabel="None" />
         </div>
       </CardContent>
     </Card>
@@ -1104,20 +1008,6 @@ function DamageView({
       meta: {
         headerClassName: 'min-w-28',
         cellClassName: 'min-w-28',
-      },
-    },
-    {
-      id: 'attribute',
-      header: 'Attribute',
-      cell: ({ row }) =>
-        row.original.damageInstance ? (
-          startCase(row.original.damageInstance.attribute)
-        ) : (
-          <NullTableValue />
-        ),
-      meta: {
-        headerClassName: 'min-w-24',
-        cellClassName: 'min-w-24',
       },
     },
     {

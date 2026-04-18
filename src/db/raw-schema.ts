@@ -11,6 +11,7 @@ import {
 import type {
   MontageNotifyDetails,
   MontageRoot,
+  SkillInfoRoot,
 } from '../../scripts/pipeline/github-data.schemas';
 
 const integer = (name: string) => bigint(name, { mode: 'number' });
@@ -941,7 +942,6 @@ export const rawMontages = pgTable(
   'raw_montages',
   {
     name: text('name').notNull(),
-    entityId: integer('entity_id').notNull(),
     characterName: text('character_name').notNull(),
     data: jsonb('data').$type<MontageRoot>().notNull(),
     notifyDetails: jsonb('notify_details')
@@ -956,9 +956,7 @@ export const rawMontages = pgTable(
  */
 export const rawSkillInfoAssets = pgTable('raw_skill_info_assets', {
   characterName: text('character_name').primaryKey(),
-  fileName: text('file_name').notNull(),
-  Rows: jsonb('Rows'),
-  data: jsonb('data').notNull(),
+  data: jsonb('data').$type<SkillInfoRoot>().notNull(),
 });
 
 /**
@@ -967,19 +965,11 @@ export const rawSkillInfoAssets = pgTable('raw_skill_info_assets', {
 export const rawReBulletDataMainRows = pgTable(
   'raw_re_bullet_data_main_rows',
   {
-    entityId: integer('entity_id').notNull(),
+    characterName: text('character_name').notNull(),
     bulletId: integer('bullet_id').notNull(),
-    fileName: text('file_name').notNull(),
-    bulletName: text('bullet_name'),
-    hitsPerTarget: integer('hits_per_target'),
-    totalHitCap: integer('total_hit_cap'),
-    hitInterval: real('hit_interval'),
-    baseSettings: jsonb('base_settings').$type<RawReBulletDataBaseSettings>(),
     rowData: jsonb('row_data').$type<RawReBulletDataRow>().notNull(),
   },
-  (table) => [
-    primaryKey({ columns: [table.entityId, table.bulletId, table.fileName] }),
-  ],
+  (table) => [primaryKey({ columns: [table.characterName, table.bulletId] })],
 );
 
 export type SkillV2Source =

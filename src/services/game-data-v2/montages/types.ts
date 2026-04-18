@@ -1,5 +1,3 @@
-import type { OriginType } from '@/services/game-data/types';
-
 /**
  * A bullet fired by a track at a specific time
  */
@@ -40,18 +38,4 @@ export interface Montage {
   endTime?: number;
   tags: Array<MontageTag>;
   events: Array<MontageEvent>;
-}
-
-export interface CharacterMontageSkill {
-  gameId: number;
-  name: string;
-  originType: OriginType;
-}
-
-export interface CharacterMontage {
-  characterName: string;
-  montageName: string;
-  skillIds: Array<number>;
-  skills: Array<CharacterMontageSkill>;
-  montage: Montage;
 }

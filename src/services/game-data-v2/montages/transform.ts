@@ -1,30 +1,70 @@
 import { isNil } from 'es-toolkit';
 
-import type { MontageAsset, SkillInfoAsset } from '../repostiory';
+import type { MontageAsset } from '../repostiory';
 
 import type { Montage } from './types';
 
-type AssetObject = Record<string, unknown>;
-type AssetObjectArray = Array<AssetObject>;
+export function toMontage(rawMontage: MontageAsset): Montage {
+  const data = rawMontage.data;
 
-function isAssetObject(value: unknown): value is AssetObject {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
+  const notifications = data.Properties.Notifies ?? [];
+  const notificationsByType = Object.groupBy(notifications, (notification) =>
+    normalizeNotificationName(notification.NotifyName),
+  );
 
-function isAssetObjectArray(value: unknown): value is AssetObjectArray {
-  return Array.isArray(value) && value.every((item) => isAssetObject(item));
+  const notifyDetails = rawMontage.notifyDetails;
+  const notificationDetailsByName = new Map(
+    notifyDetails.map((notify) => [normalizeNotificationName(notify.Name), notify]),
+  );
+
+  const bullets =
+    notificationsByType['TsAnimNotifyReSkillEvent']?.flatMap((notify) => {
+      const time = notify.LinkValue;
+      const detailReference = getDetailReference(notify.Notify?.ObjectName ?? '');
+      const details = notificationDetailsByName.get(detailReference);
+      return getBulletIds(details?.Properties).map((id) => ({ bulletId: id, time }));
+    }) ?? [];
+
+  const tags =
+    notificationsByType['TsAnimNotifyStateAddTag']?.flatMap((notify) => {
+      const time = notify.LinkValue;
+      const detailReference = getDetailReference(notify.Notify?.ObjectName ?? '');
+      const details = notificationDetailsByName.get(detailReference);
+      const tag = details?.Properties?.Tag;
+      const duration = details?.Properties?.CurrentTimeLength;
+      if (!tag || !duration) return [];
+      return [{ time, name: tag as string, duration: duration as number }];
+    }) ?? [];
+
+  const events =
+    notificationsByType['TsAnimNotifySendGamePlayEvent']?.flatMap((notify) => {
+      const time = notify.LinkValue;
+      const detailReference = getDetailReference(notify.Notify?.ObjectName ?? '');
+      const details = notificationDetailsByName.get(detailReference);
+      const eventTag = details?.Properties?.事件Tag;
+      const name =
+        typeof eventTag === 'object' && !isNil(eventTag) && 'TagName' in eventTag
+          ? (eventTag.TagName as string)
+          : undefined;
+      if (!name) return [];
+      return [{ time, name }];
+    }) ?? [];
+
+  const cancelTime = notificationsByType['TsAnimNotifyStateNextAtt']?.[0]?.LinkValue;
+  const endTime = notificationsByType['TsAnimNotifyEndSkill']?.[0]?.LinkValue;
+
+  return {
+    name: rawMontage.name.replace('AM_', ''),
+    bullets,
+    cancelTime,
+    endTime,
+    tags,
+    events,
+  };
 }
 
 function getString(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
-}
-
-function getObject(value: unknown): AssetObject | undefined {
-  return isAssetObject(value) ? value : undefined;
-}
-
-function getArray(value: unknown): AssetObjectArray | undefined {
-  return isAssetObjectArray(value) ? value : undefined;
 }
 
 function toBulletId(value: unknown): string | undefined {
@@ -32,7 +72,7 @@ function toBulletId(value: unknown): string | undefined {
   return getString(value);
 }
 
-function getBulletIds(properties: AssetObject | undefined): Array<string> {
+function getBulletIds(properties: Record<string, unknown> | undefined): Array<string> {
   const useDamageIdArray = properties?.使用子弹id数组 === true;
   const bulletIdArray = Array.isArray(properties?.子弹id数组)
     ? properties.子弹id数组
@@ -52,127 +92,10 @@ function getBulletIds(properties: AssetObject | undefined): Array<string> {
   return [bulletId];
 }
 
-function toMontage(rawMontage: MontageAsset): Montage {
-  const data = rawMontage.data;
-  const notifications = data.Properties.Notifies ?? [];
-  const notifyDetails = rawMontage.notifyDetails;
-  const notificationDetailsByName = new Map(
-    notifyDetails.map((notify) => [notify.Name, notify]),
-  );
-  const bullets = notifications
-    .filter((notify) => notify.NotifyName === 'TsAnimNotifyReSkillEvent_C')
-    .flatMap((notify) => {
-      const time = notify.LinkValue;
-      const detailReference = getDetailReference(notify.Notify?.ObjectName ?? '');
-      const details = notificationDetailsByName.get(detailReference);
-      return getBulletIds(details?.Properties).map((id) => ({ bulletId: id, time }));
-    });
-
-  const tags = notifications
-    .filter((notify) => notify.NotifyName === 'TsAnimNotifyStateAddTag_C')
-    .flatMap((notify) => {
-      const time = notify.LinkValue;
-      const detailReference = getDetailReference(notify.Notify?.ObjectName ?? '');
-      const details = notificationDetailsByName.get(detailReference);
-      const tag = details?.Properties?.Tag;
-      const duration = details?.Properties?.CurrentTimeLength;
-      if (!tag || !duration) return [];
-      return [{ time, name: tag as string, duration: duration as number }];
-    });
-  const events = notifications
-    .filter((notify) => notify.NotifyName === 'TsAnimNotifySendGamePlayEvent_C')
-    .flatMap((notify) => {
-      const time = notify.LinkValue;
-      const detailReference = getDetailReference(notify.Notify?.ObjectName ?? '');
-      const details = notificationDetailsByName.get(detailReference);
-      const eventTag = details?.Properties?.事件Tag;
-      const name =
-        typeof eventTag === 'object' && !isNil(eventTag) && 'TagName' in eventTag
-          ? (eventTag.TagName as string)
-          : undefined;
-      if (!name) return [];
-      return [{ time, name }];
-    });
-
-  const cancelTime = notifications.find(
-    (notify) => notify.NotifyName === 'TsAnimNotifyStateNextAtt_C',
-  )?.LinkValue;
-  const endTime = notifications.find(
-    (notify) => notify.NotifyName === 'TsAnimNotifyEndSkill_C',
-  )?.LinkValue;
-
-  return {
-    name: rawMontage.name,
-    bullets,
-    cancelTime,
-    endTime,
-    tags,
-    events,
-  };
-}
-
 const getDetailReference = (name: string): string => {
-  return name.split(':').at(-1)?.replace("'", '') ?? '';
+  return normalizeNotificationName(name.split(':').at(-1)?.replace("'", '') ?? '');
 };
 
-function toMontageName(assetPathName: string): string | undefined {
-  const assetName = assetPathName.split('/').at(-1)?.split('.').at(0);
-  if (!assetName?.startsWith('AM')) return undefined;
-
-  return assetName;
-}
-
-function getRowMontageSourcePaths(row: AssetObject): Array<string> {
-  const montageNames = new Set<string>();
-
-  for (const [key, value] of Object.entries(row)) {
-    if (key.startsWith('Animations_')) {
-      for (const animation of getArray(value) ?? []) {
-        const assetPathName = getString(animation.AssetPathName);
-        if (!assetPathName) continue;
-
-        const montageName = toMontageName(assetPathName);
-        if (montageName) montageNames.add(montageName);
-      }
-    }
-
-    if (key.startsWith('MontagePaths_')) {
-      if (!Array.isArray(value)) continue;
-
-      for (const montagePath of value) {
-        const assetPathName = getString(montagePath);
-        if (!assetPathName) continue;
-
-        const montageName = toMontageName(assetPathName);
-        if (montageName) montageNames.add(montageName);
-      }
-    }
-  }
-
-  return [...montageNames];
-}
-
-function buildMontageSkillMap(
-  skillInfoAsset: SkillInfoAsset,
-): Map<string, Array<number>> {
-  const rows = getObject(skillInfoAsset.Rows) ?? {};
-  const byMontageName = new Map<string, Array<number>>();
-
-  for (const [rowId, rowValue] of Object.entries(rows)) {
-    const skillId = Number.parseInt(rowId, 10);
-    if (Number.isNaN(skillId)) continue;
-
-    const row = getObject(rowValue);
-    if (!row) continue;
-
-    for (const montageName of getRowMontageSourcePaths(row)) {
-      const ids = byMontageName.get(montageName) ?? [];
-      ids.push(skillId);
-      byMontageName.set(montageName, ids);
-    }
-  }
-
-  return byMontageName;
-}
-
-export { buildMontageSkillMap, toMontage };
+const normalizeNotificationName = (name: string): string => {
+  return name.replace('_C', '');
+};

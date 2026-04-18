@@ -4,12 +4,14 @@ import type {
   NewRawMontage,
   NewRawReBulletDataMainRow,
   NewRawSkillInfoAsset,
-  RawReBulletDataBaseSettings,
   RawReBulletDataRow,
 } from '../../src/db/raw-schema';
+import { findWuwaCharacterEntityId } from '../../src/services/game-data-v2/character-entity-ids';
 
-import type { RawMontageAssetArray } from './github-data.schemas';
-import { findWuwaCharacterEntityId } from './wuwa-character-entity-ids';
+import type {
+  RawMontageAssetArray,
+  RawSkillInfoAssetArray,
+} from './github-data.schemas';
 
 type RawAssetObject = Record<string, unknown>;
 type RawAssetArray = Array<RawAssetObject>;
@@ -19,33 +21,12 @@ function getAssetRoot(data: RawAssetArray): RawAssetObject | undefined {
   return first;
 }
 
-function getStringValue(value: unknown): string | undefined {
-  return typeof value === 'string' ? value : undefined;
-}
-
-function getNumberValue(value: unknown): number | undefined {
-  return typeof value === 'number' ? value : undefined;
-}
-
 function getCharacterPath(sourcePath: string) {
   return path.posix.dirname(path.posix.dirname(sourcePath));
 }
 
 function getCharacterName(sourcePath: string) {
   return path.posix.basename(getCharacterPath(sourcePath));
-}
-
-function getFileName(sourcePath: string) {
-  return path.posix.basename(sourcePath);
-}
-
-function findValueByPrefix(record: RawAssetObject | undefined, prefix: string) {
-  if (!record) return;
-  return Object.entries(record).find(([key]) => key.startsWith(prefix))?.[1];
-}
-
-function getBaseSettings(row: RawAssetObject) {
-  return findValueByPrefix(row, '基础设置');
 }
 
 function stripHashedKeySuffix(key: string) {
@@ -74,12 +55,10 @@ function toRawMontageRow(
   data: RawMontageAssetArray,
 ): NewRawMontage | undefined {
   const characterName = getCharacterName(sourcePath);
-  const entityId = findWuwaCharacterEntityId(characterName);
-  if (entityId === undefined) return undefined;
+  if (findWuwaCharacterEntityId(characterName) === undefined) return undefined;
   const montage = data[0];
   return {
     name: montage.Name,
-    entityId,
     characterName,
     data: montage,
     notifyDetails: data.slice(1),
@@ -88,19 +67,11 @@ function toRawMontageRow(
 
 function toRawSkillInfoAssetRow(
   sourcePath: string,
-  data: RawAssetArray,
+  data: RawSkillInfoAssetArray,
 ): NewRawSkillInfoAsset {
-  const root = getAssetRoot(data);
-  const rows =
-    root?.Rows && typeof root.Rows === 'object' && !Array.isArray(root.Rows)
-      ? (root.Rows as Record<string, unknown>)
-      : undefined;
-
   return {
     characterName: getCharacterName(sourcePath),
-    fileName: getFileName(sourcePath),
-    ...(rows ? { Rows: rows } : {}),
-    data,
+    data: data[0],
   };
 }
 
@@ -109,8 +80,8 @@ function toRawReBulletDataMainRows(
   data: RawAssetArray,
 ): Array<NewRawReBulletDataMainRow> {
   const root = getAssetRoot(data);
-  const entityId = findWuwaCharacterEntityId(getCharacterName(sourcePath));
-  if (entityId === undefined) {
+  const characterName = getCharacterName(sourcePath);
+  if (findWuwaCharacterEntityId(characterName) === undefined) {
     return [];
   }
   const rows =
@@ -122,33 +93,16 @@ function toRawReBulletDataMainRows(
     if (typeof rowValue !== 'object' || rowValue === null || Array.isArray(rowValue)) {
       return [];
     }
-
     const row = rowValue as RawAssetObject;
-    const baseSettingsValue = getBaseSettings(row);
-    const baseSettings =
-      typeof baseSettingsValue === 'object' &&
-      baseSettingsValue !== null &&
-      !Array.isArray(baseSettingsValue)
-        ? (normalizeReBulletJson(baseSettingsValue) as RawReBulletDataBaseSettings)
-        : undefined;
     const normalizedRow = normalizeReBulletJson(row) as RawReBulletDataRow;
     const parsedBulletId = Number.parseInt(bulletId, 10);
     if (Number.isNaN(parsedBulletId)) {
       return [];
     }
-
     return [
       {
-        entityId,
+        characterName,
         bulletId: parsedBulletId,
-        fileName: getFileName(sourcePath),
-        bulletName: getStringValue(normalizedRow.子弹名称),
-        hitsPerTarget: getNumberValue(
-          findValueByPrefix(baseSettings, '每个单位总作用次数'),
-        ),
-        totalHitCap: getNumberValue(findValueByPrefix(baseSettings, '总作用次数限制')),
-        hitInterval: getNumberValue(findValueByPrefix(baseSettings, '作用间隔')),
-        baseSettings,
         rowData: normalizedRow,
       },
     ];

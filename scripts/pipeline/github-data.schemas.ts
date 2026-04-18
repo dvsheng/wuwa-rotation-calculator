@@ -1285,3 +1285,5 @@ export type TextEntry = z.infer<typeof TextEntrySchema>;
 export type RawMontageAssetArray = z.infer<typeof RawMontageArraySchema>;
 export type MontageNotifyDetails = z.infer<typeof MontageNotifyDetailsSchema>;
 export type MontageRoot = z.infer<typeof MontageRootSchema>;
+export type RawSkillInfoAssetArray = z.infer<typeof RawSkillInfoAssetArraySchema>;
+export type SkillInfoRoot = z.infer<typeof SkillInfoRootExportSchema>;

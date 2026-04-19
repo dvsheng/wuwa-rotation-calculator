@@ -66,16 +66,18 @@ function transformRow(row: ReBulletDataMainRow): Bullet {
   ];
 
   return {
-    id: `${row.bulletId}-${row.characterName}`,
+    id: String(row.bulletId),
     name: row.rowData.子弹名称 ?? '',
     hits,
+    hitsPerTarget: base?.每个单位总作用次数 ?? 1,
+    totalHitCap: base?.总作用次数限制 ?? -1,
     hitInterval: base?.作用间隔 ?? 0,
     duration: base?.持续时间 ?? 0,
     requiredTags: extractTags(base?.子弹允许生成Tag),
     forbiddenTags: extractTags(base?.子弹禁止生成Tag),
     shouldDestroyOnSkillEnd: base?.技能结束是否销毁子弹 ?? false,
     children: (children ?? []).map((c) => ({
-      bulletId: c.召唤子弹ID,
+      bulletId: String(c.召唤子弹ID),
       delay: c.召唤子弹延迟,
       count: c.召唤子弹数量,
     })),

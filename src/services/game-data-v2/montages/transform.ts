@@ -28,7 +28,7 @@ export function toMontage(rawMontage: MontageAsset): Montage {
       const detailReference = getDetailReference(notify.Notify?.ObjectName ?? '');
       const details = notificationDetailsByName.get(detailReference);
       if (!isReSkillEventDetails(details)) return [];
-      return getBulletIds(details.Properties, rawMontage.characterName).map((id) => ({
+      return getBulletIds(details.Properties).map((id) => ({
         bulletId: id,
         time,
       }));
@@ -42,7 +42,7 @@ export function toMontage(rawMontage: MontageAsset): Montage {
         behavior.SkillBehaviorActionGroup_20_E7E8941646BF84E137B075AD36D96317.flatMap(
           (action) =>
             (action.Bullets_77_D4BBB46C47AE6F88D881F9ADA9156FFA ?? []).map((bullet) => ({
-              bulletId: `${bullet.bulletRowName_15_E1264B954C05799310C2CA8F2AA41295}-${rawMontage.characterName}`,
+              bulletId: bullet.bulletRowName_15_E1264B954C05799310C2CA8F2AA41295,
               time,
             })),
         ),
@@ -115,23 +115,19 @@ function getString(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
 }
 
-function toBulletId(value: unknown, characterName: string): string | undefined {
-  const baseId = typeof value === 'number' ? String(value) : getString(value);
-  return `${baseId}-${characterName}`;
+function toBulletId(value: unknown): string | undefined {
+  return typeof value === 'number' ? String(value) : getString(value);
 }
 
-function getBulletIds(
-  properties: ReSkillEventDetails['Properties'],
-  characterName: string,
-): Array<string> {
+function getBulletIds(properties: ReSkillEventDetails['Properties']): Array<string> {
   const useDamageIdArray = properties?.使用子弹id数组 === true;
-  const bulletIdArray = properties?.子弹id数组?.map((id) => `${id}-${characterName}`) ?? [];
+  const bulletIdArray = properties?.子弹id数组?.map(String) ?? [];
 
   if (useDamageIdArray && bulletIdArray.length > 0) {
     return bulletIdArray;
   }
 
-  const bulletId = toBulletId(properties?.子弹数据名, characterName);
+  const bulletId = toBulletId(properties?.子弹数据名);
   if (!bulletId || bulletId === 'None') {
     return [];
   }

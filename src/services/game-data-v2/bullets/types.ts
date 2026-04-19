@@ -2,6 +2,8 @@ export interface Bullet {
   id: string;
   name: string;
   hits: Array<number>;
+  hitsPerTarget: number;
+  totalHitCap: number;
   hitInterval: number;
   duration: number;
   /**
@@ -14,7 +16,7 @@ export interface Bullet {
   forbiddenTags: Array<string>;
   shouldDestroyOnSkillEnd: boolean;
   children: Array<{
-    bulletId: number;
+    bulletId: string;
     delay: number;
     count: number;
   }>;

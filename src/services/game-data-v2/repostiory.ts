@@ -258,6 +258,6 @@ export const reBulletDataMainRows = createReadOnlyRepository<
   string
 >(
   () => database.select().from(rawReBulletDataMainRows),
-  (row) => `${row.characterName}:${row.bulletId}`,
+  (row) => String(row.bulletId),
   String,
 );

@@ -34,7 +34,7 @@ import { useEntityDamageInstances } from '@/hooks/useEntityDamageInstances';
 import { useEntityModifiers } from '@/hooks/useEntityModifiers';
 import { useEntityMontages } from '@/hooks/useEntityMontages';
 import { useGameDataEntities } from '@/hooks/useGameDataEntities';
-import { EntityType, Target } from '@/services/game-data/types';
+import { Target } from '@/services/game-data/types';
 import type { Buff } from '@/services/game-data-v2/buffs';
 import type { Bullet } from '@/services/game-data-v2/bullets';
 import { transformBulletsToTimedHits } from '@/services/game-data-v2/bullets/transform-bullet-to-timed-hits';
@@ -252,8 +252,8 @@ function BuffTags({ tags }: { tags: Array<string> }) {
   );
 }
 
-function EntityBuffsList({ id, entityType }: { id: number; entityType: EntityType }) {
-  const { data } = useEntityBuffs(id, entityType);
+function EntityBuffsList({ id }: { id: number }) {
+  const { data } = useEntityBuffs(id);
   const buffs = data as Array<Buff>;
 
   if (buffs.length === 0) {
@@ -384,14 +384,8 @@ function EntityBuffsList({ id, entityType }: { id: number; entityType: EntityTyp
   );
 }
 
-function EntityModifiersList({
-  id,
-  entityType,
-}: {
-  id: number;
-  entityType: EntityType;
-}) {
-  const { data } = useEntityModifiers(id, entityType);
+function EntityModifiersList({ id }: { id: number }) {
+  const { data } = useEntityModifiers(id);
   const modifiers = data;
 
   if (modifiers.length === 0) {
@@ -501,14 +495,8 @@ function renderMotionValue(
 
 type DamageInstanceTableRow = DamageInstance;
 
-function EntityDamageInstancesList({
-  id,
-  entityType,
-}: {
-  id: number;
-  entityType: EntityType;
-}) {
-  const { data } = useEntityDamageInstances(id, entityType);
+function EntityDamageInstancesList({ id }: { id: number }) {
+  const { data } = useEntityDamageInstances(id);
 
   if (data.length === 0) {
     return <p className="text-muted-foreground text-sm">No damage instances found.</p>;
@@ -623,8 +611,8 @@ function EntityDamageInstancesList({
   );
 }
 
-function EntityBulletsList({ id, entityType }: { id: number; entityType: EntityType }) {
-  const { data } = useEntityBullets(id, entityType);
+function EntityBulletsList({ id }: { id: number }) {
+  const { data } = useEntityBullets(id);
 
   if (data.length === 0) {
     return <p className="text-muted-foreground text-sm">No bullets found.</p>;
@@ -643,14 +631,8 @@ function NullTableValue() {
   return <span className="text-muted-foreground font-mono text-sm">null</span>;
 }
 
-function EntityMontagesList({
-  id,
-  entityType,
-}: {
-  id: number;
-  entityType: EntityType;
-}) {
-  const { data } = useEntityMontages(id, entityType);
+function EntityMontagesList({ id }: { id: number }) {
+  const { data } = useEntityMontages(id);
 
   if (data.length === 0) {
     return <p className="text-muted-foreground text-sm">No montages found.</p>;
@@ -667,7 +649,7 @@ function EntityMontagesList({
   return (
     <div className="flex flex-col gap-4">
       {primaryMontages.map((item) => (
-        <MontageCard key={item.id} id={id} entityType={entityType} item={item} />
+        <MontageCard key={item.id} id={id} item={item} />
       ))}
       {otherMontages.length > 0 && (
         <Collapsible className="rounded-md border">
@@ -684,12 +666,7 @@ function EntityMontagesList({
           <CollapsibleContent className="border-t p-4">
             <div className="flex flex-col gap-4">
               {otherMontages.map((item) => (
-                <MontageCard
-                  key={item.id}
-                  id={id}
-                  entityType={entityType}
-                  item={item}
-                />
+                <MontageCard key={item.id} id={id} item={item} />
               ))}
             </div>
           </CollapsibleContent>
@@ -699,17 +676,9 @@ function EntityMontagesList({
   );
 }
 
-function MontageCard({
-  id,
-  entityType,
-  item,
-}: {
-  id: number;
-  entityType: EntityType;
-  item: Montage;
-}) {
-  const { data: bullets } = useEntityBullets(id, entityType);
-  const { data: damageInstances } = useEntityDamageInstances(id, entityType);
+function MontageCard({ id, item }: { id: number; item: Montage }) {
+  const { data: bullets } = useEntityBullets(id);
+  const { data: damageInstances } = useEntityDamageInstances(id);
   const [viewMode, setViewMode] = React.useState<MontageViewMode>('damage');
   const hitRows: Array<MontageHitRow> = item.bullets;
   const bulletById = new Map(bullets.map((bullet) => [bullet.id, bullet]));
@@ -777,19 +746,9 @@ function MontageCard({
             </Row>
           </Row>
           {viewMode === 'damage' ? (
-            <DamageView
-              id={id}
-              entityType={entityType}
-              rows={damageRows}
-              bulletById={bulletById}
-            />
+            <DamageView id={id} rows={damageRows} bulletById={bulletById} />
           ) : (
-            <BulletView
-              id={id}
-              entityType={entityType}
-              rows={hitRows}
-              bulletById={bulletById}
-            />
+            <BulletView id={id} rows={hitRows} bulletById={bulletById} />
           )}
         </div>
       </CardContent>
@@ -799,12 +758,10 @@ function MontageCard({
 
 function BulletView({
   id,
-  entityType,
   rows,
   bulletById,
 }: {
   id: number;
-  entityType: EntityType;
   rows: Array<MontageHitRow>;
   bulletById: Map<string, Bullet>;
 }) {
@@ -835,7 +792,6 @@ function BulletView({
               params: { id: String(id) },
               search: (previous) => ({
                 ...previous,
-                entityType,
                 tab: 'bullets',
               }),
             })
@@ -889,12 +845,10 @@ function BulletView({
 
 function DamageView({
   id,
-  entityType,
   rows,
   bulletById,
 }: {
   id: number;
-  entityType: EntityType;
   rows: Array<MontageDamageRow>;
   bulletById: Map<string, Bullet>;
 }) {
@@ -925,7 +879,6 @@ function DamageView({
               params: { id: String(id) },
               search: (previous) => ({
                 ...previous,
-                entityType,
                 tab: 'damage-instances',
               }),
             })
@@ -954,7 +907,6 @@ function DamageView({
               params: { id: String(id) },
               search: (previous) => ({
                 ...previous,
-                entityType,
                 tab: 'bullets',
               }),
             })
@@ -1038,7 +990,7 @@ function DamageView({
   );
 }
 
-function EntityHeader({ id, entityType }: { id: number; entityType: string }) {
+function EntityHeader({ id }: { id: number }) {
   const { data } = useGameDataEntities({});
   const entity = data.find((gameDataEntity) => gameDataEntity.id === id);
 
@@ -1046,7 +998,6 @@ function EntityHeader({ id, entityType }: { id: number; entityType: string }) {
     <div>
       <h2 className="text-2xl font-bold">{entity?.name ?? `ID ${id}`}</h2>
       <p className="text-muted-foreground text-sm">
-        {startCase(entityType)}
         {entity?.description ? ` · ${entity.description}` : ''}
       </p>
     </div>
@@ -1055,11 +1006,9 @@ function EntityHeader({ id, entityType }: { id: number; entityType: string }) {
 
 function EntityBuffsPage() {
   const { id } = Route.useParams();
-  const { entityType, tab } = Route.useSearch();
+  const { tab } = Route.useSearch();
   const numericId = Number.parseInt(id);
   const navigate = useNavigate();
-  const isCharacter = entityType === EntityType.CHARACTER;
-  const activeTab = isCharacter || tab !== 'montages' ? (tab ?? 'buffs') : 'buffs';
 
   return (
     <Container padding="page" className="h-full min-h-0 max-w-6xl">
@@ -1073,16 +1022,15 @@ function EntityBuffsPage() {
           ← Game Data
         </Button>
         <Suspense fallback={<div className="h-10" />}>
-          <EntityHeader id={numericId} entityType={entityType} />
+          <EntityHeader id={numericId} />
         </Suspense>
         <Tabs
-          value={activeTab}
+          value={tab}
           onValueChange={(nextTab) =>
             navigate({
               to: '/game-data/$id',
               params: { id },
               search: {
-                entityType,
                 tab: nextTab as EntityGameDataTab,
               },
             })
@@ -1094,7 +1042,7 @@ function EntityBuffsPage() {
             <TabsTrigger value="modifiers">Modifiers</TabsTrigger>
             <TabsTrigger value="damage-instances">Damage Instances</TabsTrigger>
             <TabsTrigger value="bullets">Bullets</TabsTrigger>
-            {isCharacter && <TabsTrigger value="montages">Montages</TabsTrigger>}
+            <TabsTrigger value="montages">Montages</TabsTrigger>
           </TabsList>
           <TabsContent value="buffs" className="min-h-0 flex-1 overflow-y-auto">
             <Suspense
@@ -1107,7 +1055,7 @@ function EntityBuffsPage() {
                 </Card>
               }
             >
-              <EntityBuffsList id={numericId} entityType={entityType as EntityType} />
+              <EntityBuffsList id={numericId} />
             </Suspense>
           </TabsContent>
           <TabsContent value="modifiers" className="min-h-0 flex-1 overflow-y-auto">
@@ -1121,10 +1069,7 @@ function EntityBuffsPage() {
                 </Card>
               }
             >
-              <EntityModifiersList
-                id={numericId}
-                entityType={entityType as EntityType}
-              />
+              <EntityModifiersList id={numericId} />
             </Suspense>
           </TabsContent>
           <TabsContent
@@ -1141,10 +1086,7 @@ function EntityBuffsPage() {
                 </Card>
               }
             >
-              <EntityDamageInstancesList
-                id={numericId}
-                entityType={entityType as EntityType}
-              />
+              <EntityDamageInstancesList id={numericId} />
             </Suspense>
           </TabsContent>
           <TabsContent value="bullets" className="min-h-0 flex-1 overflow-y-auto">
@@ -1158,28 +1100,23 @@ function EntityBuffsPage() {
                 </Card>
               }
             >
-              <EntityBulletsList id={numericId} entityType={entityType as EntityType} />
+              <EntityBulletsList id={numericId} />
             </Suspense>
           </TabsContent>
-          {isCharacter && (
-            <TabsContent value="montages" className="min-h-0 flex-1 overflow-y-auto">
-              <Suspense
-                fallback={
-                  <Card className="h-32">
-                    <LoadingSpinnerContainer
-                      message="Loading montages..."
-                      spinnerSize={40}
-                    />
-                  </Card>
-                }
-              >
-                <EntityMontagesList
-                  id={numericId}
-                  entityType={entityType as EntityType}
-                />
-              </Suspense>
-            </TabsContent>
-          )}
+          <TabsContent value="montages" className="min-h-0 flex-1 overflow-y-auto">
+            <Suspense
+              fallback={
+                <Card className="h-32">
+                  <LoadingSpinnerContainer
+                    message="Loading montages..."
+                    spinnerSize={40}
+                  />
+                </Card>
+              }
+            >
+              <EntityMontagesList id={numericId} />
+            </Suspense>
+          </TabsContent>
         </Tabs>
       </Stack>
     </Container>
@@ -1188,7 +1125,6 @@ function EntityBuffsPage() {
 
 export const Route = createFileRoute('/game-data_/$id')({
   validateSearch: z.object({
-    entityType: z.string(),
     tab: z.enum(ENTITY_GAME_DATA_TABS).optional(),
   }),
   component: EntityBuffsPage,

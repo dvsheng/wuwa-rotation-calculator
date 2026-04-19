@@ -1,6 +1,5 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 
-import type { EntityType } from '@/services/game-data/types';
 import { listEntityMontages } from '@/services/game-data-v2/montages';
 import type { Montage } from '@/services/game-data-v2/montages';
 
@@ -8,10 +7,10 @@ export type DedupedMontage = Montage & {
   dedupedNames: Array<string>;
 };
 
-export const useEntityMontages = (id: number, entityType: EntityType) => {
+export const useEntityMontages = (id: number) => {
   return useSuspenseQuery({
-    queryKey: ['game-data-v2-entity-montages', id, entityType],
-    queryFn: () => listEntityMontages({ data: { id, entityType } }),
+    queryKey: ['game-data-v2-entity-montages', id],
+    queryFn: () => listEntityMontages({ data: { id } }),
     select: dedupeMontages,
     staleTime: Infinity,
   });

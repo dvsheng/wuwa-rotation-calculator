@@ -20,10 +20,7 @@ async function fetchDamageRowsForEntity(
 ): Promise<Array<Damage>> {
   switch (entityType) {
     case EntityType.CHARACTER: {
-      const entitySkills = await listEntitySkillsHandler(
-        entityId,
-        EntityType.CHARACTER,
-      );
+      const entitySkills = await listEntitySkillsHandler(entityId);
       return listDamageRowsByIds(entitySkills.flatMap((skill) => skill.damageIds));
     }
     case EntityType.ECHO: {

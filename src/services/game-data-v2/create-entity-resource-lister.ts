@@ -1,4 +1,4 @@
-import type { EntityType } from '@/services/game-data/types';
+import { EntityType } from '@/services/game-data/types';
 
 export type EntityResource<TDomainModel, TRepositoryRow> = TDomainModel & {
   raw: SerializableRepositoryRow<TRepositoryRow>;
@@ -32,8 +32,8 @@ export const createEntityResourceLister = <TRepositoryRow, TContext, TDomainMode
 }: EntityResourceListerOptions<TRepositoryRow, TContext, TDomainModel>) => {
   return async (
     entityId: number,
-    entityType: EntityType,
   ): Promise<Array<EntityResource<TDomainModel, TRepositoryRow>>> => {
+    const entityType = inferEntityType(entityId);
     const context = await fetchContextForEntity(entityId, entityType);
     const repositoryRows = await fetchResourcesForEntity(entityId, entityType);
     const resources: Array<EntityResource<TDomainModel, TRepositoryRow>> = [];
@@ -50,6 +50,15 @@ export const createEntityResourceLister = <TRepositoryRow, TContext, TDomainMode
 
     return resources;
   };
+};
+
+const inferEntityType = (entityId: number): EntityType => {
+  const id = String(entityId);
+
+  if (id.length <= 2) return EntityType.ECHO_SET;
+  if (id.length === 8 && id[0] === '2') return EntityType.WEAPON;
+  if (id.length === 4) return EntityType.CHARACTER;
+  return EntityType.ECHO;
 };
 
 type SerializableRepositoryRow<TRow> = [unknown] extends [TRow]

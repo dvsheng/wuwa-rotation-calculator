@@ -1,12 +1,11 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 
-import type { EntityType } from '@/services/game-data/types';
 import { listEntityModifiers } from '@/services/game-data-v2/modifiers';
 
-export const useEntityModifiers = (id: number, entityType: EntityType) => {
+export const useEntityModifiers = (id: number) => {
   return useSuspenseQuery({
-    queryKey: ['game-data-v2-entity-modifiers', id, entityType],
-    queryFn: () => listEntityModifiers({ data: { id, entityType } }),
+    queryKey: ['game-data-v2-entity-modifiers', id],
+    queryFn: () => listEntityModifiers({ data: { id } }),
     staleTime: Infinity,
   });
 };

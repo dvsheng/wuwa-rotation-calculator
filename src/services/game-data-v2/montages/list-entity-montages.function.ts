@@ -1,13 +1,10 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 
-import { EntityType } from '@/services/game-data/types';
-
 import { listEntityMontagesHandler } from './list-entity-montages.server';
 
 const ListEntityMontagesRequestSchema = z.object({
   id: z.number(),
-  entityType: z.enum(EntityType),
 });
 
 export const listEntityMontages = createServerFn({
@@ -15,5 +12,5 @@ export const listEntityMontages = createServerFn({
 })
   .inputValidator(ListEntityMontagesRequestSchema)
   .handler(({ data }) => {
-    return listEntityMontagesHandler(data.id, data.entityType);
+    return listEntityMontagesHandler(data.id);
   });

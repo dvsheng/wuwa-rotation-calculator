@@ -77,7 +77,7 @@ export const BulletItem = ({ bullet }: { bullet: Bullet }) => {
   const rows = getTimelineRows(bullet);
 
   return (
-    <Card className="gap-0 py-0">
+    <Card id={String(bullet.id)} className="gap-0 py-0">
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 py-4">
         <div className="space-y-2">
           <CardTitle className="text-base">

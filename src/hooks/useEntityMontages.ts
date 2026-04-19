@@ -11,7 +11,7 @@ export const useEntityMontages = (id: number) => {
   return useSuspenseQuery({
     queryKey: ['game-data-v2-entity-montages', id],
     queryFn: () => listEntityMontages({ data: { id } }),
-    select: dedupeMontages,
+    // select: dedupeMontages,
     staleTime: Infinity,
   });
 };

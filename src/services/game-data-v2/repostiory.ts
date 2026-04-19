@@ -19,6 +19,7 @@ import {
   rawSkillAttributes,
   rawSkillDescriptions,
   rawSkillInfoAssets,
+  rawSkillInfoRows,
   rawSkillTreeNodes,
   rawSkills,
   rawWeaponConfig,
@@ -46,6 +47,7 @@ import type {
   RawSkillAttribute,
   RawSkillDescription,
   RawSkillInfoAsset,
+  RawSkillInfoRow,
   RawSkillTreeNode,
   RawWeaponConfig,
   RawWeaponGrowth,
@@ -77,6 +79,7 @@ export type RawBasePropertyEntry = RawBaseProperty;
 export type Echo = RawPhantomItem;
 export type MontageAsset = RawMontage;
 export type SkillInfoAsset = RawSkillInfoAsset;
+export type SkillInfoRow = RawSkillInfoRow;
 export type ReBulletDataMainRow = RawReBulletDataMainRow;
 
 export type ReadOnlyRepository<TRow, TKey> = {
@@ -250,6 +253,12 @@ export const montageAssets = createReadOnlyRepository<MontageAsset, string>(
 export const skillInfoAssets = createReadOnlyRepository<SkillInfoAsset, string>(
   () => database.select().from(rawSkillInfoAssets),
   (row) => row.characterName,
+  String,
+);
+
+export const skillInfoRows = createReadOnlyRepository<SkillInfoRow, number>(
+  () => database.select().from(rawSkillInfoRows),
+  (row) => row.skillId,
   String,
 );
 

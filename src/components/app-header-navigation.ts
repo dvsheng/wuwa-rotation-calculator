@@ -1,4 +1,10 @@
-import { BookOpenText, Calculator, Database, FlaskConical, Library } from 'lucide-react';
+import {
+  BookOpenText,
+  Calculator,
+  Database,
+  FlaskConical,
+  Library,
+} from 'lucide-react';
 
 export const APP_HEADER_HOME = {
   label: 'I.R.I.S. Rotation Inspector',

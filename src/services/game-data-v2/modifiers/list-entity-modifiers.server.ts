@@ -16,7 +16,9 @@ export async function listEntityModifiersHandler(
   );
 
   const connectionGroups = groupBuffsByConnection(modifierBuffs);
-  const multiBuffConnectionGroups = connectionGroups.filter((group) => group.length > 1);
+  const multiBuffConnectionGroups = connectionGroups.filter(
+    (group) => group.length > 1,
+  );
   const groupedBuffIds = new Set(
     multiBuffConnectionGroups.flatMap((group) => group.map((buff) => buff.buffId)),
   );

@@ -1,7 +1,8 @@
-import { compact, uniq } from 'es-toolkit';
+import { uniq } from 'es-toolkit';
 
 import { CapabilityType, EntityType } from '@/services/game-data/types';
 
+import { createEntityResourceLister } from '../create-entity-resource-lister';
 import { getBuffsByPrefix, getConnectedBuffs } from '../get-capabilities';
 import {
   echoSetEffects,
@@ -22,16 +23,52 @@ import {
   getBuffTarget,
   isPermanentStat,
 } from './transform';
-import type { Buff } from './types';
+import type { BuffData } from './types';
 
-export const getEntityBuffsHandler = async (
+export const getEntityBuffsHandler = createEntityResourceLister({
+  fetchResourcesForEntity,
+  fetchContextForEntity,
+  transform,
+  filter: () => true,
+});
+
+type BuffContext = {
+  sequenceInfoByBuffId: Map<number, Pick<BuffData, 'unlockedAt' | 'disabledAt'>>;
+};
+
+async function fetchResourcesForEntity(
   id: number,
   entityType: EntityType,
-): Promise<Array<Buff>> => {
+): Promise<Array<RepositoryBuff>> {
   const buffIdPrefixes = await getEntityBuffPrefixes(id, entityType);
   const rootBuffsByPrefix = await Promise.all(
     buffIdPrefixes.map(async (prefix) => {
-      // GameplayCueId to get outro buffs
+      const gameplayCueBuffs = await getBuffsWithGameplayCuePrefix(prefix);
+      return [...getBuffsByPrefix(prefix), ...gameplayCueBuffs];
+    }),
+  );
+
+  return removeBuffsFromAlternativeGameModes(
+    uniq(rootBuffsByPrefix.flat().flatMap((buff) => getConnectedBuffs(buff.id))),
+  );
+}
+
+async function fetchContextForEntity(
+  id: number,
+  entityType: EntityType,
+): Promise<BuffContext> {
+  const sequenceInfoByBuffId = new Map<
+    number,
+    Pick<BuffData, 'unlockedAt' | 'disabledAt'>
+  >();
+
+  if (entityType !== EntityType.CHARACTER) {
+    return { sequenceInfoByBuffId };
+  }
+
+  const buffIdPrefixes = await getEntityBuffPrefixes(id, entityType);
+  const rootBuffsByPrefix = await Promise.all(
+    buffIdPrefixes.map(async (prefix) => {
       const gameplayCueBuffs = await getBuffsWithGameplayCuePrefix(prefix);
       return [...getBuffsByPrefix(prefix), ...gameplayCueBuffs];
     }),
@@ -39,43 +76,36 @@ export const getEntityBuffsHandler = async (
   const resolvedBuffs = await removeBuffsFromAlternativeGameModes(
     uniq(rootBuffsByPrefix.flat().flatMap((buff) => getConnectedBuffs(buff.id))),
   );
+  const allChains = await resonatorChains.list();
+  const entityChains = allChains.filter((chain) => chain.groupId === id);
 
-  const sequenceInfoMap = new Map<
-    number,
-    { unlockedAt?: Buff['unlockedAt']; disabledAt?: Buff['disabledAt'] }
-  >();
-  if (entityType === EntityType.CHARACTER) {
-    const allChains = await resonatorChains.list();
-    const entityChains = allChains.filter((chain) => chain.groupId === id);
-    for (const buff of inferBuffSequences(resolvedBuffs, entityChains)) {
-      if (buff.unlockedAt ?? buff.disabledAt) {
-        sequenceInfoMap.set(buff.id, {
-          unlockedAt: buff.unlockedAt,
-          disabledAt: buff.disabledAt,
-        });
-      }
+  for (const buff of inferBuffSequences(resolvedBuffs, entityChains)) {
+    if (buff.unlockedAt ?? buff.disabledAt) {
+      sequenceInfoByBuffId.set(buff.id, {
+        unlockedAt: buff.unlockedAt,
+        disabledAt: buff.disabledAt,
+      });
     }
   }
 
-  return compact(
-    resolvedBuffs.map((buff) => {
-      const stat = getBuffStat(buff);
-      if (!stat) return;
+  return { sequenceInfoByBuffId };
+}
 
-      return {
-        buffId: buff.id,
-        rawData: buff,
-        type: isPermanentStat(buff)
-          ? CapabilityType.PERMANENT_STAT
-          : CapabilityType.MODIFIER,
-        duration: getBuffDuration([buff]),
-        target: getBuffTarget(stat, [buff]),
-        ...stat,
-        ...sequenceInfoMap.get(buff.id),
-      };
-    }),
-  );
-};
+function transform(buff: RepositoryBuff, context: BuffContext): BuffData | undefined {
+  const stat = getBuffStat(buff);
+  if (!stat) return;
+
+  return {
+    buffId: buff.id,
+    type: isPermanentStat(buff)
+      ? CapabilityType.PERMANENT_STAT
+      : CapabilityType.MODIFIER,
+    duration: getBuffDuration([buff]),
+    target: getBuffTarget(stat, [buff]),
+    ...stat,
+    ...context.sequenceInfoByBuffId.get(buff.id),
+  };
+}
 
 const getBuffsWithGameplayCuePrefix = async (
   prefix: string,

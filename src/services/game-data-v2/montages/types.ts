@@ -1,3 +1,6 @@
+import type { EntityResource } from '../create-entity-resource-lister';
+import type { MontageAsset } from '../repostiory';
+
 /**
  * A bullet fired by a track at a specific time
  */
@@ -31,7 +34,7 @@ export interface MontageEvent {
 /**
  * An animation that stitches together a sequence of bullets, tags, and effects at specified time intervals
  */
-export interface Montage {
+export interface MontageData {
   name: string;
   id: string;
   dedupedNames?: Array<string>;
@@ -41,3 +44,5 @@ export interface Montage {
   tags: Array<MontageTag>;
   events: Array<MontageEvent>;
 }
+
+export type Montage = EntityResource<MontageData, MontageAsset>;

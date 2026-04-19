@@ -114,6 +114,7 @@ const createMontage = (
       time: 0.4,
     },
   ],
+  raw: {} as Montage['raw'],
   tags: [
     {
       duration: 0.5,

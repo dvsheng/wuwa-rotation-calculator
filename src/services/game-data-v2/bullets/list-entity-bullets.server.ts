@@ -1,34 +1,18 @@
 import { EntityType } from '@/services/game-data/types';
 
 import { findCharacterNamesByEntityId } from '../character-entity-ids';
+import { createEntityResourceLister } from '../create-entity-resource-lister';
 import { reBulletDataMainRows } from '../repostiory';
 import type { ReBulletDataMainRow } from '../repostiory';
 
-import type { Bullet } from './types';
+import type { BulletData } from './types';
 
-async function listCharacterBullets(entityId: number): Promise<Array<Bullet>> {
-  const characterNames = new Set(findCharacterNamesByEntityId(entityId));
-  const allRows = await reBulletDataMainRows.list();
-  return allRows
-    .filter((row) => characterNames.has(row.characterName))
-    .map((row) => transformRow(row));
-}
-
-export async function listEntityBulletsHandler(
-  entityId: number,
-  entityType: EntityType,
-): Promise<Array<Bullet>> {
-  switch (entityType) {
-    case EntityType.CHARACTER: {
-      return listCharacterBullets(entityId);
-    }
-    case EntityType.ECHO:
-    case EntityType.ECHO_SET:
-    case EntityType.WEAPON: {
-      return [];
-    }
-  }
-}
+export const listEntityBulletsHandler = createEntityResourceLister({
+  fetchResourcesForEntity: fetchBulletRowsForEntity,
+  fetchContextForEntity: fetchBulletContextForEntity,
+  transform: transformRow,
+  filter: (_bullet, row, context) => context.characterNames.has(row.characterName),
+});
 
 type ChildBulletEntry = {
   召唤子弹ID: number;
@@ -53,7 +37,39 @@ function extractTags(values: Array<unknown> | undefined): Array<string> {
   });
 }
 
-function transformRow(row: ReBulletDataMainRow): Bullet {
+type BulletContext = {
+  characterNames: Set<string>;
+};
+
+async function fetchBulletRowsForEntity(
+  _entityId: number,
+  entityType: EntityType,
+): Promise<Array<ReBulletDataMainRow>> {
+  switch (entityType) {
+    case EntityType.CHARACTER: {
+      return reBulletDataMainRows.list();
+    }
+    case EntityType.ECHO:
+    case EntityType.ECHO_SET:
+    case EntityType.WEAPON: {
+      return [];
+    }
+  }
+}
+
+function fetchBulletContextForEntity(
+  entityId: number,
+  entityType: EntityType,
+): BulletContext {
+  return {
+    characterNames:
+      entityType === EntityType.CHARACTER
+        ? new Set(findCharacterNamesByEntityId(entityId))
+        : new Set(),
+  };
+}
+
+function transformRow(row: ReBulletDataMainRow): BulletData {
   const base = row.rowData.基础设置;
   const exec = row.rowData.执行逻辑;
   const children = row.rowData['子子弹设置'] as Array<ChildBulletEntry> | undefined;

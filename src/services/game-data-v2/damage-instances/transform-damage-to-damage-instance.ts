@@ -10,13 +10,13 @@ import {
 } from '../constants';
 import type { Damage } from '../repostiory';
 
-import type { DamageInstance } from './types';
+import type { DamageInstanceData } from './types';
 
 // Try to transform a damage row from the repository to a DamageInstanc
 // return undefined if unable to
 export const tryTransformToDamageInstance = (
   damage: Damage,
-): DamageInstance | undefined => {
+): DamageInstanceData | undefined => {
   const {
     id,
     rateLv,
@@ -59,8 +59,10 @@ export const tryTransformToDamageInstance = (
 
 export const transformDamageToDamageInstances = (
   damageRows: Array<Damage>,
-): Array<DamageInstance> => {
-  return compact(damageRows.map((rawDamage) => tryTransformToDamageInstance(rawDamage)));
+): Array<DamageInstanceData> => {
+  return compact(
+    damageRows.map((rawDamage) => tryTransformToDamageInstance(rawDamage)),
+  );
 };
 
 const getMotionValuePerStack = ({ formulaParam5 }: Damage): number | undefined => {

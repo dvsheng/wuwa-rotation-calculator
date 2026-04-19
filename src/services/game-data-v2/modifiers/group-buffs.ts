@@ -13,17 +13,16 @@ type BuffGrouper = (buffs: Array<Buff>) => Array<Array<Buff>>;
 export const groupBuffsByConnection: BuffGrouper = (buffs) => {
   const connectedBuffIdsById = new Map(
     buffs.map((buff) => [
-      buff.rawData.id,
-      new Set(getConnectedBuffs(buff.rawData.id).map((connected) => connected.id)),
+      buff.raw.id,
+      new Set(getConnectedBuffs(buff.raw.id).map((connected) => connected.id)),
     ]),
   );
   return groupBuffs(
     buffs,
-    (buff) => connectedBuffIdsById.get(buff.rawData.id) ?? new Set<number>(),
+    (buff) => connectedBuffIdsById.get(buff.raw.id) ?? new Set<number>(),
     (leftBuff, rightBuff) =>
       !shouldNotGroupBuffs(leftBuff, rightBuff) &&
-      (connectedBuffIdsById.get(leftBuff.rawData.id)?.has(rightBuff.rawData.id) ??
-        false),
+      (connectedBuffIdsById.get(leftBuff.raw.id)?.has(rightBuff.raw.id) ?? false),
   );
 };
 
@@ -34,19 +33,17 @@ export const groupBuffsByConnection: BuffGrouper = (buffs) => {
 export const groupBuffsBySharedTags: BuffGrouper = (buffs) => {
   return groupBuffs(
     buffs,
-    (buff) => new Set(buff.rawData.grantedTags),
+    (buff) => new Set(buff.raw.grantedTags),
     (leftBuff, rightBuff) =>
       !shouldNotGroupBuffs(leftBuff, rightBuff) &&
-      leftBuff.rawData.grantedTags.some((tag) =>
-        rightBuff.rawData.grantedTags.includes(tag),
-      ),
+      leftBuff.raw.grantedTags.some((tag) => rightBuff.raw.grantedTags.includes(tag)),
   );
 };
 
 export const groupBuffsBySharedOriginTypeCast: BuffGrouper = (buffs) => {
   const originTypeCastRequestParametersByBuffId = new Map(
     buffs.map((buff) => [
-      buff.rawData.id,
+      buff.raw.id,
       new Set(getConnectedOriginTypeCastRequestParameters(buff)),
     ]),
   );
@@ -54,13 +51,13 @@ export const groupBuffsBySharedOriginTypeCast: BuffGrouper = (buffs) => {
   return groupBuffs(
     buffs,
     (buff) =>
-      originTypeCastRequestParametersByBuffId.get(buff.rawData.id) ?? new Set<string>(),
+      originTypeCastRequestParametersByBuffId.get(buff.raw.id) ?? new Set<string>(),
     (leftBuff, rightBuff) =>
       !shouldNotGroupBuffs(leftBuff, rightBuff) &&
       hasIntersection(
-        originTypeCastRequestParametersByBuffId.get(leftBuff.rawData.id) ??
+        originTypeCastRequestParametersByBuffId.get(leftBuff.raw.id) ??
           new Set<string>(),
-        originTypeCastRequestParametersByBuffId.get(rightBuff.rawData.id) ??
+        originTypeCastRequestParametersByBuffId.get(rightBuff.raw.id) ??
           new Set<string>(),
       ),
   );
@@ -74,7 +71,7 @@ const shouldNotGroupBuffs = (buff1: Buff, buff2: Buff) => {
 };
 
 const getConnectedOriginTypeCastRequestParameters = (buff: Buff): Array<string> => {
-  return getConnectedBuffs(buff.rawData.id).flatMap((connectedBuff) =>
+  return getConnectedBuffs(buff.raw.id).flatMap((connectedBuff) =>
     zip(
       connectedBuff.extraEffectRequirements,
       connectedBuff.extraEffectReqPara,

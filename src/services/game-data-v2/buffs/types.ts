@@ -6,11 +6,11 @@ import type {
   Target,
 } from '@/services/game-data/types';
 
+import type { EntityResource } from '../create-entity-resource-lister';
 import type { Buff as RepositoryBuff } from '../repostiory';
 
-export type Buff = Stat & {
+export type BuffData = Stat & {
   buffId: number;
-  rawData: RepositoryBuff;
   duration?: number;
   type?: typeof CapabilityType.PERMANENT_STAT | typeof CapabilityType.MODIFIER;
   target?: Target;
@@ -18,3 +18,5 @@ export type Buff = Stat & {
   unlockedAt?: Sequence;
   disabledAt?: Sequence;
 };
+
+export type Buff = EntityResource<BuffData, RepositoryBuff>;

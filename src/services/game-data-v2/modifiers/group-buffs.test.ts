@@ -21,7 +21,7 @@ vi.mock('../get-capabilities', () => ({
 const makeBuff = (id: number, applicationTagRequirements: Array<string> = []): Buff =>
   ({
     buffId: id,
-    rawData: { id, applicationTagRequirements } as unknown as RepositoryBuff,
+    raw: { id, applicationTagRequirements } as unknown as RepositoryBuff,
     duration: undefined,
   }) as unknown as Buff;
 

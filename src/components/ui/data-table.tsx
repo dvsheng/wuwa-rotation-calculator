@@ -93,16 +93,18 @@ export function DataTable<TData, TValue>({
                       >
                         {header.isPlaceholder ? undefined : (
                           <div className="flex items-center gap-1">
-                            {flexRender(header.column.columnDef.header, header.getContext())}
-                            {header.column.getCanSort() && (
-                              header.column.getIsSorted() === 'asc' ? (
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                            {header.column.getCanSort() &&
+                              (header.column.getIsSorted() === 'asc' ? (
                                 <ArrowUp className="h-3 w-3" />
                               ) : header.column.getIsSorted() === 'desc' ? (
                                 <ArrowDown className="h-3 w-3" />
                               ) : (
                                 <ArrowUpDown className="text-muted-foreground h-3 w-3" />
-                              )
-                            )}
+                              ))}
                           </div>
                         )}
                       </TableHead>
@@ -149,7 +151,9 @@ export function DataTable<TData, TValue>({
               </TableRow>
             )}
           </TableBody>
-          {renderFooter && <TableFooter>{renderFooter(table.getRowModel().rows)}</TableFooter>}
+          {renderFooter && (
+            <TableFooter>{renderFooter(table.getRowModel().rows)}</TableFooter>
+          )}
         </Table>
       </div>
     </div>

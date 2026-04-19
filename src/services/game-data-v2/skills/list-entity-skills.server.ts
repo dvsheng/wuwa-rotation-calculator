@@ -1,6 +1,16 @@
 import { EntityType, OriginType, Sequence } from '@/services/game-data/types';
 
-import type { SkillAttribute } from '../repostiory';
+import { createEntityResourceLister } from '../create-entity-resource-lister';
+import type { EntityResource } from '../create-entity-resource-lister';
+import type {
+  EchoSet,
+  EchoSetEffect,
+  ResonatorChain,
+  ResonatorSkill,
+  SkillAttribute,
+  Weapon,
+  WeaponEffect,
+} from '../repostiory';
 import {
   echoSetEffects,
   echoSets,
@@ -15,103 +25,159 @@ import {
   CHAIN_TO_SEQUENCE_MAP,
   mapSkillTypeToOriginType,
 } from './map-skill-type-to-origin-type';
+import type { EntitySkillData, EntitySkillRepositoryRow } from './types';
 
-export interface EntitySkill {
-  gameId: number;
-  name: string;
-  description: string;
-  descriptionParameters?: Array<string>;
-  iconUrl: string;
-  originType: OriginType;
-  damageIds: Array<number>;
-  buffIds: Array<number>;
-  skillAttributes?: Array<SkillAttribute>;
+export const listEntitySkillsHandler: (
+  entityId: number,
+  entityType: EntityType,
+) => Promise<Array<EntityResource<EntitySkillData, EntitySkillRepositoryRow>>> =
+  createEntityResourceLister({
+    fetchResourcesForEntity,
+    fetchContextForEntity,
+    transform,
+    filter: () => true,
+  });
+
+type EntitySkillContext = {
+  attributesByLevelGroupId: Map<number, Array<SkillAttribute>>;
+  weapon?: Weapon;
+  echoSet?: EchoSet;
+};
+
+async function fetchResourcesForEntity(
+  entityId: number,
+  entityType: EntityType,
+): Promise<Array<EntitySkillRepositoryRow>> {
+  switch (entityType) {
+    case EntityType.CHARACTER: {
+      const [allSkills, allChains] = await Promise.all([
+        resonatorSkills.list(),
+        resonatorChains.list(),
+      ]);
+
+      return [
+        ...allSkills.filter((s) => s.skillGroupId === entityId && s.skillType !== 7),
+        ...allChains.filter((c) => c.groupId === entityId),
+      ];
+    }
+    case EntityType.WEAPON: {
+      const weapon = await weapons.get(entityId);
+      if (!weapon) throw new Error('invalid id');
+
+      const allEffects = await weaponEffects.list();
+      const resonEffects = allEffects.filter(
+        (effect) => effect.resonId === weapon.resonId,
+      );
+      if (resonEffects.length === 0) return [];
+
+      const seen = new Set<number>();
+      return resonEffects
+        .toSorted((a, b) => a.id - b.id)
+        .filter((effect) => {
+          if (seen.has(effect.resonId)) return false;
+          seen.add(effect.resonId);
+          return true;
+        });
+    }
+    case EntityType.ECHO_SET: {
+      const echoSet = await echoSets.get(entityId);
+      if (!echoSet) throw new Error('invalid id');
+
+      const fetterMap = echoSet.fetterMap as Array<{ Key: number; Value: number }>;
+      const fetterIds = new Set(fetterMap.map((entry) => entry.Value));
+
+      const allEffects = await echoSetEffects.list();
+      return allEffects.filter((f) => fetterIds.has(f.id));
+    }
+    case EntityType.ECHO: {
+      return [];
+    }
+  }
 }
 
-function substituteParameters(template: string, values?: Array<string>): string {
-  return values
-    ? values.reduce((substitutedTemplate, value, index) =>
-        substitutedTemplate.replaceAll(`{${index}}`, value),
-      template)
-    : template;
-}
-
-function resolveSkillDescriptionParameters(
-  values?: Array<string>,
-): Array<string> | undefined {
-  return values && values.length > 0 ? values : undefined;
-}
-
-async function listCharacterSkills(entityId: number): Promise<Array<EntitySkill>> {
-  const [allSkills, allChains, allAttributes] = await Promise.all([
-    resonatorSkills.list(),
-    resonatorChains.list(),
-    skillAttributesRepository.list(),
-  ]);
-
+async function fetchContextForEntity(
+  entityId: number,
+  entityType: EntityType,
+): Promise<EntitySkillContext> {
+  const allAttributes = await skillAttributesRepository.list();
   const attributesByLevelGroupId = Map.groupBy(
     allAttributes,
     (attribute) => attribute.skillLevelGroupId,
   );
 
-  const skills = allSkills
-    .filter((s) => s.skillGroupId === entityId && s.skillType !== 7)
-    .map((s) => {
-      const descriptionParameters = resolveSkillDescriptionParameters(
-        s.multiSkillDetailNum.length > 0 ? s.multiSkillDetailNum : s.skillDetailNum,
-      );
-
-      return {
-        gameId: s.id,
-        name: s.skillName,
-        description: substituteParameters(s.skillDescribe, descriptionParameters),
-        descriptionParameters,
-        iconUrl: s.icon,
-        originType: mapSkillTypeToOriginType(s.skillType),
-        damageIds: s.damageList ?? [],
-        buffIds: s.buffList,
-        skillAttributes: attributesByLevelGroupId.get(s.skillLevelGroupId) ?? [],
-      };
-    });
-
-  const chains = allChains
-    .filter((c) => c.groupId === entityId)
-    .map((c) => ({
-      gameId: c.id,
-      name: c.nodeName,
-      description: substituteParameters(
-        c.attributesDescription,
-        c.attributesDescriptionParams ?? undefined,
-      ),
-      descriptionParameters: c.attributesDescriptionParams ?? undefined,
-      iconUrl: c.nodeIcon,
-      originType: CHAIN_TO_SEQUENCE_MAP[c.groupIndex] ?? Sequence.S6,
-      damageIds: [],
-      buffIds: c.buffIds ?? [],
-    }));
-
-  return [...skills, ...chains];
+  return {
+    attributesByLevelGroupId,
+    weapon:
+      entityType === EntityType.WEAPON ? await getRequiredWeapon(entityId) : undefined,
+    echoSet:
+      entityType === EntityType.ECHO_SET
+        ? await getRequiredEchoSet(entityId)
+        : undefined,
+  };
 }
 
-async function listWeaponSkills(entityId: number): Promise<Array<EntitySkill>> {
-  const weapon = await weapons.get(entityId);
-  if (!weapon) throw new Error('invalid id');
+function transform(
+  row: EntitySkillRepositoryRow,
+  context: EntitySkillContext,
+): EntitySkillData {
+  if (isResonatorSkill(row)) return transformResonatorSkill(row, context);
+  if (isResonatorChain(row)) return transformResonatorChain(row);
+  if (isWeaponEffect(row)) return transformWeaponEffect(row, context);
+  return transformEchoSetEffect(row);
+}
 
-  const allEffects = await weaponEffects.list();
-  const resonEffects = allEffects.filter((effect) => effect.resonId === weapon.resonId);
-  if (resonEffects.length === 0) return [];
+function transformResonatorSkill(
+  skill: ResonatorSkill,
+  context: EntitySkillContext,
+): EntitySkillData {
+  const rawDescriptionParameters =
+    skill.multiSkillDetailNum.length > 0
+      ? skill.multiSkillDetailNum
+      : skill.skillDetailNum;
+  const descriptionParameters = resolveSkillDescriptionParameters(
+    rawDescriptionParameters,
+  );
 
-  // Dedup by resonId, keep the lowest id (matching ingestSkillsV2 behaviour)
-  const seen = new Set<number>();
-  const deduped = resonEffects
-    .toSorted((a, b) => a.id - b.id)
-    .filter((effect) => {
-      if (seen.has(effect.resonId)) return false;
-      seen.add(effect.resonId);
-      return true;
-    });
+  return {
+    gameId: skill.id,
+    name: skill.skillName,
+    description: substituteParameters(skill.skillDescribe, descriptionParameters),
+    descriptionParameters,
+    iconUrl: skill.icon,
+    originType: mapSkillTypeToOriginType(skill.skillType),
+    damageIds: skill.damageList ?? [],
+    buffIds: skill.buffList,
+    skillAttributes:
+      context.attributesByLevelGroupId.get(skill.skillLevelGroupId) ?? [],
+  };
+}
 
-  return deduped.map((effect) => ({
+function transformResonatorChain(chain: ResonatorChain): EntitySkillData {
+  return {
+    gameId: chain.id,
+    name: chain.nodeName,
+    description: substituteParameters(
+      chain.attributesDescription,
+      chain.attributesDescriptionParams ?? undefined,
+    ),
+    descriptionParameters: resolveSkillDescriptionParameters(
+      chain.attributesDescriptionParams ?? undefined,
+    ),
+    iconUrl: chain.nodeIcon,
+    originType: CHAIN_TO_SEQUENCE_MAP[chain.groupIndex] ?? Sequence.S6,
+    damageIds: [],
+    buffIds: chain.buffIds ?? [],
+  };
+}
+
+function transformWeaponEffect(
+  effect: WeaponEffect,
+  context: EntitySkillContext,
+): EntitySkillData {
+  const weapon = context.weapon;
+  if (!weapon) throw new Error('missing weapon context');
+
+  return {
     gameId: effect.resonId,
     name: effect.name,
     description: weapon.desc,
@@ -119,46 +185,57 @@ async function listWeaponSkills(entityId: number): Promise<Array<EntitySkill>> {
     iconUrl: weapon.iconSmall,
     damageIds: [],
     buffIds: effect.effect,
-  }));
+  };
 }
 
-async function listEchoSetSkills(entityId: number): Promise<Array<EntitySkill>> {
+function transformEchoSetEffect(effect: EchoSetEffect): EntitySkillData {
+  return {
+    gameId: effect.id,
+    name: effect.name,
+    description: effect.effectDescription,
+    originType: OriginType.ECHO_SET,
+    iconUrl: effect.fetterIcon,
+    damageIds: [],
+    buffIds: effect.buffIds,
+  };
+}
+
+function substituteParameters(template: string, values?: Array<string>): string {
+  return values
+    ? values.reduce(
+        (substitutedTemplate, value, index) =>
+          substitutedTemplate.replaceAll(`{${index}}`, value),
+        template,
+      )
+    : template;
+}
+
+function resolveSkillDescriptionParameters(
+  values?: Array<string> | null,
+): Array<string> | undefined {
+  return values && values.length > 0 ? values : undefined;
+}
+
+async function getRequiredWeapon(entityId: number): Promise<Weapon> {
+  const weapon = await weapons.get(entityId);
+  if (!weapon) throw new Error('invalid id');
+  return weapon;
+}
+
+async function getRequiredEchoSet(entityId: number): Promise<EchoSet> {
   const echoSet = await echoSets.get(entityId);
   if (!echoSet) throw new Error('invalid id');
-
-  const fetterMap = echoSet.fetterMap as Array<{ Key: number; Value: number }>;
-  const fetterIds = new Set(fetterMap.map((entry) => entry.Value));
-
-  const allEffects = await echoSetEffects.list();
-  return allEffects
-    .filter((f) => fetterIds.has(f.id))
-    .map((f) => ({
-      gameId: f.id,
-      name: f.name,
-      description: f.effectDescription,
-      originType: OriginType.ECHO_SET,
-      iconUrl: f.fetterIcon,
-      damageIds: [],
-      buffIds: f.buffIds,
-    }));
+  return echoSet;
 }
 
-export async function listEntitySkillsHandler(
-  entityId: number,
-  entityType: EntityType,
-): Promise<Array<EntitySkill>> {
-  switch (entityType) {
-    case EntityType.CHARACTER: {
-      return listCharacterSkills(entityId);
-    }
-    case EntityType.WEAPON: {
-      return listWeaponSkills(entityId);
-    }
-    case EntityType.ECHO_SET: {
-      return listEchoSetSkills(entityId);
-    }
-    case EntityType.ECHO: {
-      return [];
-    }
-  }
+function isResonatorSkill(row: EntitySkillRepositoryRow): row is ResonatorSkill {
+  return 'skillGroupId' in row;
+}
+
+function isResonatorChain(row: EntitySkillRepositoryRow): row is ResonatorChain {
+  return 'nodeName' in row;
+}
+
+function isWeaponEffect(row: EntitySkillRepositoryRow): row is WeaponEffect {
+  return 'resonId' in row;
 }

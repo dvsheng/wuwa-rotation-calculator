@@ -1,4 +1,7 @@
-export interface Bullet {
+import type { EntityResource } from '../create-entity-resource-lister';
+import type { ReBulletDataMainRow } from '../repostiory';
+
+export interface BulletData {
   id: string;
   name: string;
   hits: Array<number>;
@@ -27,3 +30,5 @@ export interface Bullet {
     onField: Array<number>;
   };
 }
+
+export type Bullet = EntityResource<BulletData, ReBulletDataMainRow>;

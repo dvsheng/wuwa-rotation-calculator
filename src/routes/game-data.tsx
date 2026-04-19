@@ -14,8 +14,17 @@ import type { GameDataEntity } from '@/hooks/useGameDataEntities';
 import { useGameDataEntities } from '@/hooks/useGameDataEntities';
 import { EntityType } from '@/services/game-data/types';
 
-function GameDataTable({ search, entityType }: { search: string; entityType: string | undefined }) {
-  const { data } = useGameDataEntities({ search, entityType: entityType as EntityType });
+function GameDataTable({
+  search,
+  entityType,
+}: {
+  search: string;
+  entityType: string | undefined;
+}) {
+  const { data } = useGameDataEntities({
+    search,
+    entityType: entityType as EntityType,
+  });
   const navigate = useNavigate();
 
   const columns: Array<ColumnDef<GameDataEntity>> = [

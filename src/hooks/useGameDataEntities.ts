@@ -10,7 +10,10 @@ export interface UseGameDataEntitiesOptions {
 
 export type GameDataEntity = Awaited<ReturnType<typeof listEntities>>[number];
 
-export const useGameDataEntities = ({ entityType, search }: UseGameDataEntitiesOptions) => {
+export const useGameDataEntities = ({
+  entityType,
+  search,
+}: UseGameDataEntitiesOptions) => {
   const query = useSuspenseQuery({
     queryKey: ['game-data-v2-entities'],
     queryFn: () => listEntities(),
@@ -20,7 +23,8 @@ export const useGameDataEntities = ({ entityType, search }: UseGameDataEntitiesO
   const normalizedSearch = search?.trim().toLowerCase();
   const filteredData = query.data.filter((row) => {
     if (entityType && row.type !== entityType) return false;
-    if (normalizedSearch && !row.name.toLowerCase().includes(normalizedSearch)) return false;
+    if (normalizedSearch && !row.name.toLowerCase().includes(normalizedSearch))
+      return false;
     return true;
   });
 

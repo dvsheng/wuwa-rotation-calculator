@@ -7,9 +7,9 @@ import type {
 
 import type { MontageAsset } from '../repostiory';
 
-import type { Montage } from './types';
+import type { MontageData } from './types';
 
-export function toMontage(rawMontage: MontageAsset): Montage {
+export function toMontage(rawMontage: MontageAsset): MontageData {
   const data = rawMontage.data;
 
   const notifications = data.Properties.Notifies ?? [];
@@ -41,10 +41,12 @@ export function toMontage(rawMontage: MontageAsset): Montage {
       return (details.Properties?.技能行为 ?? []).flatMap((behavior) =>
         behavior.SkillBehaviorActionGroup_20_E7E8941646BF84E137B075AD36D96317.flatMap(
           (action) =>
-            (action.Bullets_77_D4BBB46C47AE6F88D881F9ADA9156FFA ?? []).map((bullet) => ({
-              bulletId: bullet.bulletRowName_15_E1264B954C05799310C2CA8F2AA41295,
-              time,
-            })),
+            (action.Bullets_77_D4BBB46C47AE6F88D881F9ADA9156FFA ?? []).map(
+              (bullet) => ({
+                bulletId: bullet.bulletRowName_15_E1264B954C05799310C2CA8F2AA41295,
+                time,
+              }),
+            ),
         ),
       );
     }) ?? []),

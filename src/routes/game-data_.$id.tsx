@@ -265,7 +265,7 @@ function EntityBuffsList({ id, entityType }: { id: number; entityType: EntityTyp
       id: 'raw',
       header: '',
       cell: ({ row }) => (
-        <HoverJson value={row.original.rawData}>
+        <HoverJson value={row.original.raw}>
           <span className="text-xs">raw</span>
         </HoverJson>
       ),
@@ -392,7 +392,7 @@ function EntityModifiersList({
   entityType: EntityType;
 }) {
   const { data } = useEntityModifiers(id, entityType);
-  const modifiers = data as Array<Modifier>;
+  const modifiers = data;
 
   if (modifiers.length === 0) {
     return <p className="text-muted-foreground text-sm">No modifiers found.</p>;

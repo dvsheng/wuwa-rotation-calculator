@@ -122,5 +122,6 @@ const IGNORED_MONTAGE_DEDUPE_KEYS = new Set([
   'endTime',
   'id',
   'name',
+  'raw',
 ]);
 const IGNORED_BULLET_DEDUPE_KEYS = new Set(['time']);

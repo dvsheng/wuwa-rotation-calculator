@@ -5,12 +5,10 @@ export const transformBulletsToTimedHits = (
   getBulletById: (id: Bullet['id']) => Bullet | undefined,
   startTime = 0,
 ): Array<{ damageId: number; time: number }> => {
-  const result = Array.from({ length: bullet.hitsPerTarget }, (_, index) =>
-    bullet.hits.map((hit) => ({
-      damageId: hit,
-      time: startTime + index * bullet.hitInterval,
-    })),
-  ).flat();
+  const result = bullet.hits.map((hit) => ({
+    damageId: hit,
+    time: startTime * bullet.hitInterval,
+  }));
 
   for (const child of bullet.children) {
     const childBullet = getBulletById(child.bulletId);

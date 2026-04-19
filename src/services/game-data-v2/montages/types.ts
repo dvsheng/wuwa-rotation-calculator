@@ -7,6 +7,7 @@ import type { MontageAsset } from '../repostiory';
 export interface MontageBullet {
   time: number;
   bulletId: string;
+  requiredTags: Array<string>;
 }
 
 /**

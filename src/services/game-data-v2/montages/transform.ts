@@ -25,16 +25,6 @@ export function toMontage(rawMontage: MontageAsset): MontageData {
   );
 
   const bullets = [
-    ...(notificationsByType['TsAnimNotifyReSkillEvent']?.flatMap((notify) => {
-      const time = notify.LinkValue;
-      const detailReference = getDetailReference(notify.Notify?.ObjectName ?? '');
-      const details = notificationDetailsByName.get(detailReference);
-      if (!isReSkillEventDetails(details)) return [];
-      return getBulletIds(details.Properties).map((id) => ({
-        bulletId: id,
-        time,
-      }));
-    }) ?? []),
     ...(notificationsByType['TsAnimNotifySkillBehavior']?.flatMap((notify) => {
       const time = notify.LinkValue;
       const detailReference = getDetailReference(notify.Notify?.ObjectName ?? '');
@@ -45,16 +35,32 @@ export function toMontage(rawMontage: MontageAsset): MontageData {
           (action.Bullets ?? []).map((bullet) => ({
             bulletId: bullet.bulletRowName,
             time,
+            requiredTags: behavior.SkillBehaviorConditionGroup.flatMap((tag) => {
+              return tag.TagToCheck.map((tagToCheck) =>
+                typeof tagToCheck === 'string' ? tagToCheck : tagToCheck.TagName,
+              );
+            }),
           })),
         ),
       );
+    }) ?? []),
+    ...(notificationsByType['TsAnimNotifyReSkillEvent']?.flatMap((notify) => {
+      const time = notify.LinkValue;
+      const detailReference = getDetailReference(notify.Notify?.ObjectName ?? '');
+      const details = notificationDetailsByName.get(detailReference);
+      if (!isReSkillEventDetails(details)) return [];
+      return getBulletIds(details.Properties).map((id) => ({
+        bulletId: id,
+        time,
+        requiredTags: [],
+      }));
     }) ?? []),
   ];
 
   const dedupedBullets = compact(
     Object.values(
-      Object.groupBy(bullets, ({ time, bulletId }) =>
-        JSON.stringify({ time, bulletId }),
+      Object.groupBy(bullets, ({ time, bulletId, requiredTags }) =>
+        JSON.stringify({ time, bulletId, requiredTags }),
       ),
     ).map((bulletArray) => bulletArray?.[0]),
   );

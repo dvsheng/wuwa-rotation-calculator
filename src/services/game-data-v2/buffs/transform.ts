@@ -313,7 +313,8 @@ const isPermanentStat = (buff: RepositoryBuff) => {
         requirement !== ExtraEffectRequirement.OnAttribute &&
         requirement !== ExtraEffectRequirement.OnDamageType &&
         requirement !== ExtraEffectRequirement.OnSkillTreeUnlock &&
-        requirement !== ExtraEffectRequirement.OnDamageInstances,
+        requirement !== ExtraEffectRequirement.OnDamageInstances &&
+        requirement !== ExtraEffectRequirement.OnBuffStack,
     ).length === 0
   );
 };

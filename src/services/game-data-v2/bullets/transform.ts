@@ -1,3 +1,5 @@
+import { compact, uniqBy } from 'es-toolkit';
+
 import type { ReBulletDataMainRow } from '../repostiory';
 
 import type { BulletData } from './types';
@@ -13,29 +15,29 @@ export function transform(row: ReBulletDataMainRow): BulletData {
       }>
     | undefined;
 
-  const singleHit = base?.伤害ID;
-  const multiHits = base?.多伤害ID ?? [];
-  const hits: Array<number> = [
-    ...(singleHit == undefined ? [] : [singleHit]),
-    ...multiHits,
-  ];
-
   return {
     id: String(row.bulletId),
     name: row.rowData.子弹名称 ?? '',
-    hits,
-    hitsPerTarget: base?.每个单位总作用次数 ?? 1,
+    hits:
+      base?.多伤害ID && base.多伤害ID.length > 0
+        ? base.多伤害ID
+        : compact(Array.of(base?.每个单位总作用次数 ?? 1).map((_) => base?.伤害ID)),
     totalHitCap: base?.总作用次数限制 ?? -1,
     hitInterval: base?.作用间隔 ?? 0,
     duration: base?.持续时间 ?? 0,
     requiredTags: extractTags(base?.子弹允许生成Tag),
     forbiddenTags: extractTags(base?.子弹禁止生成Tag),
     shouldDestroyOnSkillEnd: base?.技能结束是否销毁子弹 ?? false,
-    children: (children ?? []).map((c) => ({
-      bulletId: String(c.召唤子弹ID),
-      delay: c.召唤子弹延迟,
-      count: c.召唤子弹数量,
-    })),
+    // Assume that identical children fired at the same time are redundant because
+    // they generally represent children for different ranges
+    children: uniqBy(
+      (children ?? []).map((c) => ({
+        bulletId: String(c.召唤子弹ID),
+        delay: c.召唤子弹延迟,
+        count: c.召唤子弹数量,
+      })),
+      (child) => JSON.stringify(child),
+    ),
     onHitBuffs: {
       attacker: exec?.命中后对攻击者应用GE的Id ?? [],
       victim: exec?.命中后对受击者应用GE的Id ?? [],

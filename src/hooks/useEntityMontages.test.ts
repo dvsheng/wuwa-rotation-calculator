@@ -9,12 +9,12 @@ describe('dedupeMontages', () => {
     const longNameMontage = createMontage({
       id: 'long-name-id',
       name: 'LongMontageName',
-      bullets: [{ bulletId: '1001', time: 1 }],
+      bullets: [{ bulletId: '1001', time: 1, requiredTags: [] }],
     });
     const shortNameMontage = createMontage({
       id: 'short-name-id',
       name: 'Short',
-      bullets: [{ bulletId: '1001', time: 1.03 }],
+      bullets: [{ bulletId: '1001', time: 1.03, requiredTags: [] }],
     });
     const duplicateMontages: Array<Montage> = [longNameMontage, shortNameMontage];
 
@@ -54,12 +54,12 @@ describe('dedupeMontages', () => {
     const firstMontage = createMontage({
       id: 'first-id',
       name: 'First',
-      bullets: [{ bulletId: '1001', time: 1 }],
+      bullets: [{ bulletId: '1001', time: 1, requiredTags: [] }],
     });
     const secondMontage = createMontage({
       id: 'second-id',
       name: 'Second',
-      bullets: [{ bulletId: '1001', time: 1.11 }],
+      bullets: [{ bulletId: '1001', time: 1.11, requiredTags: [] }],
     });
 
     expect(dedupeMontages([firstMontage, secondMontage])).toEqual([
@@ -103,6 +103,7 @@ const createMontage = (
   bullets: [
     {
       bulletId: '1001',
+      requiredTags: [],
       time: 0.2,
     },
   ],

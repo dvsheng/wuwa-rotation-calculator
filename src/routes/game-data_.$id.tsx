@@ -64,6 +64,7 @@ type MontageDamageRow = {
   time: number;
   damageId: number;
   damageInstance?: DamageInstance;
+  montageRequiredTags: Array<string>;
 };
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
@@ -842,6 +843,7 @@ function MontageCard({ entityId, item }: { entityId: number; item: Montage }) {
         time,
         damageId,
         damageInstance: damageInstancesById.get(damageId),
+        montageRequiredTags: hitRow.requiredTags,
       }));
     })
     .toSorted(
@@ -942,8 +944,20 @@ function BulletView({
       },
     },
     {
+      id: 'montageRequiredTags',
+      header: 'Montage Required Tags',
+      cell: ({ row }) => {
+        const tags = row.original.requiredTags;
+        return tags.length === 0 ? <NullTableValue /> : <RawTagList tags={tags} />;
+      },
+      meta: {
+        headerClassName: 'min-w-48',
+        cellClassName: 'min-w-48',
+      },
+    },
+    {
       id: 'requiredTags',
-      header: 'Required Tags',
+      header: 'Bullet Required Tags',
       cell: ({ row }) => {
         const tags = bulletById.get(row.original.bulletId)?.requiredTags ?? [];
         return tags.length === 0 ? <NullTableValue /> : <RawTagList tags={tags} />;
@@ -1085,8 +1099,20 @@ function DamageView({
       },
     },
     {
+      id: 'montageRequiredTags',
+      header: 'Montage Required Tags',
+      cell: ({ row }) => {
+        const tags = row.original.montageRequiredTags;
+        return tags.length === 0 ? <NullTableValue /> : <RawTagList tags={tags} />;
+      },
+      meta: {
+        headerClassName: 'min-w-48',
+        cellClassName: 'min-w-48',
+      },
+    },
+    {
       id: 'requiredTags',
-      header: 'Required Tags',
+      header: 'Bullet Required Tags',
       cell: ({ row }) => {
         const tags = bulletById.get(row.original.bulletId)?.requiredTags ?? [];
         return tags.length === 0 ? <NullTableValue /> : <RawTagList tags={tags} />;

@@ -5,7 +5,6 @@ export interface BulletData {
   id: string;
   name: string;
   hits: Array<number>;
-  hitsPerTarget: number;
   totalHitCap: number;
   hitInterval: number;
   duration: number;

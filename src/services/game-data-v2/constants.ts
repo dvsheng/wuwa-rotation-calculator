@@ -29,7 +29,8 @@ export const DAMAGE_INSTANCE_TYPE_TO_DAMAGE_TYPE_MAP: Partial<
   3: DamageType.INTRO,
   4: DamageType.RESONANCE_SKILL,
   5: DamageType.ECHO,
-  7: DamageType.OUTRO,
+  7: DamageType.ECHO,
+  10: DamageType.NEGATIVE_STATUS,
   12: DamageType.TUNE_RUPTURE,
 } as const;
 

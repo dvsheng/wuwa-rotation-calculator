@@ -1,6 +1,6 @@
 import { compact, uniq } from 'es-toolkit';
 
-import { EntityType } from '@/services/game-data/types';
+import { CapabilityType, EntityType } from '@/services/game-data/types';
 
 import { getBuffsByPrefix, getConnectedBuffs } from '../get-capabilities';
 import {
@@ -14,9 +14,14 @@ import {
 } from '../repostiory';
 import type { Buff as RepositoryBuff } from '../repostiory';
 
-import { classifyBuffCapability, removeBuffsFromAlternativeGameModes } from './filter';
+import { removeBuffsFromAlternativeGameModes } from './filter';
 import { inferBuffSequences } from './infer-buff-sequence';
-import { getBuffDuration, getBuffStat, getBuffTarget } from './transform';
+import {
+  getBuffDuration,
+  getBuffStat,
+  getBuffTarget,
+  isPermanentStat,
+} from './transform';
 import type { Buff } from './types';
 
 export const getEntityBuffsHandler = async (
@@ -54,14 +59,15 @@ export const getEntityBuffsHandler = async (
 
   return compact(
     resolvedBuffs.map((buff) => {
-      const classification = classifyBuffCapability(buff);
       const stat = getBuffStat(buff);
       if (!stat) return;
 
       return {
         buffId: buff.id,
         rawData: buff,
-        type: classification,
+        type: isPermanentStat(buff)
+          ? CapabilityType.PERMANENT_STAT
+          : CapabilityType.MODIFIER,
         duration: getBuffDuration([buff]),
         target: getBuffTarget(stat, [buff]),
         ...stat,

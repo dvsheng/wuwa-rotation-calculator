@@ -1,5 +1,6 @@
 import type {
   CapabilityType,
+  OriginType,
   Sequence,
   Stat,
   Target,
@@ -13,6 +14,7 @@ export type Buff = Stat & {
   duration?: number;
   type?: typeof CapabilityType.PERMANENT_STAT | typeof CapabilityType.MODIFIER;
   target?: Target;
+  source?: OriginType;
   unlockedAt?: Sequence;
   disabledAt?: Sequence;
 };

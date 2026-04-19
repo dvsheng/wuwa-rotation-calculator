@@ -285,3 +285,16 @@ export function getBuffTarget(
     ? Target.TEAM
     : Target.SELF;
 }
+
+export const isPermanentStat = (buff: RepositoryBuff) => {
+  return (
+    (buff.durationMagnitude.length === 0 || buff.durationMagnitude[0] > 60) &&
+    buff.extraEffectRequirements.filter(
+      (requirement) =>
+        requirement !== ExtraEffectRequirement.OnAttribute &&
+        requirement !== ExtraEffectRequirement.OnDamageType &&
+        requirement !== ExtraEffectRequirement.OnSkillTreeUnlock &&
+        requirement !== ExtraEffectRequirement.OnDamageInstances,
+    ).length === 0
+  );
+};

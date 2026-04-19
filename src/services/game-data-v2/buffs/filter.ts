@@ -1,42 +1,14 @@
-import { CapabilityType } from '@/services/game-data/types';
-
 import {
   rogueCharacterBuffs,
   roguePermanentBuffPools,
   roguePermanentCharacterBuffs,
   rogueWeeklyBuffPools,
 } from '../repostiory';
-import type { Buff, Buff as RepositoryBuff } from '../repostiory';
-
-import { ExtraEffectRequirement } from './constants';
+import type { Buff } from '../repostiory';
 
 const ALT_GAMEMODE_TAG = ['肉鸽', 'Rogue', '装備', '関卡'];
 
 const ALT_GAMEMODE_BUFF_PREFIX = '99';
-
-export function isBuffScopedToSpecificAttacks(b: RepositoryBuff) {
-  return b.extraEffectRequirements.includes(ExtraEffectRequirement.OnDamageInstances);
-}
-
-export function isAlwaysActiveBuff(buff: RepositoryBuff) {
-  return (
-    (buff.durationMagnitude.length === 0 || buff.durationMagnitude[0] > 60) &&
-    buff.extraEffectRequirements.filter(
-      (requirement) =>
-        requirement !== ExtraEffectRequirement.OnAttribute &&
-        requirement !== ExtraEffectRequirement.OnDamageType &&
-        requirement !== ExtraEffectRequirement.OnSkillTreeUnlock &&
-        requirement !== ExtraEffectRequirement.OnDamageInstances,
-    ).length > 1
-  );
-}
-
-export function classifyBuffCapability(buff: RepositoryBuff) {
-  if (isAlwaysActiveBuff(buff)) {
-    return CapabilityType.PERMANENT_STAT;
-  }
-  return CapabilityType.MODIFIER;
-}
 
 export const removeBuffsFromAlternativeGameModes = async (
   buffs: Array<Buff>,

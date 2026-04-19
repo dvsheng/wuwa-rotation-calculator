@@ -1,7 +1,17 @@
 import type { Stat } from '@/services/game-data/types';
+import { Sequence as SequenceEnum } from '@/services/game-data/types';
 import { CharacterStat, EnemyStat, Tag } from '@/types';
 
 type TaggedStatDefinition = Omit<Stat, 'value'>;
+
+export const SEQUENCE_ORDER = [
+  SequenceEnum.S1,
+  SequenceEnum.S2,
+  SequenceEnum.S3,
+  SequenceEnum.S4,
+  SequenceEnum.S5,
+  SequenceEnum.S6,
+] as const;
 
 export const ENEMY_STAT_SET = new Set<string>(Object.values(EnemyStat));
 
@@ -334,7 +344,7 @@ export const DurationPolicy = {
 } as const;
 export type DurationPolicy = (typeof DurationPolicy)[keyof typeof DurationPolicy];
 
-const STANDARD_RATIO_STAT_MAP: Partial<Record<number, TaggedStatDefinition>> = {
+export const STANDARD_RATIO_STAT_MAP: Partial<Record<number, TaggedStatDefinition>> = {
   2: { stat: CharacterStat.HP_SCALING_BONUS, tags: [] },
   3: { stat: CharacterStat.HP_SCALING_BONUS, tags: [] },
   7: { stat: CharacterStat.ATTACK_SCALING_BONUS, tags: [] },
@@ -368,7 +378,9 @@ const STANDARD_RATIO_STAT_MAP: Partial<Record<number, TaggedStatDefinition>> = {
   142: { stat: CharacterStat.TUNE_BREAK_BOOST, tags: [Tag.ALL] },
 };
 
-const NEGATIVE_MAGNITUDE_STAT_MAP: Partial<Record<number, TaggedStatDefinition>> = {
+export const NEGATIVE_MAGNITUDE_STAT_MAP: Partial<
+  Record<number, TaggedStatDefinition>
+> = {
   10: { stat: EnemyStat.DEFENSE_REDUCTION, tags: [] },
 };
 
@@ -377,51 +389,3 @@ export const NON_RATIO_STAT_MAP: Partial<Record<number, TaggedStatDefinition>> =
   7: { stat: CharacterStat.ATTACK_FLAT, tags: [] },
   10: { stat: CharacterStat.DEFENSE_FLAT, tags: [] },
 };
-
-function toBasisPointsValue(modifierMagnitude: number) {
-  return modifierMagnitude / 10_000;
-}
-
-function toNormalizedRatioValue(gameAttributeId: number, modifierMagnitude: number) {
-  const basisPointsValue = toBasisPointsValue(modifierMagnitude);
-  return [30, 34, 99].includes(gameAttributeId)
-    ? Math.abs(basisPointsValue)
-    : basisPointsValue;
-}
-
-export function getStatByGameAttributeId(
-  gameAttributeId: number,
-  modifierMagnitude: number,
-  isFlatStat: boolean = false,
-): Stat | undefined {
-  const normalizedStatId =
-    gameAttributeId >= 10_000 ? gameAttributeId - 10_000 : gameAttributeId;
-  const negativeMagnitudeStat =
-    modifierMagnitude < 0 ? NEGATIVE_MAGNITUDE_STAT_MAP[normalizedStatId] : undefined;
-  if (negativeMagnitudeStat) {
-    return {
-      ...negativeMagnitudeStat,
-      value: Math.abs(toBasisPointsValue(modifierMagnitude)),
-    };
-  }
-
-  if (isFlatStat) {
-    const nonRatioStat = NON_RATIO_STAT_MAP[normalizedStatId];
-    if (nonRatioStat) {
-      return {
-        ...nonRatioStat,
-        value: modifierMagnitude,
-      };
-    }
-  }
-
-  const standardRatioStat = STANDARD_RATIO_STAT_MAP[normalizedStatId];
-  if (!standardRatioStat) {
-    return undefined;
-  }
-
-  return {
-    ...standardRatioStat,
-    value: toNormalizedRatioValue(normalizedStatId, modifierMagnitude),
-  };
-}

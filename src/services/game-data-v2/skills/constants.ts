@@ -1,6 +1,6 @@
 import { OriginType, Sequence } from '@/services/game-data/types';
 
-const SKILL_TYPE_TO_ORIGIN_TYPE_MAP: Partial<Record<number, OriginType>> = {
+export const SKILL_TYPE_TO_ORIGIN_TYPE_MAP: Partial<Record<number, OriginType>> = {
   1: OriginType.NORMAL_ATTACK,
   2: OriginType.RESONANCE_SKILL,
   3: OriginType.RESONANCE_LIBERATION,
@@ -20,6 +20,3 @@ export const CHAIN_TO_SEQUENCE_MAP: Partial<Record<number, Sequence>> = {
   6: Sequence.S6,
 } as const;
 
-export function mapSkillTypeToOriginType(skillType: number): OriginType {
-  return SKILL_TYPE_TO_ORIGIN_TYPE_MAP[skillType] ?? OriginType.NORMAL_ATTACK;
-}

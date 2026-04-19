@@ -4,7 +4,7 @@ import { AttackScalingProperty, Attribute, DamageType, Tag } from '@/types';
 
 import type { Damage } from '../repostiory';
 
-import { tryTransformToDamageInstance } from './transform-damage-to-damage-instance';
+import { tryTransformToDamageInstance } from './transform';
 
 const baseDamage = {
   id: 123_456_789,

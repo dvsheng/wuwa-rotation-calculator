@@ -12,8 +12,6 @@ import type { Damage } from '../repostiory';
 
 import type { DamageInstanceData } from './types';
 
-// Try to transform a damage row from the repository to a DamageInstanc
-// return undefined if unable to
 export const tryTransformToDamageInstance = (
   damage: Damage,
 ): DamageInstanceData | undefined => {

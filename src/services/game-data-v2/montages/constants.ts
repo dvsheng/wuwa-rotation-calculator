@@ -54,15 +54,3 @@ export const WUWA_CHARACTER_ENTITY_IDS: Record<string, number> = {
   Zanni: 1507,
   Zhezhi: 1105,
 };
-
-export function findWuwaCharacterEntityId(characterName: string): number | undefined {
-  if (Object.hasOwn(WUWA_CHARACTER_ENTITY_IDS, characterName)) {
-    return WUWA_CHARACTER_ENTITY_IDS[characterName];
-  }
-}
-
-export function findCharacterNamesByEntityId(entityId: number): Array<string> {
-  return Object.entries(WUWA_CHARACTER_ENTITY_IDS)
-    .filter(([, id]) => id === entityId)
-    .map(([name]) => name);
-}

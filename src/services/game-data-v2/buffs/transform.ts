@@ -1,7 +1,7 @@
 import { compact, uniq, zip } from 'es-toolkit';
 
 import type { NumberNode, Stat } from '@/services/game-data/types';
-import { Target } from '@/services/game-data/types';
+import { CapabilityType, Target } from '@/services/game-data/types';
 import { Tag } from '@/types';
 
 import {
@@ -16,12 +16,34 @@ import {
   ENEMY_STAT_SET,
   ExtraEffectID,
   ExtraEffectRequirement,
+  NEGATIVE_MAGNITUDE_STAT_MAP,
   NEGATIVE_STATUS_BUFF_ID_TO_STAT,
   NON_RATIO_STAT_MAP,
-  getStatByGameAttributeId,
+  STANDARD_RATIO_STAT_MAP,
 } from './constants';
+import type { BuffContext } from './fetch-context';
+import type { BuffData } from './types';
 
 const ENEMY_REQUIREMENT_TARGET = 1;
+
+export function toBuff(
+  buff: RepositoryBuff,
+  context: BuffContext,
+): BuffData | undefined {
+  const stat = getBuffStat(buff);
+  if (!stat) return;
+
+  return {
+    buffId: buff.id,
+    type: isPermanentStat(buff)
+      ? CapabilityType.PERMANENT_STAT
+      : CapabilityType.MODIFIER,
+    duration: getBuffDuration([buff]),
+    target: getBuffTarget(stat, [buff]),
+    ...stat,
+    ...context.sequenceInfoByBuffId.get(buff.id),
+  };
+}
 
 function mapExtraEffectRequirementToAttackTag(parameter: string): Tag | undefined {
   const damageType =
@@ -251,7 +273,7 @@ export function getBuffStat(b: RepositoryBuff): Stat | undefined {
   };
 }
 
-export function getBuffDuration(buffGraph: Array<RepositoryBuff>) {
+function getBuffDuration(buffGraph: Array<RepositoryBuff>) {
   const leafBuff = buffGraph.at(-1);
   const parentBuff = buffGraph.at(-2);
   if (
@@ -269,10 +291,7 @@ export function getBuffDuration(buffGraph: Array<RepositoryBuff>) {
   }
 }
 
-export function getBuffTarget(
-  statDefinition: Stat,
-  buffGraph: Array<RepositoryBuff>,
-): Target {
+function getBuffTarget(statDefinition: Stat, buffGraph: Array<RepositoryBuff>): Target {
   if (ENEMY_STAT_SET.has(statDefinition.stat)) {
     return Target.ENEMY;
   }
@@ -286,7 +305,7 @@ export function getBuffTarget(
     : Target.SELF;
 }
 
-export const isPermanentStat = (buff: RepositoryBuff) => {
+const isPermanentStat = (buff: RepositoryBuff) => {
   return (
     (buff.durationMagnitude.length === 0 || buff.durationMagnitude[0] > 60) &&
     buff.extraEffectRequirements.filter(
@@ -298,3 +317,51 @@ export const isPermanentStat = (buff: RepositoryBuff) => {
     ).length === 0
   );
 };
+
+function getStatByGameAttributeId(
+  gameAttributeId: number,
+  modifierMagnitude: number,
+  isFlatStat: boolean = false,
+): Stat | undefined {
+  const normalizedStatId =
+    gameAttributeId >= 10_000 ? gameAttributeId - 10_000 : gameAttributeId;
+  const negativeMagnitudeStat =
+    modifierMagnitude < 0 ? NEGATIVE_MAGNITUDE_STAT_MAP[normalizedStatId] : undefined;
+  if (negativeMagnitudeStat) {
+    return {
+      ...negativeMagnitudeStat,
+      value: Math.abs(toBasisPointsValue(modifierMagnitude)),
+    };
+  }
+
+  if (isFlatStat) {
+    const nonRatioStat = NON_RATIO_STAT_MAP[normalizedStatId];
+    if (nonRatioStat) {
+      return {
+        ...nonRatioStat,
+        value: modifierMagnitude,
+      };
+    }
+  }
+
+  const standardRatioStat = STANDARD_RATIO_STAT_MAP[normalizedStatId];
+  if (!standardRatioStat) {
+    return undefined;
+  }
+
+  return {
+    ...standardRatioStat,
+    value: toNormalizedRatioValue(normalizedStatId, modifierMagnitude),
+  };
+}
+
+function toBasisPointsValue(modifierMagnitude: number) {
+  return modifierMagnitude / 10_000;
+}
+
+function toNormalizedRatioValue(gameAttributeId: number, modifierMagnitude: number) {
+  const basisPointsValue = toBasisPointsValue(modifierMagnitude);
+  return [30, 34, 99].includes(gameAttributeId)
+    ? Math.abs(basisPointsValue)
+    : basisPointsValue;
+}

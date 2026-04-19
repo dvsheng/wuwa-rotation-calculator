@@ -9,7 +9,7 @@ export type EntityResourceListerOptions<TRepositoryRow, TContext, TDomainModel> 
     entityId: number,
     entityType: EntityType,
   ) => Promise<Array<TRepositoryRow>>;
-  fetchContextForEntity: (
+  fetchContextForEntity?: (
     entityId: number,
     entityType: EntityType,
   ) => TContext | Promise<TContext>;
@@ -17,18 +17,24 @@ export type EntityResourceListerOptions<TRepositoryRow, TContext, TDomainModel> 
     repositoryRow: TRepositoryRow,
     context: TContext,
   ) => TDomainModel | undefined;
-  filter: (
+  filter?: (
     transformedRow: TDomainModel,
     repositoryRow: TRepositoryRow,
     context: TContext,
   ) => boolean;
 };
 
-export const createEntityResourceLister = <TRepositoryRow, TContext, TDomainModel>({
+export const createEntityResourceLister = <
+  TRepositoryRow,
+  TDomainModel,
+  TContext = {},
+>({
   fetchResourcesForEntity,
-  fetchContextForEntity,
+  fetchContextForEntity = () => {
+    return {} as TContext;
+  },
   transform,
-  filter,
+  filter = () => true,
 }: EntityResourceListerOptions<TRepositoryRow, TContext, TDomainModel>) => {
   return async (
     entityId: number,

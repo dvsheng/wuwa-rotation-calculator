@@ -269,24 +269,25 @@ async function listWuwaSkillInfoAssetFiles(): Promise<Array<string>> {
   return listings.flat().toSorted((left, right) => left.localeCompare(right));
 }
 
-async function listWuwaReBulletDataMainFiles(): Promise<Array<string>> {
-  const characterPaths = listWuwaCharacterPaths();
-  const listings = await Promise.all(
-    characterPaths.map((characterPath) => {
-      const dataPath = `${characterPath}/Data`;
-      const items = listWuwaCharacterDataDirectory(dataPath);
-      return items
-        .filter(
-          (item) =>
-            item.type === 'file' &&
-            item.name.startsWith('DT_ReBulletDataMain') &&
-            item.name.endsWith('.json'),
-        )
-        .map((item) => item.path);
-    }),
-  );
+function listWuwaReBulletDataMainFiles(): Array<string> {
+  const results: Array<string> = [];
 
-  return listings.flat().toSorted((left, right) => left.localeCompare(right));
+  function walk(relativePath: string) {
+    const items = listWuwaCharacterDataDirectory(relativePath);
+    for (const item of items) {
+      if (item.type === 'dir') {
+        walk(item.path);
+      } else if (
+        item.name.startsWith('DT_ReBulletDataMain') &&
+        item.name.endsWith('.json')
+      ) {
+        results.push(item.path);
+      }
+    }
+  }
+
+  walk('');
+  return results.toSorted((left, right) => left.localeCompare(right));
 }
 
 export {

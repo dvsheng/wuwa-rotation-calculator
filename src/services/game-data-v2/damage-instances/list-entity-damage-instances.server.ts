@@ -9,9 +9,7 @@ import { tryTransformToDamageInstance } from './transform-damage-to-damage-insta
 
 export const listEntityDamageInstancesHandler = createEntityResourceLister({
   fetchResourcesForEntity: fetchDamageRowsForEntity,
-  fetchContextForEntity: fetchDamageInstanceContextForEntity,
   transform: tryTransformToDamageInstance,
-  filter: () => true,
 });
 
 async function fetchDamageRowsForEntity(
@@ -41,14 +39,9 @@ async function fetchDamageRowsForEntity(
   }
 }
 
-function fetchDamageInstanceContextForEntity() {
-  return;
-}
-
 async function listDamageRowsByIds(damageIds: Array<number>): Promise<Array<Damage>> {
   if (damageIds.length === 0) {
     return [];
   }
-
   return damage.getByIds(damageIds);
 }

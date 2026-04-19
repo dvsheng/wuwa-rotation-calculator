@@ -1,5 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table';
 
+import { DebugHoverIcon } from '@/components/common/DebugHoverIcon';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
@@ -111,6 +112,7 @@ export const BulletItem = ({ bullet }: { bullet: Bullet }) => {
             </div>
           )}
         </div>
+        <DebugHoverIcon value={bullet} />
       </CardHeader>
       <CardContent className="pt-0 pb-4">
         <DataTable

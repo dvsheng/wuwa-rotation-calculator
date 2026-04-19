@@ -1412,6 +1412,7 @@ const ReBulletRowSchema = z
       message: z.prettifyError(result.error),
     });
   });
+const RawReBulletDataRowSchema = withStrippedHashedKeySuffixes(ReBulletRowSchema);
 
 const ReBulletDataMainRootExportSchema = z
   .object({
@@ -1425,7 +1426,7 @@ const ReBulletDataMainRootExportSchema = z
         RowStruct: ObjectReferenceSchema,
       })
       .catchall(EngineValueSchema),
-    Rows: z.record(z.string(), ReBulletRowSchema),
+    Rows: z.record(z.string(), RawReBulletDataRowSchema),
   })
   .catchall(EngineValueSchema);
 const RawReBulletDataMainArraySchema = z
@@ -1506,5 +1507,8 @@ export type RawSkillInfoAssetArray = z.infer<typeof RawSkillInfoAssetArraySchema
 export type RawSkillInfoRowData = z.infer<typeof RawSkillInfoRowDataSchema>;
 export type RawSkillInfoRowDataFileArray = z.infer<
   typeof RawSkillInfoRowFileArraySchema
+>;
+export type RawReBulletDataMainFileArray = z.infer<
+  typeof RawReBulletDataMainArraySchema
 >;
 export type SkillInfoRoot = z.infer<typeof SkillInfoRootExportSchema>;

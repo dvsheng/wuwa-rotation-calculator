@@ -1,6 +1,5 @@
 import { EntityType } from '@/services/game-data/types';
 
-import { findCharacterNamesByEntityId } from '../character-entity-ids';
 import { createEntityResourceLister } from '../create-entity-resource-lister';
 import { reBulletDataMainRows } from '../repostiory';
 import type { ReBulletDataMainRow } from '../repostiory';
@@ -9,37 +8,8 @@ import type { BulletData } from './types';
 
 export const listEntityBulletsHandler = createEntityResourceLister({
   fetchResourcesForEntity: fetchBulletRowsForEntity,
-  fetchContextForEntity: fetchBulletContextForEntity,
   transform: transformRow,
-  filter: (_bullet, row, context) => context.characterNames.has(row.characterName),
 });
-
-type ChildBulletEntry = {
-  召唤子弹ID: number;
-  召唤子弹延迟: number;
-  召唤子弹数量: number;
-};
-
-function extractTags(values: Array<unknown> | undefined): Array<string> {
-  if (!values) return [];
-  return values.flatMap((v) => {
-    if (typeof v === 'string') return [v];
-    if (
-      typeof v === 'object' &&
-      v !== null &&
-      !Array.isArray(v) &&
-      'TagName' in v &&
-      typeof (v as Record<string, unknown>).TagName === 'string'
-    ) {
-      return [(v as Record<string, string>).TagName];
-    }
-    return [];
-  });
-}
-
-type BulletContext = {
-  characterNames: Set<string>;
-};
 
 async function fetchBulletRowsForEntity(
   _entityId: number,
@@ -47,7 +17,10 @@ async function fetchBulletRowsForEntity(
 ): Promise<Array<ReBulletDataMainRow>> {
   switch (entityType) {
     case EntityType.CHARACTER: {
-      return reBulletDataMainRows.list();
+      const bullets = await reBulletDataMainRows.list();
+      return bullets.filter((bullet) =>
+        String(bullet.bulletId).startsWith(String(_entityId)),
+      );
     }
     case EntityType.ECHO:
     case EntityType.ECHO_SET:
@@ -57,22 +30,16 @@ async function fetchBulletRowsForEntity(
   }
 }
 
-function fetchBulletContextForEntity(
-  entityId: number,
-  entityType: EntityType,
-): BulletContext {
-  return {
-    characterNames:
-      entityType === EntityType.CHARACTER
-        ? new Set(findCharacterNamesByEntityId(entityId))
-        : new Set(),
-  };
-}
-
 function transformRow(row: ReBulletDataMainRow): BulletData {
   const base = row.rowData.基础设置;
   const exec = row.rowData.执行逻辑;
-  const children = row.rowData['子子弹设置'] as Array<ChildBulletEntry> | undefined;
+  const children = row.rowData['子子弹设置'] as
+    | Array<{
+        召唤子弹ID: number;
+        召唤子弹延迟: number;
+        召唤子弹数量: number;
+      }>
+    | undefined;
 
   const singleHit = base?.伤害ID;
   const multiHits = base?.多伤害ID ?? [];
@@ -104,4 +71,21 @@ function transformRow(row: ReBulletDataMainRow): BulletData {
       onField: exec?.命中后对在场上角色应用的GE的Id ?? [],
     },
   };
+}
+
+function extractTags(values: Array<unknown> | undefined): Array<string> {
+  if (!values) return [];
+  return values.flatMap((v) => {
+    if (typeof v === 'string') return [v];
+    if (
+      typeof v === 'object' &&
+      v !== null &&
+      !Array.isArray(v) &&
+      'TagName' in v &&
+      typeof (v as Record<string, unknown>).TagName === 'string'
+    ) {
+      return [(v as Record<string, string>).TagName];
+    }
+    return [];
+  });
 }

@@ -12,7 +12,6 @@ import type {
   MontageNotifyDetails,
   MontageRoot,
   RawSkillInfoRowData,
-  SkillInfoRoot,
 } from '../../scripts/pipeline/github-data.schemas';
 
 export type {
@@ -961,14 +960,6 @@ export const rawMontages = pgTable(
 );
 
 /**
- * Raw DT_SkillInfo asset rows from dvsheng/wuwa-character-data {Character}/Data/DT_SkillInfo.json
- */
-export const rawSkillInfoAssets = pgTable('raw_skill_info_assets', {
-  characterName: text('character_name').primaryKey(),
-  data: jsonb('data').$type<SkillInfoRoot>().notNull(),
-});
-
-/**
  * Raw DT_SkillInfo rows from dvsheng/wuwa-character-data {Character}/Data/DT_SkillInfo.json
  */
 export const rawSkillInfoRows = pgTable('raw_skill_info_rows', {
@@ -979,15 +970,10 @@ export const rawSkillInfoRows = pgTable('raw_skill_info_rows', {
 /**
  * Raw DT_ReBulletDataMain rows from dvsheng/wuwa-character-data {Character}/Data/DT_ReBulletDataMain*.json
  */
-export const rawReBulletDataMainRows = pgTable(
-  'raw_re_bullet_data_main_rows',
-  {
-    characterName: text('character_name').notNull(),
-    bulletId: integer('bullet_id').notNull(),
-    rowData: jsonb('row_data').$type<RawReBulletDataRow>().notNull(),
-  },
-  (table) => [primaryKey({ columns: [table.characterName, table.bulletId] })],
-);
+export const rawReBulletDataMainRows = pgTable('raw_re_bullet_data_main_rows', {
+  bulletId: integer('bullet_id').primaryKey(),
+  rowData: jsonb('row_data').$type<RawReBulletDataRow>().notNull(),
+});
 
 export type SkillV2Source =
   | 'character_skill'
@@ -1068,8 +1054,6 @@ export type NewRawPhantomSkill = typeof rawPhantomSkills.$inferInsert;
 export type RawMontage = typeof rawMontages.$inferSelect;
 export type NewRawMontage = typeof rawMontages.$inferInsert;
 
-export type RawSkillInfoAsset = typeof rawSkillInfoAssets.$inferSelect;
-export type NewRawSkillInfoAsset = typeof rawSkillInfoAssets.$inferInsert;
 export type RawSkillInfoRow = typeof rawSkillInfoRows.$inferSelect;
 export type NewRawSkillInfoRow = typeof rawSkillInfoRows.$inferInsert;
 

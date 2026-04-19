@@ -34,7 +34,6 @@ export const listEntitySkillsHandler: (
     fetchResourcesForEntity,
     fetchContextForEntity,
     transform,
-    filter: () => true,
   });
 
 type EntitySkillContext = {

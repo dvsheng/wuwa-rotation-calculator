@@ -29,7 +29,6 @@ export const getEntityBuffsHandler = createEntityResourceLister({
   fetchResourcesForEntity,
   fetchContextForEntity,
   transform,
-  filter: () => true,
 });
 
 type BuffContext = {

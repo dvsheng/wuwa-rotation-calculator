@@ -7,7 +7,7 @@ import React, { Suspense } from 'react';
 import { z } from 'zod';
 
 import { AttributeIcon } from '@/components/common/AssetIcon';
-import { InfoTooltip } from '@/components/common/InfoTooltip';
+import { DebugHoverIcon } from '@/components/common/DebugHoverIcon';
 import { LoadingSpinnerContainer } from '@/components/common/LoadingSpinnerContainer';
 import { BulletItem } from '@/components/game-data/BulletItem';
 import { Badge } from '@/components/ui/badge';
@@ -262,16 +262,20 @@ function EntityBuffsList({ id }: { id: number }) {
 
   const columns: Array<ColumnDef<Buff>> = [
     {
-      id: 'raw',
+      id: 'debug',
       header: '',
-      cell: ({ row }) => (
-        <HoverJson value={row.original.raw}>
-          <span className="text-xs">raw</span>
-        </HoverJson>
-      ),
+      cell: ({ row }) => <DebugHoverIcon value={row.original.raw} />,
       meta: {
-        headerClassName: 'w-10',
-        cellClassName: 'w-10',
+        headerClassName: 'w-8',
+        cellClassName: 'w-8',
+      },
+    },
+    {
+      accessorKey: 'buffId',
+      header: 'ID',
+      meta: {
+        headerClassName: 'min-w-20',
+        cellClassName: 'min-w-20 font-mono text-xs',
       },
     },
     {
@@ -504,13 +508,9 @@ function EntityDamageInstancesList({ id }: { id: number }) {
 
   const columns: Array<ColumnDef<DamageInstanceTableRow>> = [
     {
-      id: 'info',
+      id: 'debug',
       header: '',
-      cell: ({ row }) => (
-        <InfoTooltip contentClassName="font-mono text-xs">
-          {row.original.id}
-        </InfoTooltip>
-      ),
+      cell: ({ row }) => <DebugHoverIcon value={row.original} />,
       meta: {
         headerClassName: 'w-8',
         cellClassName: 'w-8',
@@ -723,9 +723,7 @@ function MontageCard({ id, item }: { id: number; item: Montage }) {
             </Badge>
           </div>
         </div>
-        <HoverJson value={item}>
-          <span className="text-muted-foreground text-xs">raw</span>
-        </HoverJson>
+        <DebugHoverIcon value={item} />
       </CardHeader>
       <CardContent className="grid gap-4 pt-0 pb-4 md:grid-cols-2">
         <div className="space-y-1 md:col-span-2">
@@ -1025,7 +1023,7 @@ function EntityBuffsPage() {
           <EntityHeader id={numericId} />
         </Suspense>
         <Tabs
-          value={tab}
+          value={tab ?? 'montages'}
           onValueChange={(nextTab) =>
             navigate({
               to: '/game-data/$id',

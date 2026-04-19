@@ -80,6 +80,25 @@ describe('NumberNodeSchema', () => {
       expect(result.success).toBe(true);
     });
 
+    it('parses a conditional expression with a reverse threshold', () => {
+      const input = {
+        type: 'conditional',
+        operand: {
+          type: 'statParameterizedNumber',
+          stat: CharacterStat.ENERGY_REGEN,
+          resolveWith: 'self',
+        },
+        operator: '>=',
+        threshold: 1,
+        reverseThreshold: 2,
+        valueIfTrue: 0.2,
+        valueIfFalse: 0,
+      };
+
+      const result = NumberNodeSchema.safeParse(input);
+      expect(result.success).toBe(true);
+    });
+
     it('rejects an object with an invalid nested node', () => {
       const input = {
         type: 'sum',

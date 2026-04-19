@@ -48,7 +48,8 @@ interface ConditionalOperation {
   type: typeof OperationType.CONDITIONAL;
   operand: NumberNode;
   operator: '>' | '>=' | '<' | '<=';
-  threshold: number;
+  threshold: NumberNode;
+  reverseThreshold?: NumberNode;
   valueIfTrue: NumberNode;
   valueIfFalse: NumberNode;
 }
@@ -177,6 +178,13 @@ const COMPARATORS = {
   '<=': (left: number, right: number) => left <= right,
 } as const;
 
+const REVERSE_COMPARATOR = {
+  '>': '<',
+  '>=': '<=',
+  '<': '>',
+  '<=': '>=',
+} as const satisfies Record<keyof typeof COMPARATORS, keyof typeof COMPARATORS>;
+
 const isPrimitive = (value: NumberNode): value is Primitive => {
   return typeof value === 'number' || value.type === 'statParameterizedNumber';
 };
@@ -253,7 +261,20 @@ const resolveRuntimeNumber = (
     }
     case OperationType.CONDITIONAL: {
       const operandValue = resolveRuntimeNumber(definition.operand, context);
-      return COMPARATORS[definition.operator](operandValue, definition.threshold)
+      const threshold = resolveRuntimeNumber(definition.threshold, context);
+      const reverseThreshold =
+        definition.reverseThreshold === undefined
+          ? undefined
+          : resolveRuntimeNumber(definition.reverseThreshold, context);
+      const satisfiesReverseThreshold =
+        reverseThreshold === undefined ||
+        COMPARATORS[REVERSE_COMPARATOR[definition.operator]](
+          operandValue,
+          reverseThreshold,
+        );
+
+      return COMPARATORS[definition.operator](operandValue, threshold) &&
+        satisfiesReverseThreshold
         ? resolveRuntimeNumber(definition.valueIfTrue, context)
         : resolveRuntimeNumber(definition.valueIfFalse, context);
     }
@@ -282,6 +303,10 @@ const collectDeps = (node: NumberNode): Array<StatParameterizedNumber> => {
     case OperationType.CONDITIONAL: {
       return [
         ...collectDeps(node.operand),
+        ...collectDeps(node.threshold),
+        ...(node.reverseThreshold === undefined
+          ? []
+          : collectDeps(node.reverseThreshold)),
         ...collectDeps(node.valueIfTrue),
         ...collectDeps(node.valueIfFalse),
       ];

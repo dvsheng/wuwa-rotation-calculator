@@ -47,11 +47,13 @@ const conditional = (
   threshold: number,
   valueIfTrue: AnyNode,
   valueIfFalse: AnyNode,
+  reverseThreshold?: number,
 ) => ({
   type: OperationType.CONDITIONAL,
   operand,
   operator,
   threshold,
+  ...(reverseThreshold === undefined ? {} : { reverseThreshold }),
   valueIfTrue,
   valueIfFalse,
 });
@@ -237,6 +239,30 @@ describe('resolveStats', () => {
 
       expect(resolve(team, makeEnemyStats()).team[0][CharacterStat.DAMAGE_BONUS]).toBe(
         100,
+      );
+    });
+
+    it('takes the false branch when the operand fails reverseThreshold', () => {
+      const team = [
+        makeCharStats({
+          [CharacterStat.DAMAGE_BONUS]: [conditional(6, '>=', 1, 100, 0, 5)],
+        }),
+      ];
+
+      expect(resolve(team, makeEnemyStats()).team[0][CharacterStat.DAMAGE_BONUS]).toBe(
+        0,
+      );
+    });
+
+    it('uses the reverse comparator for less-than thresholds', () => {
+      const team = [
+        makeCharStats({
+          [CharacterStat.DAMAGE_BONUS]: [conditional(0, '<=', 5, 100, 0, 1)],
+        }),
+      ];
+
+      expect(resolve(team, makeEnemyStats()).team[0][CharacterStat.DAMAGE_BONUS]).toBe(
+        0,
       );
     });
   });

@@ -229,6 +229,7 @@ export type NumberNode =
       operator: '>' | '>=' | '<' | '<=';
       operand: NumberNode;
       threshold: NumberNode;
+      reverseThreshold?: NumberNode;
       valueIfTrue: NumberNode;
       valueIfFalse: NumberNode;
     };
@@ -255,6 +256,7 @@ export const NumberNodeSchema: z.ZodType<NumberNode> = z.lazy(() =>
       operand: NumberNodeSchema,
       operator: z.enum(['>', '>=', '<', '<=']),
       threshold: NumberNodeSchema,
+      reverseThreshold: NumberNodeSchema.optional(),
       valueIfTrue: NumberNodeSchema,
       valueIfFalse: NumberNodeSchema,
     }),

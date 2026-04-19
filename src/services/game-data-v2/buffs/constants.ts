@@ -282,11 +282,20 @@ export const DAMAGE_SUBTYPE_TO_TAG_MAP = {
 export const Buff = {
   GLACIO_CHAFE: 10_011_000,
   FUSION_BURST: 10_021_000,
-  ELECTRO_FLARE: 10_041_000,
+  ELECTRO_FLARE: 10_031_000,
   AERO_EROSION: 10_041_000,
   SPECTRO_FRAZZLE: 10_051_000,
   HAVOC_BANE: 10_061_000,
 } as const;
+
+export const NEGATIVE_STATUS_BUFF_ID_TO_STAT: Partial<Record<number, EnemyStat>> = {
+  [Buff.GLACIO_CHAFE]: EnemyStat.GLACIO_CHAFE,
+  [Buff.FUSION_BURST]: EnemyStat.FUSION_BURST,
+  [Buff.ELECTRO_FLARE]: EnemyStat.ELECTRO_FLARE,
+  [Buff.AERO_EROSION]: EnemyStat.AERO_EROSION,
+  [Buff.SPECTRO_FRAZZLE]: EnemyStat.SPECTRO_FRAZZLE,
+  [Buff.HAVOC_BANE]: EnemyStat.HAVOC_BANE,
+};
 
 /** Requirement types that gate or trigger ExtraEffect execution */
 export const ExtraEffectRequirement = {

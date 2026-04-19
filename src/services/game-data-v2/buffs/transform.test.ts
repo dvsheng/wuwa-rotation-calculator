@@ -319,6 +319,19 @@ const buff31000024011 = {
   tagLogic: [],
 } satisfies RepositoryBuff;
 
+const buff110025009 = {
+  ...buff1306008020,
+  id: 110_025_009,
+  gameAttributeId: 0,
+  extraEffectId: 37,
+  extraEffectRequirements: [14],
+  extraEffectReqPara: ['10041000#1#1#99'],
+  extraEffectParameters: [],
+  extraEffectParametersGrow1: [2000],
+  calculationPolicy: [0],
+  modifierMagnitude: [],
+} satisfies RepositoryBuff;
+
 function expectRuntimeParameterizedValue(
   value: unknown,
   expected: {
@@ -443,6 +456,29 @@ describe('getBuffStat', () => {
       maximum: 0.15,
       coefficient: 30,
       stat: 'tuneBreakBoost',
+    });
+  });
+
+  it('wraps enemy negative-status stack requirements in a conditional value', () => {
+    const stat = getBuffStat(buff110025009);
+
+    expect(stat).toBeDefined();
+    expect(stat).toEqual({
+      stat: 'damageAmplification',
+      tags: ['all'],
+      value: {
+        type: 'conditional',
+        operand: {
+          type: 'statParameterizedNumber',
+          stat: 'aeroErosion',
+          resolveWith: 'enemy',
+        },
+        operator: '>=',
+        threshold: 1,
+        reverseThreshold: 99,
+        valueIfTrue: 0.2,
+        valueIfFalse: 0,
+      },
     });
   });
 });

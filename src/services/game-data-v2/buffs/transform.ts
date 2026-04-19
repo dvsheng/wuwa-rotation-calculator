@@ -16,9 +16,12 @@ import {
   ENEMY_STAT_SET,
   ExtraEffectID,
   ExtraEffectRequirement,
+  NEGATIVE_STATUS_BUFF_ID_TO_STAT,
   NON_RATIO_STAT_MAP,
   getStatByGameAttributeId,
 } from './constants';
+
+const ENEMY_REQUIREMENT_TARGET = 1;
 
 function mapExtraEffectRequirementToAttackTag(parameter: string): Tag | undefined {
   const damageType =
@@ -170,6 +173,58 @@ function buildStackParameterizedValue(
   };
 }
 
+function buildNegativeStatusConditionalValue(
+  buff: RepositoryBuff,
+  value: NumberNode,
+): NumberNode {
+  const statusRequirements = zip(
+    buff.extraEffectRequirements,
+    buff.extraEffectReqPara,
+  ).flatMap(([requirement, parameter]) => {
+    if (requirement !== ExtraEffectRequirement.OnBuffStack || !parameter) return [];
+
+    const [buffId, target, lowerBound, reverseBound] = parameter
+      .split('#')
+      .map((part) => Number.parseInt(part, 10));
+    const stat = NEGATIVE_STATUS_BUFF_ID_TO_STAT[buffId];
+    if (
+      !stat ||
+      target !== ENEMY_REQUIREMENT_TARGET ||
+      !Number.isFinite(lowerBound) ||
+      !Number.isFinite(reverseBound)
+    ) {
+      return [];
+    }
+
+    return [
+      {
+        stat,
+        threshold: lowerBound,
+        reverseThreshold: reverseBound,
+      },
+    ];
+  });
+
+  if (statusRequirements.length === 0) return value;
+
+  return statusRequirements.reduceRight<NumberNode>(
+    (valueIfFalse, requirement) => ({
+      type: 'conditional',
+      operand: {
+        type: 'statParameterizedNumber',
+        stat: requirement.stat,
+        resolveWith: 'enemy',
+      },
+      operator: '>=',
+      threshold: requirement.threshold,
+      reverseThreshold: requirement.reverseThreshold,
+      valueIfTrue: value,
+      valueIfFalse,
+    }),
+    0,
+  );
+}
+
 export function getBuffStat(b: RepositoryBuff): Stat | undefined {
   const statLookup = getBuffStatIdAndMagnitude(b);
   if (!statLookup) return;
@@ -192,7 +247,7 @@ export function getBuffStat(b: RepositoryBuff): Stat | undefined {
   return {
     stat: baseStat.stat,
     tags,
-    value,
+    value: buildNegativeStatusConditionalValue(b, value),
   };
 }
 

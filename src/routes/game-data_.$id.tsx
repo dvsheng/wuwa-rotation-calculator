@@ -27,6 +27,7 @@ import {
 import { Container, Row, Stack } from '@/components/ui/layout';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Text } from '@/components/ui/typography';
 import { useEntityBuffs } from '@/hooks/useEntityBuffs';
 import { useEntityBullets } from '@/hooks/useEntityBullets';
 import { useEntityDamageInstances } from '@/hooks/useEntityDamageInstances';
@@ -253,8 +254,9 @@ function BuffTags({ tags }: { tags: Array<string> }) {
 
 function EntityBuffsList({ id, entityType }: { id: number; entityType: EntityType }) {
   const { data } = useEntityBuffs(id, entityType);
+  const buffs = data as Array<Buff>;
 
-  if (data.length === 0) {
+  if (buffs.length === 0) {
     return <p className="text-muted-foreground text-sm">No buffs found.</p>;
   }
 
@@ -374,7 +376,7 @@ function EntityBuffsList({ id, entityType }: { id: number; entityType: EntityTyp
   return (
     <DataTable
       columns={columns}
-      data={data}
+      data={buffs}
       classNames={{
         wrapper: 'bg-muted/30 rounded-md border',
       }}
@@ -390,14 +392,15 @@ function EntityModifiersList({
   entityType: EntityType;
 }) {
   const { data } = useEntityModifiers(id, entityType);
+  const modifiers = data as Array<Modifier>;
 
-  if (data.length === 0) {
+  if (modifiers.length === 0) {
     return <p className="text-muted-foreground text-sm">No modifiers found.</p>;
   }
 
   return (
     <div className="flex flex-col gap-4">
-      {data.map((modifier, index) => (
+      {modifiers.map((modifier, index) => (
         <ModifierCard
           key={
             modifier.buffs.map((buff) => buff.buffId).join('-') || `modifier-${index}`
@@ -411,9 +414,6 @@ function EntityModifiersList({
 }
 
 function ModifierCard({ modifier, index }: { modifier: Modifier; index: number }) {
-  const modifierTargets = [
-    ...new Set(modifier.buffs.flatMap((buff) => (buff.target ? [buff.target] : []))),
-  ];
   const modifierDurations = [...new Set(modifier.buffs.map((buff) => buff.duration))];
 
   return (
@@ -423,15 +423,9 @@ function ModifierCard({ modifier, index }: { modifier: Modifier; index: number }
           <CardTitle className="text-base">Modifier {index + 1}</CardTitle>
           <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
             <Badge variant="outline">{modifier.buffs.length} buffs</Badge>
-            {modifierTargets.map((target) => (
-              <Badge key={target} variant="secondary" className="gap-1">
-                {TARGET_ICON[target]}
-                {startCase(target)}
-              </Badge>
-            ))}
             {modifierDurations.map((duration) => (
               <Badge key={String(duration)} variant="secondary">
-                {duration === undefined ? 'Permanent' : `${duration}s`}
+                {duration === undefined ? 'No Duration' : `${duration}s`}
               </Badge>
             ))}
           </div>
@@ -450,7 +444,6 @@ function ModifierCard({ modifier, index }: { modifier: Modifier; index: number }
               <Badge variant="outline" className="font-mono">
                 {buff.buffId}
               </Badge>
-              <Badge variant="secondary">{startCase(buff.stat)}</Badge>
               {buff.type && <Badge variant="secondary">{startCase(buff.type)}</Badge>}
               {buff.target && (
                 <Badge variant="secondary" className="gap-1">
@@ -458,9 +451,6 @@ function ModifierCard({ modifier, index }: { modifier: Modifier; index: number }
                   {startCase(buff.target)}
                 </Badge>
               )}
-              <Badge variant="secondary">
-                {buff.duration === undefined ? 'Permanent' : `${buff.duration}s`}
-              </Badge>
               {buff.unlockedAt && (
                 <Badge variant="secondary">{buff.unlockedAt.toUpperCase()}</Badge>
               )}
@@ -474,7 +464,7 @@ function ModifierCard({ modifier, index }: { modifier: Modifier; index: number }
                   Value
                 </p>
                 <div className="font-mono text-sm">
-                  <BuffValue value={buff.value} />
+                  <BuffValue value={buff.value} /> <Text>{startCase(buff.stat)}</Text>
                 </div>
               </div>
               <div>

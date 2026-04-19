@@ -51,12 +51,16 @@ const getReferencedSelfStats = (node: NumberNode | number): Set<CharacterStatTyp
     case 'clamp': {
       const stats = getReferencedSelfStats(node.operand);
 
-      for (const stat of getReferencedSelfStats(node.minimum)) {
-        stats.add(stat);
+      if (node.minimum !== undefined) {
+        for (const stat of getReferencedSelfStats(node.minimum)) {
+          stats.add(stat);
+        }
       }
 
-      for (const stat of getReferencedSelfStats(node.maximum)) {
-        stats.add(stat);
+      if (node.maximum !== undefined) {
+        for (const stat of getReferencedSelfStats(node.maximum)) {
+          stats.add(stat);
+        }
       }
 
       return stats;
@@ -66,6 +70,11 @@ const getReferencedSelfStats = (node: NumberNode | number): Set<CharacterStatTyp
 
       for (const stat of getReferencedSelfStats(node.threshold)) {
         stats.add(stat);
+      }
+      if (node.reverseThreshold !== undefined) {
+        for (const stat of getReferencedSelfStats(node.reverseThreshold)) {
+          stats.add(stat);
+        }
       }
       for (const stat of getReferencedSelfStats(node.valueIfTrue)) {
         stats.add(stat);
@@ -204,8 +213,12 @@ const extractRuntimeTargetsFromNode = (
     }
 
     extractRuntimeTargetsFromNode(node.operand, runtimeTargets);
-    extractRuntimeTargetsFromNode(node.minimum, runtimeTargets);
-    extractRuntimeTargetsFromNode(node.maximum, runtimeTargets);
+    if (node.minimum !== undefined) {
+      extractRuntimeTargetsFromNode(node.minimum, runtimeTargets);
+    }
+    if (node.maximum !== undefined) {
+      extractRuntimeTargetsFromNode(node.maximum, runtimeTargets);
+    }
     return;
   }
 
@@ -226,6 +239,9 @@ const extractRuntimeTargetsFromNode = (
 
     extractRuntimeTargetsFromNode(node.operand, runtimeTargets);
     extractRuntimeTargetsFromNode(node.threshold, runtimeTargets);
+    if (node.reverseThreshold !== undefined) {
+      extractRuntimeTargetsFromNode(node.reverseThreshold, runtimeTargets);
+    }
     extractRuntimeTargetsFromNode(node.valueIfTrue, runtimeTargets);
     extractRuntimeTargetsFromNode(node.valueIfFalse, runtimeTargets);
     return;

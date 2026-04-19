@@ -4,12 +4,16 @@ import type {
   NewRawMontage,
   NewRawReBulletDataMainRow,
   NewRawSkillInfoAsset,
+  NewRawSkillInfoRow,
   RawReBulletDataRow,
 } from '../../src/db/raw-schema';
 
 import type {
+  MontageNotifyDetails,
+  MontageRoot,
   RawMontageAssetArray,
   RawSkillInfoAssetArray,
+  RawSkillInfoRowDataFileArray,
 } from './github-data.schemas';
 
 type RawAssetObject = Record<string, unknown>;
@@ -54,13 +58,13 @@ function toRawMontageRow(
   data: RawMontageAssetArray,
 ): NewRawMontage | undefined {
   const characterName = getCharacterName(sourcePath);
-  const montage = data.at(0);
+  const montage = data[0] as MontageRoot | undefined;
   if (!montage) return;
   return {
     name: montage.Name,
     characterName,
     data: montage,
-    notifyDetails: data.slice(1),
+    notifyDetails: data.slice(1) as Array<MontageNotifyDetails>,
   };
 }
 
@@ -72,6 +76,26 @@ function toRawSkillInfoAssetRow(
     characterName: getCharacterName(sourcePath),
     data: data[0],
   };
+}
+
+function toRawSkillInfoRows(
+  data: RawSkillInfoRowDataFileArray,
+): Array<NewRawSkillInfoRow> {
+  const rows = data[0].Rows;
+
+  return Object.entries(rows).flatMap(([skillId, rowData]) => {
+    const parsedSkillId = Number.parseInt(skillId);
+    if (Number.isNaN(parsedSkillId)) {
+      return [];
+    }
+
+    return [
+      {
+        skillId: parsedSkillId,
+        rowData,
+      },
+    ];
+  });
 }
 
 function toRawReBulletDataMainRows(
@@ -105,4 +129,9 @@ function toRawReBulletDataMainRows(
   });
 }
 
-export { toRawMontageRow, toRawReBulletDataMainRows, toRawSkillInfoAssetRow };
+export {
+  toRawMontageRow,
+  toRawReBulletDataMainRows,
+  toRawSkillInfoAssetRow,
+  toRawSkillInfoRows,
+};

@@ -11,6 +11,7 @@ import {
 import type {
   MontageNotifyDetails,
   MontageRoot,
+  RawSkillInfoRowData,
   SkillInfoRoot,
 } from '../../scripts/pipeline/github-data.schemas';
 
@@ -968,6 +969,14 @@ export const rawSkillInfoAssets = pgTable('raw_skill_info_assets', {
 });
 
 /**
+ * Raw DT_SkillInfo rows from dvsheng/wuwa-character-data {Character}/Data/DT_SkillInfo.json
+ */
+export const rawSkillInfoRows = pgTable('raw_skill_info_rows', {
+  skillId: integer('skill_id').primaryKey(),
+  rowData: jsonb('row_data').$type<RawSkillInfoRowData>().notNull(),
+});
+
+/**
  * Raw DT_ReBulletDataMain rows from dvsheng/wuwa-character-data {Character}/Data/DT_ReBulletDataMain*.json
  */
 export const rawReBulletDataMainRows = pgTable(
@@ -1061,7 +1070,8 @@ export type NewRawMontage = typeof rawMontages.$inferInsert;
 
 export type RawSkillInfoAsset = typeof rawSkillInfoAssets.$inferSelect;
 export type NewRawSkillInfoAsset = typeof rawSkillInfoAssets.$inferInsert;
+export type RawSkillInfoRow = typeof rawSkillInfoRows.$inferSelect;
+export type NewRawSkillInfoRow = typeof rawSkillInfoRows.$inferInsert;
 
 export type RawReBulletDataMainRow = typeof rawReBulletDataMainRows.$inferSelect;
 export type NewRawReBulletDataMainRow = typeof rawReBulletDataMainRows.$inferInsert;
-

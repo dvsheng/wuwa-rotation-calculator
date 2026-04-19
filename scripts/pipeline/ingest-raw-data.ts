@@ -31,6 +31,7 @@ import {
   rawSkillAttributes,
   rawSkillDescriptions,
   rawSkillInfoAssets,
+  rawSkillInfoRows,
   rawSkillTreeNodes,
   rawSkills,
   rawWeaponConfig,
@@ -58,6 +59,7 @@ import {
   RawMontageAssetArraySchema,
   RawReBulletDataMainFileArraySchema,
   RawSkillInfoAssetFileArraySchema,
+  RawSkillInfoRowDataFileArraySchema,
   RogueCharacterBuffArraySchema,
   RoguePermanentBuffPoolArraySchema,
   RoguePermanentCharacterBuffArraySchema,
@@ -75,6 +77,7 @@ import {
   toRawMontageRow,
   toRawReBulletDataMainRows,
   toRawSkillInfoAssetRow,
+  toRawSkillInfoRows,
 } from './montage-assets';
 import { getTextResolver } from './text';
 
@@ -996,6 +999,26 @@ async function ingestRawSkillInfoAssets() {
   );
 }
 
+async function ingestRawSkillInfoRows() {
+  const sourcePaths = await listWuwaSkillInfoAssetFiles();
+  const rowGroups = await Promise.all(
+    sourcePaths.map(async (sourcePath) => {
+      const data = await fetchAndValidateWuwaCharacterDataJson(
+        sourcePath,
+        RawSkillInfoRowDataFileArraySchema,
+      );
+      return toRawSkillInfoRows(data);
+    }),
+  );
+
+  await batchInsert(
+    rawSkillInfoRows,
+    rowGroups.flat(),
+    (qb) => qb.onConflictDoNothing(),
+    'raw_skill_info_rows',
+  );
+}
+
 async function ingestRawReBulletDataMainRows() {
   const sourcePaths = await listWuwaReBulletDataMainFiles();
   const rowGroups = await Promise.all(
@@ -1035,7 +1058,8 @@ async function ingestRawData() {
       raw_skill_tree_nodes, raw_role_info, raw_weapon_growth, raw_weapon_reson,
       raw_weapon_config, raw_phantom_fetter_groups, raw_phantom_fetters,
       raw_phantom_items, raw_phantom_skills, raw_role_property_growth,
-      raw_base_properties, raw_montages, raw_skill_info_assets, raw_re_bullet_data_main_rows
+      raw_base_properties, raw_montages, raw_skill_info_assets, raw_skill_info_rows,
+      raw_re_bullet_data_main_rows
   `);
 
   console.log('Loading English text resolver...');
@@ -1065,6 +1089,7 @@ async function ingestRawData() {
     ingestBaseProperties(),
     ingestRawMontages(),
     ingestRawSkillInfoAssets(),
+    ingestRawSkillInfoRows(),
     ingestRawReBulletDataMainRows(),
   ]);
 

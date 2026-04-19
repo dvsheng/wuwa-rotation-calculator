@@ -84,6 +84,33 @@ const EngineValueSchema: z.ZodType<unknown> = z.lazy(() =>
   ]),
 );
 
+function stripHashedKeySuffix(key: string) {
+  return key.replace(/_\d+_[\dA-F]+$/i, '');
+}
+
+function stripHashedKeySuffixes(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry) => stripHashedKeySuffixes(entry));
+  }
+
+  if (typeof value !== 'object' || value === null) {
+    return value;
+  }
+
+  return Object.fromEntries(
+    Object.entries(value).map(([key, entryValue]) => [
+      stripHashedKeySuffix(key),
+      stripHashedKeySuffixes(entryValue),
+    ]),
+  );
+}
+
+function withStrippedHashedKeySuffixes<TSchema extends z.ZodType>(
+  schema: TSchema,
+): z.ZodPipe<z.ZodTransform<unknown, unknown>, TSchema> {
+  return z.transform(stripHashedKeySuffixes).pipe(schema);
+}
+
 const SkillTriggerSchema = z
   .object({
     TriggerType_2_A4B916C949F97F67C63AEFA1E4A3F1CC: z.string(),
@@ -388,6 +415,77 @@ const SkillInfoRowSchema = z
     }
   });
 
+const NormalizedSkillTargetSchema = z
+  .object({
+    LockOnConfigId: z.number(),
+    SkillTargetPriority: z.string(),
+    ShowTarget: z.boolean(),
+    HateOrLockOnChanged: z.boolean(),
+    TargetDied: z.boolean(),
+    GlobalTarget: z.boolean(),
+    BlackboardKey: z.string(),
+    SkillTargetRemainTime: z.number(),
+  })
+  .strict();
+
+const NormalizedCooldownConfigSchema = z
+  .object({
+    CdTime: z.number(),
+    CdDelay: z.number(),
+    IsShareAllCdSkill: z.boolean(),
+    MaxCount: z.number(),
+    ShareGroupId: z.number(),
+    SectionCount: z.number(),
+    SectionRemaining: z.number(),
+    NextSkillId: z.number(),
+    StartTime: z.number(),
+    StopTime: z.number(),
+    IsReset: z.boolean(),
+    IsResetOnChangeRole: z.boolean(),
+    CdTags: z.array(GameplayTagOrStringSchema),
+  })
+  .strict();
+
+const RawSkillInfoRowDataSchema = withStrippedHashedKeySuffixes(
+  z
+    .object({
+      SkillName: z.string(),
+      SkillIcon: AssetReferenceSchema,
+      SkillMode: z.string(),
+      SkillTriggers: z.array(EngineObjectSchema),
+      SkillBehaviorGroup: z.array(EngineObjectSchema),
+      SkillGA: AssetReferenceSchema,
+      Animations: z.array(AssetReferenceSchema),
+      MontagePaths: z.array(z.string()),
+      SkillTag: z.array(GameplayTagSchema),
+      GroupId: z.number(),
+      InterruptLevel: z.number(),
+      SkillGenre: z.string(),
+      IsLockOn: z.boolean(),
+      SkillTarget: NormalizedSkillTargetSchema,
+      SkillDirection: z.string(),
+      CooldownConfig: NormalizedCooldownConfigSchema,
+      WalkOffLedge: z.boolean(),
+      SkillStartBuff: z.array(z.number()),
+      SkillBuff: z.array(z.number()),
+      SkillEndBuff: z.array(z.number()),
+      ToughRatio: z.number(),
+      StrengthCost: z.number(),
+      IsFullBodySkill: z.boolean(),
+      AutonomouslyBySimulate: z.boolean(),
+      MoveControllerTime: z.number(),
+      ImmuneFallDamageTime: z.number(),
+      OverrideHit: z.boolean(),
+      OverrideType: z.string(),
+      ExportSpecialAnim: z.array(AssetReferenceSchema),
+      SkillStepUp: z.boolean(),
+      SkillCanBeginWithoutControl: z.boolean(),
+      MaxCounterCount: z.number(),
+      SpecialBuffInCode: z.array(z.number()),
+    })
+    .strict(),
+);
+
 const SkillInfoRootExportSchema = z
   .object({
     Type: z.literal('DataTable'),
@@ -401,6 +499,22 @@ const SkillInfoRootExportSchema = z
       })
       .catchall(EngineValueSchema),
     Rows: z.record(z.string(), SkillInfoRowSchema),
+  })
+  .catchall(EngineValueSchema);
+
+const RawSkillInfoRowRootExportSchema = z
+  .object({
+    Type: z.literal('DataTable'),
+    Name: z.literal('DT_SkillInfo'),
+    Flags: z.string(),
+    Class: z.string(),
+    Package: z.string(),
+    Properties: z
+      .object({
+        RowStruct: ObjectReferenceSchema,
+      })
+      .catchall(EngineValueSchema),
+    Rows: z.record(z.string(), RawSkillInfoRowDataSchema),
   })
   .catchall(EngineValueSchema);
 
@@ -1257,6 +1371,7 @@ const RawMontageArraySchema = z
 const RawSkillInfoAssetArraySchema = z
   .tuple([SkillInfoRootExportSchema])
   .rest(MontageNotifyDetailsSchema);
+const RawSkillInfoRowFileArraySchema = z.tuple([RawSkillInfoRowRootExportSchema]);
 const ReBulletBaseSettingsSchema = z
   .record(z.string(), EngineValueSchema)
   .superRefine((row, context) => {
@@ -1358,6 +1473,7 @@ export const PhantomItemArraySchema = z.array(PhantomItemSchema);
 export const PhantomSkillArraySchema = z.array(PhantomSkillSchema);
 export const RawMontageAssetArraySchema = RawMontageArraySchema;
 export const RawSkillInfoAssetFileArraySchema = RawSkillInfoAssetArraySchema;
+export const RawSkillInfoRowDataFileArraySchema = RawSkillInfoRowFileArraySchema;
 export const RawReBulletDataMainFileArraySchema = RawReBulletDataMainArraySchema;
 export const TextEntryArraySchema = z.array(TextEntrySchema);
 
@@ -1387,4 +1503,8 @@ export type SendGamePlayEventDetails = z.infer<typeof SendGamePlayEventDetailsSc
 export type SkillBehaviorDetails = z.infer<typeof SkillBehaviorDetailsSchema>;
 export type MontageRoot = z.infer<typeof MontageRootSchema>;
 export type RawSkillInfoAssetArray = z.infer<typeof RawSkillInfoAssetArraySchema>;
+export type RawSkillInfoRowData = z.infer<typeof RawSkillInfoRowDataSchema>;
+export type RawSkillInfoRowDataFileArray = z.infer<
+  typeof RawSkillInfoRowFileArraySchema
+>;
 export type SkillInfoRoot = z.infer<typeof SkillInfoRootExportSchema>;

@@ -62,10 +62,8 @@ export const database = drizzle(client, { schema });
 
 // Pre-warm the connection at module init so the first real request doesn't pay
 // the TCP + TLS + Secrets Manager handshake cost.
-void (async () => {
-  try {
-    await client`SELECT 1`;
-  } catch {
-    // Ignore - if the DB is unreachable at startup we'll surface the error on the first real query.
-  }
-})();
+try {
+  await client`SELECT 1`;
+} catch {
+  // Ignore - if the DB is unreachable at startup we'll surface the error on the first real query.
+}

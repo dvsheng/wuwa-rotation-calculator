@@ -279,6 +279,15 @@ export const DAMAGE_SUBTYPE_TO_TAG_MAP = {
   '1201': Tag.TUNE_RUPTURE,
 } as const as Partial<Record<string, Tag>>;
 
+export const Buff = {
+  GLACIO_CHAFE: 10_011_000,
+  FUSION_BURST: 10_021_000,
+  ELECTRO_FLARE: 10_041_000,
+  AERO_EROSION: 10_041_000,
+  SPECTRO_FRAZZLE: 10_051_000,
+  HAVOC_BANE: 10_061_000,
+} as const;
+
 /** Requirement types that gate or trigger ExtraEffect execution */
 export const ExtraEffectRequirement = {
   /** Triggers when damage with matching prefix lands. ReqPara = damage ID prefixes */
@@ -297,7 +306,7 @@ export const ExtraEffectRequirement = {
   OnDamageType: 12,
   /** Triggers on matching index. ReqPara = [index1#index2#...] */
   OnIndexMatch: 13,
-  /** Triggers on buff state. ReqPara = [buffId#?#lower#upper] */
+  /** Triggers on buff state. ReqPara = [buffId#target#lower#upper] */
   OnBuffStack: 14,
   /** Triggers on condition. ReqPara = [?#conditionId] */
   OnDamageSubtype: 17,

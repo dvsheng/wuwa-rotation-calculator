@@ -1,6 +1,6 @@
 import { compact } from 'es-toolkit';
 
-import { ExtraEffectID, ManageBuffAction } from './buffs/constants';
+import { ExtraEffectID } from './buffs/constants';
 import type { Buff, Damage } from './repostiory';
 import { buffs, damage } from './repostiory';
 
@@ -80,8 +80,7 @@ const getBuffChildren = (buffId: number): Array<Buff> => {
     ...(buff.extraEffectId === ExtraEffectID.ApplyBuff
       ? getIdsFromString(buff.extraEffectParameters[2])
       : []),
-    ...(buff.extraEffectId === ExtraEffectID.ManageBuff &&
-    Number.parseInt(buff.extraEffectParameters[0] ?? '') === ManageBuffAction.Apply
+    ...(buff.extraEffectId === ExtraEffectID.ManageBuff
       ? getIdsFromString(buff.extraEffectParameters[1])
       : []),
     ...buff.relatedExtraEffectBuffId,

@@ -17,7 +17,6 @@ export const groupBuffsByConnection: BuffGrouper = (buffs) => {
       new Set(getConnectedBuffs(buff.rawData.id).map((connected) => connected.id)),
     ]),
   );
-
   return groupBuffs(
     buffs,
     (buff) => connectedBuffIdsById.get(buff.rawData.id) ?? new Set<number>(),
@@ -71,29 +70,18 @@ export const groupBuffsBySharedOriginTypeCast: BuffGrouper = (buffs) => {
 // but the children have different application tags, they are not grouped together
 
 const shouldNotGroupBuffs = (buff1: Buff, buff2: Buff) => {
-  return (
-    buff1.duration != buff2.duration ||
-    buff1.rawData.applicationTagRequirements !==
-      buff2.rawData.applicationSourceTagRequirements
-  );
-};
-
-const getOriginTypeCastRequestParameters = (buff: Buff): Array<string> => {
-  return zip(buff.rawData.extraEffectRequirements, buff.rawData.extraEffectReqPara).flatMap(
-    ([requirement, parameter]) =>
-      requirement === ExtraEffectRequirement.OnOriginTypeCast
-        ? [String(parameter)]
-        : [],
-  );
+  return buff1.duration != buff2.duration;
 };
 
 const getConnectedOriginTypeCastRequestParameters = (buff: Buff): Array<string> => {
   return getConnectedBuffs(buff.rawData.id).flatMap((connectedBuff) =>
-    zip(connectedBuff.extraEffectRequirements, connectedBuff.extraEffectReqPara).flatMap(
-      ([requirement, parameter]) =>
-        requirement === ExtraEffectRequirement.OnOriginTypeCast
-          ? [String(parameter)]
-          : [],
+    zip(
+      connectedBuff.extraEffectRequirements,
+      connectedBuff.extraEffectReqPara,
+    ).flatMap(([requirement, parameter]) =>
+      requirement === ExtraEffectRequirement.OnOriginTypeCast
+        ? [String(parameter)]
+        : [],
     ),
   );
 };

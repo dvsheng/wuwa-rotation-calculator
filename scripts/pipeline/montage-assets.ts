@@ -6,7 +6,6 @@ import type {
   NewRawSkillInfoAsset,
   RawReBulletDataRow,
 } from '../../src/db/raw-schema';
-import { findWuwaCharacterEntityId } from '../../src/services/game-data-v2/character-entity-ids';
 
 import type {
   RawMontageAssetArray,
@@ -55,8 +54,8 @@ function toRawMontageRow(
   data: RawMontageAssetArray,
 ): NewRawMontage | undefined {
   const characterName = getCharacterName(sourcePath);
-  if (findWuwaCharacterEntityId(characterName) === undefined) return undefined;
-  const montage = data[0];
+  const montage = data.at(0);
+  if (!montage) return;
   return {
     name: montage.Name,
     characterName,
@@ -81,9 +80,6 @@ function toRawReBulletDataMainRows(
 ): Array<NewRawReBulletDataMainRow> {
   const root = getAssetRoot(data);
   const characterName = getCharacterName(sourcePath);
-  if (findWuwaCharacterEntityId(characterName) === undefined) {
-    return [];
-  }
   const rows =
     root?.Rows && typeof root.Rows === 'object' && !Array.isArray(root.Rows)
       ? (root.Rows as Record<string, unknown>)
@@ -95,7 +91,7 @@ function toRawReBulletDataMainRows(
     }
     const row = rowValue as RawAssetObject;
     const normalizedRow = normalizeReBulletJson(row) as RawReBulletDataRow;
-    const parsedBulletId = Number.parseInt(bulletId, 10);
+    const parsedBulletId = Number.parseInt(bulletId);
     if (Number.isNaN(parsedBulletId)) {
       return [];
     }

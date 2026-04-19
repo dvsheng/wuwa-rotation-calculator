@@ -46,6 +46,7 @@ export const WUWA_CHARACTER_ENTITY_IDS: Record<string, number> = {
   Xiakong: 1407,
   Xiangliyao: 1305,
   Xigelika: 1412,
+  Yangyang: 1402,
   YinLin: 1302,
   Youhu: 1106,
   Younuo: 1410,

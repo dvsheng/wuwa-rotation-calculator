@@ -34,6 +34,7 @@ export interface MontageEvent {
 export interface Montage {
   name: string;
   id: string;
+  dedupedNames?: Array<string>;
   bullets: Array<MontageBullet>;
   cancelTime?: number;
   endTime?: number;

@@ -71,7 +71,7 @@ function GameDataTable({
             navigate({
               to: '/game-data/$id',
               params: { id: String(row.original.id) },
-              search: { entityType: row.original.type },
+              search: { tab: 'buffs' },
             })
           }
         >

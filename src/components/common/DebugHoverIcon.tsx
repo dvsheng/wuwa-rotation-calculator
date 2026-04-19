@@ -9,7 +9,10 @@ import {
 export const DebugHoverIcon = ({ value }: { value: unknown }) => (
   <HoverCard openDelay={150} closeDelay={100}>
     <HoverCardTrigger asChild>
-      <button type="button" className="text-muted-foreground hover:text-foreground cursor-help transition-colors">
+      <button
+        type="button"
+        className="text-muted-foreground hover:text-foreground cursor-help transition-colors"
+      >
         <CircleHelp className="h-3.5 w-3.5" />
       </button>
     </HoverCardTrigger>

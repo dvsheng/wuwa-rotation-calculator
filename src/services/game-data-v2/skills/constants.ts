@@ -19,4 +19,3 @@ export const CHAIN_TO_SEQUENCE_MAP: Partial<Record<number, Sequence>> = {
   5: Sequence.S5,
   6: Sequence.S6,
 } as const;
-

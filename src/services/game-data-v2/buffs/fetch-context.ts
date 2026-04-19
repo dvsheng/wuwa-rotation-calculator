@@ -8,7 +8,10 @@ import { resonatorChains } from '../repostiory';
 import type { Buff, ResonatorChain } from '../repostiory';
 
 import { SEQUENCE_ORDER } from './constants';
-import { getBuffsWithGameplayCuePrefix, getEntityBuffPrefixes } from './fetch-resources';
+import {
+  getBuffsWithGameplayCuePrefix,
+  getEntityBuffPrefixes,
+} from './fetch-resources';
 import { removeBuffsFromAlternativeGameModes } from './filter';
 import type { BuffData } from './types';
 
@@ -65,7 +68,7 @@ function inferBuffSequences(
   const buffIdToSequenceMap = new Map<number, Sequence>();
 
   for (const chain of chains) {
-    const sequence = SEQUENCE_ORDER[chain.groupIndex - 1];
+    const sequence = SEQUENCE_ORDER.at(chain.groupIndex - 1);
     if (!sequence) continue;
 
     for (const buffId of chain.buffIds ?? []) {
@@ -91,7 +94,9 @@ function inferBuffSequences(
     const unlockedAt =
       compact(unlockTags.map((tag) => tagToSequenceMap.get(tag))).at(0) ??
       buffIdToSequenceMap.get(buff.id);
-    const disabledAt = compact(removeTags.map((tag) => tagToSequenceMap.get(tag))).at(0);
+    const disabledAt = compact(removeTags.map((tag) => tagToSequenceMap.get(tag))).at(
+      0,
+    );
     return {
       ...buff,
       ...(unlockedAt ? { unlockedAt } : {}),

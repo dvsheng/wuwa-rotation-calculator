@@ -1,3 +1,5 @@
+import { compact } from 'es-toolkit';
+
 import type {
   ReSkillEventDetails,
   SendGamePlayEventDetails,
@@ -39,18 +41,23 @@ export function toMontage(rawMontage: MontageAsset): MontageData {
       const details = notificationDetailsByName.get(detailReference);
       if (!isSkillBehaviorDetails(details)) return [];
       return (details.Properties?.技能行为 ?? []).flatMap((behavior) =>
-        behavior.SkillBehaviorActionGroup_20_E7E8941646BF84E137B075AD36D96317.flatMap(
-          (action) =>
-            (action.Bullets_77_D4BBB46C47AE6F88D881F9ADA9156FFA ?? []).map(
-              (bullet) => ({
-                bulletId: bullet.bulletRowName_15_E1264B954C05799310C2CA8F2AA41295,
-                time,
-              }),
-            ),
+        behavior.SkillBehaviorActionGroup.flatMap((action) =>
+          (action.Bullets ?? []).map((bullet) => ({
+            bulletId: bullet.bulletRowName,
+            time,
+          })),
         ),
       );
     }) ?? []),
   ];
+
+  const dedupedBullets = compact(
+    Object.values(
+      Object.groupBy(bullets, ({ time, bulletId }) =>
+        JSON.stringify({ time, bulletId }),
+      ),
+    ).map((bulletArray) => bulletArray?.[0]),
+  );
 
   const tags =
     notificationsByType['TsAnimNotifyStateAddTag']?.flatMap((notify) => {
@@ -81,7 +88,7 @@ export function toMontage(rawMontage: MontageAsset): MontageData {
   return {
     name: rawMontage.name.replace('AM_', ''),
     id: `${rawMontage.name}-${rawMontage.characterName}`,
-    bullets,
+    bullets: dedupedBullets,
     cancelTime,
     endTime,
     tags,

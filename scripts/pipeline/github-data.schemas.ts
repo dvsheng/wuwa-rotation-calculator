@@ -64,25 +64,6 @@ const GameplayTagSchema = z
   })
   .strict();
 const GameplayTagOrStringSchema = z.union([GameplayTagSchema, z.string()]);
-const EngineObjectSchema: z.ZodType<Record<string, unknown>> = z.lazy(() =>
-  z.record(z.string(), EngineValueSchema),
-);
-const EngineArraySchema: z.ZodType<Array<unknown>> = z.lazy(() =>
-  z.array(EngineValueSchema),
-);
-const EngineValueSchema: z.ZodType<unknown> = z.lazy(() =>
-  z.union([
-    z.string(),
-    z.number(),
-    z.boolean(),
-    z.null(),
-    GameplayTagSchema,
-    ObjectReferenceSchema,
-    AssetReferenceSchema,
-    EngineObjectSchema,
-    EngineArraySchema,
-  ]),
-);
 
 function stripHashedKeySuffix(key: string) {
   return key.replace(/_\d+_[\dA-F]+$/i, '');
@@ -124,49 +105,39 @@ const SkillTriggerSchema = z
   })
   .strict();
 
-const SkillBehaviorConditionSchema = z.object({
-  ConditionType_31_FDE61D77427DCD4BC0F2A7AA3D27695C: z.string(),
-  IgnoreZ_37_F6CCC57746F2CC2ECC2C2C8B8697BAE3: z.boolean(),
-  Sign_72_F5B15D704A9FA4243D4D888D6E838352: z.boolean(),
-  ComparisonLogic_41_BFD626EA4ADC6ECB646CA6B4C474889C: z.string(),
-  Value_45_2649759445759C286E73938D5318AA99: z.number(),
-  RangeL_47_7B13704A41AF164405A70085BB8683AB: z.number(),
-  RangeR_49_6D00959F40FAE4F69CAF15A1F177BDD9: z.number(),
-  AttributeId1_57_B049A05E4E70C63D62BE2BA6A045D0AB: z.number(),
-  AttributeId2_55_F810A3BA4E7646BDF7859F8D04BC9E20: z.number(),
-  AttributeRate_61_C001B3DF4577447AB9519DA1B72FF66F: z.number(),
-  TagToCheck_64_464EE5B34705853741899A9D4F266404: z.array(GameplayTagOrStringSchema),
-  AnyTag_67_51D28A91427519B4E10E76B922EE7E9B: z.boolean(),
-  Reverse_35_73079DDF426EC7983ADE55B35FEC138A: z.boolean(),
+const SkillBehaviorConditionSchema = z.looseObject({
+  ConditionType: z.string(),
+  IgnoreZ: z.boolean(),
+  Sign: z.boolean(),
+  ComparisonLogic: z.string(),
+  Value: z.number(),
+  RangeL: z.number(),
+  RangeR: z.number(),
+  AttributeId1: z.number(),
+  AttributeId2: z.number(),
+  AttributeRate: z.number(),
+  TagToCheck: z.array(GameplayTagOrStringSchema),
+  AnyTag: z.boolean(),
+  Reverse: z.boolean(),
 });
 
-const SkillBehaviorBulletSchema = z
-  .object({
-    bulletRowName_15_E1264B954C05799310C2CA8F2AA41295: z.string(),
-    bulletCount_17_C760AE4F44AC5EA2E83EE287AC1E2986: z.number(),
-    BlackboardKey_20_7646422D4796E9134AE08E984D1F68A9: z.string(),
-  })
-  .catchall(EngineValueSchema);
+const SkillBehaviorBulletSchema = z.looseObject({
+  bulletRowName: z.string(),
+  bulletCount: z.number(),
+  BlackboardKey: z.string(),
+});
 
-const SkillBehaviorActionSchema = z
-  .object({
-    ActionType_19_928EDB4F42F86E100915608112580A79: z.string().optional(),
-    Bullets_77_D4BBB46C47AE6F88D881F9ADA9156FFA: z
-      .array(SkillBehaviorBulletSchema)
-      .optional(),
-  })
-  .catchall(EngineValueSchema);
+const SkillBehaviorActionSchema = z.looseObject({
+  ActionType: z.string().optional(),
+  Bullets: z.array(SkillBehaviorBulletSchema).optional(),
+});
 
 const SkillBehaviorGroupSchema = z
   .object({
-    SkillBehaviorConditionGroup_23_D256B3E54F0444CCB6BA3B977B371542: z.array(
-      SkillBehaviorConditionSchema,
-    ),
-    SkillBehaviorConditionFormula_27_32ED9061461B3AC3C2028BB34993284A: z.string(),
-    SkillBehaviorActionGroup_20_E7E8941646BF84E137B075AD36D96317: z.array(
-      SkillBehaviorActionSchema,
-    ),
-    SkillBehaviorContinue_34_DCA2FD6843FDD1BA359888B5BC8283A0: z.boolean(),
+    SkillBehaviorConditionGroup: z.array(SkillBehaviorConditionSchema),
+    SkillBehaviorConditionFormula: z.string(),
+    SkillBehaviorActionGroup: z.array(SkillBehaviorActionSchema),
+    SkillBehaviorContinue: z.boolean(),
   })
   .strict();
 
@@ -217,24 +188,20 @@ const MontageNotifySchema = z
   })
   .strict();
 
-const MontagePropertiesSchema = z
-  .object({
-    Notifies: z.array(MontageNotifySchema).optional(),
-    SequenceLength: z.number(),
-  })
-  .catchall(EngineValueSchema);
+const MontagePropertiesSchema = z.looseObject({
+  Notifies: z.array(MontageNotifySchema).optional(),
+  SequenceLength: z.number(),
+});
 
-const MontageRootSchema = z
-  .object({
-    Type: z.literal('AnimMontage'),
-    Name: z.string(),
-    Flags: z.string(),
-    Class: z.string(),
-    Package: z.string(),
-    Properties: MontagePropertiesSchema,
-    SkeletonGuid: z.string().optional(),
-  })
-  .catchall(EngineValueSchema);
+const MontageRootSchema = z.looseObject({
+  Type: z.literal('AnimMontage'),
+  Name: z.string(),
+  Flags: z.string(),
+  Class: z.string(),
+  Package: z.string(),
+  Properties: MontagePropertiesSchema,
+  SkeletonGuid: z.string().optional(),
+});
 
 const BaseNotifyDetailFields = {
   Name: z.string(),
@@ -244,82 +211,168 @@ const BaseNotifyDetailFields = {
   SkeletonGuid: z.string().optional(),
 };
 
-const ReSkillEventPropertiesSchema = z
-  .object({
-    子弹数据名: z.string().optional(),
-    使用子弹id数组: z.boolean().optional(),
-    子弹id数组: z.array(z.string()).optional(),
-    骨骼名字: z.string().optional(),
-    子弹出生位置偏移: EngineObjectSchema.optional(),
-    传入当前实体位置: z.boolean().optional(),
-    exportIndex: z.number().optional(),
-  })
-  .catchall(EngineValueSchema);
+const ReSkillEventPropertiesSchema = z.looseObject({
+  子弹数据名: z.string().optional(),
+  使用子弹id数组: z.boolean().optional(),
+  子弹id数组: z.array(z.string()).optional(),
+  骨骼名字: z.string().optional(),
+  子弹出生位置偏移: JsonObjectSchema.optional(),
+  传入当前实体位置: z.boolean().optional(),
+  exportIndex: z.number().optional(),
+});
 
-const StateAddTagPropertiesSchema = z
-  .object({
-    Tag: GameplayTagSchema.optional(),
-    CurrentTimeLength: z.number().optional(),
-    exportIndex: z.number().optional(),
-  })
-  .catchall(EngineValueSchema);
+const StateAddTagPropertiesSchema = z.looseObject({
+  Tag: GameplayTagSchema.optional(),
+  CurrentTimeLength: z.number().optional(),
+  exportIndex: z.number().optional(),
+});
 
-const SendGamePlayEventPropertiesSchema = z
-  .object({
-    事件Tag: GameplayTagSchema.optional(),
-    exportIndex: z.number().optional(),
-  })
-  .catchall(EngineValueSchema);
+const SendGamePlayEventPropertiesSchema = z.looseObject({
+  事件Tag: GameplayTagSchema.optional(),
+  exportIndex: z.number().optional(),
+});
 
-const ReSkillEventDetailsSchema = z
-  .object({
-    ...BaseNotifyDetailFields,
-    Type: z.literal('TsAnimNotifyReSkillEvent_C'),
-    Properties: ReSkillEventPropertiesSchema.optional(),
-  })
-  .catchall(EngineValueSchema);
+const ReSkillEventDetailsSchema = z.looseObject({
+  ...BaseNotifyDetailFields,
+  Type: z.literal('TsAnimNotifyReSkillEvent_C'),
+  Properties: ReSkillEventPropertiesSchema.optional(),
+});
 
-const StateAddTagDetailsSchema = z
-  .object({
-    ...BaseNotifyDetailFields,
-    Type: z.literal('TsAnimNotifyStateAddTag_C'),
-    Properties: StateAddTagPropertiesSchema.optional(),
-  })
-  .catchall(EngineValueSchema);
+const StateAddTagDetailsSchema = z.looseObject({
+  ...BaseNotifyDetailFields,
+  Type: z.literal('TsAnimNotifyStateAddTag_C'),
+  Properties: StateAddTagPropertiesSchema.optional(),
+});
 
-const SendGamePlayEventDetailsSchema = z
-  .object({
-    ...BaseNotifyDetailFields,
-    Type: z.literal('TsAnimNotifySendGamePlayEvent_C'),
-    Properties: SendGamePlayEventPropertiesSchema.optional(),
-  })
-  .catchall(EngineValueSchema);
+const SendGamePlayEventDetailsSchema = z.looseObject({
+  ...BaseNotifyDetailFields,
+  Type: z.literal('TsAnimNotifySendGamePlayEvent_C'),
+  Properties: SendGamePlayEventPropertiesSchema.optional(),
+});
 
-const SkillBehaviorPropertiesSchema = z
-  .object({
-    技能行为: z.array(SkillBehaviorGroupSchema).optional(),
-    exportIndex: z.number().optional(),
-  })
-  .catchall(EngineValueSchema);
+const SkillBehaviorPropertiesSchema = z.looseObject({
+  技能行为: z.array(SkillBehaviorGroupSchema).optional(),
+  exportIndex: z.number().optional(),
+});
 
-const SkillBehaviorDetailsSchema = z
-  .object({
-    ...BaseNotifyDetailFields,
-    Type: z.literal('TsAnimNotifySkillBehavior_C'),
-    Properties: SkillBehaviorPropertiesSchema.optional(),
-  })
-  .catchall(EngineValueSchema);
+const SkillBehaviorDetailsSchema = z.looseObject({
+  ...BaseNotifyDetailFields,
+  Type: z.literal('TsAnimNotifySkillBehavior_C'),
+  Properties: SkillBehaviorPropertiesSchema.optional(),
+});
 
-const GenericNotifyDetailsSchema = z
-  .object({
-    ...BaseNotifyDetailFields,
-    Type: z.string(),
-    Properties: EngineObjectSchema.optional(),
-    Rows: EngineObjectSchema.optional(),
-  })
-  .catchall(EngineValueSchema);
+const GenericMontageNotifyTypes = [
+  'ANS_Jueyuan_Huaban_C',
+  'ANS_ShowSpecMesh_C',
+  'ANS_Yinlin_Beam_C',
+  'AnimNotifyAddMaterialControllerDataGroup_C',
+  'AnimNotifyAddMaterialControllerData_C',
+  'AnimNotifyAddMotionVertexOffset_C',
+  'AnimNotifyEffect_C',
+  'AnimNotifyStateAddMaterialControllerDataGroup_C',
+  'AnimNotifyStateAddMaterialControllerData_C',
+  'AnimNotifyStateEffect_C',
+  'AnimNotifyStateGhost_C',
+  'AnimNotifyStateScreenEffect_C',
+  'AnimNotifyState_DisableRootMotion',
+  'TsAnimNotifyAddBuff_C',
+  'TsAnimNotifyAddTag_C',
+  'TsAnimNotifyAirAttack_C',
+  'TsAnimNotifyAudioEvent_C',
+  'TsAnimNotifyBattleQte_C',
+  'TsAnimNotifyBounce_C',
+  'TsAnimNotifyBreakPoint_C',
+  'TsAnimNotifyCameraEffect_C',
+  'TsAnimNotifyCameraModify_C',
+  'TsAnimNotifyCameraShake_C',
+  'TsAnimNotifyCatapult_C',
+  'TsAnimNotifyChangeSkillPriority_C',
+  'TsAnimNotifyChangeSlot_C',
+  'TsAnimNotifyClearInputCache_C',
+  'TsAnimNotifyClientEvent_C',
+  'TsAnimNotifyControllerShake_C',
+  'TsAnimNotifyDestroySpecBullet_C',
+  'TsAnimNotifyDisableAllRoleWithoutControl_C',
+  'TsAnimNotifyEndSkill_C',
+  'TsAnimNotifyFightStand_C',
+  'TsAnimNotifyFootstepAudio_C',
+  'TsAnimNotifyHideMesh_C',
+  'TsAnimNotifyJoinTeamQte_C',
+  'TsAnimNotifyPanelQte_C',
+  'TsAnimNotifyReSkillByTagCount_C',
+  'TsAnimNotifyRemoveSummonedEntity_C',
+  'TsAnimNotifyResetPositionToGround_C',
+  'TsAnimNotifyResetSkillTarget_C',
+  'TsAnimNotifyRoleFinishInteract_C',
+  'TsAnimNotifySetMovementMode_C',
+  'TsAnimNotifyStateAbsoluteTimeStop_C',
+  'TsAnimNotifyStateAccelInSplineMove_C',
+  'TsAnimNotifyStateAddBuff_C',
+  'TsAnimNotifyStateAddGameplayCue_C',
+  'TsAnimNotifyStateAddMaterialController_C',
+  'TsAnimNotifyStateAddMoveByInputDirect_C',
+  'TsAnimNotifyStateAudioEvent_C',
+  'TsAnimNotifyStateBulletDuration_C',
+  'TsAnimNotifyStateBurst_C',
+  'TsAnimNotifyStateCameraModify_C',
+  'TsAnimNotifyStateCameraShake_C',
+  'TsAnimNotifyStateCameraStateChange_C',
+  'TsAnimNotifyStateCaughtBinding_C',
+  'TsAnimNotifyStateCaughtTrigger_C',
+  'TsAnimNotifyStateChangeSlot_C',
+  'TsAnimNotifyStateCleanBurstCamera_C',
+  'TsAnimNotifyStateControllerShake_C',
+  'TsAnimNotifyStateCurveMove_C',
+  'TsAnimNotifyStateDisableCameraCollision_C',
+  'TsAnimNotifyStateEnableSequenceCameraDither_C',
+  'TsAnimNotifyStateFoleyAudioEvent_C',
+  'TsAnimNotifyStateGoThrough_C',
+  'TsAnimNotifyStateHideActor_C',
+  'TsAnimNotifyStateHideBone_C',
+  'TsAnimNotifyStateHideMesh_C',
+  'TsAnimNotifyStateInteractionRotateToLocation_C',
+  'TsAnimNotifyStateJumpLandDetect_C',
+  'TsAnimNotifyStateKeepAwayFromGround_C',
+  'TsAnimNotifyStateMeshDitherDetect_C',
+  'TsAnimNotifyStateMontageSpeedChange_C',
+  'TsAnimNotifyStateNextAtt_C',
+  'TsAnimNotifyStatePositionBranchTarget_C',
+  'TsAnimNotifyStatePositionTarget_C',
+  'TsAnimNotifyStatePosition_C',
+  'TsAnimNotifyStateRoleRotate_C',
+  'TsAnimNotifyStateRotateAlignGravity_C',
+  'TsAnimNotifyStateRotateBonesToTarget_C',
+  'TsAnimNotifyStateRotateMesh_C',
+  'TsAnimNotifyStateRotate_C',
+  'TsAnimNotifyStateSceneInteract_C',
+  'TsAnimNotifyStateSetCollisionChannel_C',
+  'TsAnimNotifyStateSetCollisionLv_C',
+  'TsAnimNotifyStateSetHitPriority_C',
+  'TsAnimNotifyStateSetMass_C',
+  'TsAnimNotifyStateSetMovementMode_C',
+  'TsAnimNotifyStateShowUiWeapon_C',
+  'TsAnimNotifyStateSimpleDisableCollision_C',
+  'TsAnimNotifyStateSkeletalMeshAnimPlay_C',
+  'TsAnimNotifyStateSkillBehavior_C',
+  'TsAnimNotifyStateSoftLock_C',
+  'TsAnimNotifyStateSubMeshControl_C',
+  'TsAnimNotifyStateTimeStopRequest_C',
+  'TsAnimNotifyStateTurnModelBlackboard_C',
+  'TsAnimNotifyStateWeaponHang_C',
+  'TsAnimNotifySwitchSequenceCamera_C',
+  'TsAnimNotifyTeleport_C',
+  'TsAnimNotifyWeaponHide_C',
+  'TsSeqAnimNotifyPlayPlot_C',
+] as const;
 
-const MontageNotifyDetailsSchema = z.union([
+const GenericNotifyDetailsSchema = z.looseObject({
+  ...BaseNotifyDetailFields,
+  Type: z.enum(GenericMontageNotifyTypes),
+  Properties: JsonObjectSchema.optional(),
+  Rows: JsonObjectSchema.optional(),
+});
+
+const MontageNotifyDetailsSchema = z.discriminatedUnion('Type', [
   ReSkillEventDetailsSchema,
   StateAddTagDetailsSchema,
   SendGamePlayEventDetailsSchema,
@@ -387,7 +440,7 @@ const SkillInfoPatternValidators = [
   [/^ImmuneFallDamageTime_/, z.number()],
   [/^OverrideHit_/, z.boolean()],
   [/^OverrideType_/, z.string()],
-  [/^ExportSpecialAnim_/, z.array(EngineObjectSchema)],
+  [/^ExportSpecialAnim_/, z.array(JsonObjectSchema)],
   [/^SkillStepUp_/, z.boolean()],
   [/^SkillCanBeginWithoutControl_/, z.boolean()],
   [/^MaxCounterCount_/, z.number()],
@@ -395,7 +448,7 @@ const SkillInfoPatternValidators = [
 ] as const;
 
 const SkillInfoRowSchema = z
-  .record(z.string(), EngineValueSchema)
+  .record(z.string(), JsonValueSchema)
   .superRefine((row, context) => {
     for (const [key, value] of Object.entries(row)) {
       const validator = SkillInfoPatternValidators.find(([pattern]) =>
@@ -452,8 +505,8 @@ const RawSkillInfoRowDataSchema = withStrippedHashedKeySuffixes(
       SkillName: z.string(),
       SkillIcon: AssetReferenceSchema,
       SkillMode: z.string(),
-      SkillTriggers: z.array(EngineObjectSchema),
-      SkillBehaviorGroup: z.array(EngineObjectSchema),
+      SkillTriggers: z.array(JsonObjectSchema),
+      SkillBehaviorGroup: z.array(JsonObjectSchema),
       SkillGA: AssetReferenceSchema,
       Animations: z.array(AssetReferenceSchema),
       MontagePaths: z.array(z.string()),
@@ -486,37 +539,29 @@ const RawSkillInfoRowDataSchema = withStrippedHashedKeySuffixes(
     .strict(),
 );
 
-const SkillInfoRootExportSchema = z
-  .object({
-    Type: z.literal('DataTable'),
-    Name: z.literal('DT_SkillInfo'),
-    Flags: z.string(),
-    Class: z.string(),
-    Package: z.string(),
-    Properties: z
-      .object({
-        RowStruct: ObjectReferenceSchema,
-      })
-      .catchall(EngineValueSchema),
-    Rows: z.record(z.string(), SkillInfoRowSchema),
-  })
-  .catchall(EngineValueSchema);
+const SkillInfoRootExportSchema = z.looseObject({
+  Type: z.literal('DataTable'),
+  Name: z.literal('DT_SkillInfo'),
+  Flags: z.string(),
+  Class: z.string(),
+  Package: z.string(),
+  Properties: z.looseObject({
+    RowStruct: ObjectReferenceSchema,
+  }),
+  Rows: z.record(z.string(), SkillInfoRowSchema),
+});
 
-const RawSkillInfoRowRootExportSchema = z
-  .object({
-    Type: z.literal('DataTable'),
-    Name: z.literal('DT_SkillInfo'),
-    Flags: z.string(),
-    Class: z.string(),
-    Package: z.string(),
-    Properties: z
-      .object({
-        RowStruct: ObjectReferenceSchema,
-      })
-      .catchall(EngineValueSchema),
-    Rows: z.record(z.string(), RawSkillInfoRowDataSchema),
-  })
-  .catchall(EngineValueSchema);
+const RawSkillInfoRowRootExportSchema = z.looseObject({
+  Type: z.literal('DataTable'),
+  Name: z.literal('DT_SkillInfo'),
+  Flags: z.string(),
+  Class: z.string(),
+  Package: z.string(),
+  Properties: z.looseObject({
+    RowStruct: ObjectReferenceSchema,
+  }),
+  Rows: z.record(z.string(), RawSkillInfoRowDataSchema),
+});
 
 const BasePropertyNumberKeys = [
   'Id',
@@ -1365,15 +1410,15 @@ const PhantomSkillSchema = z
   })
   .strict();
 
-const RawMontageArraySchema = z
-  .tuple([MontageRootSchema])
-  .rest(MontageNotifyDetailsSchema);
-const RawSkillInfoAssetArraySchema = z
-  .tuple([SkillInfoRootExportSchema])
-  .rest(MontageNotifyDetailsSchema);
+const RawMontageArraySchema = withStrippedHashedKeySuffixes(
+  z.tuple([MontageRootSchema]).rest(MontageNotifyDetailsSchema),
+);
+const RawSkillInfoAssetArraySchema = withStrippedHashedKeySuffixes(
+  z.tuple([SkillInfoRootExportSchema]).rest(MontageNotifyDetailsSchema),
+);
 const RawSkillInfoRowFileArraySchema = z.tuple([RawSkillInfoRowRootExportSchema]);
 const ReBulletBaseSettingsSchema = z
-  .record(z.string(), EngineValueSchema)
+  .record(z.string(), JsonValueSchema)
   .superRefine((row, context) => {
     for (const prefix of ['每个单位总作用次数', '总作用次数限制', '作用间隔']) {
       const entry = Object.entries(row).find(([key]) => key.startsWith(prefix));
@@ -1387,7 +1432,7 @@ const ReBulletBaseSettingsSchema = z
   });
 
 const ReBulletRowSchema = z
-  .record(z.string(), EngineValueSchema)
+  .record(z.string(), JsonValueSchema)
   .superRefine((row, context) => {
     const baseSettingsEntry = Object.entries(row).find(([key]) =>
       key.startsWith('基础设置'),
@@ -1414,21 +1459,17 @@ const ReBulletRowSchema = z
   });
 const RawReBulletDataRowSchema = withStrippedHashedKeySuffixes(ReBulletRowSchema);
 
-const ReBulletDataMainRootExportSchema = z
-  .object({
-    Type: z.literal('DataTable'),
-    Name: z.string().regex(/^DT_ReBulletDataMain/),
-    Flags: z.string(),
-    Class: z.string(),
-    Package: z.string(),
-    Properties: z
-      .object({
-        RowStruct: ObjectReferenceSchema,
-      })
-      .catchall(EngineValueSchema),
-    Rows: z.record(z.string(), RawReBulletDataRowSchema),
-  })
-  .catchall(EngineValueSchema);
+const ReBulletDataMainRootExportSchema = z.looseObject({
+  Type: z.literal('DataTable'),
+  Name: z.string().regex(/^DT_ReBulletDataMain/),
+  Flags: z.string(),
+  Class: z.string(),
+  Package: z.string(),
+  Properties: z.looseObject({
+    RowStruct: ObjectReferenceSchema,
+  }),
+  Rows: z.record(z.string(), RawReBulletDataRowSchema),
+});
 const RawReBulletDataMainArraySchema = z
   .tuple([ReBulletDataMainRootExportSchema])
   .rest(MontageNotifyDetailsSchema);

@@ -5,9 +5,9 @@ export const transformBulletsToTimedHits = (
   getBulletById: (id: Bullet['id']) => Bullet | undefined,
   startTime = 0,
 ): Array<{ damageId: number; time: number }> => {
-  const result = bullet.hits.map((hit) => ({
+  const result = bullet.hits.map((hit, index) => ({
     damageId: hit,
-    time: startTime * bullet.hitInterval,
+    time: startTime + index * bullet.hitInterval,
   }));
 
   for (const child of bullet.children) {

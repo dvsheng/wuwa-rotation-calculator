@@ -36,6 +36,7 @@ import { useEntityModifiers } from '@/hooks/useEntityModifiers';
 import { useEntityMontages } from '@/hooks/useEntityMontages';
 import { useGameDataEntities } from '@/hooks/useGameDataEntities';
 import { Target } from '@/services/game-data/types';
+import type { ActivatableSkill } from '@/services/game-data-v2/activatable-skills/types';
 import type { Buff } from '@/services/game-data-v2/buffs';
 import type { Bullet } from '@/services/game-data-v2/bullets';
 import { transformBulletsToTimedHits } from '@/services/game-data-v2/bullets/transform-bullet-to-timed-hits';
@@ -45,6 +46,7 @@ import type { Montage } from '@/services/game-data-v2/montages';
 import { Attribute } from '@/types/attribute';
 
 const ENTITY_GAME_DATA_TABS = [
+  'attacks',
   'buffs',
   'modifiers',
   'damage-instances',
@@ -59,6 +61,11 @@ type StackInfo = { valueAt1: number; valueAtMax: number; maxStacks: number };
 type ClampInfo = { min: number; max: number; stat: string | undefined };
 type MontageHitRow = Montage['bullets'][number];
 type MontageViewMode = 'bullet' | 'damage';
+type Attack = ActivatableSkill & { raw: unknown };
+type MontageWithDamageRows = {
+  montage: Montage;
+  damageRows: Array<MontageDamageRow>;
+};
 type MontageDamageRow = {
   bulletId: string;
   time: number;
@@ -767,29 +774,150 @@ function EntityBulletsList({ id }: { id: number }) {
   );
 }
 
+function EntityAttacksList({ entityId }: { entityId: number }) {
+  const { data: skills } = useEntityActivatableSkills(entityId);
+  const { data: montages } = useEntityMontages(entityId);
+  const { data: bullets } = useEntityBullets(entityId);
+  const { data: damageInstances } = useEntityDamageInstances(entityId);
+
+  if (skills.length === 0) {
+    return <p className="text-muted-foreground text-sm">No attacks found.</p>;
+  }
+
+  const montagesById = new Map(montages.map((montage) => [montage.id, montage]));
+  const bulletById = new Map(bullets.map((bullet) => [bullet.id, bullet]));
+  const damageInstancesById = new Map(
+    damageInstances.map((damageInstance) => [damageInstance.id, damageInstance]),
+  );
+  const attacksWithDamage = skills.flatMap((skill) => {
+    const montagesWithDamageRows = skill.montages.flatMap((montageId) => {
+      const montage = montagesById.get(montageId);
+      if (!montage) return [];
+
+      const damageRows = createMontageDamageRows({
+        montage,
+        bulletById,
+        damageInstancesById,
+      });
+
+      return damageRows.length === 0 ? [] : [{ montage, damageRows }];
+    });
+
+    return montagesWithDamageRows.length === 0
+      ? []
+      : [{ skill, montagesWithDamageRows }];
+  });
+
+  if (attacksWithDamage.length === 0) {
+    return <p className="text-muted-foreground text-sm">No attacks found.</p>;
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      {attacksWithDamage.map(({ skill, montagesWithDamageRows }) => (
+        <AttackCard
+          key={skill.id}
+          entityId={entityId}
+          skill={skill}
+          montagesWithDamageRows={montagesWithDamageRows}
+          bulletById={bulletById}
+        />
+      ))}
+    </div>
+  );
+}
+
+function AttackCard({
+  entityId,
+  skill,
+  montagesWithDamageRows,
+  bulletById,
+}: {
+  entityId: number;
+  skill: Attack;
+  montagesWithDamageRows: Array<MontageWithDamageRows>;
+  bulletById: Map<string, Bullet>;
+}) {
+  return (
+    <Card id={`attack-${skill.id}`} className="gap-0 py-0">
+      <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 py-4">
+        <div className="space-y-2">
+          <CardTitle className="text-base">{skill.name}</CardTitle>
+          <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
+            <Badge variant="secondary" className="font-mono">
+              {skill.id}
+            </Badge>
+            <Badge variant="secondary">genre: {skill.genre || 'n/a'}</Badge>
+            <Badge variant="secondary">montages: {montagesWithDamageRows.length}</Badge>
+          </div>
+        </div>
+        <DebugHoverIcon value={skill.raw} />
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4 pt-0 pb-4">
+        {montagesWithDamageRows.map(({ montage, damageRows }) => (
+          <div key={montage.id} className="space-y-2">
+            <Row justify="between" align="center" className="gap-3">
+              <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                {montage.name}
+              </p>
+              <Badge variant="secondary">{montage.bullets.length} bullets</Badge>
+            </Row>
+            <DamageView entityId={entityId} rows={damageRows} bulletById={bulletById} />
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
 function NullTableValue() {
   return <span className="text-muted-foreground font-mono text-sm">null</span>;
 }
 
 function EntityMontagesList({ entityId }: { entityId: number }) {
   const { data } = useEntityMontages(entityId);
+  const { data: bullets } = useEntityBullets(entityId);
+  const { data: damageInstances } = useEntityDamageInstances(entityId);
 
   if (data.length === 0) {
     return <p className="text-muted-foreground text-sm">No montages found.</p>;
   }
 
+  const bulletById = new Map(bullets.map((bullet) => [bullet.id, bullet]));
+  const damageInstancesById = new Map(
+    damageInstances.map((damageInstance) => [damageInstance.id, damageInstance]),
+  );
+  const montagesWithDamageRows = data.flatMap((montage) => {
+    const damageRows = createMontageDamageRows({
+      montage,
+      bulletById,
+      damageInstancesById,
+    });
+
+    return damageRows.length === 0 ? [] : [{ montage, damageRows }];
+  });
+
+  if (montagesWithDamageRows.length === 0) {
+    return <p className="text-muted-foreground text-sm">No montages found.</p>;
+  }
+
   const [otherMontages, primaryMontages] = partition(
-    data,
-    (item) =>
-      item.bullets.length === 0 ||
-      item.name.toLowerCase().includes('rogue') ||
-      item.name.toLowerCase().includes('photo'),
+    montagesWithDamageRows,
+    ({ montage }) =>
+      montage.name.toLowerCase().includes('rogue') ||
+      montage.name.toLowerCase().includes('photo'),
   );
 
   return (
     <div className="flex flex-col gap-4">
-      {primaryMontages.map((item) => (
-        <MontageCard key={item.id} entityId={entityId} item={item} />
+      {primaryMontages.map(({ montage, damageRows }) => (
+        <MontageCard
+          key={montage.id}
+          entityId={entityId}
+          item={montage}
+          damageRows={damageRows}
+          bulletById={bulletById}
+        />
       ))}
       {otherMontages.length > 0 && (
         <Collapsible className="rounded-md border">
@@ -805,8 +933,14 @@ function EntityMontagesList({ entityId }: { entityId: number }) {
           </CollapsibleTrigger>
           <CollapsibleContent className="border-t p-4">
             <div className="flex flex-col gap-4">
-              {otherMontages.map((item) => (
-                <MontageCard key={item.id} entityId={entityId} item={item} />
+              {otherMontages.map(({ montage, damageRows }) => (
+                <MontageCard
+                  key={montage.id}
+                  entityId={entityId}
+                  item={montage}
+                  damageRows={damageRows}
+                  bulletById={bulletById}
+                />
               ))}
             </div>
           </CollapsibleContent>
@@ -816,39 +950,19 @@ function EntityMontagesList({ entityId }: { entityId: number }) {
   );
 }
 
-function MontageCard({ entityId, item }: { entityId: number; item: Montage }) {
-  const { data: bullets } = useEntityBullets(entityId);
-  const { data: damageInstances } = useEntityDamageInstances(entityId);
+function MontageCard({
+  entityId,
+  item,
+  damageRows,
+  bulletById,
+}: {
+  entityId: number;
+  item: Montage;
+  damageRows: Array<MontageDamageRow>;
+  bulletById: Map<string, Bullet>;
+}) {
   const [viewMode, setViewMode] = React.useState<MontageViewMode>('damage');
   const hitRows: Array<MontageHitRow> = item.bullets;
-  const bulletById = new Map(bullets.map((bullet) => [bullet.id, bullet]));
-  const damageInstancesById = new Map(
-    damageInstances.map((damageInstance) => [damageInstance.id, damageInstance]),
-  );
-  const damageRows: Array<MontageDamageRow> = hitRows
-    .flatMap((hitRow) => {
-      const bullet = bulletById.get(hitRow.bulletId);
-      if (!bullet) {
-        return [];
-      }
-
-      return transformBulletsToTimedHits(
-        bullet,
-        (bulletId) => {
-          return bulletById.get(bulletId);
-        },
-        hitRow.time,
-      ).map(({ damageId, time }) => ({
-        bulletId: hitRow.bulletId,
-        time,
-        damageId,
-        damageInstance: damageInstancesById.get(damageId),
-        montageRequiredTags: hitRow.requiredTags,
-      }));
-    })
-    .toSorted(
-      (left, right) => left.time - right.time || left.damageId - right.damageId,
-    );
 
   return (
     <Card id={item.id} className="gap-0 py-0">
@@ -894,6 +1008,41 @@ function MontageCard({ entityId, item }: { entityId: number; item: Montage }) {
       </CardContent>
     </Card>
   );
+}
+
+function createMontageDamageRows({
+  montage,
+  bulletById,
+  damageInstancesById,
+}: {
+  montage: Montage;
+  bulletById: Map<string, Bullet>;
+  damageInstancesById: Map<number, DamageInstance>;
+}): Array<MontageDamageRow> {
+  return montage.bullets
+    .flatMap((hitRow) => {
+      const bullet = bulletById.get(hitRow.bulletId);
+      if (!bullet) {
+        return [];
+      }
+
+      return transformBulletsToTimedHits(
+        bullet,
+        (bulletId) => {
+          return bulletById.get(bulletId);
+        },
+        hitRow.time,
+      ).map(({ damageId, time }) => ({
+        bulletId: hitRow.bulletId,
+        time,
+        damageId,
+        damageInstance: damageInstancesById.get(damageId),
+        montageRequiredTags: hitRow.requiredTags,
+      }));
+    })
+    .toSorted(
+      (left, right) => left.time - right.time || left.damageId - right.damageId,
+    );
 }
 
 function BulletView({
@@ -1196,6 +1345,7 @@ function EntityBuffsPage() {
           className="min-h-0 flex-1 gap-4"
         >
           <TabsList className="w-fit">
+            <TabsTrigger value="attacks">Attacks</TabsTrigger>
             <TabsTrigger value="buffs">Buffs</TabsTrigger>
             <TabsTrigger value="modifiers">Modifiers</TabsTrigger>
             <TabsTrigger value="damage-instances">Damage Instances</TabsTrigger>
@@ -1203,6 +1353,20 @@ function EntityBuffsPage() {
             <TabsTrigger value="montages">Montages</TabsTrigger>
             <TabsTrigger value="skill-info">Skill Info</TabsTrigger>
           </TabsList>
+          <TabsContent value="attacks" className="min-h-0 flex-1 overflow-y-auto">
+            <Suspense
+              fallback={
+                <Card className="h-32">
+                  <LoadingSpinnerContainer
+                    message="Loading attacks..."
+                    spinnerSize={40}
+                  />
+                </Card>
+              }
+            >
+              <EntityAttacksList entityId={numericId} />
+            </Suspense>
+          </TabsContent>
           <TabsContent value="buffs" className="min-h-0 flex-1 overflow-y-auto">
             <Suspense
               fallback={

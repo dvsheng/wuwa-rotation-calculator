@@ -23,13 +23,34 @@ function getCharacterName(sourcePath: string) {
   return path.posix.basename(getCharacterPath(sourcePath));
 }
 
+function getMontageCharacterName(
+  sourcePath: string,
+  characterNameOverride: string | undefined,
+): string | undefined {
+  if (!sourcePath.startsWith('Vision/')) {
+    return getCharacterName(sourcePath);
+  }
+
+  if (characterNameOverride) {
+    return characterNameOverride;
+  }
+
+  console.warn(
+    `Skipping ${sourcePath}: unable to derive echo character name from echo bullet ids`,
+  );
+}
+
 function toRawMontageRow(
   sourcePath: string,
   data: RawMontageAssetArray,
+  characterNameOverride?: string,
 ): NewRawMontage | undefined {
-  const characterName = getCharacterName(sourcePath);
   const montage = data[0] as MontageRoot | undefined;
   if (!montage) return;
+
+  const characterName = getMontageCharacterName(sourcePath, characterNameOverride);
+  if (!characterName) return;
+
   return {
     name: montage.Name,
     characterName,

@@ -17,23 +17,23 @@ import type { ZodType } from 'zod';
 export const BASE_URL =
   'https://raw.githubusercontent.com/Arikatsu/WutheringWaves_Data/3.2';
 export const WUWA_CHARACTER_DATA_BASE_URL =
-  'https://raw.githubusercontent.com/dvsheng/wuwa-character-data/refs/heads/main';
+  'https://raw.githubusercontent.com/dvsheng/wuwa-game-data/refs/heads/main';
 export const WUWA_CHARACTER_DATA_TARBALL_URL =
-  'https://codeload.github.com/dvsheng/wuwa-character-data/tar.gz/refs/heads/main';
+  'https://codeload.github.com/dvsheng/wuwa-game-data/tar.gz/refs/heads/main';
 export const OUTPUT_DIR = '.local/data/github';
 export const CACHE_DIR = path.join(OUTPUT_DIR, 'cache');
 export const SNAPSHOT_DIR = path.join(OUTPUT_DIR, 'snapshots');
 export const WUWA_CHARACTER_DATA_SNAPSHOT_DIR = path.join(
   SNAPSHOT_DIR,
-  'wuwa-character-data-main',
+  'wuwa-game-data-main',
 );
-export const WUWA_CHARACTER_DATA_ROLE_SNAPSHOT_DIR = path.join(
+export const WUWA_CHARACTER_DATA_CHARACTER_SNAPSHOT_DIR = path.join(
   WUWA_CHARACTER_DATA_SNAPSHOT_DIR,
   'Character',
-  'Role',
 );
 const FETCH_RETRY_COUNT = 5;
 const FETCH_RETRY_DELAY_MS = 1000;
+const WUWA_CHARACTER_DATA_SOURCE_ROOTS = ['Role', 'Vision'] as const;
 
 function formatZodIssues(
   filePath: string,
@@ -153,12 +153,12 @@ type GithubContentItem = {
 };
 
 function getWuwaCharacterDataSnapshotPath(relativePath = '') {
-  return path.join(WUWA_CHARACTER_DATA_ROLE_SNAPSHOT_DIR, relativePath);
+  return path.join(WUWA_CHARACTER_DATA_CHARACTER_SNAPSHOT_DIR, relativePath);
 }
 
 function refreshWuwaCharacterDataSnapshot() {
-  const temporaryDirectory = mkdtempSync(path.join(tmpdir(), 'wuwa-character-data-'));
-  const tarballPath = path.join(temporaryDirectory, 'wuwa-character-data.tar.gz');
+  const temporaryDirectory = mkdtempSync(path.join(tmpdir(), 'wuwa-game-data-'));
+  const tarballPath = path.join(temporaryDirectory, 'wuwa-game-data.tar.gz');
 
   mkdirSync(SNAPSHOT_DIR, { recursive: true });
   rmSync(WUWA_CHARACTER_DATA_SNAPSHOT_DIR, { force: true, recursive: true });
@@ -170,7 +170,7 @@ function refreshWuwaCharacterDataSnapshot() {
       { stdio: 'inherit' },
     );
 
-    console.log('Extracting wuwa-character-data tarball');
+    console.log('Extracting wuwa-game-data tarball');
     execSync(`tar -xzf '${tarballPath}' -C '${SNAPSHOT_DIR}'`, { stdio: 'inherit' });
   } finally {
     rmSync(temporaryDirectory, { force: true, recursive: true });
@@ -198,7 +198,7 @@ function listWuwaCharacterDataDirectory(
         type: entry.isDirectory() ? 'dir' : 'file',
         download_url: entry.isDirectory()
           ? undefined
-          : `${WUWA_CHARACTER_DATA_BASE_URL}/${entryPath}`,
+          : `${WUWA_CHARACTER_DATA_BASE_URL}/Character/${entryPath}`,
       };
     })
     .toSorted((left, right) => left.path.localeCompare(right.path));
@@ -210,7 +210,7 @@ function fetchAndValidateWuwaCharacterDataJson<T>(
 ): T {
   const absoluteFilePath = getWuwaCharacterDataSnapshotPath(filePath);
   if (!existsSync(absoluteFilePath)) {
-    throw new Error(`Missing wuwa-character-data snapshot file: ${filePath}`);
+    throw new Error(`Missing wuwa-game-data snapshot file: ${filePath}`);
   }
 
   const raw = JSON.parse(readFileSync(absoluteFilePath, 'utf8')) as unknown;
@@ -224,14 +224,28 @@ function fetchAndValidateWuwaCharacterDataJson<T>(
 }
 
 function listWuwaCharacterPaths(): Array<string> {
-  const rootItems = listWuwaCharacterDataDirectory('');
-  const characterGroups = rootItems.filter((item) => item.type === 'dir');
-  const nested = characterGroups.map((group) => {
-    const children = listWuwaCharacterDataDirectory(group.path);
-    return children.filter((item) => item.type === 'dir').map((item) => item.path);
-  });
+  const results: Array<string> = [];
 
-  return nested.flat().toSorted((left, right) => left.localeCompare(right));
+  function walk(relativePath: string) {
+    const items = listWuwaCharacterDataDirectory(relativePath);
+    const childDirectories = items.filter((item) => item.type === 'dir');
+    const directoryNames = new Set(childDirectories.map((item) => item.name));
+
+    if (directoryNames.has('CommonAnim') || directoryNames.has('Data')) {
+      results.push(relativePath);
+      return;
+    }
+
+    for (const childDirectory of childDirectories) {
+      walk(childDirectory.path);
+    }
+  }
+
+  for (const sourceRoot of WUWA_CHARACTER_DATA_SOURCE_ROOTS) {
+    walk(sourceRoot);
+  }
+
+  return results.toSorted((left, right) => left.localeCompare(right));
 }
 
 async function listWuwaCharacterMontageFiles(): Promise<Array<string>> {
@@ -286,7 +300,10 @@ function listWuwaReBulletDataMainFiles(): Array<string> {
     }
   }
 
-  walk('');
+  for (const sourceRoot of WUWA_CHARACTER_DATA_SOURCE_ROOTS) {
+    walk(sourceRoot);
+  }
+
   return results.toSorted((left, right) => left.localeCompare(right));
 }
 

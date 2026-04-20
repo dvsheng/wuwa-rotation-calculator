@@ -21,7 +21,11 @@ export function transform(row: ReBulletDataMainRow): BulletData {
     hits:
       base?.多伤害ID && base.多伤害ID.length > 0
         ? base.多伤害ID
-        : compact(Array.of(base?.每个单位总作用次数 ?? 1).map((_) => base?.伤害ID)),
+        : compact(
+            Array.from({ length: base?.每个单位总作用次数 ?? 1 }).map(
+              (_) => base?.伤害ID,
+            ),
+          ),
     totalHitCap: base?.总作用次数限制 ?? -1,
     hitInterval: base?.作用间隔 ?? 0,
     duration: base?.持续时间 ?? 0,

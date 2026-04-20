@@ -262,6 +262,7 @@ const SkillBehaviorDetailsSchema = z.looseObject({
 });
 
 const GenericMontageNotifyTypes = [
+  'ANS_Bianshenweizhi_C',
   'ANS_Jueyuan_Huaban_C',
   'ANS_ShowSpecMesh_C',
   'ANS_Yinlin_Beam_C',
@@ -296,6 +297,8 @@ const GenericMontageNotifyTypes = [
   'TsAnimNotifyEndSkill_C',
   'TsAnimNotifyFightStand_C',
   'TsAnimNotifyFootstepAudio_C',
+  'TsAnimNotifyBonesShowControl_C',
+  'TsAnimNotifyHideBone_C',
   'TsAnimNotifyHideMesh_C',
   'TsAnimNotifyJoinTeamQte_C',
   'TsAnimNotifyPanelQte_C',
@@ -313,6 +316,7 @@ const GenericMontageNotifyTypes = [
   'TsAnimNotifyStateAddMoveByInputDirect_C',
   'TsAnimNotifyStateAudioEvent_C',
   'TsAnimNotifyStateBulletDuration_C',
+  'TsAnimNotifyStateBonesShowControl_C',
   'TsAnimNotifyStateBurst_C',
   'TsAnimNotifyStateCameraModify_C',
   'TsAnimNotifyStateCameraShake_C',
@@ -339,6 +343,7 @@ const GenericMontageNotifyTypes = [
   'TsAnimNotifyStatePositionBranchTarget_C',
   'TsAnimNotifyStatePositionTarget_C',
   'TsAnimNotifyStatePosition_C',
+  'TsAnimNotifyStateReplaceHitEffect_C',
   'TsAnimNotifyStateRoleRotate_C',
   'TsAnimNotifyStateRotateAlignGravity_C',
   'TsAnimNotifyStateRotateBonesToTarget_C',

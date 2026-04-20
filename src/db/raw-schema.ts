@@ -944,7 +944,7 @@ export const rawPhantomSkills = pgTable('raw_phantom_skills', {
 });
 
 /**
- * Raw montage asset rows from dvsheng/wuwa-character-data {Character}/CommonAnim/AM*.json
+ * Raw montage asset rows from dvsheng/wuwa-game-data {Character}/CommonAnim/AM*.json
  */
 export const rawMontages = pgTable(
   'raw_montages',
@@ -960,7 +960,7 @@ export const rawMontages = pgTable(
 );
 
 /**
- * Raw DT_SkillInfo rows from dvsheng/wuwa-character-data {Character}/Data/DT_SkillInfo.json
+ * Raw DT_SkillInfo rows from dvsheng/wuwa-game-data {Character}/Data/DT_SkillInfo.json
  */
 export const rawSkillInfoRows = pgTable('raw_skill_info_rows', {
   skillId: integer('skill_id').primaryKey(),
@@ -968,7 +968,7 @@ export const rawSkillInfoRows = pgTable('raw_skill_info_rows', {
 });
 
 /**
- * Raw DT_ReBulletDataMain rows from dvsheng/wuwa-character-data {Character}/Data/DT_ReBulletDataMain*.json
+ * Raw DT_ReBulletDataMain rows from dvsheng/wuwa-game-data {Character}/Data/DT_ReBulletDataMain*.json
  */
 export const rawReBulletDataMainRows = pgTable('raw_re_bullet_data_main_rows', {
   bulletId: integer('bullet_id').primaryKey(),

@@ -955,15 +955,87 @@ async function ingestPhantomSkills(t: TextResolver) {
   );
 }
 
+function warnAndSkipValidationFailure(sourcePath: string, error: unknown) {
+  if (!(error instanceof Error) || !error.message.startsWith('Validation failed')) {
+    throw error;
+  }
+
+  console.warn(`Skipping ${sourcePath}: ${error.message}`);
+}
+
+async function getVisionEchoCharacterNamesByPath() {
+  const bulletSourcePaths = listWuwaReBulletDataMainFiles().filter((sourcePath) =>
+    sourcePath.startsWith('Vision/'),
+  );
+  const prefixGroups = await Promise.all(
+    bulletSourcePaths.map(async (sourcePath) => {
+      try {
+        const data = await fetchAndValidateWuwaCharacterDataJson(
+          sourcePath,
+          RawReBulletDataMainFileArraySchema,
+        );
+        const echoPath = getVisionEchoPath(sourcePath);
+        const prefixes = toRawReBulletDataMainRows(sourcePath, data).flatMap((row) =>
+          getBulletIdPrefix(row.bulletId),
+        );
+
+        return echoPath ? [[echoPath, prefixes] as const] : [];
+      } catch (error) {
+        warnAndSkipValidationFailure(sourcePath, error);
+        return [];
+      }
+    }),
+  );
+  const prefixesByEchoPath = Map.groupBy(prefixGroups.flat(), ([echoPath]) => echoPath);
+
+  return new Map(
+    [...prefixesByEchoPath].flatMap(([echoPath, entries]) => {
+      const prefix = entries
+        .flatMap(([, prefixes]) => prefixes)
+        .toSorted((left, right) => left.localeCompare(right))[0];
+
+      return prefix ? [[echoPath, prefix]] : [];
+    }),
+  );
+}
+
+function getVisionEchoPath(sourcePath: string): string | undefined {
+  if (!sourcePath.startsWith('Vision/')) return;
+
+  const parts = sourcePath.split('/');
+  const dataIndex = parts.indexOf('Data');
+  const commonAnimIndex = parts.indexOf('CommonAnim');
+  const endIndex = dataIndex === -1 ? commonAnimIndex : dataIndex;
+
+  return endIndex === -1 ? undefined : parts.slice(0, endIndex).join('/');
+}
+
+function getBulletIdPrefix(bulletId: number): Array<string> {
+  const match = String(bulletId).match(/^\d{6}/);
+  return match ? [match[0]] : [];
+}
+
 async function ingestRawMontages() {
   const sourcePaths = await listWuwaCharacterMontageFiles();
+  const visionEchoCharacterNamesByPath = await getVisionEchoCharacterNamesByPath();
   const rowResults = await Promise.all(
     sourcePaths.map(async (sourcePath) => {
-      const data = await fetchAndValidateWuwaCharacterDataJson(
-        sourcePath,
-        RawMontageAssetArraySchema,
-      );
-      return toRawMontageRow(sourcePath, data);
+      try {
+        const data = await fetchAndValidateWuwaCharacterDataJson(
+          sourcePath,
+          RawMontageAssetArraySchema,
+        );
+        const visionEchoPath = getVisionEchoPath(sourcePath);
+        return toRawMontageRow(
+          sourcePath,
+          data,
+          visionEchoPath
+            ? visionEchoCharacterNamesByPath.get(visionEchoPath)
+            : undefined,
+        );
+      } catch (error) {
+        warnAndSkipValidationFailure(sourcePath, error);
+      }
     }),
   );
   const rows = rowResults.filter((row) => row !== undefined);
@@ -980,11 +1052,16 @@ async function ingestRawSkillInfoRows() {
   const sourcePaths = await listWuwaSkillInfoAssetFiles();
   const rowGroups = await Promise.all(
     sourcePaths.map(async (sourcePath) => {
-      const data = await fetchAndValidateWuwaCharacterDataJson(
-        sourcePath,
-        RawSkillInfoRowDataFileArraySchema,
-      );
-      return toRawSkillInfoRows(data);
+      try {
+        const data = await fetchAndValidateWuwaCharacterDataJson(
+          sourcePath,
+          RawSkillInfoRowDataFileArraySchema,
+        );
+        return toRawSkillInfoRows(data);
+      } catch (error) {
+        warnAndSkipValidationFailure(sourcePath, error);
+        return [];
+      }
     }),
   );
 
@@ -1000,11 +1077,16 @@ async function ingestRawReBulletDataMainRows() {
   const sourcePaths = listWuwaReBulletDataMainFiles();
   const rowGroups = await Promise.all(
     sourcePaths.map(async (sourcePath) => {
-      const data = await fetchAndValidateWuwaCharacterDataJson(
-        sourcePath,
-        RawReBulletDataMainFileArraySchema,
-      );
-      return toRawReBulletDataMainRows(sourcePath, data);
+      try {
+        const data = await fetchAndValidateWuwaCharacterDataJson(
+          sourcePath,
+          RawReBulletDataMainFileArraySchema,
+        );
+        return toRawReBulletDataMainRows(sourcePath, data);
+      } catch (error) {
+        warnAndSkipValidationFailure(sourcePath, error);
+        return [];
+      }
     }),
   );
 
@@ -1023,7 +1105,7 @@ async function ingestRawReBulletDataMainRows() {
 async function ingestRawData() {
   console.log('Ingesting raw GitHub data into database...\n');
 
-  console.log('Refreshing wuwa-character-data snapshot...');
+  console.log('Refreshing wuwa-game-data snapshot...');
   await refreshWuwaCharacterDataSnapshot();
 
   console.log('Truncating raw tables...');

@@ -1,7 +1,7 @@
 /* eslint-disable unicorn/filename-case */
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import type { ColumnDef } from '@tanstack/react-table';
-import { partition, startCase } from 'es-toolkit';
+import { startCase } from 'es-toolkit';
 import { Cat, User, Users } from 'lucide-react';
 import React, { Suspense } from 'react';
 import { z } from 'zod';
@@ -9,7 +9,6 @@ import { z } from 'zod';
 import { AttributeIcon } from '@/components/common/AssetIcon';
 import { DebugHoverIcon } from '@/components/common/DebugHoverIcon';
 import { LoadingSpinnerContainer } from '@/components/common/LoadingSpinnerContainer';
-import { BulletItem } from '@/components/game-data/BulletItem';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +24,6 @@ import {
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
 import { Container, Row, Stack } from '@/components/ui/layout';
-import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Text } from '@/components/ui/typography';
 import { useEntityActivatableSkills } from '@/hooks/useEntityActivatableSkills';
@@ -42,6 +40,7 @@ import type { Bullet } from '@/services/game-data-v2/bullets';
 import { transformBulletsToTimedHits } from '@/services/game-data-v2/bullets/transform-bullet-to-timed-hits';
 import type { DamageInstance } from '@/services/game-data-v2/damage-instances/types';
 import type { Modifier } from '@/services/game-data-v2/modifiers';
+import { NotificationType } from '@/services/game-data-v2/montages';
 import type { Montage } from '@/services/game-data-v2/montages';
 import { Attribute } from '@/types/attribute';
 
@@ -59,8 +58,6 @@ type EntityGameDataTab = (typeof ENTITY_GAME_DATA_TABS)[number];
 type NumberNode = Buff['value'];
 type StackInfo = { valueAt1: number; valueAtMax: number; maxStacks: number };
 type ClampInfo = { min: number; max: number; stat: string | undefined };
-type MontageHitRow = Montage['bullets'][number];
-type MontageViewMode = 'bullet' | 'damage';
 type Attack = ActivatableSkill & { raw: unknown };
 type MontageWithDamageRows = {
   montage: Montage;
@@ -72,6 +69,11 @@ type MontageDamageRow = {
   damageId: number;
   damageInstance?: DamageInstance;
   montageRequiredTags: Array<string>;
+};
+type MontageBullet = {
+  bulletId: string;
+  time: number;
+  requiredTags: Array<string>;
 };
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
@@ -760,17 +762,151 @@ function EntityActivatableSkillsList({ id }: { id: number }) {
 
 function EntityBulletsList({ id }: { id: number }) {
   const { data } = useEntityBullets(id);
+  const navigate = useNavigate();
 
   if (data.length === 0) {
     return <p className="text-muted-foreground text-sm">No bullets found.</p>;
   }
 
+  const columns: Array<ColumnDef<(typeof data)[number]>> = [
+    {
+      id: 'debug',
+      header: '',
+      cell: ({ row }) => <DebugHoverIcon value={row.original.raw} />,
+      meta: { headerClassName: 'w-8', cellClassName: 'w-8' },
+    },
+    {
+      accessorKey: 'id',
+      header: 'ID',
+      meta: {
+        headerClassName: 'min-w-24',
+        cellClassName: 'min-w-24 font-mono text-xs',
+      },
+    },
+    {
+      accessorKey: 'name',
+      header: 'Name',
+      cell: ({ row }) => row.original.name || <NullTableValue />,
+      meta: { headerClassName: 'min-w-48', cellClassName: 'min-w-48' },
+    },
+    {
+      id: 'hits',
+      header: 'Damage',
+      cell: ({ row }) =>
+        row.original.hits.length === 0 ? (
+          <NullTableValue />
+        ) : (
+          <div className="flex flex-col gap-0.5">
+            {row.original.hits.map((damageId) => (
+              <Button
+                key={damageId}
+                type="button"
+                variant="link"
+                size="xs"
+                className="h-auto justify-start px-0 font-mono text-xs"
+                onClick={() =>
+                  navigate({
+                    to: '/game-data/$id',
+                    params: { id: String(id) },
+                    search: (previous) => ({
+                      ...previous,
+                      tab: 'damage-instances',
+                    }),
+                    hash: String(damageId),
+                  })
+                }
+              >
+                {damageId}
+              </Button>
+            ))}
+          </div>
+        ),
+      meta: { headerClassName: 'min-w-24', cellClassName: 'min-w-24' },
+    },
+    {
+      id: 'children',
+      header: 'Children',
+      cell: ({ row }) =>
+        row.original.children.length === 0 ? (
+          <NullTableValue />
+        ) : (
+          <HoverJson value={row.original.children}>
+            <Badge variant="secondary">{row.original.children.length}</Badge>
+          </HoverJson>
+        ),
+      meta: { headerClassName: 'min-w-24', cellClassName: 'min-w-24' },
+    },
+    {
+      accessorKey: 'duration',
+      header: 'Duration',
+      cell: ({ row }) => `${row.original.duration.toFixed(3)}s`,
+      meta: {
+        headerClassName: 'min-w-24',
+        cellClassName: 'min-w-24 font-mono text-sm',
+      },
+    },
+    {
+      accessorKey: 'hitInterval',
+      header: 'Hit Interval',
+      cell: ({ row }) => `${row.original.hitInterval.toFixed(3)}s`,
+      meta: {
+        headerClassName: 'min-w-28',
+        cellClassName: 'min-w-28 font-mono text-sm',
+      },
+    },
+    {
+      accessorKey: 'totalHitCap',
+      header: 'Hit Cap',
+      meta: {
+        headerClassName: 'min-w-20',
+        cellClassName: 'min-w-20 font-mono text-sm',
+      },
+    },
+    {
+      id: 'requiredTags',
+      header: 'Required Tags',
+      cell: ({ row }) => {
+        const tags = row.original.requiredTags;
+        return tags.length === 0 ? <NullTableValue /> : <RawTagList tags={tags} />;
+      },
+      meta: { headerClassName: 'min-w-48', cellClassName: 'min-w-48' },
+    },
+    {
+      id: 'forbiddenTags',
+      header: 'Forbidden Tags',
+      cell: ({ row }) => {
+        const tags = row.original.forbiddenTags;
+        return tags.length === 0 ? <NullTableValue /> : <RawTagList tags={tags} />;
+      },
+      meta: { headerClassName: 'min-w-48', cellClassName: 'min-w-48' },
+    },
+    {
+      id: 'onHitBuffs',
+      header: 'On Hit Buffs',
+      cell: ({ row }) => {
+        const buffCount = Object.values(row.original.onHitBuffs).reduce(
+          (total, buffs) => total + buffs.length,
+          0,
+        );
+
+        return buffCount === 0 ? (
+          <NullTableValue />
+        ) : (
+          <HoverJson value={row.original.onHitBuffs}>
+            <Badge variant="secondary">{buffCount}</Badge>
+          </HoverJson>
+        );
+      },
+      meta: { headerClassName: 'min-w-28', cellClassName: 'min-w-28' },
+    },
+  ];
+
   return (
-    <div className="flex flex-col gap-4">
-      {data.map((bullet) => (
-        <BulletItem key={bullet.id} bullet={bullet} />
-      ))}
-    </div>
+    <DataTable
+      columns={columns}
+      data={data}
+      classNames={{ wrapper: 'bg-muted/30 rounded-md border' }}
+    />
   );
 }
 
@@ -784,7 +920,9 @@ function EntityAttacksList({ entityId }: { entityId: number }) {
     return <p className="text-muted-foreground text-sm">No attacks found.</p>;
   }
 
-  const montagesById = new Map(montages.map((montage) => [montage.id, montage]));
+  const montagesById = new Map(
+    montages.map((montage) => [getMontageKey(montage), montage]),
+  );
   const bulletById = new Map(bullets.map((bullet) => [bullet.id, bullet]));
   const damageInstancesById = new Map(
     damageInstances.map((damageInstance) => [damageInstance.id, damageInstance]),
@@ -855,12 +993,14 @@ function AttackCard({
       </CardHeader>
       <CardContent className="flex flex-col gap-4 pt-0 pb-4">
         {montagesWithDamageRows.map(({ montage, damageRows }) => (
-          <div key={montage.id} className="space-y-2">
+          <div key={getMontageKey(montage)} className="space-y-2">
             <Row justify="between" align="center" className="gap-3">
               <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                 {montage.name}
               </p>
-              <Badge variant="secondary">{montage.bullets.length} bullets</Badge>
+              <Badge variant="secondary">
+                {getMontageBullets(montage).length} bullets
+              </Badge>
             </Row>
             <DamageView entityId={entityId} rows={damageRows} bulletById={bulletById} />
           </div>
@@ -876,49 +1016,21 @@ function NullTableValue() {
 
 function EntityMontagesList({ entityId }: { entityId: number }) {
   const { data } = useEntityMontages(entityId);
-  const { data: bullets } = useEntityBullets(entityId);
-  const { data: damageInstances } = useEntityDamageInstances(entityId);
 
   if (data.length === 0) {
     return <p className="text-muted-foreground text-sm">No montages found.</p>;
   }
 
-  const bulletById = new Map(bullets.map((bullet) => [bullet.id, bullet]));
-  const damageInstancesById = new Map(
-    damageInstances.map((damageInstance) => [damageInstance.id, damageInstance]),
-  );
-  const montagesWithDamageRows = data.flatMap((montage) => {
-    const damageRows = createMontageDamageRows({
-      montage,
-      bulletById,
-      damageInstancesById,
-    });
-
-    return damageRows.length === 0 ? [] : [{ montage, damageRows }];
-  });
-
-  if (montagesWithDamageRows.length === 0) {
-    return <p className="text-muted-foreground text-sm">No montages found.</p>;
-  }
-
-  const [otherMontages, primaryMontages] = partition(
-    montagesWithDamageRows,
-    ({ montage }) =>
-      montage.name.toLowerCase().includes('rogue') ||
-      montage.name.toLowerCase().includes('photo'),
-  );
+  const relevantMontages = data.filter((montage) => isRelevantMontage(montage));
+  const otherMontages = data.filter((montage) => !isRelevantMontage(montage));
 
   return (
     <div className="flex flex-col gap-4">
-      {primaryMontages.map(({ montage, damageRows }) => (
-        <MontageCard
-          key={montage.id}
-          entityId={entityId}
-          item={montage}
-          damageRows={damageRows}
-          bulletById={bulletById}
-        />
-      ))}
+      {relevantMontages.length === 0 ? (
+        <p className="text-muted-foreground text-sm">No relevant montages found.</p>
+      ) : (
+        <MontageTable data={relevantMontages} allMontages={data} />
+      )}
       {otherMontages.length > 0 && (
         <Collapsible className="rounded-md border">
           <CollapsibleTrigger asChild>
@@ -932,17 +1044,7 @@ function EntityMontagesList({ entityId }: { entityId: number }) {
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="border-t p-4">
-            <div className="flex flex-col gap-4">
-              {otherMontages.map(({ montage, damageRows }) => (
-                <MontageCard
-                  key={montage.id}
-                  entityId={entityId}
-                  item={montage}
-                  damageRows={damageRows}
-                  bulletById={bulletById}
-                />
-              ))}
-            </div>
+            <MontageTable data={otherMontages} allMontages={data} />
           </CollapsibleContent>
         </Collapsible>
       )}
@@ -950,64 +1052,111 @@ function EntityMontagesList({ entityId }: { entityId: number }) {
   );
 }
 
-function MontageCard({
-  entityId,
-  item,
-  damageRows,
-  bulletById,
+function MontageTable({
+  data,
+  allMontages,
 }: {
-  entityId: number;
-  item: Montage;
-  damageRows: Array<MontageDamageRow>;
-  bulletById: Map<string, Bullet>;
+  data: Array<Montage>;
+  allMontages: Array<Montage>;
 }) {
-  const [viewMode, setViewMode] = React.useState<MontageViewMode>('damage');
-  const hitRows: Array<MontageHitRow> = item.bullets;
+  const showCharacterName =
+    new Set(allMontages.map((montage) => montage.characterName)).size > 1;
+  const columns: Array<ColumnDef<(typeof data)[number]>> = [
+    {
+      id: 'debug',
+      header: '',
+      cell: ({ row }) => <DebugHoverIcon value={row.original.raw} />,
+      meta: { headerClassName: 'w-8', cellClassName: 'w-8' },
+    },
+    {
+      accessorKey: 'name',
+      header: 'Name',
+      meta: { headerClassName: 'min-w-48', cellClassName: 'min-w-48' },
+    },
+    ...(showCharacterName
+      ? [
+          {
+            accessorKey: 'characterName',
+            header: 'Character',
+            meta: {
+              headerClassName: 'min-w-32',
+              cellClassName: 'min-w-32 font-mono text-xs',
+            },
+          } satisfies ColumnDef<(typeof data)[number]>,
+        ]
+      : []),
+    {
+      accessorKey: 'effectiveTime',
+      header: 'Effective',
+      cell: ({ row }) =>
+        row.original.effectiveTime === undefined ? (
+          <NullTableValue />
+        ) : (
+          `${row.original.effectiveTime.toFixed(3)}s`
+        ),
+      meta: {
+        headerClassName: 'min-w-24',
+        cellClassName: 'min-w-24 font-mono text-sm',
+      },
+    },
+    {
+      id: 'notifications',
+      header: 'Notifications',
+      cell: ({ row }) =>
+        row.original.notifications.length === 0 ? (
+          <NullTableValue />
+        ) : (
+          <div className="flex flex-col gap-1">
+            {row.original.notifications.map((notification, index) => (
+              <HoverJson
+                key={`${notification.type}:${notification.time}:${index}`}
+                value={notification}
+              >
+                <span className="text-muted-foreground font-mono text-xs">
+                  {notification.type} @ {notification.time.toFixed(3)}s
+                </span>
+              </HoverJson>
+            ))}
+          </div>
+        ),
+      meta: {
+        headerClassName: 'min-w-56',
+        cellClassName: 'min-w-56',
+      },
+    },
+  ];
 
   return (
-    <Card id={item.id} className="gap-0 py-0">
-      <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 py-4">
-        <div className="space-y-2">
-          <CardTitle className="text-base">{item.name}</CardTitle>
-          <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
-            <Badge variant="secondary">
-              cancel:{' '}
-              {item.cancelTime === undefined ? 'n/a' : `${item.cancelTime.toFixed(3)}s`}
-            </Badge>
-            <Badge variant="secondary">
-              end: {item.endTime === undefined ? 'n/a' : `${item.endTime.toFixed(3)}s`}
-            </Badge>
-          </div>
-        </div>
-        <DebugHoverIcon value={item} />
-      </CardHeader>
-      <CardContent className="grid gap-4 pt-0 pb-4 md:grid-cols-2">
-        <div className="space-y-1 md:col-span-2">
-          <Row justify="between" align="center" className="gap-3">
-            <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-              {viewMode === 'damage' ? 'Damage View' : 'Bullet View'}
-            </p>
-            <Row align="center" className="gap-2">
-              <span className="text-sm">Bullet</span>
-              <Switch
-                checked={viewMode === 'damage'}
-                onCheckedChange={(checked) =>
-                  setViewMode(checked ? 'damage' : 'bullet')
-                }
-                aria-label={`Montage view for ${item.name}`}
-              />
-              <span className="text-sm">Damage</span>
-            </Row>
-          </Row>
-          {viewMode === 'damage' ? (
-            <DamageView entityId={entityId} rows={damageRows} bulletById={bulletById} />
-          ) : (
-            <BulletView entityId={entityId} rows={hitRows} bulletById={bulletById} />
-          )}
-        </div>
-      </CardContent>
-    </Card>
+    <DataTable
+      columns={columns}
+      data={data}
+      classNames={{ wrapper: 'bg-muted/30 rounded-md border' }}
+    />
   );
+}
+
+function isRelevantMontage(montage: Montage): boolean {
+  return (
+    montage.effectiveTime !== undefined &&
+    montage.notifications.length > 0 &&
+    !montage.name.toLowerCase().includes('rogue')
+  );
+}
+
+function getMontageKey(montage: Montage): string {
+  return `${montage.raw.name}-${montage.characterName}`;
+}
+
+function getMontageBullets(montage: Montage): Array<MontageBullet> {
+  return montage.notifications.flatMap((notification) => {
+    if (notification.type !== NotificationType.SPAWN_BULLETS) return [];
+
+    return notification.bullets.map((bullet) => ({
+      bulletId: String(bullet.id),
+      time: notification.time,
+      requiredTags: bullet.condition?.requiredTags ?? [],
+    }));
+  });
 }
 
 function createMontageDamageRows({
@@ -1019,7 +1168,7 @@ function createMontageDamageRows({
   bulletById: Map<string, Bullet>;
   damageInstancesById: Map<number, DamageInstance>;
 }): Array<MontageDamageRow> {
-  return montage.bullets
+  return getMontageBullets(montage)
     .flatMap((hitRow) => {
       const bullet = bulletById.get(hitRow.bulletId);
       if (!bullet) {
@@ -1043,103 +1192,6 @@ function createMontageDamageRows({
     .toSorted(
       (left, right) => left.time - right.time || left.damageId - right.damageId,
     );
-}
-
-function BulletView({
-  entityId,
-  rows,
-  bulletById,
-}: {
-  entityId: number;
-  rows: Array<MontageHitRow>;
-  bulletById: Map<string, Bullet>;
-}) {
-  const navigate = useNavigate();
-
-  const columns: Array<ColumnDef<MontageHitRow>> = [
-    {
-      accessorKey: 'time',
-      header: 'Time',
-      cell: ({ row }) => `${row.original.time.toFixed(3)}s`,
-      meta: {
-        headerClassName: 'min-w-20',
-        cellClassName: 'min-w-20 font-mono text-sm',
-      },
-    },
-    {
-      accessorKey: 'bulletId',
-      header: 'Bullet ID',
-      cell: ({ row }) => (
-        <Button
-          type="button"
-          variant="link"
-          size="xs"
-          className="h-auto px-0 font-mono"
-          onClick={() =>
-            navigate({
-              to: '/game-data/$id',
-              params: { id: String(entityId) },
-              search: (previous) => ({ ...previous, tab: 'bullets' }),
-              hash: String(row.original.bulletId),
-            })
-          }
-        >
-          {row.original.bulletId}
-        </Button>
-      ),
-      meta: {
-        headerClassName: 'min-w-24',
-        cellClassName: 'min-w-24',
-      },
-    },
-    {
-      id: 'montageRequiredTags',
-      header: 'Montage Required Tags',
-      cell: ({ row }) => {
-        const tags = row.original.requiredTags;
-        return tags.length === 0 ? <NullTableValue /> : <RawTagList tags={tags} />;
-      },
-      meta: {
-        headerClassName: 'min-w-48',
-        cellClassName: 'min-w-48',
-      },
-    },
-    {
-      id: 'requiredTags',
-      header: 'Bullet Required Tags',
-      cell: ({ row }) => {
-        const tags = bulletById.get(row.original.bulletId)?.requiredTags ?? [];
-        return tags.length === 0 ? <NullTableValue /> : <RawTagList tags={tags} />;
-      },
-      meta: {
-        headerClassName: 'min-w-48',
-        cellClassName: 'min-w-48',
-      },
-    },
-    {
-      id: 'forbiddenTags',
-      header: 'Forbidden Tags',
-      cell: ({ row }) => {
-        const tags = bulletById.get(row.original.bulletId)?.forbiddenTags ?? [];
-        return tags.length === 0 ? <NullTableValue /> : <RawTagList tags={tags} />;
-      },
-      meta: {
-        headerClassName: 'min-w-48',
-        cellClassName: 'min-w-48',
-      },
-    },
-  ];
-
-  return (
-    <DataTable
-      columns={columns}
-      data={rows}
-      emptyMessage="No hits."
-      classNames={{
-        wrapper: 'bg-muted/30 rounded-md border',
-      }}
-    />
-  );
 }
 
 function DamageView({

@@ -1,6 +1,6 @@
 import { EntityType } from '@/services/game-data/types';
 
-import { reBulletDataMainRows } from '../repostiory';
+import { echoes, reBulletDataMainRows } from '../repostiory';
 import type { ReBulletDataMainRow } from '../repostiory';
 
 export async function fetchResourcesForEntity(
@@ -14,7 +14,16 @@ export async function fetchResourcesForEntity(
         String(bullet.bulletId).startsWith(String(entityId)),
       );
     }
-    case EntityType.ECHO:
+    case EntityType.ECHO: {
+      const echo = await echoes.get(entityId);
+      if (!echo) throw new Error('invalid id');
+
+      const bulletIdPrefix = String(echo.skillId).slice(0, 5);
+      const bullets = await reBulletDataMainRows.list();
+      return bullets.filter((bullet) =>
+        String(bullet.bulletId).startsWith(bulletIdPrefix),
+      );
+    }
     case EntityType.ECHO_SET:
     case EntityType.WEAPON: {
       return [];

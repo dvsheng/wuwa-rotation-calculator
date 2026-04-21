@@ -7,14 +7,24 @@ import { dedupeMontages } from './useEntityMontages';
 describe('dedupeMontages', () => {
   it('dedupes montages by matching data while keeping the shortest name', () => {
     const longNameMontage = createMontage({
-      id: 'long-name-id',
       name: 'LongMontageName',
-      bullets: [{ bulletId: '1001', time: 1, requiredTags: [] }],
+      notifications: [
+        {
+          type: 'spawnBullets',
+          time: 1,
+          bullets: [{ id: 1001, condition: { requiredTags: [] } }],
+        },
+      ],
     });
     const shortNameMontage = createMontage({
-      id: 'short-name-id',
       name: 'Short',
-      bullets: [{ bulletId: '1001', time: 1.03, requiredTags: [] }],
+      notifications: [
+        {
+          type: 'spawnBullets',
+          time: 1.03,
+          bullets: [{ id: 1001, condition: { requiredTags: [] } }],
+        },
+      ],
     });
     const duplicateMontages: Array<Montage> = [longNameMontage, shortNameMontage];
 
@@ -28,11 +38,9 @@ describe('dedupeMontages', () => {
 
   it('keeps montages with different data separate', () => {
     const firstMontage = createMontage({
-      id: 'first-id',
       name: 'First',
     });
     const secondMontage = createMontage({
-      id: 'second-id',
       name: 'Second',
       endTime: 2,
     });
@@ -52,14 +60,24 @@ describe('dedupeMontages', () => {
 
   it('keeps montages separate when matching bullet times are outside tolerance', () => {
     const firstMontage = createMontage({
-      id: 'first-id',
       name: 'First',
-      bullets: [{ bulletId: '1001', time: 1, requiredTags: [] }],
+      notifications: [
+        {
+          type: 'spawnBullets',
+          time: 1,
+          bullets: [{ id: 1001, condition: { requiredTags: [] } }],
+        },
+      ],
     });
     const secondMontage = createMontage({
-      id: 'second-id',
       name: 'Second',
-      bullets: [{ bulletId: '1001', time: 1.11, requiredTags: [] }],
+      notifications: [
+        {
+          type: 'spawnBullets',
+          time: 1.11,
+          bullets: [{ id: 1001, condition: { requiredTags: [] } }],
+        },
+      ],
     });
 
     expect(dedupeMontages([firstMontage, secondMontage])).toEqual([
@@ -74,17 +92,15 @@ describe('dedupeMontages', () => {
     ]);
   });
 
-  it('applies tolerance to cancel and end times', () => {
+  it('applies tolerance to effective and end times', () => {
     const longNameMontage = createMontage({
-      id: 'long-name-id',
       name: 'LongMontageName',
-      cancelTime: 1,
+      effectiveTime: 1,
       endTime: 2,
     });
     const shortNameMontage = createMontage({
-      id: 'short-name-id',
       name: 'Short',
-      cancelTime: 1.1,
+      effectiveTime: 1.1,
       endTime: 2.2,
     });
 
@@ -97,31 +113,35 @@ describe('dedupeMontages', () => {
   });
 });
 
-const createMontage = (
-  montage: Pick<Montage, 'id' | 'name'> & Partial<Montage>,
-): Montage => ({
-  bullets: [
+const createMontage = (montage: Pick<Montage, 'name'> & Partial<Montage>): Montage => ({
+  characterName: 'Character',
+  notifications: [
     {
-      bulletId: '1001',
-      requiredTags: [],
+      type: 'spawnBullets',
       time: 0.2,
+      bullets: [
+        {
+          id: 1001,
+          condition: {
+            requiredTags: [],
+          },
+        },
+      ],
     },
-  ],
-  cancelTime: 0.8,
-  endTime: 1.5,
-  events: [
     {
-      name: 'Gameplay.Event',
+      type: 'sendEvent',
       time: 0.4,
+      name: 'Gameplay.Event',
     },
-  ],
-  raw: {} as Montage['raw'],
-  tags: [
     {
-      duration: 0.5,
-      name: 'Gameplay.Tag',
+      type: 'addTag',
       time: 0.3,
+      name: 'Gameplay.Tag',
+      duration: 0.5,
     },
   ],
+  effectiveTime: 0.8,
+  endTime: 1.5,
+  raw: {} as Montage['raw'],
   ...montage,
 });

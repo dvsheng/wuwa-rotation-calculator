@@ -50,8 +50,8 @@ const createMontageDedupeKey = (montage: Montage): string => {
       .filter(([key]) => !IGNORED_MONTAGE_DEDUPE_KEYS.has(key))
       .map(([key, value]) => [
         key,
-        key === 'bullets'
-          ? createBulletDedupeFields(value as Montage['bullets'])
+        key === 'notifications'
+          ? createNotificationDedupeFields(value as Montage['notifications'])
           : value,
       ]),
   );
@@ -59,10 +59,12 @@ const createMontageDedupeKey = (montage: Montage): string => {
   return JSON.stringify(dedupeFields);
 };
 
-const createBulletDedupeFields = (bullets: Montage['bullets']) => {
-  return bullets.map((bullet) =>
+const createNotificationDedupeFields = (notifications: Montage['notifications']) => {
+  return notifications.map((notification) =>
     Object.fromEntries(
-      Object.entries(bullet).filter(([key]) => !IGNORED_BULLET_DEDUPE_KEYS.has(key)),
+      Object.entries(notification).filter(
+        ([key]) => !IGNORED_NOTIFICATION_DEDUPE_KEYS.has(key),
+      ),
     ),
   );
 };
@@ -87,13 +89,15 @@ const clusterMontagesByBulletTimeTolerance = (
 };
 
 const areBulletTimesWithinTolerance = (left: Montage, right: Montage): boolean => {
-  if (left.bullets.length !== right.bullets.length) return false;
-  if (!isOptionalWithinTolerance(left.cancelTime, right.cancelTime)) return false;
+  if (left.notifications.length !== right.notifications.length) return false;
+  if (!isOptionalWithinTolerance(left.effectiveTime, right.effectiveTime)) {
+    return false;
+  }
   if (!isOptionalWithinTolerance(left.endTime, right.endTime)) return false;
 
-  return left.bullets.every((bullet, index) => {
-    const comparisonBullet = right.bullets[index];
-    return isWithinTolerance(bullet.time, comparisonBullet.time);
+  return left.notifications.every((notification, index) => {
+    const comparisonNotification = right.notifications[index];
+    return isWithinTolerance(notification.time, comparisonNotification.time);
   });
 };
 
@@ -116,11 +120,11 @@ const isWithinTolerance = (left: number, right: number): boolean => {
 
 const MONTAGE_TIME_TOLERANCE = 0.1;
 const IGNORED_MONTAGE_DEDUPE_KEYS = new Set([
-  'cancelTime',
   'dedupedNames',
+  'effectiveTime',
   'endTime',
   'id',
   'name',
   'raw',
 ]);
-const IGNORED_BULLET_DEDUPE_KEYS = new Set(['time']);
+const IGNORED_NOTIFICATION_DEDUPE_KEYS = new Set(['time']);

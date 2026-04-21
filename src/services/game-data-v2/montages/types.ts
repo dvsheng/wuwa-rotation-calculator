@@ -1,49 +1,54 @@
 import type { EntityResource } from '../create-entity-resource-lister';
 import type { MontageAsset } from '../repostiory';
 
-/**
- * A bullet fired by a track at a specific time
- */
-export interface MontageBullet {
+export const NotificationType = {
+  SPAWN_BULLETS: 'spawnBullets',
+  ADD_TAG: 'addTag',
+  SEND_EVENT: 'sendEvent',
+} as const;
+
+export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];
+
+interface BaseNotification {
   time: number;
-  bulletId: string;
-  requiredTags: Array<string>;
+  type: NotificationType;
 }
 
-/**
- * A tag added to game state by the montage at a specified time for a specified duration
- */
-export interface MontageTag {
+export interface SpawnBulletsNotification extends BaseNotification {
+  type: 'spawnBullets';
+  bullets: Array<{
+    id: number;
+    condition?: {
+      requiredTags?: Array<string>;
+    };
+  }>;
+}
+
+export interface AddTagNotification extends BaseNotification {
+  type: 'addTag';
   name: string;
-  time: number;
-  duration?: number;
+  duration: number;
 }
 
-/**
- * An option for the sequence of bullets the montage fires
- */
-export type MontageTrack = Array<MontageBullet>;
-
-/**
- * An event fired off by a montage at a specified time
- */
-export interface MontageEvent {
+export interface SendEventNotification extends BaseNotification {
+  type: 'sendEvent';
   name: string;
-  time: number;
 }
+
+export type Notification =
+  | SpawnBulletsNotification
+  | AddTagNotification
+  | SendEventNotification;
 
 /**
  * An animation that stitches together a sequence of bullets, tags, and effects at specified time intervals
  */
 export interface MontageData {
   name: string;
-  id: string;
-  dedupedNames?: Array<string>;
-  bullets: Array<MontageBullet>;
-  cancelTime?: number;
+  characterName: string;
+  notifications: Array<Notification>;
   endTime?: number;
-  tags: Array<MontageTag>;
-  events: Array<MontageEvent>;
+  effectiveTime?: number;
 }
 
 export type Montage = EntityResource<MontageData, MontageAsset>;

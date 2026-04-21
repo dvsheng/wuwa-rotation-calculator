@@ -22,7 +22,9 @@ export async function fetchResourcesForEntity(
         return [];
       }
 
-      return listDamageRowsByIds(echoSkill.settleIds);
+      const rows = await listDamageRowsByIds(echoSkill.settleIds);
+      console.log('hello world', rows.length, echoSkill.settleIds.length);
+      return rows;
     }
     case EntityType.ECHO_SET:
     case EntityType.WEAPON: {

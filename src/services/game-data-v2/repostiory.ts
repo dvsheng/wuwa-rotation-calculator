@@ -237,7 +237,7 @@ export const echoes = createReadOnlyRepository<Echo, number>(
 
 export const echoSkills = createReadOnlyRepository<EchoSkill, number>(
   () => database.select().from(rawPhantomSkills),
-  byId,
+  (row) => row.phantomSkillId,
   String,
 );
 

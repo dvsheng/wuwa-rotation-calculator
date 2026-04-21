@@ -10,7 +10,7 @@ export function transform(row: SkillInfoRow): ActivatableSkill {
     montages: row.rowData.Animations.flatMap((animation) => {
       const path = animation.AssetPathName;
       const components = path.split('/');
-      const characterName = components.at(-3);
+      const characterName = getMontageCharacterName(path, row.skillId, components);
       const montageName = components.at(-1)?.split('.').at(-1);
       if (!characterName || !montageName) return [];
       return `${montageName}-${characterName}`;
@@ -25,3 +25,15 @@ export function transform(row: SkillInfoRow): ActivatableSkill {
     toughRatio: row.rowData.ToughRatio,
   };
 }
+
+const getMontageCharacterName = (
+  path: string,
+  skillId: number,
+  components: Array<string>,
+): string | undefined => {
+  if (path.includes('/Character/Vision/')) {
+    return String(skillId).slice(0, 6);
+  }
+
+  return components.at(-3);
+};

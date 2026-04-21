@@ -1,5 +1,3 @@
-import { compact } from 'es-toolkit';
-
 import type {
   ReSkillEventDetails,
   SendGamePlayEventDetails,
@@ -9,96 +7,119 @@ import type {
 
 import type { MontageAsset } from '../repostiory';
 
-import type { MontageData } from './types';
+import { NotificationType } from './types';
+import type { MontageData, Notification } from './types';
+
+const RELEVANT_NOTIFICATION_NAMES = new Set([
+  'TsAnimNotifySkillBehavior',
+  'TsAnimNotifyReSkillEvent',
+  'TsAnimNotifyStateAddTag',
+  'TsAnimNotifySendGamePlayEvent',
+]);
+
+const TIME_STOP_REQUEST_NOTIFICATION_NAME = 'TsAnimNotifyStateTimeStopRequest';
 
 export function toMontage(rawMontage: MontageAsset): MontageData {
   const data = rawMontage.data;
-
-  const notifications = data.Properties.Notifies ?? [];
-  const notificationsByType = Object.groupBy(notifications, (notification) =>
-    normalizeNotificationName(notification.NotifyName),
-  );
 
   const notifyDetails = rawMontage.notifyDetails;
   const notificationDetailsByName = new Map(
     notifyDetails.map((notify) => [normalizeNotificationName(notify.Name), notify]),
   );
 
-  const bullets = [
-    ...(notificationsByType['TsAnimNotifySkillBehavior']?.flatMap((notify) => {
-      const time = notify.LinkValue;
-      const detailReference = getDetailReference(notify.Notify?.ObjectName ?? '');
-      const details = notificationDetailsByName.get(detailReference);
-      if (!isSkillBehaviorDetails(details)) return [];
-      return (details.Properties?.技能行为 ?? []).flatMap((behavior) =>
-        behavior.SkillBehaviorActionGroup.flatMap((action) =>
-          (action.Bullets ?? []).map((bullet) => ({
-            bulletId: bullet.bulletRowName,
-            time,
-            requiredTags: behavior.SkillBehaviorConditionGroup.flatMap((tag) => {
-              return tag.TagToCheck.map((tagToCheck) =>
-                typeof tagToCheck === 'string' ? tagToCheck : tagToCheck.TagName,
-              );
-            }),
-          })),
-        ),
+  const rawNotifications = (data.Properties.Notifies ?? []).map((notification) => ({
+    ...notification,
+    name: normalizeNotificationName(notification.NotifyName),
+  }));
+  const notifications: Array<Notification> = rawNotifications
+    .filter((notification) => RELEVANT_NOTIFICATION_NAMES.has(notification.name))
+    .flatMap((notification): Array<Notification> => {
+      const time = notification.LinkValue;
+      const detailKey = getDetailKey(notification.Notify?.ObjectName);
+      const notificationDetails = notificationDetailsByName.get(detailKey);
+      switch (notification.name) {
+        case 'TsAnimNotifySkillBehavior': {
+          if (!isSkillBehaviorDetails(notificationDetails)) return [];
+          return [
+            {
+              type: NotificationType.SPAWN_BULLETS,
+              time,
+              bullets: (notificationDetails.Properties?.技能行为 ?? []).flatMap(
+                (behavior) => {
+                  const bulletIds = behavior.SkillBehaviorActionGroup.flatMap(
+                    (actionGroup) =>
+                      (actionGroup.Bullets ?? []).map((bullet) =>
+                        Number.parseInt(bullet.bulletRowName),
+                      ),
+                  );
+                  const requiredTags = behavior.SkillBehaviorConditionGroup.flatMap(
+                    (conditionGroup) =>
+                      conditionGroup.TagToCheck.map((tag) =>
+                        typeof tag === 'string' ? tag : tag.TagName,
+                      ),
+                  );
+                  return bulletIds.map((bulletId) => ({
+                    id: bulletId,
+                    condition: {
+                      requiredTags,
+                    },
+                  }));
+                },
+              ),
+            },
+          ];
+        }
+        case 'TsAnimNotifyReSkillEvent': {
+          if (!isReSkillEventDetails(notificationDetails)) return [];
+          return [
+            {
+              type: NotificationType.SPAWN_BULLETS,
+              time,
+              bullets: getBulletIds(notificationDetails.Properties).map((bulletId) => {
+                return { id: Number.parseInt(bulletId) };
+              }),
+            },
+          ];
+        }
+        case 'TsAnimNotifyStateAddTag': {
+          if (!isStateAddTagDetails(notificationDetails)) return [];
+          const tag = notificationDetails.Properties?.Tag?.TagName;
+          const duration = notificationDetails.Properties?.CurrentTimeLength;
+          if (!tag || !duration) return [];
+          return [{ type: NotificationType.ADD_TAG, time, name: tag, duration }];
+        }
+        case 'TsAnimNotifySendGamePlayEvent': {
+          if (!isSendGamePlayEventDetails(notificationDetails)) return [];
+          const name = notificationDetails.Properties?.事件Tag?.TagName;
+          if (!name) return [];
+          return [{ type: NotificationType.SEND_EVENT, time, name }];
+        }
+      }
+      return [];
+    });
+  const endTime = rawNotifications.find(
+    (notification) => notification.name === 'TsAnimNotifyEndSkill',
+  )?.LinkValue;
+
+  const stoppedTime = rawNotifications
+    .filter((notification) => notification.name === TIME_STOP_REQUEST_NOTIFICATION_NAME)
+    .reduce((total, notification) => {
+      const detailKey = getDetailKey(notification.NotifyStateClass?.ObjectName);
+      const notificationDetails = notificationDetailsByName.get(detailKey);
+      const currentTimeLength = getNumber(
+        notificationDetails?.Properties?.CurrentTimeLength,
       );
-    }) ?? []),
-    ...(notificationsByType['TsAnimNotifyReSkillEvent']?.flatMap((notify) => {
-      const time = notify.LinkValue;
-      const detailReference = getDetailReference(notify.Notify?.ObjectName ?? '');
-      const details = notificationDetailsByName.get(detailReference);
-      if (!isReSkillEventDetails(details)) return [];
-      return getBulletIds(details.Properties).map((id) => ({
-        bulletId: id,
-        time,
-        requiredTags: [],
-      }));
-    }) ?? []),
-  ];
+      return total + (currentTimeLength ?? notification.Duration);
+    }, 0);
 
-  const dedupedBullets = compact(
-    Object.values(
-      Object.groupBy(bullets, ({ time, bulletId, requiredTags }) =>
-        JSON.stringify({ time, bulletId, requiredTags }),
-      ),
-    ).map((bulletArray) => bulletArray?.[0]),
-  );
-
-  const tags =
-    notificationsByType['TsAnimNotifyStateAddTag']?.flatMap((notify) => {
-      const time = notify.LinkValue;
-      const detailReference = getDetailReference(notify.Notify?.ObjectName ?? '');
-      const details = notificationDetailsByName.get(detailReference);
-      if (!isStateAddTagDetails(details)) return [];
-      const tag = details.Properties?.Tag?.TagName;
-      const duration = details.Properties?.CurrentTimeLength;
-      if (!tag || !duration) return [];
-      return [{ time, name: tag, duration }];
-    }) ?? [];
-
-  const events =
-    notificationsByType['TsAnimNotifySendGamePlayEvent']?.flatMap((notify) => {
-      const time = notify.LinkValue;
-      const detailReference = getDetailReference(notify.Notify?.ObjectName ?? '');
-      const details = notificationDetailsByName.get(detailReference);
-      if (!isSendGamePlayEventDetails(details)) return [];
-      const name = details.Properties?.事件Tag?.TagName;
-      if (!name) return [];
-      return [{ time, name }];
-    }) ?? [];
-
-  const cancelTime = notificationsByType['TsAnimNotifyStateNextAtt']?.[0]?.LinkValue;
-  const endTime = notificationsByType['TsAnimNotifyEndSkill']?.[0]?.LinkValue;
-
+  const effectiveTime =
+    endTime === undefined ? undefined : Math.max(endTime - stoppedTime, 0);
   return {
     name: rawMontage.name.replace('AM_', ''),
-    id: `${rawMontage.name}-${rawMontage.characterName}`,
-    bullets: dedupedBullets,
-    cancelTime,
+    characterName: rawMontage.characterName,
+    notifications: notifications,
+    effectiveTime,
     endTime,
-    tags,
-    events,
   };
 }
 
@@ -130,6 +151,10 @@ function getString(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
 }
 
+function getNumber(value: unknown): number | undefined {
+  return typeof value === 'number' ? value : undefined;
+}
+
 function toBulletId(value: unknown): string | undefined {
   return typeof value === 'number' ? String(value) : getString(value);
 }
@@ -150,7 +175,8 @@ function getBulletIds(properties: ReSkillEventDetails['Properties']): Array<stri
   return [bulletId];
 }
 
-const getDetailReference = (name: string): string => {
+const getDetailKey = (name: string | undefined): string => {
+  if (!name) return '';
   return normalizeNotificationName(name.split(':').at(-1)?.replace("'", '') ?? '');
 };
 

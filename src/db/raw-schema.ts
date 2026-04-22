@@ -15,10 +15,12 @@ import type {
 } from '../../scripts/pipeline/github-data.schemas';
 
 export type {
+  AddBuffDetails,
   MontageNotifyDetails,
   ReSkillEventDetails,
   SendGamePlayEventDetails,
   SkillBehaviorDetails,
+  StateAddBuffDetails,
   StateAddTagDetails,
 } from '../../scripts/pipeline/github-data.schemas';
 

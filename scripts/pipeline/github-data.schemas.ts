@@ -130,6 +130,9 @@ const SkillBehaviorBulletSchema = z.looseObject({
 const SkillBehaviorActionSchema = z.looseObject({
   ActionType: z.string().optional(),
   Bullets: z.array(SkillBehaviorBulletSchema).optional(),
+  BuffId: z.number().optional(),
+  Tag: GameplayTagSchema.optional(),
+  Duration: z.number().optional(),
 });
 
 const SkillBehaviorGroupSchema = z
@@ -261,6 +264,29 @@ const SkillBehaviorDetailsSchema = z.looseObject({
   Properties: SkillBehaviorPropertiesSchema.optional(),
 });
 
+const AddBuffPropertiesSchema = z.looseObject({
+  BuffId: z.number().optional(),
+  exportIndex: z.number().optional(),
+});
+
+const AddBuffDetailsSchema = z.looseObject({
+  ...BaseNotifyDetailFields,
+  Type: z.literal('TsAnimNotifyAddBuff_C'),
+  Properties: AddBuffPropertiesSchema.optional(),
+});
+
+const StateAddBuffPropertiesSchema = z.looseObject({
+  BuffId: z.number().optional(),
+  CurrentTimeLength: z.number().optional(),
+  exportIndex: z.number().optional(),
+});
+
+const StateAddBuffDetailsSchema = z.looseObject({
+  ...BaseNotifyDetailFields,
+  Type: z.literal('TsAnimNotifyStateAddBuff_C'),
+  Properties: StateAddBuffPropertiesSchema.optional(),
+});
+
 const GenericMontageNotifyTypes = [
   'ANS_Bianshenweizhi_C',
   'ANS_Jueyuan_Huaban_C',
@@ -276,7 +302,6 @@ const GenericMontageNotifyTypes = [
   'AnimNotifyStateGhost_C',
   'AnimNotifyStateScreenEffect_C',
   'AnimNotifyState_DisableRootMotion',
-  'TsAnimNotifyAddBuff_C',
   'TsAnimNotifyAddTag_C',
   'TsAnimNotifyAirAttack_C',
   'TsAnimNotifyAudioEvent_C',
@@ -310,7 +335,6 @@ const GenericMontageNotifyTypes = [
   'TsAnimNotifySetMovementMode_C',
   'TsAnimNotifyStateAbsoluteTimeStop_C',
   'TsAnimNotifyStateAccelInSplineMove_C',
-  'TsAnimNotifyStateAddBuff_C',
   'TsAnimNotifyStateAddGameplayCue_C',
   'TsAnimNotifyStateAddMaterialController_C',
   'TsAnimNotifyStateAddMoveByInputDirect_C',
@@ -382,6 +406,8 @@ const MontageNotifyDetailsSchema = z.discriminatedUnion('Type', [
   StateAddTagDetailsSchema,
   SendGamePlayEventDetailsSchema,
   SkillBehaviorDetailsSchema,
+  AddBuffDetailsSchema,
+  StateAddBuffDetailsSchema,
   GenericNotifyDetailsSchema,
 ]);
 
@@ -1548,6 +1574,8 @@ export type ReSkillEventProperties = z.infer<typeof ReSkillEventPropertiesSchema
 export type StateAddTagDetails = z.infer<typeof StateAddTagDetailsSchema>;
 export type SendGamePlayEventDetails = z.infer<typeof SendGamePlayEventDetailsSchema>;
 export type SkillBehaviorDetails = z.infer<typeof SkillBehaviorDetailsSchema>;
+export type AddBuffDetails = z.infer<typeof AddBuffDetailsSchema>;
+export type StateAddBuffDetails = z.infer<typeof StateAddBuffDetailsSchema>;
 export type MontageRoot = z.infer<typeof MontageRootSchema>;
 export type RawSkillInfoAssetArray = z.infer<typeof RawSkillInfoAssetArraySchema>;
 export type RawSkillInfoRowData = z.infer<typeof RawSkillInfoRowDataSchema>;

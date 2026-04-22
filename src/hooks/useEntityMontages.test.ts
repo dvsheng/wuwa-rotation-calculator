@@ -12,7 +12,7 @@ describe('dedupeMontages', () => {
         {
           type: 'spawnBullets',
           time: 1,
-          bullets: [{ id: 1001, condition: { requiredTags: [] } }],
+          bullets: [1001],
         },
       ],
     });
@@ -22,7 +22,7 @@ describe('dedupeMontages', () => {
         {
           type: 'spawnBullets',
           time: 1.03,
-          bullets: [{ id: 1001, condition: { requiredTags: [] } }],
+          bullets: [1001],
         },
       ],
     });
@@ -65,7 +65,7 @@ describe('dedupeMontages', () => {
         {
           type: 'spawnBullets',
           time: 1,
-          bullets: [{ id: 1001, condition: { requiredTags: [] } }],
+          bullets: [1001],
         },
       ],
     });
@@ -75,7 +75,7 @@ describe('dedupeMontages', () => {
         {
           type: 'spawnBullets',
           time: 1.11,
-          bullets: [{ id: 1001, condition: { requiredTags: [] } }],
+          bullets: [1001],
         },
       ],
     });
@@ -119,14 +119,7 @@ const createMontage = (montage: Pick<Montage, 'name'> & Partial<Montage>): Monta
     {
       type: 'spawnBullets',
       time: 0.2,
-      bullets: [
-        {
-          id: 1001,
-          condition: {
-            requiredTags: [],
-          },
-        },
-      ],
+      bullets: [1001],
     },
     {
       type: 'sendEvent',

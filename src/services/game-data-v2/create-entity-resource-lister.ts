@@ -1,3 +1,5 @@
+import { memoize } from 'es-toolkit';
+
 import { EntityType } from '@/services/game-data/types';
 
 export type EntityResource<TDomainModel, TRepositoryRow> = TDomainModel & {
@@ -36,7 +38,7 @@ export const createEntityResourceLister = <
   transform,
   filter = () => true,
 }: EntityResourceListerOptions<TRepositoryRow, TContext, TDomainModel>) => {
-  return async (
+  const resourceFetcher = async (
     entityId: number,
   ): Promise<Array<EntityResource<TDomainModel, TRepositoryRow>>> => {
     const entityType = inferEntityType(entityId);
@@ -56,6 +58,8 @@ export const createEntityResourceLister = <
 
     return resources;
   };
+  // Entity resources only change once per patch, so they can be cached indefinitely safely
+  return memoize(resourceFetcher);
 };
 
 const inferEntityType = (entityId: number): EntityType => {

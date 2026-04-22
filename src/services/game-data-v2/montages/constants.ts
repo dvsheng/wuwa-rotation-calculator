@@ -1,3 +1,15 @@
+export const NOTIFICATION_NAME = {
+  SKILL_BEHAVIOR: 'TsAnimNotifySkillBehavior',
+  RE_SKILL_EVENT: 'TsAnimNotifyReSkillEvent',
+  STATE_ADD_TAG: 'TsAnimNotifyStateAddTag',
+  SEND_GAME_PLAY_EVENT: 'TsAnimNotifySendGamePlayEvent',
+  ADD_BUFF: 'TsAnimNotifyAddBuff',
+  STATE_ADD_BUFF: 'TsAnimNotifyStateAddBuff',
+  END_SKILL: 'TsAnimNotifyEndSkill',
+  TIME_STOP_REQUEST: 'TsAnimNotifyStateTimeStopRequest',
+  ABSOLUTE_TIME_STOP: 'TsAnimNotifyStateAbsoluteTimeStop',
+} as const;
+
 export const WUWA_CHARACTER_ENTITY_IDS: Record<string, number> = {
   Aimisi: 1210,
   AimisiGD: 1210,

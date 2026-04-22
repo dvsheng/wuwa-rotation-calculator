@@ -30,14 +30,16 @@ import { Text } from '@/components/ui/typography';
 import { useEntityDetails } from '@/hooks/useEntityDetails';
 import { useGameDataEntities } from '@/hooks/useGameDataEntities';
 import { Target } from '@/services/game-data/types';
-import type { ActivatableSkill } from '@/services/game-data-v2/activatable-skills/types';
-import type { Buff } from '@/services/game-data-v2/buffs';
-import type { Bullet } from '@/services/game-data-v2/bullets';
+import { NotificationType } from '@/services/game-data-v2';
+import type {
+  ActivatableSkill,
+  Buff,
+  Bullet,
+  DamageInstance,
+  Modifier,
+  Montage,
+} from '@/services/game-data-v2';
 import { transformBulletsToTimedHits } from '@/services/game-data-v2/bullets/transform-bullet-to-timed-hits';
-import type { DamageInstance } from '@/services/game-data-v2/damage-instances/types';
-import type { Modifier } from '@/services/game-data-v2/modifiers';
-import { NotificationType } from '@/services/game-data-v2/montages';
-import type { Montage } from '@/services/game-data-v2/montages';
 import { Attribute } from '@/types/attribute';
 
 const ENTITY_GAME_DATA_TABS = [

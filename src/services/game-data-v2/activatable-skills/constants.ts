@@ -11,6 +11,7 @@ export const SKILL_GENRE_TO_TYPE_MAP = {
   9: 'Outro Skill',
   10: 'Weakness Break',
   11: 'None',
+  12: 'Outro',
 } as const;
 
 export type SkillType =

@@ -149,7 +149,11 @@ const transformSkillBehavior = (
   // paths can be assumed to be identical, and not needed to be modeled.
   const seenTagKeys = new Set<string>();
   const options = allOptions.filter((option) => {
-    const tagKey = `${option.condition.operator ?? ''}:${option.condition.requiredTags.toSorted().join('\0')}`;
+    const { requiredTags, operator } = option.condition;
+    const tagKey =
+      requiredTags.length === 0
+        ? ''
+        : `${operator ?? ''}:${requiredTags.toSorted().join('\0')}`;
     if (seenTagKeys.has(tagKey)) return false;
     seenTagKeys.add(tagKey);
     return true;

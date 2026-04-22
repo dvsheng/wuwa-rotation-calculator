@@ -27,12 +27,7 @@ import { Container, Row, Stack } from '@/components/ui/layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Toggle } from '@/components/ui/toggle';
 import { Text } from '@/components/ui/typography';
-import { useEntityActivatableSkills } from '@/hooks/useEntityActivatableSkills';
-import { useEntityBuffs } from '@/hooks/useEntityBuffs';
-import { useEntityBullets } from '@/hooks/useEntityBullets';
-import { useEntityDamageInstances } from '@/hooks/useEntityDamageInstances';
-import { useEntityModifiers } from '@/hooks/useEntityModifiers';
-import { useEntityMontages } from '@/hooks/useEntityMontages';
+import { useEntityDetails } from '@/hooks/useEntityDetails';
 import { useGameDataEntities } from '@/hooks/useGameDataEntities';
 import { Target } from '@/services/game-data/types';
 import type { ActivatableSkill } from '@/services/game-data-v2/activatable-skills/types';
@@ -276,9 +271,8 @@ function BuffTags({ tags }: { tags: Array<string> }) {
   );
 }
 
-function EntityBuffsList({ id }: { id: number }) {
-  const { data } = useEntityBuffs(id);
-  const buffs = data as Array<Buff>;
+function EntityBuffsList({ data }: { data: Array<Buff> }) {
+  const buffs = data;
 
   if (buffs.length === 0) {
     return <p className="text-muted-foreground text-sm">No buffs found.</p>;
@@ -412,8 +406,7 @@ function EntityBuffsList({ id }: { id: number }) {
   );
 }
 
-function EntityModifiersList({ id }: { id: number }) {
-  const { data } = useEntityModifiers(id);
+function EntityModifiersList({ data }: { data: Array<Modifier> }) {
   const modifiers = data;
 
   if (modifiers.length === 0) {
@@ -585,9 +578,7 @@ function isDamageRowEnabled(row: MontageDamageRow, activeTags: Array<string>): b
 
 type DamageInstanceTableRow = DamageInstance;
 
-function EntityDamageInstancesList({ id }: { id: number }) {
-  const { data } = useEntityDamageInstances(id);
-
+function EntityDamageInstancesList({ data }: { data: Array<DamageInstance> }) {
   if (data.length === 0) {
     return <p className="text-muted-foreground text-sm">No damage instances found.</p>;
   }
@@ -697,8 +688,13 @@ function EntityDamageInstancesList({ id }: { id: number }) {
   );
 }
 
-function EntityActivatableSkillsList({ id }: { id: number }) {
-  const { data } = useEntityActivatableSkills(id);
+function EntityActivatableSkillsList({
+  id,
+  data,
+}: {
+  id: number;
+  data: Array<Attack>;
+}) {
   const navigate = useNavigate();
 
   if (data.length === 0) {
@@ -834,8 +830,7 @@ function EntityActivatableSkillsList({ id }: { id: number }) {
   );
 }
 
-function EntityBulletsList({ id }: { id: number }) {
-  const { data } = useEntityBullets(id);
+function EntityBulletsList({ id, data }: { id: number; data: Array<Bullet> }) {
   const navigate = useNavigate();
 
   if (data.length === 0) {
@@ -984,12 +979,19 @@ function EntityBulletsList({ id }: { id: number }) {
   );
 }
 
-function EntityAttacksList({ entityId }: { entityId: number }) {
-  const { data: skills } = useEntityActivatableSkills(entityId);
-  const { data: montages } = useEntityMontages(entityId);
-  const { data: bullets } = useEntityBullets(entityId);
-  const { data: damageInstances } = useEntityDamageInstances(entityId);
-
+function EntityAttacksList({
+  entityId,
+  skills,
+  montages,
+  bullets,
+  damageInstances,
+}: {
+  entityId: number;
+  skills: Array<Attack>;
+  montages: Array<Montage>;
+  bullets: Array<Bullet>;
+  damageInstances: Array<DamageInstance>;
+}) {
   if (skills.length === 0) {
     return <p className="text-muted-foreground text-sm">No attacks found.</p>;
   }
@@ -1159,9 +1161,7 @@ function NullTableValue() {
   return <span className="text-muted-foreground font-mono text-sm">null</span>;
 }
 
-function EntityMontagesList({ entityId }: { entityId: number }) {
-  const { data } = useEntityMontages(entityId);
-
+function EntityMontagesList({ data }: { data: Array<Montage> }) {
   if (data.length === 0) {
     return <p className="text-muted-foreground text-sm">No montages found.</p>;
   }
@@ -1551,6 +1551,70 @@ function EntityHeader({ id }: { id: number }) {
   );
 }
 
+function EntityGameDataTabs({
+  id,
+  tab,
+}: {
+  id: number;
+  tab: EntityGameDataTab | undefined;
+}) {
+  const { data } = useEntityDetails(id);
+  const navigate = useNavigate();
+
+  return (
+    <Tabs
+      value={tab ?? 'montages'}
+      onValueChange={(nextTab) =>
+        navigate({
+          to: '/game-data/$id',
+          params: { id: String(id) },
+          search: {
+            tab: nextTab as EntityGameDataTab,
+          },
+        })
+      }
+      className="min-h-0 flex-1 gap-4"
+    >
+      <TabsList className="w-fit">
+        <TabsTrigger value="attacks">Attacks</TabsTrigger>
+        <TabsTrigger value="buffs">Buffs</TabsTrigger>
+        <TabsTrigger value="modifiers">Modifiers</TabsTrigger>
+        <TabsTrigger value="damage-instances">Damage Instances</TabsTrigger>
+        <TabsTrigger value="bullets">Bullets</TabsTrigger>
+        <TabsTrigger value="montages">Montages</TabsTrigger>
+        <TabsTrigger value="skill-info">Skill Info</TabsTrigger>
+      </TabsList>
+      <TabsContent value="attacks" className="min-h-0 flex-1 overflow-y-auto">
+        <EntityAttacksList
+          entityId={data.id}
+          skills={data.activatableSkills}
+          montages={data.montages}
+          bullets={data.bullets}
+          damageInstances={data.damageInstances}
+        />
+      </TabsContent>
+      <TabsContent value="buffs" className="min-h-0 flex-1 overflow-y-auto">
+        <EntityBuffsList data={data.buffs} />
+      </TabsContent>
+      <TabsContent value="modifiers" className="min-h-0 flex-1 overflow-y-auto">
+        <EntityModifiersList data={data.modifiers} />
+      </TabsContent>
+      <TabsContent value="damage-instances" className="min-h-0 flex-1 overflow-y-auto">
+        <EntityDamageInstancesList data={data.damageInstances} />
+      </TabsContent>
+      <TabsContent value="bullets" className="min-h-0 flex-1 overflow-y-auto">
+        <EntityBulletsList id={data.id} data={data.bullets} />
+      </TabsContent>
+      <TabsContent value="montages" className="min-h-0 flex-1 overflow-y-auto">
+        <EntityMontagesList data={data.montages} />
+      </TabsContent>
+      <TabsContent value="skill-info" className="min-h-0 flex-1 overflow-y-auto">
+        <EntityActivatableSkillsList id={data.id} data={data.activatableSkills} />
+      </TabsContent>
+    </Tabs>
+  );
+}
+
 function EntityBuffsPage() {
   const { id } = Route.useParams();
   const { tab } = Route.useSearch();
@@ -1571,130 +1635,18 @@ function EntityBuffsPage() {
         <Suspense fallback={<div className="h-10" />}>
           <EntityHeader id={numericId} />
         </Suspense>
-        <Tabs
-          value={tab ?? 'montages'}
-          onValueChange={(nextTab) =>
-            navigate({
-              to: '/game-data/$id',
-              params: { id },
-              search: {
-                tab: nextTab as EntityGameDataTab,
-              },
-            })
+        <Suspense
+          fallback={
+            <Card className="h-32">
+              <LoadingSpinnerContainer
+                message="Loading game data..."
+                spinnerSize={40}
+              />
+            </Card>
           }
-          className="min-h-0 flex-1 gap-4"
         >
-          <TabsList className="w-fit">
-            <TabsTrigger value="attacks">Attacks</TabsTrigger>
-            <TabsTrigger value="buffs">Buffs</TabsTrigger>
-            <TabsTrigger value="modifiers">Modifiers</TabsTrigger>
-            <TabsTrigger value="damage-instances">Damage Instances</TabsTrigger>
-            <TabsTrigger value="bullets">Bullets</TabsTrigger>
-            <TabsTrigger value="montages">Montages</TabsTrigger>
-            <TabsTrigger value="skill-info">Skill Info</TabsTrigger>
-          </TabsList>
-          <TabsContent value="attacks" className="min-h-0 flex-1 overflow-y-auto">
-            <Suspense
-              fallback={
-                <Card className="h-32">
-                  <LoadingSpinnerContainer
-                    message="Loading attacks..."
-                    spinnerSize={40}
-                  />
-                </Card>
-              }
-            >
-              <EntityAttacksList entityId={numericId} />
-            </Suspense>
-          </TabsContent>
-          <TabsContent value="buffs" className="min-h-0 flex-1 overflow-y-auto">
-            <Suspense
-              fallback={
-                <Card className="h-32">
-                  <LoadingSpinnerContainer
-                    message="Loading buffs..."
-                    spinnerSize={40}
-                  />
-                </Card>
-              }
-            >
-              <EntityBuffsList id={numericId} />
-            </Suspense>
-          </TabsContent>
-          <TabsContent value="modifiers" className="min-h-0 flex-1 overflow-y-auto">
-            <Suspense
-              fallback={
-                <Card className="h-32">
-                  <LoadingSpinnerContainer
-                    message="Loading modifiers..."
-                    spinnerSize={40}
-                  />
-                </Card>
-              }
-            >
-              <EntityModifiersList id={numericId} />
-            </Suspense>
-          </TabsContent>
-          <TabsContent
-            value="damage-instances"
-            className="min-h-0 flex-1 overflow-y-auto"
-          >
-            <Suspense
-              fallback={
-                <Card className="h-32">
-                  <LoadingSpinnerContainer
-                    message="Loading damage instances..."
-                    spinnerSize={40}
-                  />
-                </Card>
-              }
-            >
-              <EntityDamageInstancesList id={numericId} />
-            </Suspense>
-          </TabsContent>
-          <TabsContent value="bullets" className="min-h-0 flex-1 overflow-y-auto">
-            <Suspense
-              fallback={
-                <Card className="h-32">
-                  <LoadingSpinnerContainer
-                    message="Loading bullets..."
-                    spinnerSize={40}
-                  />
-                </Card>
-              }
-            >
-              <EntityBulletsList id={numericId} />
-            </Suspense>
-          </TabsContent>
-          <TabsContent value="montages" className="min-h-0 flex-1 overflow-y-auto">
-            <Suspense
-              fallback={
-                <Card className="h-32">
-                  <LoadingSpinnerContainer
-                    message="Loading montages..."
-                    spinnerSize={40}
-                  />
-                </Card>
-              }
-            >
-              <EntityMontagesList entityId={numericId} />
-            </Suspense>
-          </TabsContent>
-          <TabsContent value="skill-info" className="min-h-0 flex-1 overflow-y-auto">
-            <Suspense
-              fallback={
-                <Card className="h-32">
-                  <LoadingSpinnerContainer
-                    message="Loading skill info..."
-                    spinnerSize={40}
-                  />
-                </Card>
-              }
-            >
-              <EntityActivatableSkillsList id={numericId} />
-            </Suspense>
-          </TabsContent>
-        </Tabs>
+          <EntityGameDataTabs id={numericId} tab={tab} />
+        </Suspense>
       </Stack>
     </Container>
   );

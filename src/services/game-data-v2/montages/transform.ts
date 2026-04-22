@@ -1,3 +1,5 @@
+import { sum } from 'es-toolkit';
+
 import type {
   AddBuffDetails,
   ReSkillEventDetails,
@@ -76,28 +78,13 @@ export const toMontage = (rawMontage: MontageAsset): MontageData => {
     (notification) => notification.name === NOTIFICATION_NAME.END_SKILL,
   )?.LinkValue;
 
-  const absoluteTimeStops = rawNotifications.filter(
-    (n) => n.name === NOTIFICATION_NAME.ABSOLUTE_TIME_STOP,
+  const stoppedTime = sum(
+    rawNotifications
+      .filter(
+        (notification) => notification.name === NOTIFICATION_NAME.TIME_STOP_REQUEST,
+      )
+      .map((notification) => notification.Duration),
   );
-
-  const stoppedTime = rawNotifications
-    .filter((notification) => notification.name === NOTIFICATION_NAME.TIME_STOP_REQUEST)
-    .filter(
-      (notification) =>
-        !absoluteTimeStops.some(
-          (abs) =>
-            abs.LinkValue === notification.LinkValue &&
-            abs.Duration === notification.Duration,
-        ),
-    )
-    .reduce((total, notification) => {
-      const detailKey = getDetailKey(notification.NotifyStateClass?.ObjectName);
-      const notificationDetails = notificationDetailsByName.get(detailKey);
-      const currentTimeLength = getNumber(
-        notificationDetails?.Properties?.CurrentTimeLength,
-      );
-      return total + (currentTimeLength ?? notification.Duration);
-    }, 0);
 
   const effectiveTime =
     endTime === undefined ? undefined : Math.max(endTime - stoppedTime, 0);
@@ -257,9 +244,6 @@ const isStateAddBuffDetails = (
 
 const getString = (value: unknown): string | undefined =>
   typeof value === 'string' ? value : undefined;
-
-const getNumber = (value: unknown): number | undefined =>
-  typeof value === 'number' ? value : undefined;
 
 const toBulletId = (value: unknown): string | undefined =>
   typeof value === 'number' ? String(value) : getString(value);

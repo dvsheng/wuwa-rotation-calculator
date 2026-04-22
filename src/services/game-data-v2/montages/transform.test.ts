@@ -97,7 +97,9 @@ const createSkillBehavior = (
     Properties: {
       技能行为: options.map((option) => ({
         SkillBehaviorActionGroup: option.bullets.map((bulletId) => ({
-          Bullets: [{ bulletRowName: String(bulletId), bulletCount: 1, BlackboardKey: '' }],
+          Bullets: [
+            { bulletRowName: String(bulletId), bulletCount: 1, BlackboardKey: '' },
+          ],
           BuffId: 0,
           Tag: { TagName: 'None' },
         })),
@@ -131,14 +133,14 @@ const createMontageAsset = (
     characterName: 'TestChar',
     data: {
       Properties: {
-        Notifies: notifies.map((n, i) => ({
+        Notifies: notifies.map((n, index) => ({
           NotifyName: n.notifyName,
-          LinkValue: i * 0.1,
+          LinkValue: index * 0.1,
           Duration: 0,
           Notify: {
             ObjectName: `${n.notifyName}'AM_Test:${n.detailName}'`,
           },
-          NotifyStateClass: null,
+          NotifyStateClass: undefined,
         })),
       },
     },

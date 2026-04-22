@@ -4,13 +4,15 @@ import { SKILL_GENRE_TO_TYPE_MAP } from './constants';
 import type { ActivatableSkill } from './types';
 
 export function transform(row: SkillInfoRow): ActivatableSkill {
+  const skillGenre = Number(row.rowData.SkillGenre.replaceAll(/\D/g, ''));
+
   return {
     id: row.skillId,
     name: row.rowData.SkillName,
     skillType:
-      SKILL_GENRE_TO_TYPE_MAP[
-        Number(row.rowData.SkillGenre.replaceAll(/\D/g, '')) as keyof typeof SKILL_GENRE_TO_TYPE_MAP
-      ] ?? 'Unknown',
+      skillGenre in SKILL_GENRE_TO_TYPE_MAP
+        ? SKILL_GENRE_TO_TYPE_MAP[skillGenre as keyof typeof SKILL_GENRE_TO_TYPE_MAP]
+        : 'Unknown',
     montages: row.rowData.Animations.flatMap((animation) => {
       const path = animation.AssetPathName;
       const components = path.split('/');

@@ -2,7 +2,7 @@ import { EntityType } from '@/services/game-data/types';
 
 import { damage, echoSkills, echoes } from '../repostiory';
 import type { Damage } from '../repostiory';
-import { listEntitySkillsHandler } from '../skills/list-entity-skills.server';
+import { listEntitySkills } from '../skills/list-entity-skills';
 
 export async function fetchResourcesForEntity(
   entityId: number,
@@ -10,7 +10,7 @@ export async function fetchResourcesForEntity(
 ): Promise<Array<Damage>> {
   switch (entityType) {
     case EntityType.CHARACTER: {
-      const entitySkills = await listEntitySkillsHandler(entityId);
+      const entitySkills = await listEntitySkills(entityId);
       return listDamageRowsByIds(entitySkills.flatMap((skill) => skill.damageIds));
     }
     case EntityType.ECHO: {

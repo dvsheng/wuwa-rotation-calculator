@@ -1,14 +1,12 @@
 import { CapabilityType } from '@/services/game-data/types';
 
-import { getEntityBuffsHandler } from '../buffs/list-entity-buffs.server';
+import { getEntityBuffs } from '../buffs/list-entity-buffs';
 
 import { groupBuffsByConnection, groupBuffsBySharedTags } from './group-buffs';
 import type { Modifier } from './types';
 
-export async function listEntityModifiersHandler(
-  entityId: number,
-): Promise<Array<Modifier>> {
-  const entityBuffs = await getEntityBuffsHandler(entityId);
+export async function listEntityModifiers(entityId: number): Promise<Array<Modifier>> {
+  const entityBuffs = await getEntityBuffs(entityId);
   const modifierBuffs = entityBuffs.filter(
     (buff) => buff.type === CapabilityType.MODIFIER,
   );

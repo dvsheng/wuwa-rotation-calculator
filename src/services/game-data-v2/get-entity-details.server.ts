@@ -1,23 +1,23 @@
 import { EntityType } from '../game-data/types';
 
-import { listEntityActivatableSkillsHandler } from './activatable-skills/list-entity-activatable-skills.server';
-import { getEntityBuffsHandler } from './buffs/list-entity-buffs.server';
-import { listEntityBulletsHandler } from './bullets/list-entity-bullets.server';
-import { listEntityDamageInstancesHandler } from './damage-instances/list-entity-damage-instances.server';
-import { listEntityModifiersHandler } from './modifiers/list-entity-modifiers.server';
-import { listEntityMontagesHandler } from './montages/list-entity-montages.server';
-import { listEntitySkillsHandler } from './skills/list-entity-skills.server';
+import { listEntityActivatableSkills } from './activatable-skills/list-entity-activatable-skills';
+import { getEntityBuffs } from './buffs/list-entity-buffs';
+import { listEntityBullets } from './bullets/list-entity-bullets';
+import { listEntityDamageInstances } from './damage-instances/list-entity-damage-instances';
+import { listEntityModifiers } from './modifiers/list-entity-modifiers';
+import { listEntityMontages } from './montages/list-entity-montages';
+import { listEntitySkills } from './skills/list-entity-skills';
 
 export interface EntityDetails {
   id: number;
   entityType: EntityType;
-  activatableSkills: Awaited<ReturnType<typeof listEntityActivatableSkillsHandler>>;
-  buffs: Awaited<ReturnType<typeof getEntityBuffsHandler>>;
-  bullets: Awaited<ReturnType<typeof listEntityBulletsHandler>>;
-  damageInstances: Awaited<ReturnType<typeof listEntityDamageInstancesHandler>>;
-  modifiers: Awaited<ReturnType<typeof listEntityModifiersHandler>>;
-  montages: Awaited<ReturnType<typeof listEntityMontagesHandler>>;
-  skills: Awaited<ReturnType<typeof listEntitySkillsHandler>>;
+  activatableSkills: Awaited<ReturnType<typeof listEntityActivatableSkills>>;
+  buffs: Awaited<ReturnType<typeof getEntityBuffs>>;
+  bullets: Awaited<ReturnType<typeof listEntityBullets>>;
+  damageInstances: Awaited<ReturnType<typeof listEntityDamageInstances>>;
+  modifiers: Awaited<ReturnType<typeof listEntityModifiers>>;
+  montages: Awaited<ReturnType<typeof listEntityMontages>>;
+  skills: Awaited<ReturnType<typeof listEntitySkills>>;
 }
 
 export const getEntityDetailsHandler = async (
@@ -33,13 +33,13 @@ export const getEntityDetailsHandler = async (
     montages,
     skills,
   ] = await Promise.all([
-    listEntityActivatableSkillsHandler(entityId),
-    getEntityBuffsHandler(entityId),
-    listEntityBulletsHandler(entityId),
-    listEntityDamageInstancesHandler(entityId),
-    listEntityModifiersHandler(entityId),
-    listEntityMontagesHandler(entityId),
-    listEntitySkillsHandler(entityId),
+    listEntityActivatableSkills(entityId),
+    getEntityBuffs(entityId),
+    listEntityBullets(entityId),
+    listEntityDamageInstances(entityId),
+    listEntityModifiers(entityId),
+    listEntityMontages(entityId),
+    listEntitySkills(entityId),
   ]);
 
   return {

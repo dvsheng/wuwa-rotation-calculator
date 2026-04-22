@@ -1,2 +1,2 @@
-export { listEntityModifiers } from './list-entity-modifiers.function';
+export { listEntityModifiers } from './list-entity-modifiers';
 export type { Modifier } from './types';

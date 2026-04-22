@@ -6,7 +6,7 @@ import { fetchResourcesForEntity } from './fetch-resources';
 import { transform } from './transform';
 import type { EntitySkillData, EntitySkillRepositoryRow } from './types';
 
-export const listEntitySkillsHandler: (
+export const listEntitySkills: (
   entityId: number,
 ) => Promise<Array<EntityResource<EntitySkillData, EntitySkillRepositoryRow>>> =
   createEntityResourceLister({

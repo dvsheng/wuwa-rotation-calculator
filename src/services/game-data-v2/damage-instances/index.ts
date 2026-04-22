@@ -1,1 +1,1 @@
-export { listEntityDamageInstances } from './list-entity-damage-instances.function';
+export { listEntityDamageInstances } from './list-entity-damage-instances';

@@ -1,2 +1,2 @@
-export { listEntityBullets } from './list-entity-bullets.function';
+export { listEntityBullets } from './list-entity-bullets';
 export type { Bullet } from './types';

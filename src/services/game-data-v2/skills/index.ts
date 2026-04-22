@@ -1,2 +1,2 @@
-export { listEntitySkills } from './list-entity-skills.function';
+export { listEntitySkills } from './list-entity-skills';
 export type { EntitySkill } from './types';

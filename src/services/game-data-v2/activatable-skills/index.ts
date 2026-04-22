@@ -1,2 +1,2 @@
-export { listEntityActivatableSkills } from './list-entity-activatable-skills.function';
+export { listEntityActivatableSkills } from './list-entity-activatable-skills';
 export type { ActivatableSkill } from './types';

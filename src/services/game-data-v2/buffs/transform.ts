@@ -25,13 +25,32 @@ import type { BuffContext } from './fetch-context';
 import type { BuffData } from './types';
 
 const ENEMY_REQUIREMENT_TARGET = 1;
+const ENERGY_ATTRIBUTE_ID = 62;
+const CONCERTO_ATTRIBUTE_ID = 77;
+
+function getEnergyOrConcertoData(
+  buff: RepositoryBuff,
+): Pick<BuffData, 'energy' | 'concertoRegen'> | undefined {
+  if (buff.modifierMagnitude.length === 0) return;
+  const magnitude = buff.modifierMagnitude[0];
+  if (buff.gameAttributeId === ENERGY_ATTRIBUTE_ID) return { energy: magnitude };
+  if (buff.gameAttributeId === CONCERTO_ATTRIBUTE_ID) return { concertoRegen: magnitude };
+}
 
 export function toBuff(
   buff: RepositoryBuff,
   context: BuffContext,
 ): BuffData | undefined {
   const stat = getBuffStat(buff);
-  if (!stat) return;
+  const energyConcertoData = getEnergyOrConcertoData(buff);
+
+  if (!stat && !energyConcertoData) return;
+
+  const target = stat
+    ? getBuffTarget(stat, [buff])
+    : buff.formationPolicy === 1 || buff.formationPolicy === 2 || buff.formationPolicy === 5
+      ? Target.TEAM
+      : Target.SELF;
 
   return {
     buffId: buff.id,
@@ -39,8 +58,9 @@ export function toBuff(
       ? CapabilityType.PERMANENT_STAT
       : CapabilityType.MODIFIER,
     duration: getBuffDuration([buff]),
-    target: getBuffTarget(stat, [buff]),
+    target,
     ...stat,
+    ...energyConcertoData,
     ...context.sequenceInfoByBuffId.get(buff.id),
   };
 }

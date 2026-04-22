@@ -9,7 +9,7 @@ import type {
 import type { EntityResource } from '../create-entity-resource-lister';
 import type { Buff as RepositoryBuff } from '../repostiory';
 
-export type BuffData = Stat & {
+export type BuffData = Partial<Stat> & {
   buffId: number;
   duration?: number;
   type?: typeof CapabilityType.PERMANENT_STAT | typeof CapabilityType.MODIFIER;
@@ -17,6 +17,8 @@ export type BuffData = Stat & {
   source?: OriginType;
   unlockedAt?: Sequence;
   disabledAt?: Sequence;
+  energy?: number;
+  concertoRegen?: number;
 };
 
 export type Buff = EntityResource<BuffData, RepositoryBuff>;

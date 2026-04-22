@@ -1,7 +1,9 @@
+import type { SkillType } from './constants';
+
 export interface ActivatableSkill {
   id: number;
   name: string;
-  genre: string;
+  skillType: SkillType;
   montages: Array<string>;
   buffs: {
     onStart: Array<number>;

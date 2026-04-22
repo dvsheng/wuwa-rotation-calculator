@@ -722,8 +722,8 @@ function EntityActivatableSkillsList({
       meta: { headerClassName: 'min-w-48', cellClassName: 'min-w-48' },
     },
     {
-      accessorKey: 'genre',
-      header: 'Genre',
+      accessorKey: 'skillType',
+      header: 'Skill Type',
       meta: { headerClassName: 'min-w-32', cellClassName: 'min-w-32' },
     },
     {
@@ -1055,7 +1055,7 @@ function AttackCard({
         <div className="space-y-2">
           <CardTitle className="text-base">{skill.name}</CardTitle>
           <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
-            <Badge variant="secondary">genre: {skill.genre || 'n/a'}</Badge>
+            <Badge variant="secondary">{skill.skillType}</Badge>
           </div>
         </div>
         <DebugHoverIcon value={skill.raw} />

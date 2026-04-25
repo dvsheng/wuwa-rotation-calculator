@@ -34,7 +34,8 @@ function getEnergyOrConcertoData(
   if (buff.modifierMagnitude.length === 0) return;
   const magnitude = buff.modifierMagnitude[0];
   if (buff.gameAttributeId === ENERGY_ATTRIBUTE_ID) return { energy: magnitude };
-  if (buff.gameAttributeId === CONCERTO_ATTRIBUTE_ID) return { concertoRegen: magnitude };
+  if (buff.gameAttributeId === CONCERTO_ATTRIBUTE_ID)
+    return { concertoRegen: magnitude };
 }
 
 export function toBuff(
@@ -48,7 +49,9 @@ export function toBuff(
 
   const target = stat
     ? getBuffTarget(stat, [buff])
-    : buff.formationPolicy === 1 || buff.formationPolicy === 2 || buff.formationPolicy === 5
+    : buff.formationPolicy === 1 ||
+        buff.formationPolicy === 2 ||
+        buff.formationPolicy === 5
       ? Target.TEAM
       : Target.SELF;
 

@@ -10,11 +10,19 @@ import {
 } from '../constants';
 import type { Damage } from '../repostiory';
 
+import type { DamageInstanceContext } from './fetch-context';
 import type { DamageInstanceData } from './types';
+
+const EMPTY_CONTEXT: DamageInstanceContext = { damageById: new Map() };
 
 export const tryTransformToDamageInstance = (
   damage: Damage,
+  context: DamageInstanceContext = EMPTY_CONTEXT,
 ): DamageInstanceData | undefined => {
+  if (damage.condition) {
+    return tryTransformConditionalDamage(damage, context);
+  }
+
   const {
     id,
     rateLv,
@@ -60,6 +68,92 @@ export const transformDamageToDamageInstances = (
 ): Array<DamageInstanceData> => {
   return compact(
     damageRows.map((rawDamage) => tryTransformToDamageInstance(rawDamage)),
+  );
+};
+
+const tryTransformConditionalDamage = (
+  damage: Damage,
+  context: DamageInstanceContext,
+): DamageInstanceData | undefined => {
+  const parsed = parseCondition(damage.condition, damage.constVariables);
+  if (!parsed) return undefined;
+
+  const { noTagId, hasTagId, requiredTag } = parsed;
+  const baseDamageRow = context.damageById.get(noTagId);
+  if (!baseDamageRow) return undefined;
+
+  const base = tryTransformToDamageInstance(baseDamageRow);
+  if (!base) return undefined;
+
+  const altDamageRow = context.damageById.get(hasTagId);
+  const altMotionValue = altDamageRow
+    ? getDefaultSkillLevelValue(altDamageRow.rateLv)
+    : undefined;
+
+  const alternativeMotionValue =
+    altMotionValue === undefined
+      ? undefined
+      : {
+          requiredTag,
+          motionValue: altMotionValue,
+          motionValuePerStack:
+            getDefaultSkillLevelValue(altDamageRow!.formulaParam5) ?? 0,
+        };
+
+  return {
+    ...base,
+    id: damage.id,
+    ...(alternativeMotionValue ? { alternativeMotionValue } : {}),
+  };
+};
+
+type ParsedCondition = {
+  hasTagId: number;
+  noTagId: number;
+  requiredTag: string;
+};
+
+const parseCondition = (
+  condition: string,
+  constVariables: unknown,
+): ParsedCondition | undefined => {
+  const lines = condition.split('\n');
+
+  let hasTagLine: string | undefined;
+  let noTagLine: string | undefined;
+  for (const line of lines) {
+    if (line.includes('NotHasAnyTag')) {
+      noTagLine = line;
+    } else if (line.includes('HasAnyTag')) {
+      hasTagLine = line;
+    }
+  }
+
+  if (!hasTagLine || !noTagLine) return undefined;
+
+  const hasTagMatch = hasTagLine.match(/HasAnyTag (\w+).*ExecDamage (\d+)/);
+  const noTagMatch = noTagLine.match(/ExecDamage (\d+)/);
+
+  if (!hasTagMatch || !noTagMatch) return undefined;
+
+  const variableKey = hasTagMatch[1];
+  const hasTagId = Number.parseInt(hasTagMatch[2], 10);
+  const noTagId = Number.parseInt(noTagMatch[1], 10);
+
+  const variables = getConstVariables(constVariables);
+  const constVariable = variables.find((v) => v.Key === variableKey);
+  if (!constVariable) return undefined;
+
+  return { hasTagId, noTagId, requiredTag: constVariable.Value };
+};
+
+type ConstVariable = { Key: string; Value: string };
+
+const getConstVariables = (constVariables: unknown): Array<ConstVariable> => {
+  if (!Array.isArray(constVariables)) return [];
+  return constVariables.filter(
+    (v): v is ConstVariable =>
+      typeof v === 'object' && v !== null && 'Key' in v && 'Value' in v,
   );
 };
 

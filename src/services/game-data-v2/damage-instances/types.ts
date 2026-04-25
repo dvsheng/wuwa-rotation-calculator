@@ -12,6 +12,11 @@ export interface DamageInstanceData {
   id: number;
   motionValue: number;
   motionValuePerStack?: number;
+  alternativeMotionValue?: {
+    requiredTag: string;
+    motionValue: number;
+    motionValuePerStack: number;
+  };
   attribute: Attribute;
   type: DamageType;
   subtypes: Array<Tag>;

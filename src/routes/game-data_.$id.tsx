@@ -23,9 +23,8 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
-import { Container, Row, Stack } from '@/components/ui/layout';
+import { Container, Stack } from '@/components/ui/layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Toggle } from '@/components/ui/toggle';
 import { useEntityDetails } from '@/hooks/useEntityDetails';
 import { useGameDataEntities } from '@/hooks/useGameDataEntities';
 import { Target } from '@/services/game-data/types';
@@ -38,7 +37,12 @@ import type {
   Modifier,
   Montage,
 } from '@/services/game-data-v2';
-import { transformBulletsToTimedHits } from '@/services/game-data-v2/bullets/transform-bullet-to-timed-hits';
+import type {
+  BuffEvent,
+  DamageEvent,
+  MontageEventGroup,
+} from '@/services/game-data-v2/montages/methods';
+import { transformMontageToEventGroups } from '@/services/game-data-v2/montages/methods';
 import { Attribute } from '@/types/attribute';
 
 const ENTITY_GAME_DATA_TABS = [
@@ -56,31 +60,9 @@ type NumberNode = Buff['value'];
 type StackInfo = { valueAt1: number; valueAtMax: number; maxStacks: number };
 type ClampInfo = { min: number; max: number; stat: string | undefined };
 type Attack = ActivatableSkill & { raw: unknown };
-type MontageWithTableRows = {
+type MontageWithEventGroups = {
   montage: Montage;
-  tableRows: Array<MontageTableRow>;
-};
-type MontageHitRow = {
-  rowType: 'damage';
-  bulletId: string;
-  time: number;
-  damageId: number;
-  damageInstance?: DamageInstance;
-  requiredTags: Array<string>;
-  forbiddenTags: Array<string>;
-  onHitBuffs: Bullet['onHitBuffs'];
-};
-type MontageBuffRow = {
-  rowType: 'buff';
-  time: number;
-  buffIds: Array<number>;
-  duration?: number;
-};
-type MontageTableRow = MontageHitRow | MontageBuffRow;
-type MontageBullet = {
-  bulletId: string;
-  time: number;
-  condition?: MontageCondition;
+  eventGroups: Array<MontageEventGroup>;
 };
 type MontageDamageTotal = {
   scalingAttribute: DamageInstance['scalingAttribute'];
@@ -88,10 +70,6 @@ type MontageDamageTotal = {
   motionValuePerStack?: number;
 };
 type MontageNotification = Montage['notifications'][number];
-type MontageCondition = Extract<
-  MontageNotification,
-  { type: typeof NotificationType.DYNAMIC_BEHAVIOR }
->['options'][number]['condition'];
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
@@ -598,25 +576,19 @@ function MontageDamageTotalView({ totals }: { totals: Array<MontageDamageTotal> 
   );
 }
 
-function createMontageDamageTotals(
-  rows: Array<MontageHitRow>,
-): Array<MontageDamageTotal> {
+function createDamageGroupTotals(group: MontageEventGroup): Array<MontageDamageTotal> {
   const totalsByScalingAttribute = Map.groupBy(
-    rows.flatMap((row) => (row.damageInstance ? [row.damageInstance] : [])),
-    (damageInstance) => damageInstance.scalingAttribute,
+    group.events.filter((event): event is DamageEvent => event.eventType === 'damage'),
+    (event) => event.scalingAttribute,
   );
 
   return [...totalsByScalingAttribute.entries()]
-    .map(([scalingAttribute, damageInstances]) => {
-      const motionValue = damageInstances.reduce(
-        (total, damageInstance) => total + damageInstance.motionValue,
+    .map(([scalingAttribute, events]) => {
+      const motionValue = events.reduce((total, event) => total + event.motionValue, 0);
+      const motionValuePerStack = events.reduce(
+        (total, event) => total + (event.motionValuePerStack ?? 0),
         0,
       );
-      const motionValuePerStack = damageInstances.reduce(
-        (total, damageInstance) => total + (damageInstance.motionValuePerStack ?? 0),
-        0,
-      );
-
       return {
         scalingAttribute,
         motionValue,
@@ -627,19 +599,6 @@ function createMontageDamageTotals(
     .toSorted((left, right) =>
       left.scalingAttribute.localeCompare(right.scalingAttribute),
     );
-}
-
-function getMontageSelectableTags(rows: Array<MontageHitRow>): Array<string> {
-  return combineTags(
-    ...rows.flatMap((row) => [row.requiredTags, row.forbiddenTags]),
-  ).toSorted((left, right) => left.localeCompare(right));
-}
-
-function isDamageRowEnabled(row: MontageHitRow, activeTags: Array<string>): boolean {
-  return (
-    row.requiredTags.every((tag) => activeTags.includes(tag)) &&
-    row.forbiddenTags.every((tag) => !activeTags.includes(tag))
-  );
 }
 
 type DamageInstanceTableRow = DamageInstance;
@@ -1046,17 +1005,17 @@ function EntityBulletsList({ id, data }: { id: number; data: Array<Bullet> }) {
 }
 
 function EntityAttacksList({
-  entityId,
   skills,
   montages,
   bullets,
   damageInstances,
+  buffs,
 }: {
-  entityId: number;
   skills: Array<Attack>;
   montages: Array<Montage>;
   bullets: Array<Bullet>;
   damageInstances: Array<DamageInstance>;
+  buffs: Array<Buff>;
 }) {
   if (skills.length === 0) {
     return <p className="text-muted-foreground text-sm">No attacks found.</p>;
@@ -1065,27 +1024,35 @@ function EntityAttacksList({
   const montagesById = new Map(
     montages.map((montage) => [getMontageKey(montage), montage]),
   );
-  const bulletById = new Map(bullets.map((bullet) => [bullet.id, bullet]));
-  const damageInstancesById = new Map(
-    damageInstances.map((damageInstance) => [damageInstance.id, damageInstance]),
-  );
+  const bulletMap = Object.fromEntries(
+    bullets.map((bullet) => [Number(bullet.id), bullet]),
+  ) as Partial<Record<number, Bullet>>;
+  const damageMap = Object.fromEntries(
+    damageInstances.map((di) => [di.id, di]),
+  ) as Partial<Record<number, DamageInstance>>;
+  const buffMap = Object.fromEntries(
+    buffs.map((buff) => [buff.buffId, buff]),
+  ) as Partial<Record<number, Buff>>;
   const attacksWithDamage = skills.flatMap((skill) => {
-    const montagesWithTableRows = skill.montages.flatMap((montageId) => {
+    const montagesWithEventGroups = skill.montages.flatMap((montageId) => {
       const montage = montagesById.get(montageId);
       if (!montage) return [];
 
-      const tableRows = createMontageTableRows({
+      const eventGroups = transformMontageToEventGroups({
         montage,
-        bulletById,
-        damageInstancesById,
+        bulletMap,
+        damageMap,
+        buffMap,
         onStartBuffs: skill.buffs.onStart,
         onEndBuffs: skill.buffs.onEnd,
       });
 
-      return tableRows.length === 0 ? [] : [{ montage, tableRows }];
+      return eventGroups.length === 0 ? [] : [{ montage, eventGroups }];
     });
 
-    return montagesWithTableRows.length === 0 ? [] : [{ skill, montagesWithTableRows }];
+    return montagesWithEventGroups.length === 0
+      ? []
+      : [{ skill, montagesWithEventGroups }];
   });
 
   if (attacksWithDamage.length === 0) {
@@ -1094,12 +1061,11 @@ function EntityAttacksList({
 
   return (
     <div className="flex flex-col gap-4">
-      {attacksWithDamage.map(({ skill, montagesWithTableRows }) => (
+      {attacksWithDamage.map(({ skill, montagesWithEventGroups }) => (
         <AttackCard
           key={skill.id}
-          entityId={entityId}
           skill={skill}
-          montagesWithTableRows={montagesWithTableRows}
+          montagesWithEventGroups={montagesWithEventGroups}
         />
       ))}
     </div>
@@ -1107,13 +1073,11 @@ function EntityAttacksList({
 }
 
 function AttackCard({
-  entityId,
   skill,
-  montagesWithTableRows,
+  montagesWithEventGroups,
 }: {
-  entityId: number;
   skill: Attack;
-  montagesWithTableRows: Array<MontageWithTableRows>;
+  montagesWithEventGroups: Array<MontageWithEventGroups>;
 }) {
   const { whileActive } = skill.buffs;
   return (
@@ -1135,12 +1099,11 @@ function AttackCard({
         <DebugHoverIcon value={skill.raw} />
       </CardHeader>
       <CardContent className="flex flex-col gap-4 pt-0 pb-4">
-        {montagesWithTableRows.map(({ montage, tableRows }) => (
+        {montagesWithEventGroups.map(({ montage, eventGroups }) => (
           <MontageAttackSection
             key={getMontageKey(montage)}
-            entityId={entityId}
             montage={montage}
-            tableRows={tableRows}
+            eventGroups={eventGroups}
           />
         ))}
       </CardContent>
@@ -1149,68 +1112,160 @@ function AttackCard({
 }
 
 function MontageAttackSection({
-  entityId,
   montage,
-  tableRows,
+  eventGroups,
 }: {
-  entityId: number;
   montage: Montage;
-  tableRows: Array<MontageTableRow>;
+  eventGroups: Array<MontageEventGroup>;
 }) {
-  const [selectedTags, setSelectedTags] = React.useState<Array<string>>([]);
-  const hitRows = tableRows.filter((r): r is MontageHitRow => r.rowType === 'damage');
-  const buffRows = tableRows.filter((r): r is MontageBuffRow => r.rowType === 'buff');
-  const selectableTags = getMontageSelectableTags(hitRows);
-  const resolvedHitRows =
-    selectableTags.length === 0
-      ? hitRows
-      : hitRows.filter((row) => isDamageRowEnabled(row, selectedTags));
-  const resolvedRows: Array<MontageTableRow> = [
-    ...resolvedHitRows,
-    ...buffRows,
-  ].toSorted((a, b) => a.time - b.time);
-  const damageTotals = createMontageDamageTotals(resolvedHitRows);
-  const totalEnergy = resolvedHitRows.reduce(
-    (sum, row) => sum + (row.damageInstance?.energy ?? 0),
-    0,
+  return (
+    <div className="bg-muted/20 rounded-md border p-4">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+          {montage.name}
+        </p>
+        {montage.effectiveTime !== undefined && (
+          <span className="text-muted-foreground font-mono text-xs">
+            {montage.effectiveTime.toFixed(3)}s
+          </span>
+        )}
+      </div>
+      <div className="space-y-4">
+        {eventGroups.map((group, index) => (
+          <EventGroupSection key={index} index={index} group={group} />
+        ))}
+      </div>
+    </div>
   );
-  const totalConcerto = resolvedHitRows.reduce(
-    (sum, row) => sum + (row.damageInstance?.concertoRegen ?? 0),
-    0,
-  );
+}
 
-  const toggleTag = (tag: string) => {
-    setSelectedTags((currentTags) =>
-      currentTags.includes(tag)
-        ? currentTags.filter((selectedTag) => selectedTag !== tag)
-        : [...currentTags, tag].toSorted((left, right) => left.localeCompare(right)),
-    );
-  };
+function EventGroupSection({
+  index,
+  group,
+}: {
+  index: number;
+  group: MontageEventGroup;
+}) {
+  type EventRow = DamageEvent | BuffEvent;
+  const eventRows: Array<EventRow> = group.events.toSorted((a, b) => a.time - b.time);
+  const columns: Array<ColumnDef<EventRow>> = [
+    {
+      id: 'debug',
+      header: '',
+      cell: ({ row }) => <DebugHoverIcon value={row.original.raw} />,
+      meta: { headerClassName: 'w-8', cellClassName: 'w-8' },
+    },
+    {
+      id: 'time',
+      header: 'Time',
+      cell: ({ row }) => `${row.original.time.toFixed(3)}s`,
+      meta: {
+        headerClassName: 'min-w-20',
+        cellClassName: 'min-w-20 font-mono text-sm',
+      },
+    },
+    {
+      id: 'type',
+      header: 'Type',
+      cell: ({ row }) =>
+        row.original.eventType === 'damage' ? (
+          <Badge variant="outline" className="text-xs">
+            Hit
+          </Badge>
+        ) : (
+          <Badge variant="secondary" className="text-xs">
+            Buff
+          </Badge>
+        ),
+      meta: { headerClassName: 'min-w-16', cellClassName: 'min-w-16' },
+    },
+    {
+      id: 'motionValue',
+      header: 'Motion Value',
+      cell: ({ row }) =>
+        row.original.eventType === 'damage' ? (
+          renderMotionValue(
+            row.original.motionValue,
+            row.original.scalingAttribute,
+            row.original.motionValuePerStack,
+          )
+        ) : (
+          <NullTableValue />
+        ),
+      meta: {
+        headerClassName: 'min-w-56',
+        cellClassName: 'min-w-56 font-mono text-sm',
+      },
+    },
+    {
+      id: 'damageType',
+      header: 'Damage Type',
+      cell: ({ row }) =>
+        row.original.eventType === 'damage' ? (
+          startCase(row.original.damageType)
+        ) : (
+          <NullTableValue />
+        ),
+      meta: { headerClassName: 'min-w-28', cellClassName: 'min-w-28' },
+    },
+    {
+      id: 'buffId',
+      header: 'Buff ID',
+      cell: ({ row }) =>
+        row.original.eventType === 'buff' ? (
+          <span className="font-mono text-sm">{row.original.buffId}</span>
+        ) : (
+          <NullTableValue />
+        ),
+      meta: { headerClassName: 'min-w-20', cellClassName: 'min-w-20' },
+    },
+    {
+      id: 'energy',
+      header: 'Energy',
+      cell: ({ row }) =>
+        row.original.eventType === 'damage' ? (
+          <span className="font-mono text-sm">{row.original.energy}</span>
+        ) : (
+          <NullTableValue />
+        ),
+      meta: { headerClassName: 'min-w-20', cellClassName: 'min-w-20' },
+    },
+    {
+      id: 'concerto',
+      header: 'Concerto',
+      cell: ({ row }) =>
+        row.original.eventType === 'damage' ? (
+          <span className="font-mono text-sm">{row.original.concertoRegen}</span>
+        ) : (
+          <NullTableValue />
+        ),
+      meta: { headerClassName: 'min-w-20', cellClassName: 'min-w-20' },
+    },
+  ];
+
+  const totals = createDamageGroupTotals(group);
+  const damageEvents = group.events.filter(
+    (event): event is DamageEvent => event.eventType === 'damage',
+  );
+  const totalEnergy = damageEvents.reduce((sum, event) => sum + event.energy, 0);
+  const totalConcerto = damageEvents.reduce(
+    (sum, event) => sum + event.concertoRegen,
+    0,
+  );
+  const hasAnyTags = group.requiredTags.length > 0 || group.forbiddenTags.length > 0;
 
   return (
-    <div className="space-y-3">
-      <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-        {montage.name}
-      </p>
+    <div className="space-y-2">
       <div className="bg-muted/30 rounded-md border p-3">
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-              Effective Time
-            </p>
-            <p className="font-mono text-sm">
-              {montage.effectiveTime === undefined ? (
-                <NullTableValue />
-              ) : (
-                `${montage.effectiveTime.toFixed(3)}s`
-              )}
-            </p>
-          </div>
+        <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
+          Event Group {index + 1}
+        </p>
+        <div className="grid gap-3 md:grid-cols-3">
           <div>
             <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
               Total Damage
             </p>
-            <MontageDamageTotalView totals={damageTotals} />
+            <MontageDamageTotalView totals={totals} />
           </div>
           <div>
             <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
@@ -1225,34 +1280,33 @@ function MontageAttackSection({
             <p className="font-mono text-sm">{totalConcerto}</p>
           </div>
         </div>
-        {selectableTags.length > 0 && (
-          <div className="mt-3 border-t pt-3">
-            <Row align="center" className="mb-2 flex-wrap gap-2">
-              <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                Active Tags
-              </p>
-              <span className="text-muted-foreground text-xs">
-                Resolving {resolvedHitRows.length} of {hitRows.length} hits
-              </span>
-            </Row>
-            <div className="flex flex-wrap gap-2">
-              {selectableTags.map((tag) => (
-                <Toggle
-                  key={tag}
-                  pressed={selectedTags.includes(tag)}
-                  variant="outline"
-                  size="sm"
-                  className="h-auto max-w-full justify-start py-1 font-mono text-xs whitespace-normal"
-                  onPressedChange={() => toggleTag(tag)}
-                >
-                  {tag}
-                </Toggle>
-              ))}
-            </div>
+        {hasAnyTags && (
+          <div className="mt-3 flex flex-wrap gap-4 border-t pt-3">
+            {group.requiredTags.length > 0 && (
+              <div>
+                <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
+                  Required Tags
+                </p>
+                <RawTagList tags={group.requiredTags} />
+              </div>
+            )}
+            {group.forbiddenTags.length > 0 && (
+              <div>
+                <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
+                  Forbidden Tags
+                </p>
+                <RawTagList tags={group.forbiddenTags} />
+              </div>
+            )}
           </div>
         )}
       </div>
-      <AttackRowsView entityId={entityId} rows={resolvedRows} />
+      <DataTable
+        columns={columns}
+        data={eventRows}
+        emptyMessage="No events."
+        classNames={{ wrapper: 'bg-muted/30 rounded-md border' }}
+      />
     </div>
   );
 }
@@ -1393,27 +1447,6 @@ function getMontageKey(montage: Montage): string {
   return `${montage.raw.name}-${montage.characterName}`;
 }
 
-function getMontageBullets(montage: Montage): Array<MontageBullet> {
-  return montage.notifications.flatMap((notification) => {
-    if (notification.type === NotificationType.SPAWN_BULLETS) {
-      return notification.bullets.map((bullet) => ({
-        bulletId: String(bullet),
-        time: notification.time,
-      }));
-    }
-
-    if (notification.type !== NotificationType.DYNAMIC_BEHAVIOR) return [];
-
-    return notification.options.flatMap((option) =>
-      option.bullets.map((bullet) => ({
-        bulletId: String(bullet),
-        time: notification.time,
-        condition: option.condition,
-      })),
-    );
-  });
-}
-
 function getNotificationSummary(notification: MontageNotification): string {
   switch (notification.type) {
     case NotificationType.SPAWN_BULLETS: {
@@ -1436,374 +1469,6 @@ function getNotificationSummary(notification: MontageNotification): string {
       return `${notification.type}: ${notification.name}`;
     }
   }
-}
-
-function getMontageConditionRequiredTags(
-  condition: MontageCondition | undefined,
-): Array<string> {
-  if (!condition || condition.operator === 'NOT') return [];
-  return condition.requiredTags;
-}
-
-function getMontageConditionForbiddenTags(
-  condition: MontageCondition | undefined,
-): Array<string> {
-  if (condition?.operator !== 'NOT') return [];
-  return condition.requiredTags;
-}
-
-function combineTags(...tagGroups: Array<Array<string> | undefined>): Array<string> {
-  return [...new Set(tagGroups.flatMap((tags) => tags ?? []))];
-}
-
-function createMontageTableRows({
-  montage,
-  bulletById,
-  damageInstancesById,
-  onStartBuffs,
-  onEndBuffs,
-}: {
-  montage: Montage;
-  bulletById: Map<string, Bullet>;
-  damageInstancesById: Map<number, DamageInstance>;
-  onStartBuffs: Array<number>;
-  onEndBuffs: Array<number>;
-}): Array<MontageTableRow> {
-  const hitRows: Array<MontageHitRow> = getMontageBullets(montage).flatMap((hitRow) => {
-    const bullet = bulletById.get(hitRow.bulletId);
-    if (!bullet) return [];
-    const montageRequiredTags = getMontageConditionRequiredTags(hitRow.condition);
-    const montageForbiddenTags = getMontageConditionForbiddenTags(hitRow.condition);
-    const requiredTags = combineTags(bullet.requiredTags, montageRequiredTags);
-    const forbiddenTags = combineTags(bullet.forbiddenTags, montageForbiddenTags);
-
-    return transformBulletsToTimedHits(
-      bullet,
-      (bulletId) => bulletById.get(bulletId),
-      hitRow.time,
-    ).map(({ damageId, time }) => ({
-      rowType: 'damage' as const,
-      bulletId: hitRow.bulletId,
-      time,
-      damageId,
-      damageInstance: damageInstancesById.get(damageId),
-      requiredTags,
-      forbiddenTags,
-      onHitBuffs: bullet.onHitBuffs,
-    }));
-  });
-
-  const buffRows: Array<MontageBuffRow> = montage.notifications
-    .filter(
-      (n): n is Extract<Montage['notifications'][number], { type: 'applyBuff' }> =>
-        n.type === NotificationType.APPLY_BUFF,
-    )
-    .map((n) => ({
-      rowType: 'buff' as const,
-      time: n.time,
-      buffIds: n.buffs,
-      duration: n.duration,
-    }));
-
-  const lastNotificationTime = montage.notifications.reduce(
-    (max, n) => Math.max(max, n.time),
-    0,
-  );
-  const endTime = montage.endTime ?? lastNotificationTime;
-
-  const skillBuffRows: Array<MontageBuffRow> = [
-    ...(onStartBuffs.length > 0
-      ? [{ rowType: 'buff' as const, time: 0, buffIds: onStartBuffs }]
-      : []),
-    ...(onEndBuffs.length > 0
-      ? [{ rowType: 'buff' as const, time: endTime, buffIds: onEndBuffs }]
-      : []),
-  ];
-
-  return [...hitRows, ...buffRows, ...skillBuffRows].toSorted(
-    (left, right) =>
-      left.time - right.time ||
-      ('damageId' in left && 'damageId' in right ? left.damageId - right.damageId : 0),
-  );
-}
-
-function RowInfoCard({ entityId, row }: { entityId: number; row: MontageTableRow }) {
-  const navigate = useNavigate();
-
-  if (row.rowType === 'buff') {
-    const allBuffIds = row.buffIds;
-    return (
-      <HoverCard openDelay={150} closeDelay={100}>
-        <HoverCardTrigger asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            size="xs"
-            className="h-5 w-5 p-0 font-mono text-xs"
-          >
-            ⊕
-          </Button>
-        </HoverCardTrigger>
-        <HoverCardContent className="w-fit p-3">
-          <div className="flex flex-col gap-1">
-            <p className="text-muted-foreground text-xs font-medium uppercase">
-              Buff IDs
-            </p>
-            {allBuffIds.map((id) => (
-              <span key={id} className="font-mono text-xs">
-                {id}
-              </span>
-            ))}
-            {row.duration !== undefined && (
-              <p className="text-muted-foreground mt-1 text-xs">
-                {row.duration}s duration
-              </p>
-            )}
-          </div>
-        </HoverCardContent>
-      </HoverCard>
-    );
-  }
-
-  const { attacker, victim, energy, onField } = row.onHitBuffs;
-  const hasOnHitBuffs =
-    attacker.length > 0 || victim.length > 0 || energy.length > 0 || onField.length > 0;
-
-  return (
-    <HoverCard openDelay={150} closeDelay={100}>
-      <HoverCardTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="xs"
-          className="h-5 w-5 p-0 font-mono text-xs"
-        >
-          ⊙
-        </Button>
-      </HoverCardTrigger>
-      <HoverCardContent className="w-fit p-3">
-        <Stack gap="inset">
-          <div>
-            <p className="text-muted-foreground text-xs font-medium uppercase">
-              Damage ID
-            </p>
-            <Button
-              type="button"
-              variant="link"
-              size="xs"
-              className="h-auto px-0 font-mono text-xs"
-              onClick={() =>
-                navigate({
-                  to: '/game-data/$id',
-                  params: { id: String(entityId) },
-                  search: (previous) => ({ ...previous, tab: 'damage-instances' }),
-                  hash: String(row.damageId),
-                })
-              }
-            >
-              {row.damageId}
-            </Button>
-          </div>
-          <div>
-            <p className="text-muted-foreground text-xs font-medium uppercase">
-              Bullet ID
-            </p>
-            <Button
-              type="button"
-              variant="link"
-              size="xs"
-              className="h-auto px-0 font-mono text-xs"
-              onClick={() =>
-                navigate({
-                  to: '/game-data/$id',
-                  params: { id: String(entityId) },
-                  search: (previous) => ({ ...previous, tab: 'bullets' }),
-                  hash: String(row.bulletId),
-                })
-              }
-            >
-              {row.bulletId}
-            </Button>
-          </div>
-          {hasOnHitBuffs && (
-            <div>
-              <p className="text-muted-foreground text-xs font-medium uppercase">
-                On-Hit Buffs
-              </p>
-              <div className="flex flex-col gap-0.5 font-mono text-xs">
-                {attacker.length > 0 && <span>Attacker: {attacker.join(', ')}</span>}
-                {victim.length > 0 && <span>Victim: {victim.join(', ')}</span>}
-                {energy.length > 0 && <span>Energy: {energy.join(', ')}</span>}
-                {onField.length > 0 && <span>On-Field: {onField.join(', ')}</span>}
-              </div>
-            </div>
-          )}
-        </Stack>
-      </HoverCardContent>
-    </HoverCard>
-  );
-}
-
-function AttackRowsView({
-  entityId,
-  rows,
-}: {
-  entityId: number;
-  rows: Array<MontageTableRow>;
-}) {
-  const columns: Array<ColumnDef<MontageTableRow>> = [
-    {
-      id: 'info',
-      header: '',
-      cell: ({ row }) => <RowInfoCard entityId={entityId} row={row.original} />,
-      meta: {
-        headerClassName: 'w-8',
-        cellClassName: 'w-8',
-      },
-    },
-    {
-      id: 'rowType',
-      header: 'Type',
-      cell: ({ row }) =>
-        row.original.rowType === 'buff' ? (
-          <Badge variant="secondary" className="text-xs">
-            Buff
-          </Badge>
-        ) : (
-          <Badge variant="outline" className="text-xs">
-            Hit
-          </Badge>
-        ),
-      meta: {
-        headerClassName: 'min-w-16',
-        cellClassName: 'min-w-16',
-      },
-    },
-    {
-      accessorKey: 'time',
-      header: 'Time',
-      cell: ({ row }) => `${row.original.time.toFixed(3)}s`,
-      meta: {
-        headerClassName: 'min-w-20',
-        cellClassName: 'min-w-20 font-mono text-sm',
-      },
-    },
-    {
-      id: 'motionValue',
-      header: 'Motion Value',
-      cell: ({ row }) => {
-        if (row.original.rowType !== 'damage') return <NullTableValue />;
-        return row.original.damageInstance ? (
-          renderMotionValue(
-            row.original.damageInstance.motionValue,
-            row.original.damageInstance.scalingAttribute,
-            row.original.damageInstance.motionValuePerStack,
-          )
-        ) : (
-          <NullTableValue />
-        );
-      },
-      meta: {
-        headerClassName: 'min-w-56',
-        cellClassName: 'min-w-56 font-mono text-sm',
-      },
-    },
-    {
-      id: 'damageType',
-      header: 'Damage Type',
-      cell: ({ row }) => {
-        if (row.original.rowType !== 'damage') return <NullTableValue />;
-        return row.original.damageInstance ? (
-          startCase(row.original.damageInstance.type)
-        ) : (
-          <NullTableValue />
-        );
-      },
-      meta: {
-        headerClassName: 'min-w-28',
-        cellClassName: 'min-w-28',
-      },
-    },
-    {
-      id: 'energy',
-      header: 'Energy',
-      cell: ({ row }) => {
-        if (row.original.rowType !== 'damage') return <NullTableValue />;
-        const energy = row.original.damageInstance?.energy;
-        return energy === undefined ? (
-          <NullTableValue />
-        ) : (
-          <span className="font-mono text-sm">{energy}</span>
-        );
-      },
-      meta: {
-        headerClassName: 'min-w-20',
-        cellClassName: 'min-w-20',
-      },
-    },
-    {
-      id: 'concertoRegen',
-      header: 'Concerto',
-      cell: ({ row }) => {
-        if (row.original.rowType !== 'damage') return <NullTableValue />;
-        const concertoRegen = row.original.damageInstance?.concertoRegen;
-        return concertoRegen === undefined ? (
-          <NullTableValue />
-        ) : (
-          <span className="font-mono text-sm">{concertoRegen}</span>
-        );
-      },
-      meta: {
-        headerClassName: 'min-w-20',
-        cellClassName: 'min-w-20',
-      },
-    },
-    {
-      id: 'requiredTags',
-      header: 'Required Tags',
-      cell: ({ row }) => {
-        if (row.original.rowType !== 'damage') return <NullTableValue />;
-        const { requiredTags } = row.original;
-        return requiredTags.length === 0 ? (
-          <NullTableValue />
-        ) : (
-          <RawTagList tags={requiredTags} />
-        );
-      },
-      meta: {
-        headerClassName: 'min-w-48',
-        cellClassName: 'min-w-48',
-      },
-    },
-    {
-      id: 'forbiddenTags',
-      header: 'Forbidden Tags',
-      cell: ({ row }) => {
-        if (row.original.rowType !== 'damage') return <NullTableValue />;
-        const { forbiddenTags } = row.original;
-        return forbiddenTags.length === 0 ? (
-          <NullTableValue />
-        ) : (
-          <RawTagList tags={forbiddenTags} />
-        );
-      },
-      meta: {
-        headerClassName: 'min-w-48',
-        cellClassName: 'min-w-48',
-      },
-    },
-  ];
-
-  return (
-    <DataTable
-      columns={columns}
-      data={rows}
-      emptyMessage="No timed hits or buffs."
-      classNames={{
-        wrapper: 'bg-muted/30 rounded-md border',
-      }}
-    />
-  );
 }
 
 function EntityHeader({ id }: { id: number }) {
@@ -1855,11 +1520,11 @@ function EntityGameDataTabs({
       </TabsList>
       <TabsContent value="attacks" className="min-h-0 flex-1 overflow-y-auto">
         <EntityAttacksList
-          entityId={data.id}
           skills={data.activatableSkills}
           montages={data.montages}
           bullets={data.bullets}
           damageInstances={data.damageInstances}
+          buffs={data.buffs}
         />
       </TabsContent>
       <TabsContent value="buffs" className="min-h-0 flex-1 overflow-y-auto">
